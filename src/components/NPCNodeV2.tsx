@@ -134,8 +134,8 @@ export function NPCNodeV2({ data, selected }: NodeProps<NPCNodeData>) {
         {/* Flag indicators */}
         {node.setFlags && node.setFlags.length > 0 && (
           <div className="mt-1.5 flex flex-wrap gap-1">
-            {node.setFlags.map(flagId => {
-              const flag = flagSchema?.flags.find(f => f.id === flagId);
+            {node.setFlags.map((flagId: string) => {
+              const flag = flagSchema?.flags.find((f: { id: string }) => f.id === flagId);
               const flagType = flag?.type || 'dialogue';
               return (
                 <span 

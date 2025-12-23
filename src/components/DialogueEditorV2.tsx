@@ -29,7 +29,7 @@ import { ExampleLoaderButton } from './ExampleLoaderButton';
 import { ENABLE_DEBUG_TOOLS } from '../utils/feature-flags';
 import 'reactflow/dist/style.css';
 
-import { DialogueEditorProps, DialogueTree, DialogueNode, Choice } from '../types';
+import { DialogueEditorProps, DialogueTree, DialogueNode, Choice, ConditionalBlock } from '../types';
 import { exportToYarn, importFromYarn } from '../lib/yarn-converter';
 import { convertDialogueTreeToReactFlow, updateDialogueTreeFromReactFlow, CHOICE_COLORS } from '../utils/reactflow-converter';
 import { createNode, deleteNodeFromTree, addChoiceToNode, removeChoiceFromNode, updateChoiceInNode } from '../utils/node-helpers';
@@ -172,7 +172,7 @@ function DialogueEditorV2Internal({
       
       // Check player choices
       if (node.choices) {
-        node.choices.forEach((choice, idx) => {
+        node.choices.forEach((choice: Choice, idx: number) => {
           if (choice.nextNodeId && dialogue.nodes[choice.nextNodeId]) {
             if (findPathToTarget(choice.nextNodeId, new Set(visitedInPath), depth + 1)) {
               foundPath = true;
@@ -184,7 +184,7 @@ function DialogueEditorV2Internal({
       
       // Check conditional blocks
       if (node.conditionalBlocks) {
-        node.conditionalBlocks.forEach((block, idx) => {
+        node.conditionalBlocks.forEach((block: ConditionalBlock, idx: number) => {
           if (block.nextNodeId && dialogue.nodes[block.nextNodeId]) {
             if (findPathToTarget(block.nextNodeId, new Set(visitedInPath), depth + 1)) {
               foundPath = true;
@@ -1521,7 +1521,7 @@ function DialogueEditorV2Internal({
                   
                   // Update nodes using React Flow instance to ensure proper selection
                   const allNodes = reactFlowInstance.getNodes();
-                  const updatedNodes = allNodes.map((n) => ({
+                  const updatedNodes = allNodes.map((n: Node) => ({
                     ...n,
                     selected: n.id === nodeId
                   }));

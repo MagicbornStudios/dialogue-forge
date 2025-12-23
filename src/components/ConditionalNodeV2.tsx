@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { DialogueNode } from '../types';
+import { DialogueNode, Condition, ConditionalBlock } from '../types';
 import { GitBranch, Play, Flag } from 'lucide-react';
 import { FlagSchema } from '../types/flags';
 import { LayoutDirection } from '../utils/layout';
@@ -37,7 +37,7 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
       const headerHeight = headerRef.current.offsetHeight;
       let cumulativeHeight = headerHeight;
       
-      blocks.forEach((_, idx) => {
+      blocks.forEach((_block: ConditionalBlock, idx: number) => {
         const blockEl = blockRefs.current[idx];
         if (blockEl) {
           const blockHeight = blockEl.offsetHeight;
@@ -114,7 +114,7 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
                 </span>
                 {block.condition && block.condition.length > 0 && (
                   <span className="text-[9px] text-gray-500 font-mono truncate flex-1">
-                    {block.condition.map(c => {
+                    {block.condition.map((c: Condition) => {
                       const varName = `$${c.flag}`;
                       if (c.operator === 'is_set') return varName;
                       if (c.operator === 'is_not_set') return `not ${varName}`;

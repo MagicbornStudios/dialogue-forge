@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { DialogueNode } from '../types';
+import { DialogueNode, Choice } from '../types';
 import { GitBranch, Play, Flag } from 'lucide-react';
 import { FlagSchema } from '../types/flags';
 import { LayoutDirection } from '../utils/layout';
@@ -38,7 +38,7 @@ export function PlayerNodeV2({ data, selected }: NodeProps<PlayerNodeData>) {
       const headerHeight = headerRef.current.offsetHeight;
       let cumulativeHeight = headerHeight;
       
-      choices.forEach((_, idx) => {
+      choices.forEach((_choice: Choice, idx: number) => {
         const choiceEl = choiceRefs.current[idx];
         if (choiceEl) {
           const choiceHeight = choiceEl.offsetHeight;

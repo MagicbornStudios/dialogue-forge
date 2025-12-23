@@ -19,7 +19,7 @@
       }
     ],
     "paths": {
-      "@portfolio/*": ["../../packages/*"]
+      "@magicborn/*": ["../../packages/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],

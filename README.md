@@ -7,7 +7,7 @@ A visual node-based dialogue editor with Yarn Spinner support for game developme
 ### Run the Demo
 
 ```bash
-npx @portfolio/dialogue-forge
+npx @magicborn/dialogue-forge
 ```
 
 This will download the package and start an interactive demo server at `http://localhost:3000`.
@@ -15,7 +15,7 @@ This will download the package and start an interactive demo server at `http://l
 ### Install as Library
 
 ```bash
-npm install @portfolio/dialogue-forge
+npm install @magicborn/dialogue-forge
 ```
 
 ## Quick Start
@@ -23,7 +23,7 @@ npm install @portfolio/dialogue-forge
 ### 1. Define Your Flags
 
 ```typescript
-import { FlagSchema, FLAG_TYPE, FLAG_VALUE_TYPE } from '@portfolio/dialogue-forge';
+import { FlagSchema, FLAG_TYPE, FLAG_VALUE_TYPE } from '@magicborn/dialogue-forge';
 
 const flagSchema: FlagSchema = {
   categories: ['quests', 'items', 'stats'],
@@ -56,7 +56,7 @@ const flagSchema: FlagSchema = {
 ### 2. Load Dialogue from Yarn
 
 ```typescript
-import { importFromYarn } from '@portfolio/dialogue-forge';
+import { importFromYarn } from '@magicborn/dialogue-forge';
 
 const yarnContent = await loadFile('merchant.yarn');
 const dialogue = importFromYarn(yarnContent, 'Merchant Dialogue');
@@ -65,7 +65,7 @@ const dialogue = importFromYarn(yarnContent, 'Merchant Dialogue');
 ### 3. Edit Dialogue
 
 ```tsx
-import { DialogueEditor, exportToYarn } from '@portfolio/dialogue-forge';
+import { DialogueEditor, exportToYarn } from '@magicborn/dialogue-forge';
 
 <DialogueEditor
   dialogue={dialogue}
@@ -80,7 +80,7 @@ import { DialogueEditor, exportToYarn } from '@portfolio/dialogue-forge';
 ### 4. Run Dialogue with Game State
 
 ```tsx
-import { DialogueSimulator } from '@portfolio/dialogue-forge';
+import { DialogueSimulator } from '@magicborn/dialogue-forge';
 
 // Get current game flags
 const gameFlags = {
@@ -166,10 +166,10 @@ import {
   exportToYarn,
   FlagSchema,
   GameFlagState
-} from '@portfolio/dialogue-forge';
+} from '@magicborn/dialogue-forge';
 
 // Define flags
-import { FLAG_TYPE } from '@portfolio/dialogue-forge';
+import { FLAG_TYPE } from '@magicborn/dialogue-forge';
 
 const flagSchema: FlagSchema = {
   flags: [

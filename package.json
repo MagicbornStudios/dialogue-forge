@@ -47,7 +47,7 @@
     "react-dom": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@dagrejs/dagre": "^0.8.5",
+    "@dagrejs/dagre": "^1.1.8",
     "react-tooltip": "^5.30.0",
     "reactflow": "^11.11.4",
     "lucide-react": "^0.559.0",

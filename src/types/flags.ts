@@ -6,7 +6,7 @@
  * 
  * @example
  * ```typescript
- * import { FLAG_TYPE, FlagSchema } from '@portfolio/dialogue-forge';
+ * import { FLAG_TYPE, FlagSchema } from '@magicborn/dialogue-forge';
  * 
  * const mySchema: FlagSchema = {
  *   flags: [

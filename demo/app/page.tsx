@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { DialogueEditorV2 } from '@portfolio/dialogue-forge/src/components/DialogueEditorV2';
-import { FlagSchema, exampleFlagSchema } from '@portfolio/dialogue-forge/src/types/flags';
-import { DialogueTree } from '@portfolio/dialogue-forge/src/types';
-import { exportToYarn } from '@portfolio/dialogue-forge/src/lib/yarn-converter';
+import { DialogueEditorV2 } from '@magicborn/dialogue-forge/src/components/DialogueEditorV2';
+import { FlagSchema, exampleFlagSchema } from '@magicborn/dialogue-forge/src/types/flags';
+import { DialogueTree } from '@magicborn/dialogue-forge/src/types';
+import { exportToYarn } from '@magicborn/dialogue-forge/src/lib/yarn-converter';
 
 const defaultDialogue: DialogueTree = {
   id: 'demo-dialogue',

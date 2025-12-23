@@ -4,7 +4,7 @@
  * Dialogue Forge Demo Server
  * 
  * This script starts the Next.js demo server for Dialogue Forge.
- * Users can run: npx @portfolio/dialogue-forge
+ * Users can run: npx @magicborn/dialogue-forge
  */
 
 const { spawn } = require('child_process');

@@ -1,6 +1,6 @@
 const nextConfig = {
   pageExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  transpilePackages: ['@portfolio/dialogue-forge'],
+  transpilePackages: ['@magicborn/dialogue-forge'],
 };
 
 export default nextConfig;

@@ -1,5 +1,5 @@
 {
-  "name": "@portfolio/dialogue-forge",
+  "name": "@magicborn/dialogue-forge",
   "version": "0.1.0",
   "description": "Visual node-based dialogue editor with Yarn Spinner support",
   "author": "Ben Garrard <benjamingarrard5279@gmail.com>",
@@ -47,6 +47,7 @@
     "react-dom": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^0.8.5",
     "react-tooltip": "^5.30.0",
     "reactflow": "^11.11.4",
     "lucide-react": "^0.559.0",

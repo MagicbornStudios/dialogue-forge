@@ -36,7 +36,24 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       
       - name: Install dependencies
-        run: npm ci
+        run: |
+          # Install root dependencies if package-lock.json exists
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+          
+          # Install demo dependencies if needed
+          if [ -d demo ] && [ -f demo/package.json ]; then
+            cd demo
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi
+            cd ..
+          fi
       
       - name: Build package
         run: npm run build
@@ -57,7 +74,7 @@ jobs:
       - name: Publish to NPM
         run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.ORG_NPM_TOKEN }}
       
       - name: Create GitHub Release
         if: github.event.inputs.version_bump != 'none' && github.event.inputs.version_bump != ''

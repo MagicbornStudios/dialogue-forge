@@ -2,9 +2,6 @@
 
 A visual node-based dialogue editor with Yarn Spinner support for game development.
 
-[![npm version](https://img.shields.io/npm/v/@portfolio/dialogue-forge)](https://www.npmjs.com/package/@portfolio/dialogue-forge)
-[![GitHub](https://img.shields.io/github/license/MagicbornStudios/dialogue-forge)](https://github.com/MagicbornStudios/dialogue-forge)
-
 ## 🚀 Quick Start
 
 ### Run the Demo
@@ -157,28 +154,80 @@ See [DATA_STRUCTURES.md](./DATA_STRUCTURES.md) for complete type documentation a
 - `DialogueNode` - Individual dialogue node (NPC or Player)
 - `FlagSchema` - Flag definitions
 - `GameFlagState` - Current flag values `{ [flagId]: value }`
+- `DialogueResult` - Result from running dialogue (updated flags, visited nodes)
+
+## Complete Example
+
+```typescript
+import {
+  DialogueEditor,
+  DialogueSimulator,
+  importFromYarn,
+  exportToYarn,
+  FlagSchema,
+  GameFlagState
+} from '@portfolio/dialogue-forge';
+
+// Define flags
+import { FLAG_TYPE } from '@portfolio/dialogue-forge';
+
+const flagSchema: FlagSchema = {
+  flags: [
+    { id: 'quest_complete', type: FLAG_TYPE.QUEST, category: 'quests' },
+    { id: 'item_key', type: FLAG_TYPE.ITEM, category: 'items' },
+  ]
+};
+
+// Load dialogue
+const dialogue = importFromYarn(yarnFile, 'Merchant');
+
+// Get current game state
+const gameFlags: GameFlagState = {
+  quest_complete: 'complete',
+  item_key: true
+};
+
+// Edit dialogue
+<DialogueEditor
+  dialogue={dialogue}
+  onChange={(updated) => {
+    const yarn = exportToYarn(updated);
+    saveFile(yarn);
+  }}
+  flagSchema={flagSchema}
+  initialFlags={gameFlags}
+/>
+
+// OR run dialogue
+<DialogueSimulator
+  dialogue={dialogue}
+  initialFlags={gameFlags}
+  onComplete={(result) => {
+    // Update game with new flags
+    gameState.flags = result.updatedFlags;
+    // Next dialogue will have different options
+    // based on updated flags
+  }}
+/>
+```
 
 ## Documentation
 
-- [GUIDE.md](./GUIDE.md) - Complete usage guide
-- [USAGE.md](./USAGE.md) - API usage examples
-- [INTEGRATION.md](./INTEGRATION.md) - Game integration guide
-- [DATA_STRUCTURES.md](./DATA_STRUCTURES.md) - Type definitions
-- [FLAG_SYSTEM.md](./FLAG_SYSTEM.md) - Flag system details
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - Technical architecture
+- **[GUIDE.md](./GUIDE.md)** - Friendly, educational guide for learning Dialogue Forge
+- **[UNREAL_INTEGRATION.md](./UNREAL_INTEGRATION.md)** - Complete guide for integrating with Unreal Engine
+- **[DATA_STRUCTURES.md](./DATA_STRUCTURES.md)** - Complete type reference and API documentation
+- **[INTEGRATION.md](./INTEGRATION.md)** - General integration patterns
+- **[FLAG_SYSTEM.md](./FLAG_SYSTEM.md)** - Detailed flag system documentation
 
-## Contributing
+Click the **book icon** in the editor to open the built-in guide.
 
-This package is part of a monorepo. See [PUBLISHING.md](./PUBLISHING.md) for development workflow.
+### Key Concepts
 
-## License
+**Flags = Yarn Variables**: Flags you define in Dialogue Forge become `$variable` in Yarn Spinner. These variables are stored in Yarn Spinner's Variable Storage at runtime, not in the .yarn file.
 
-MIT
+**Bidirectional Flow**: 
+- Edit in Dialogue Forge → Export .yarn → Import to Unreal
+- Game sets variables → Yarn reads them → Dialogue reacts
+- Dialogue sets variables → Yarn stores them → Game reads them
 
-## Links
-
-- **GitHub**: https://github.com/MagicbornStudios/dialogue-forge
-- **NPM**: https://www.npmjs.com/package/@portfolio/dialogue-forge
-- **Issues**: https://github.com/MagicbornStudios/dialogue-forge/issues
-
-
+See [UNREAL_INTEGRATION.md](./UNREAL_INTEGRATION.md) for complete details.

@@ -2,13 +2,15 @@
 
 # Sync dialogue-forge package to its own GitHub repo
 # This script pushes the package to MagicbornStudios/dialogue-forge
+# When pushed to main, GitHub Actions will automatically publish to npm
 
 set -e
 
 PACKAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_URL="https://github.com/MagicbornStudios/dialogue-forge.git"
+PACKAGE_NAME="dialogue-forge"
+REPO_URL="https://github.com/MagicbornStudios/$PACKAGE_NAME.git"
 
-echo "🔄 Syncing dialogue-forge to its own repository..."
+echo "🔄 Syncing $PACKAGE_NAME to its own repository..."
 
 cd "$PACKAGE_DIR"
 
@@ -31,6 +33,9 @@ if [ "$CURRENT_REMOTE" != "$REPO_URL" ]; then
   git remote set-url origin "$REPO_URL"
 fi
 
+# Ensure we're on main branch
+git checkout -b main 2>/dev/null || git checkout main
+
 # Stage all files
 echo "📦 Staging files..."
 git add -A
@@ -44,14 +49,17 @@ else
   git commit -m "Update package from monorepo" || echo "No changes to commit"
 fi
 
-# Push to remote
-echo "🚀 Pushing to GitHub..."
+# Push to remote main branch
+echo "🚀 Pushing to GitHub main branch..."
+echo "   (This will trigger automatic npm publish via GitHub Actions)"
 git push -u origin main || git push -u origin master || {
   echo "⚠️  Push failed. You may need to:"
   echo "   1. Create the repo on GitHub first"
   echo "   2. Set up authentication"
   echo "   3. Run: git push -u origin main"
+  exit 1
 }
 
 echo "✅ Sync complete!"
+echo "📦 GitHub Actions will automatically publish to npm on main branch push"
 

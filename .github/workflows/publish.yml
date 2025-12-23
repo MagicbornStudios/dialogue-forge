@@ -36,27 +36,14 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       
       - name: Install dependencies
-        run: |
-          # Install root dependencies if package-lock.json exists
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-          
-          # Install demo dependencies if needed
-          if [ -d demo ] && [ -f demo/package.json ]; then
-            cd demo
-            if [ -f package-lock.json ]; then
-              npm ci
-            else
-              npm install
-            fi
-            cd ..
-          fi
+        run: npm install
+        # Only installs package dependencies (TypeScript, etc.)
+        # Demo dependencies are workspace refs - not needed for publishing
       
       - name: Build package
         run: npm run build
+        # This builds the library code to dist/
+        # Demo is included as-is in the published package
       
       - name: Bump version (if specified)
         if: github.event.inputs.version_bump != 'none' && github.event.inputs.version_bump != ''

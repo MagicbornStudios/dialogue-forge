@@ -8,8 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "@portfolio/dialogue-forge": "workspace:*",
-    "@portfolio/server-template": "workspace:*",
+    "@portfolio/dialogue-forge": "*",
+    "@portfolio/server-template": "*",
     "next": "16.0.8",
     "react": "19.2.1",
     "react-dom": "19.2.1",
@@ -26,4 +26,3 @@
     "@tailwindcss/postcss": "^4"
   }
 }
-

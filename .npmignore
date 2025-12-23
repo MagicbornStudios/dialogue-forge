@@ -1,0 +1,57 @@
+# Source files (not needed in published package)
+src/
+*.ts
+!*.d.ts
+*.tsx
+*.tsbuildinfo
+
+# Development files
+node_modules/
+.vscode/
+.idea/
+*.log
+*.cache
+
+# Test files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+vitest.config.ts
+coverage/
+
+# Development configs
+tsconfig.json
+.eslintrc*
+.prettierrc*
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (keep README.md, ignore others)
+ARCHITECTURE*.md
+DATA_STRUCTURES.md
+ENHANCEMENT_ROADMAP.md
+FEATURES.md
+FLAG_SYSTEM.md
+GUIDE.md
+INTEGRATION.md
+LAYOUT_STRATEGIES.md
+NEXT_STEPS.md
+REACT_FLOW_MIGRATION_PLAN.md
+TESTING.md
+UNREAL_INTEGRATION.md
+USAGE.md
+V2_*.md
+YARN_FEATURES.md
+
+# Build artifacts (keep dist, ignore others)
+*.map
+.eslintcache
+
+# OS files
+.DS_Store
+Thumbs.db
+

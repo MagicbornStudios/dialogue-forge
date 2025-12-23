@@ -1,0 +1,53 @@
+/**
+ * Unified Examples System
+ * 
+ * All examples are stored as Yarn files and loaded through the registry system.
+ * This provides a single, organized way to discover and load examples.
+ * 
+ * Structure:
+ * - examples-registry.ts: Metadata about all examples (titles, descriptions, features)
+ * - yarn-examples.ts: Actual Yarn file contents (all examples as Yarn strings)
+ * - index.ts: Public API for loading examples (this file)
+ */
+
+export { 
+  examplesRegistry,
+  exampleFlagSchemas,
+  getExampleMetadata,
+  listExampleIds,
+  getExampleFlagSchema,
+  listFlagSchemaIds,
+  type ExampleMetadata
+} from './examples-registry';
+
+export {
+  loadAllExamples,
+  getExampleDialogue,
+  getAllExampleDialogues,
+  getExampleFlagSchema as getFlagSchemaForExample
+} from './yarn-examples';
+
+/**
+ * Legacy exports for backward compatibility
+ * These will be removed once all code is migrated to the new system
+ */
+import { exampleDialogues as legacyExamples, demoFlagSchemas as legacySchemas } from './legacy-examples';
+
+export const exampleDialogues = legacyExamples;
+export const demoFlagSchemas = legacySchemas;
+
+export function listExamples(): string[] {
+  return Object.keys(legacyExamples);
+}
+
+export function listDemoFlagSchemas(): string[] {
+  return Object.keys(legacySchemas);
+}
+
+export function getExampleDialogue(name: string) {
+  return legacyExamples[name] || null;
+}
+
+export function getDemoFlagSchema(name: string) {
+  return legacySchemas[name] || null;
+}

@@ -1,0 +1,88 @@
+title: merchant_greeting
+---
+Merchant: "Welcome to my shop, traveler!"
+<<set $dialogue_met_merchant = true>>
+
+<<if $quest_dragon_slayer == "complete">>
+    Merchant: "I heard you slayed the dragon! Here's a reward for your heroism."
+    <<set $stat_gold += 500>>
+    <<set $achievement_dragon_slayer = true>>
+<<endif>>
+
+<<if $item_ancient_key>>
+    Merchant: "I see you have the ancient key. That's quite valuable!"
+    -> "I want to sell it"
+        <<set $stat_gold += 1000>>
+        <<set $item_ancient_key = false>>
+        <<jump merchant_thanks>>
+    -> "I'll keep it"
+        <<jump merchant_understands>>
+<<endif>>
+
+-> "I want to buy something"
+    <<set $dialogue_shopping = true>>
+    <<jump shop_menu>>
+-> "I want to sell something"
+    <<jump sell_menu>>
+-> "Just browsing"
+    <<jump merchant_goodbye>>
+===
+
+title: shop_menu
+---
+Merchant: "What would you like to buy?"
+
+<<if $stat_gold >= 100>>
+    -> "Buy a potion (100 gold)"
+        <<set $stat_gold -= 100>>
+        <<set $item_potion = true>>
+        Merchant: "Here you go! That'll be 100 gold."
+        <<jump merchant_goodbye>>
+<<endif>>
+
+<<if $stat_gold >= 500>>
+    -> "Buy a sword (500 gold)"
+        <<set $stat_gold -= 500>>
+        <<set $item_sword = true>>
+        Merchant: "Excellent choice! That'll be 500 gold."
+        <<jump merchant_goodbye>>
+<<endif>>
+
+-> "Actually, never mind"
+    <<jump merchant_goodbye>>
+===
+
+title: sell_menu
+---
+Merchant: "Show me what you have."
+
+<<if $item_ancient_key>>
+    -> "Sell the ancient key (1000 gold)"
+        <<set $stat_gold += 1000>>
+        <<set $item_ancient_key = false>>
+        <<jump merchant_thanks>>
+<<endif>>
+
+-> "I don't have anything to sell"
+    <<jump merchant_goodbye>>
+===
+
+title: merchant_thanks
+---
+Merchant: "Thank you for your business! Come back anytime."
+===
+
+title: merchant_understands
+---
+Merchant: "I understand. That key is special. Take care of it."
+===
+
+title: merchant_goodbye
+---
+Merchant: "Safe travels, friend!"
+===
+
+
+
+
+

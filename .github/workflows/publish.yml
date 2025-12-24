@@ -29,12 +29,53 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Debug - Check secrets availability
+        run: |
+          echo "=== Debug: Secret Availability ==="
+          echo "Checking if secrets are configured..."
+          if [ -n "${{ secrets.NPM_TOKEN }}" ]; then
+            TOKEN_LEN=$(echo -n "${{ secrets.NPM_TOKEN }}" | wc -c)
+            echo "✓ NPM_TOKEN secret is set (length: $TOKEN_LEN chars)"
+          else
+            echo "✗ NPM_TOKEN secret is NOT set"
+          fi
+          if [ -n "${{ secrets.ORG_NPM_TOKEN }}" ]; then
+            ORG_TOKEN_LEN=$(echo -n "${{ secrets.ORG_NPM_TOKEN }}" | wc -c)
+            echo "✓ ORG_NPM_TOKEN secret is set (length: $ORG_TOKEN_LEN chars)"
+          else
+            echo "✗ ORG_NPM_TOKEN secret is NOT set"
+          fi
+          echo "Selected token: ${{ secrets.NPM_TOKEN && 'NPM_TOKEN' || (secrets.ORG_NPM_TOKEN && 'ORG_NPM_TOKEN' || 'NONE') }}"
+          echo "Package name: @magicborn/dialogue-forge"
+          echo "Package version: $(node -p "require('./package.json').version")"
+          echo "=================================="
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
           scope: '@magicborn'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.ORG_NPM_TOKEN }}
+      
+      - name: Debug - Verify npm authentication
+        run: |
+          echo "=== Debug: NPM Authentication ==="
+          echo "Verifying npm authentication..."
+          if [ -n "$NODE_AUTH_TOKEN" ]; then
+            TOKEN_LEN=$(echo -n "$NODE_AUTH_TOKEN" | wc -c)
+            echo "✓ NODE_AUTH_TOKEN environment variable is set (length: $TOKEN_LEN chars)"
+            echo "Attempting to authenticate..."
+            npm whoami --registry=https://registry.npmjs.org || echo "✗ Authentication failed - check token permissions"
+          else
+            echo "✗ NODE_AUTH_TOKEN environment variable is NOT set"
+            echo "This means the secret was not passed to the environment"
+          fi
+          echo "npm registry: $(npm config get registry)"
+          echo "npm scope: @magicborn"
+          echo "npm config scope: $(npm config get @magicborn:registry || echo 'not set')"
+          echo "=================================="
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.ORG_NPM_TOKEN }}
       
@@ -61,10 +102,34 @@ jobs:
       - name: Verify package
         run: npm pack --dry-run
       
-      - name: Publish to NPM
-        run: npm publish --access public
+      - name: Debug - Pre-publish check
+        run: |
+          echo "=== Debug: Pre-Publish Check ==="
+          echo "Package: @magicborn/dialogue-forge@$(node -p "require('./package.json').version")"
+          if [ -n "$NODE_AUTH_TOKEN" ]; then
+            echo "✓ NODE_AUTH_TOKEN is set"
+            npm whoami --registry=https://registry.npmjs.org || echo "✗ Warning: Not authenticated"
+          else
+            echo "✗ NODE_AUTH_TOKEN is NOT set"
+          fi
+          echo "Checking if package already exists..."
+          npm view @magicborn/dialogue-forge version 2>/dev/null && echo "Package exists" || echo "Package does not exist yet (expected for first publish)"
+          echo "=================================="
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.ORG_NPM_TOKEN }}
+      
+      - name: Publish to NPM
+        run: |
+          echo "Publishing @magicborn/dialogue-forge..."
+          npm publish --access public --registry=https://registry.npmjs.org
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.ORG_NPM_TOKEN }}
+      
+      - name: Debug - Post-publish verification
+        run: |
+          echo "Post-publish verification..."
+          npm view @magicborn/dialogue-forge version || echo "Package not found (publish may have failed)"
+          echo "Published version: $(node -p "require('./package.json').version")"
       
       - name: Create GitHub Release
         if: github.event.inputs.version_bump != 'none' && github.event.inputs.version_bump != ''

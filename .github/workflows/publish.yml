@@ -32,20 +32,39 @@ jobs:
       - name: Debug - Check secrets availability
         run: |
           echo "=== Debug: Secret Availability ==="
-          echo "Checking if secrets are configured..."
+          echo "Repository: ${{ github.repository }}"
+          echo "Organization: ${{ github.repository_owner }}"
+          echo ""
+          echo "Checking for NPM_TOKEN secret..."
+          echo "  (This checks both repo-level and org-level secrets)"
           if [ -n "${{ secrets.NPM_TOKEN }}" ]; then
             TOKEN_LEN=$(echo -n "${{ secrets.NPM_TOKEN }}" | wc -c)
-            echo "✓ NPM_TOKEN secret is set (length: $TOKEN_LEN chars)"
+            echo "✓ NPM_TOKEN is available (length: $TOKEN_LEN chars)"
+            echo "  → Token is accessible (could be repo or org secret)"
+            HAS_TOKEN=true
           else
-            echo "✗ NPM_TOKEN secret is NOT set"
+            echo "✗ NPM_TOKEN is NOT available"
+            echo ""
+            echo "⚠️  ACTION REQUIRED:"
+            echo ""
+            echo "If you set it as an ORGANIZATION secret:"
+            echo "  1. Go to: https://github.com/organizations/MagicbornStudios/settings/secrets/actions"
+            echo "  2. Find your NPM_TOKEN secret"
+            echo "  3. Click on it to edit"
+            echo "  4. Under 'Repository access', make sure 'dialogue-forge' is SELECTED"
+            echo "  5. If it's set to 'All repositories', that should work too"
+            echo "  6. Click 'Update secret'"
+            echo ""
+            echo "OR set it as a REPOSITORY secret:"
+            echo "  1. Go to: https://github.com/MagicbornStudios/dialogue-forge/settings/secrets/actions"
+            echo "  2. Click 'New repository secret'"
+            echo "  3. Name: NPM_TOKEN"
+            echo "  4. Value: Your npm token"
+            echo "  5. Click 'Add secret'"
+            echo ""
+            HAS_TOKEN=false
           fi
-          if [ -n "${{ secrets.ORG_NPM_TOKEN }}" ]; then
-            ORG_TOKEN_LEN=$(echo -n "${{ secrets.ORG_NPM_TOKEN }}" | wc -c)
-            echo "✓ ORG_NPM_TOKEN secret is set (length: $ORG_TOKEN_LEN chars)"
-          else
-            echo "✗ ORG_NPM_TOKEN secret is NOT set"
-          fi
-          echo "Selected token: ${{ secrets.NPM_TOKEN && 'NPM_TOKEN' || (secrets.ORG_NPM_TOKEN && 'ORG_NPM_TOKEN' || 'NONE') }}"
+          echo ""
           echo "Package name: @magicborn/dialogue-forge"
           echo "Package version: $(node -p "require('./package.json').version")"
           echo "=================================="
@@ -57,7 +76,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           scope: '@magicborn'
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.ORG_NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
       - name: Debug - Verify npm authentication
         run: |
@@ -77,7 +96,7 @@ jobs:
           echo "npm config scope: $(npm config get @magicborn:registry || echo 'not set')"
           echo "=================================="
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.ORG_NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
       - name: Install dependencies
         run: npm install
@@ -116,14 +135,14 @@ jobs:
           npm view @magicborn/dialogue-forge version 2>/dev/null && echo "Package exists" || echo "Package does not exist yet (expected for first publish)"
           echo "=================================="
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.ORG_NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
       - name: Publish to NPM
         run: |
           echo "Publishing @magicborn/dialogue-forge..."
           npm publish --access public --registry=https://registry.npmjs.org
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.ORG_NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
       - name: Debug - Post-publish verification
         run: |

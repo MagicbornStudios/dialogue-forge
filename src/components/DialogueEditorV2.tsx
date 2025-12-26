@@ -1032,19 +1032,18 @@ function DialogueEditorV2Internal({
               nodesConnectable={true}
               elementsSelectable={true}
               selectionOnDrag={true}
-              panOnDrag={[1, 2]} // Pan on left-click (1) and right-click (2) when dragging empty space
-              panOnScroll={true} // Pan with Shift+Scroll
-              panOnScrollMode="vertical" // Allow both horizontal and vertical panning
+              panOnDrag={true} // Enable panning when dragging empty space (left-click or trackpad drag)
+              panOnScroll={true} // Pan with Shift+Scroll (allows both horizontal and vertical panning)
               zoomOnScroll={true} // Scroll/trackpad scroll to zoom (when Shift not held)
               zoomOnPinch={true} // Pinch to zoom on trackpad
-              preventScrolling={false} // Allow native scrolling
+              preventScrolling={false} // Allow native scrolling for panning
               // Behavior:
-              // - Click and drag a node = moves the node (nodesDraggable controls this)
-              // - Click and drag empty space = pans canvas (panOnDrag controls this)
-              // - Trackpad two-finger drag = pans canvas (native browser behavior)
+              // - Click and drag a node = moves the node (React Flow handles this automatically)
+              // - Click and drag empty space = pans canvas
+              // - Trackpad two-finger swipe = pans canvas (works with panOnDrag)
               // - Scroll wheel/trackpad scroll = zooms
               // - Shift+Scroll = pans
-              // Note: React Flow automatically prioritizes node dragging over panning when clicking on a node
+              // Note: React Flow automatically detects if you're dragging a node vs empty space
               zoomOnDoubleClick={false}
               minZoom={0.1}
               maxZoom={3}

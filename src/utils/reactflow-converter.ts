@@ -91,7 +91,7 @@ export function convertDialogueTreeToReactFlow(
         source: node.id,
         target: node.nextNodeId,
         sourceHandle: 'next',
-        type: 'npc', // Uses NPCEdgeV2 component (smoothstep style)
+        type: 'default', // Uses NPCEdgeV2 component (smoothstep style)
       } as Edge);
     }
 

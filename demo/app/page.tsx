@@ -85,8 +85,8 @@ export default function DialogueForgeDemo() {
   };
 
   return (
-    <div className="w-full h-[calc(100vh-200px)]">
-      <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="w-full h-screen flex flex-col">
+      <div className="max-w-7xl mx-auto px-4 py-6 flex-shrink-0">
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-white mb-2">Dialogue Forge Editor</h1>
           <p className="text-zinc-400">
@@ -94,7 +94,7 @@ export default function DialogueForgeDemo() {
           </p>
         </div>
       </div>
-      <div className="w-full h-full">
+      <div className="flex-1 w-full min-h-0">
         <DialogueEditorV2
           dialogue={dialogueTree}
           onChange={setDialogueTree}

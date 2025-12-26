@@ -957,7 +957,7 @@ function DialogueEditorV2Internal({
       {viewMode === 'graph' && (
         <div className="flex-1 flex overflow-hidden">
           {/* React Flow Graph */}
-          <div className="flex-1 relative" ref={reactFlowWrapperRef}>
+          <div className="flex-1 relative w-full h-full" ref={reactFlowWrapperRef} style={{ minHeight: 0 }}>
             <ReactFlow
               nodes={nodesWithFlags}
               edges={edges.map(edge => {

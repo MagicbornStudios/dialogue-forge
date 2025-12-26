@@ -1032,10 +1032,15 @@ function DialogueEditorV2Internal({
               nodesConnectable={true}
               elementsSelectable={true}
               selectionOnDrag={true}
-              panOnDrag={[1, 2]} // Middle mouse button or space
-              zoomOnScroll={true}
-              zoomOnPinch={true}
-              preventScrolling={true}
+              panOnDrag={true} // Left-click drag to pan (standard - works with trackpad drag)
+              panOnScroll={true} // Enable scroll panning (Shift+Scroll to pan, Scroll to zoom)
+              zoomOnScroll={true} // Scroll/trackpad scroll to zoom (when Shift not held)
+              zoomOnPinch={true} // Pinch to zoom on trackpad
+              preventScrolling={false} // Allow native scrolling
+              // Standard behavior:
+              // - Left-click drag or trackpad two-finger drag = pan
+              // - Scroll wheel = zoom
+              // - Shift+Scroll = pan (handled by panOnScroll)
               zoomOnDoubleClick={false}
               minZoom={0.1}
               maxZoom={3}

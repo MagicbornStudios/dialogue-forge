@@ -131,39 +131,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
-      - name: Debug - Verify token and scope
-        run: |
-          echo "=== Debug: Token and Scope Verification ==="
-          if [ -n "$NODE_AUTH_TOKEN" ]; then
-            echo "✓ Token is set"
-            echo ""
-            echo "Checking npm authentication..."
-            NPM_USER=$(npm whoami --registry=https://registry.npmjs.org 2>&1)
-            if [ $? -eq 0 ]; then
-              echo "✓ Authenticated as: $NPM_USER"
-            else
-              echo "✗ Authentication failed: $NPM_USER"
-              echo "  → Token may be expired or invalid"
-              echo "  → Create new token at: https://www.npmjs.com/settings/magicborn/tokens"
-            fi
-            echo ""
-            echo "Checking @magicborn scope access..."
-            npm access ls-packages @magicborn --registry=https://registry.npmjs.org 2>&1 || echo "  → Note: Scope check may fail if org doesn't exist or you're not a member"
-            echo ""
-            echo "Checking if package already exists..."
-            EXISTING_VERSION=$(npm view @magicborn/dialogue-forge version --registry=https://registry.npmjs.org 2>&1)
-            if [ $? -eq 0 ]; then
-              echo "✓ Package exists: version $EXISTING_VERSION"
-            else
-              echo "  → Package doesn't exist yet (first publish - this is normal)"
-            fi
-          else
-            echo "✗ NODE_AUTH_TOKEN not set"
-          fi
-          echo "=================================="
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      
       - name: Publish to NPM
         run: |
           echo "=== Publishing to NPM ==="

@@ -13,6 +13,9 @@ import {
   listDemoFlagSchemas,
   getDemoFlagSchema 
 } from '@magicborn/dialogue-forge/src/examples';
+import { Play, Layout, FileText } from 'lucide-react';
+
+type ViewMode = 'graph' | 'yarn' | 'play';
 
 // Demo examples - these are specific to the demo app
 const demoDialogues: Record<string, DialogueTree> = {
@@ -139,7 +142,7 @@ const demoDialogues: Record<string, DialogueTree> = {
         y: 550,
         choices: [
           { id: 'accept', text: "I'll do it.", nextNodeId: 'quest_accepted' },
-          { id: 'decline', text: "Not interested.", nextNodeId: undefined },
+          { id: 'decline', text: "Not interested." },
         ],
       },
       'quest_accepted': {
@@ -167,6 +170,7 @@ const demoDialogues: Record<string, DialogueTree> = {
 export default function DialogueForgeDemo() {
   const [dialogueTree, setDialogueTree] = useState<DialogueTree>(demoDialogues['mysterious-stranger']);
   const [flagSchema, setFlagSchema] = useState<FlagSchema>(exampleFlagSchema);
+  const [viewMode, setViewMode] = useState<ViewMode>('graph');
   
   // Panel states
   const [showFlagManager, setShowFlagManager] = useState(false);
@@ -226,6 +230,33 @@ export default function DialogueForgeDemo() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 bg-[#12121a] border border-[#2a2a3e] rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('graph')}
+                className={`px-3 py-1.5 text-sm rounded transition-colors flex items-center gap-1.5 ${
+                  viewMode === 'graph'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+                title="Graph Editor"
+              >
+                <Layout size={14} />
+                <span className="hidden sm:inline">Editor</span>
+              </button>
+              <button
+                onClick={() => setViewMode('play')}
+                className={`px-3 py-1.5 text-sm rounded transition-colors flex items-center gap-1.5 ${
+                  viewMode === 'play'
+                    ? 'bg-green-600 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+                title="Play Dialogue"
+              >
+                <Play size={14} />
+                <span className="hidden sm:inline">Play</span>
+              </button>
+            </div>
             <button
               onClick={() => setShowExamplePicker(true)}
               className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors"
@@ -236,14 +267,15 @@ export default function DialogueForgeDemo() {
         </div>
       </div>
 
-      {/* Editor */}
+      {/* Editor/Player */}
       <div className="flex-1 w-full min-h-0">
         <DialogueEditorV2
           dialogue={dialogueTree}
           onChange={setDialogueTree}
           onExportYarn={handleExportYarn}
           flagSchema={flagSchema}
-          initialViewMode="graph"
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
           className="w-full h-full"
           onOpenFlagManager={() => setShowFlagManager(true)}
           onOpenGuide={() => setShowGuide(true)}

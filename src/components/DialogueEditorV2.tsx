@@ -62,6 +62,8 @@ const edgeTypes = {
 interface DialogueEditorV2InternalProps extends DialogueEditorProps {
   flagSchema?: FlagSchema;
   initialViewMode?: ViewMode;
+  viewMode?: ViewMode; // Controlled view mode (if provided, overrides initialViewMode)
+  onViewModeChange?: (mode: ViewMode) => void; // Callback when view mode changes
   layoutStrategy?: string; // Layout strategy ID from parent
   onLayoutStrategyChange?: (strategy: string) => void;
   onOpenFlagManager?: () => void;
@@ -80,6 +82,8 @@ function DialogueEditorV2Internal({
   showTitleEditor = true,
   flagSchema,
   initialViewMode = 'graph',
+  viewMode: controlledViewMode,
+  onViewModeChange,
   layoutStrategy: propLayoutStrategy = 'dagre', // Accept from parent
   onLayoutStrategyChange,
   onOpenFlagManager,
@@ -95,7 +99,16 @@ function DialogueEditorV2Internal({
   onNodeSelect,
   onNodeDoubleClick: onNodeDoubleClickHook,
 }: DialogueEditorV2InternalProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
+  // Use controlled viewMode if provided, otherwise use internal state
+  const [internalViewMode, setInternalViewMode] = useState<ViewMode>(initialViewMode);
+  const viewMode = controlledViewMode ?? internalViewMode;
+  
+  const setViewMode = (mode: ViewMode) => {
+    if (controlledViewMode === undefined) {
+      setInternalViewMode(mode);
+    }
+    onViewModeChange?.(mode);
+  };
   const [layoutDirection, setLayoutDirection] = useState<LayoutDirection>('TB');
   const layoutStrategy = propLayoutStrategy; // Use prop instead of state
   const [autoOrganize, setAutoOrganize] = useState<boolean>(false); // Auto-layout on changes
@@ -1595,7 +1608,9 @@ function DialogueEditorV2Internal({
 
 export function DialogueEditorV2(props: DialogueEditorProps & { 
   flagSchema?: FlagSchema; 
-  initialViewMode?: ViewMode; 
+  initialViewMode?: ViewMode;
+  viewMode?: ViewMode;
+  onViewModeChange?: (mode: ViewMode) => void;
   layoutStrategy?: string;
   onLayoutStrategyChange?: (strategy: string) => void;
   onOpenFlagManager?: () => void;

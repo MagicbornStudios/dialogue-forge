@@ -3,7 +3,7 @@ import { ConditionOperator, NodeType } from './constants';
 export interface Choice {
   id: string;
   text: string;
-  nextNodeId: string;
+  nextNodeId?: string; // Optional - choice can end the dialogue
   conditions?: Condition[];
   setFlags?: string[];
 }

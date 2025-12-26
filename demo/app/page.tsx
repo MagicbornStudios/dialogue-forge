@@ -174,7 +174,7 @@ const demoDialogues: Record<string, DialogueTree> = {
         y: 550,
         choices: [
           { id: 'accept', text: "I'll do it.", nextNodeId: 'quest_accepted' },
-          { id: 'decline', text: "Not interested.", nextNodeId: undefined },
+          { id: 'decline', text: "Not interested." },
         ],
       },
       'quest_accepted': {

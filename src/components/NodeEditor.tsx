@@ -1078,7 +1078,9 @@ export function NodeEditor({
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            onFocusNode(choice.nextNodeId);
+                            if (choice.nextNodeId && onFocusNode) {
+                              onFocusNode(choice.nextNodeId);
+                            }
                           }}
                           className="transition-colors cursor-pointer flex-shrink-0"
                           title={`Focus on node: ${choice.nextNodeId}`}
@@ -1092,8 +1094,8 @@ export function NodeEditor({
                       )}
                       <div className="relative flex-1">
                         <select
-                          value={choice.nextNodeId}
-                          onChange={(e) => onUpdateChoice(idx, { nextNodeId: e.target.value })}
+                          value={choice.nextNodeId || ''}
+                          onChange={(e) => onUpdateChoice(idx, { nextNodeId: e.target.value || undefined })}
                           className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 outline-none"
                           style={{
                             borderColor: choice.nextNodeId ? darkChoiceColor : '#2a2a3e',

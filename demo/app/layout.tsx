@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import '../styles/globals.css';
-import { BrandedLayout } from '@magicborn/server-template/components/BrandedLayout';
+import { BrandedLayout } from '../../../../packages-shared/server-template/components/BrandedLayout';
 
 export const metadata: Metadata = {
   title: 'Dialogue Forge - Visual Dialogue Editor',

@@ -131,9 +131,31 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
+      - name: Debug - Verify token permissions
+        run: |
+          echo "=== Debug: Token Permissions ==="
+          if [ -n "$NODE_AUTH_TOKEN" ]; then
+            echo "Token is set, checking permissions..."
+            # Try to get user info
+            npm whoami --registry=https://registry.npmjs.org || echo "Cannot verify user"
+            # Check if we can access the scope
+            echo "Checking @magicborn scope access..."
+            npm access ls-packages @magicborn --registry=https://registry.npmjs.org 2>&1 || echo "Note: This may fail if package doesn't exist yet (first publish)"
+          else
+            echo "✗ NODE_AUTH_TOKEN not set"
+          fi
+          echo "=================================="
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
       - name: Publish to NPM
         run: |
           echo "Publishing @magicborn/dialogue-forge..."
+          echo "Package: @magicborn/dialogue-forge@$(node -p "require('./package.json').version")"
+          echo "Access: public"
+          echo "Registry: https://registry.npmjs.org"
+          echo ""
+          # First-time publish might need explicit access flag
           npm publish --access public --registry=https://registry.npmjs.org
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

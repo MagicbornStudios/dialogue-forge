@@ -2,7 +2,7 @@
   "name": "@magicborn/dialogue-forge",
   "version": "0.1.0",
   "description": "Visual node-based dialogue editor with Yarn Spinner support",
-  "author": "Ben Garrard <benjamingarrard5279@gmail.com>",
+  "author": "Ben Garrard <b2gdevs@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -18,6 +18,10 @@
   "bin": {
     "dialogue-forge": "bin/dialogue-forge.js"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
   "files": [
     "dist",
     "demo",
@@ -26,7 +30,8 @@
   ],
   "scripts": {
     "build": "tsc && tsc --module esnext --outDir dist/esm",
-    "dev": "tsc --watch",
+    "dev": "npm run build && node bin/dialogue-forge.js",
+    "dev:watch": "tsc --watch",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",

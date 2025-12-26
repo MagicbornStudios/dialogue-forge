@@ -21,8 +21,21 @@ if (!fs.existsSync(demoDir)) {
   process.exit(1);
 }
 
-// Check if node_modules exists (package might need install)
+// Check if we're in a published package (has node_modules/@magicborn) or local dev
+const isPublished = fs.existsSync(path.join(packageDir, 'node_modules', '@magicborn'));
 const nodeModulesPath = path.join(demoDir, 'node_modules');
+
+// For published packages, use npm package references
+// For local dev, use file references (already set in package.json)
+if (isPublished) {
+  // Update demo package.json to use published packages
+  const demoPackageJson = path.join(demoDir, 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(demoPackageJson, 'utf8'));
+  pkg.dependencies['@magicborn/dialogue-forge'] = '*';
+  pkg.dependencies['@magicborn/server-template'] = '*';
+  fs.writeFileSync(demoPackageJson, JSON.stringify(pkg, null, 2));
+}
+
 if (!fs.existsSync(nodeModulesPath)) {
   console.log('📦 Installing dependencies...');
   const install = spawn('npm', ['install'], {

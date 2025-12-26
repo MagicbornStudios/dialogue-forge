@@ -8,8 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "@magicborn/dialogue-forge": "*",
-    "@magicborn/server-template": "*",
+    "@magicborn/dialogue-forge": "file:..",
+    "@magicborn/server-template": "file:../../packages-shared/server-template",
     "next": "16.0.8",
     "react": "19.2.1",
     "react-dom": "19.2.1",

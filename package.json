@@ -30,7 +30,8 @@
   ],
   "scripts": {
     "build": "tsc && tsc --module esnext --outDir dist/esm",
-    "dev": "npm run build && node bin/dialogue-forge.js",
+    "dev": "npm run build && npm install --prefix demo && node bin/dialogue-forge.js",
+    "dev:setup": "npm run build && npm install --prefix demo",
     "dev:watch": "tsc --watch",
     "test": "vitest",
     "test:watch": "vitest --watch",

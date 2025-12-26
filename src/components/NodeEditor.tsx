@@ -214,40 +214,51 @@ export function NodeEditor({
       initializedBlocksRef.current.clear();
     }
     
-    // Initialize inputs for choice conditions
+    // Always sync choice condition inputs with actual choice data (not just initialize once)
     if (node.choices) {
       setConditionInputs(prev => {
         const newInputs: Record<string, string> = { ...prev };
         node.choices!.forEach(choice => {
           const choiceKey = `choice-${choice.id}`;
-          // Only initialize if this choice hasn't been initialized yet
-          if (!initializedChoicesRef.current.has(choiceKey)) {
-            initializedChoicesRef.current.add(choiceKey);
-            if (choice.conditions && choice.conditions.length > 0) {
-              // Convert condition array to Yarn-style string
-              const conditionStr = choice.conditions.map(cond => {
-                const varName = `$${cond.flag}`;
-                if (cond.operator === 'is_set') {
-                  return varName;
-                } else if (cond.operator === 'is_not_set') {
-                  return `not ${varName}`;
-                } else if (cond.value !== undefined) {
-                  const op = cond.operator === 'equals' ? '==' :
-                            cond.operator === 'not_equals' ? '!=' :
-                            cond.operator === 'greater_than' ? '>' :
-                            cond.operator === 'less_than' ? '<' :
-                            cond.operator === 'greater_equal' ? '>=' :
-                            cond.operator === 'less_equal' ? '<=' : '==';
-                  const value = typeof cond.value === 'string' ? `"${cond.value}"` : cond.value;
-                  return `${varName} ${op} ${value}`;
-                }
-                return '';
-              }).filter(c => c).join(' and ') || '';
+          // Always sync with actual choice data to ensure conditions persist
+          if (choice.conditions && choice.conditions.length > 0) {
+            // Convert condition array to Yarn-style string
+            const conditionStr = choice.conditions.map(cond => {
+              const varName = `$${cond.flag}`;
+              if (cond.operator === 'is_set') {
+                return varName;
+              } else if (cond.operator === 'is_not_set') {
+                return `not ${varName}`;
+              } else if (cond.value !== undefined) {
+                const op = cond.operator === 'equals' ? '==' :
+                          cond.operator === 'not_equals' ? '!=' :
+                          cond.operator === 'greater_than' ? '>' :
+                          cond.operator === 'less_than' ? '<' :
+                          cond.operator === 'greater_equal' ? '>=' :
+                          cond.operator === 'less_equal' ? '<=' : '==';
+                const value = typeof cond.value === 'string' ? `"${cond.value}"` : cond.value;
+                return `${varName} ${op} ${value}`;
+              }
+              return '';
+            }).filter(c => c).join(' and ') || '';
+            // Only update if different to avoid overwriting user typing
+            if (newInputs[choiceKey] !== conditionStr) {
               newInputs[choiceKey] = conditionStr;
-            } else if (choice.conditions !== undefined) {
-              // Empty array - user clicked "Add Condition"
+            }
+          } else if (choice.conditions !== undefined) {
+            // Empty array - user clicked "Add Condition"
+            if (newInputs[choiceKey] === undefined || newInputs[choiceKey] !== '') {
               newInputs[choiceKey] = '';
             }
+          } else {
+            // No conditions - clear the input if it exists
+            if (newInputs[choiceKey] !== undefined) {
+              delete newInputs[choiceKey];
+            }
+          }
+          // Mark as initialized
+          if (!initializedChoicesRef.current.has(choiceKey)) {
+            initializedChoicesRef.current.add(choiceKey);
           }
         });
         // Remove inputs for choices that no longer exist

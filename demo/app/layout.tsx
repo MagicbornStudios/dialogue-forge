@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import '../styles/globals.css';
+import '../../../../packages-shared/server-template/styles/globals.css';
 import { BrandedLayout } from '../../../../packages-shared/server-template/components/BrandedLayout';
 
 export const metadata: Metadata = {

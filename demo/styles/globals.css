@@ -1,9 +1,9 @@
+/* Import dialogue-forge component styles - must be before @tailwind */
+@import '../../src/styles/scrollbar.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import dialogue-forge component styles */
-@import '../../src/styles/scrollbar.css';
 
 :root {
   --background: #0a0a0f;

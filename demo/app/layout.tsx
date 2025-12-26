@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import 'reactflow/dist/style.css';
+import 'react-tooltip/dist/react-tooltip.css';
 import '../styles/globals.css';
 import '../../../../packages-shared/server-template/styles/globals.css';
 import { BrandedLayout } from '../../../../packages-shared/server-template/components/BrandedLayout';

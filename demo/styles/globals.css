@@ -2,12 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import React Flow styles */
-@import 'reactflow/dist/style.css';
-
-/* Import react-tooltip styles */
-@import 'react-tooltip/dist/react-tooltip.css';
-
 /* Import dialogue-forge component styles */
 @import '../../src/styles/scrollbar.css';
 

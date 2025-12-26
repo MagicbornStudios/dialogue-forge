@@ -5,6 +5,12 @@
 /* Import React Flow styles */
 @import 'reactflow/dist/style.css';
 
+/* Import react-tooltip styles */
+@import 'react-tooltip/dist/react-tooltip.css';
+
+/* Import dialogue-forge component styles */
+@import '../../src/styles/scrollbar.css';
+
 :root {
   --background: #0a0a0f;
   --foreground: #e4e4e7;

@@ -53,11 +53,25 @@ const demoDialogues: Record<string, DialogueTree> = {
             id: 'choice_treasure',
             text: "I seek the legendary treasure.",
             nextNodeId: 'treasure_response',
+            conditions: [
+              { flag: 'reputation', operator: 'greater_equal', value: 0 },
+            ],
           },
           {
             id: 'choice_knowledge',
             text: "I'm searching for ancient knowledge.",
             nextNodeId: 'knowledge_response',
+            conditions: [
+              { flag: 'reputation', operator: 'greater_equal', value: 0 },
+            ],
+          },
+          {
+            id: 'choice_high_rep',
+            text: "I am a hero of this land!",
+            nextNodeId: 'high_rep_response',
+            conditions: [
+              { flag: 'reputation', operator: 'greater_than', value: 50 },
+            ],
           },
         ],
       },
@@ -78,6 +92,16 @@ const demoDialogues: Record<string, DialogueTree> = {
         y: 450,
         content: "\"A seeker of truth... Take this tome. It contains the riddles you must solve.\"",
         nextNodeId: undefined,
+      },
+      'high_rep_response': {
+        id: 'high_rep_response',
+        type: 'npc',
+        speaker: 'Stranger',
+        x: 500,
+        y: 450,
+        content: "\"Ah, a hero! Your reputation precedes you. I have something special for you...\"",
+        nextNodeId: undefined,
+        setFlags: ['reputation'],
       },
     },
   },
@@ -114,6 +138,14 @@ const demoDialogues: Record<string, DialogueTree> = {
           { id: 'order_ale', text: "I'll have an ale.", nextNodeId: 'drink_ale' },
           { id: 'ask_work', text: "What kind of work?", nextNodeId: 'work_info' },
           { id: 'look_around', text: "I'll just look around.", nextNodeId: 'observe_tavern' },
+          { 
+            id: 'vip_entrance', 
+            text: "I'm a VIP member.",
+            nextNodeId: 'vip_response',
+            conditions: [
+              { flag: 'reputation', operator: 'greater_than', value: 75 },
+            ],
+          },
         ],
       },
       'drink_ale': {
@@ -142,7 +174,7 @@ const demoDialogues: Record<string, DialogueTree> = {
         y: 550,
         choices: [
           { id: 'accept', text: "I'll do it.", nextNodeId: 'quest_accepted' },
-          { id: 'decline', text: "Not interested." },
+          { id: 'decline', text: "Not interested.", nextNodeId: undefined },
         ],
       },
       'quest_accepted': {
@@ -163,13 +195,37 @@ const demoDialogues: Record<string, DialogueTree> = {
         content: "You notice a hooded figure in the corner, watching you intently...",
         nextNodeId: undefined,
       },
+      'vip_response': {
+        id: 'vip_response',
+        type: 'npc',
+        speaker: 'Bartender',
+        x: 600,
+        y: 420,
+        content: "\"Of course! Right this way to the VIP lounge. Your reputation grants you access.\"",
+        nextNodeId: undefined,
+      },
     },
   },
 };
 
+// Enhanced flag schema with reputation for demo examples
+const demoFlagSchema: FlagSchema = {
+  ...exampleFlagSchema,
+  flags: [
+    ...exampleFlagSchema.flags,
+    {
+      id: 'reputation',
+      name: 'Reputation',
+      type: 'stat',
+      description: 'Player reputation score',
+      defaultValue: 0,
+    },
+  ],
+};
+
 export default function DialogueForgeDemo() {
   const [dialogueTree, setDialogueTree] = useState<DialogueTree>(demoDialogues['mysterious-stranger']);
-  const [flagSchema, setFlagSchema] = useState<FlagSchema>(exampleFlagSchema);
+  const [flagSchema, setFlagSchema] = useState<FlagSchema>(demoFlagSchema);
   const [viewMode, setViewMode] = useState<ViewMode>('graph');
   
   // Panel states

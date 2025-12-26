@@ -1159,42 +1159,67 @@ export function NodeEditor({
                           </button>
                         </div>
                         <div className="relative">
-                          <input
-                            type="text"
+                          <ConditionAutocomplete
                             value={conditionValue}
-                            onFocus={() => {
-                              setEditingCondition({
-                                id: choiceKey,
-                                value: conditionValue,
-                                type: 'choice',
-                                choiceIdx: idx
+                            onChange={(newValue) => {
+                              setConditionInputs(prev => ({ ...prev, [choiceKey]: newValue }));
+                              
+                              // Parse and update condition immediately
+                              const parseCondition = (conditionStr: string): any[] => {
+                                const conditions: any[] = [];
+                                if (!conditionStr.trim()) return conditions;
+                                const parts = conditionStr.split(/\s+and\s+/i);
+                                parts.forEach(part => {
+                                  part = part.trim();
+                                  if (part.startsWith('not ')) {
+                                    const flagName = part.substring(4).replace('$', '');
+                                    conditions.push({ flag: flagName, operator: 'is_not_set' });
+                                  } else if (part.match(/^\$(\w+)$/)) {
+                                    const match = part.match(/^\$(\w+)$/);
+                                    if (match) {
+                                      conditions.push({ flag: match[1], operator: 'is_set' });
+                                    }
+                                  } else {
+                                    const match = part.match(/^\$(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+)$/);
+                                    if (match) {
+                                      const [, flagName, op, valueStr] = match;
+                                      let value: any = valueStr.trim();
+                                      // Remove quotes if present
+                                      if (value.startsWith('"') && value.endsWith('"')) {
+                                        value = value.slice(1, -1);
+                                      } else if (!isNaN(Number(value))) {
+                                        value = Number(value);
+                                      }
+                                      
+                                      const operator = op === '==' ? 'equals' :
+                                                       op === '!=' ? 'not_equals' :
+                                                       op === '>=' ? 'greater_equal' :
+                                                       op === '<=' ? 'less_equal' :
+                                                       op === '>' ? 'greater_than' :
+                                                       op === '<' ? 'less_than' : 'equals';
+                                      
+                                      conditions.push({ flag: flagName, operator, value });
+                                    }
+                                  }
+                                });
+                                return conditions;
+                              };
+                              
+                              const newConditions = parseCondition(newValue);
+                              onUpdateChoice(idx, { 
+                                conditions: newConditions.length > 0 ? newConditions : [] 
                               });
                             }}
-                            readOnly
-                            className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 font-mono outline-none cursor-pointer hover:border-blue-500/50 transition-all"
+                            placeholder="e.g., $reputation &gt; 10 or $flag == &quot;value&quot;"
+                            className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 font-mono outline-none hover:border-blue-500/50 transition-all"
                             style={{
                               borderColor: conditionValue.trim().length > 0 && debouncedValue.trim().length > 0
                                 ? (validationResult.isValid ? 'rgba(59, 130, 246, 0.5)' : 
                                    validationResult.errors.length > 0 ? '#ef4444' : '#eab308')
                                 : '#2a2a3e'
-                            }}
-                            placeholder='e.g., $reputation &gt; 10 or $flag == "value"'
+                            } as React.CSSProperties}
+                            flagSchema={flagSchema}
                           />
-                          {conditionValue.trim().length > 0 && debouncedValue.trim().length > 0 && validationResult.errors.length > 0 && (
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-red-500" title={validationResult.errors.join('\n')}>
-                              <AlertCircle size={14} />
-                            </div>
-                          )}
-                          {conditionValue.trim().length > 0 && debouncedValue.trim().length > 0 && validationResult.warnings.length > 0 && validationResult.errors.length === 0 && (
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-yellow-500" title={validationResult.warnings.join('\n')}>
-                              <Info size={14} />
-                            </div>
-                          )}
-                          {conditionValue.trim().length > 0 && debouncedValue.trim().length > 0 && validationResult.isValid && validationResult.errors.length === 0 && validationResult.warnings.length === 0 && (
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-green-500" title="Valid condition">
-                              <CheckCircle size={14} />
-                            </div>
-                          )}
                         </div>
                         {conditionValue.trim().length > 0 && debouncedValue.trim().length > 0 && validationResult.errors.length > 0 && (
                           <p className="text-[10px] text-red-500 mt-1">{validationResult.errors[0]}</p>

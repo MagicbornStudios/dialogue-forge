@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { BaseEdge, EdgeProps, getSmoothStepPath, getBezierPath, Position } from 'reactflow';
 
-// Loop back edge color
-const LOOP_COLOR = '#f59e0b'; // Amber/orange for visibility
+// Loop back edge color - now uses CSS variable var(--color-df-edge-loop)
 
 export function NPCEdgeV2({
   id,
@@ -44,19 +43,15 @@ export function NPCEdgeV2({
   const isSelected = selected || hovered;
   const isDimmed = data?.isDimmed ?? false;
   
-  // Use orange for back edges, otherwise use grey
-  const baseColor = isSelected ? '#8a8aaa' : '#4a4a6a';
-  // When dimmed, use a darker grey
-  const strokeColor = isDimmed ? '#2a2a3a' : (isBackEdge ? LOOP_COLOR : baseColor);
+  // Use CSS variables for colors
+  const strokeColor = isDimmed 
+    ? 'var(--color-df-edge-dimmed)' 
+    : (isBackEdge ? 'var(--color-df-edge-loop)' : (isSelected ? 'var(--color-df-edge-default-hover)' : 'var(--color-df-edge-default)'));
   const strokeWidth = isSelected ? 4 : 2;
   const opacity = isDimmed ? 0.2 : (isSelected ? 1 : 0.6);
   
   // Add glow effect when hovered (only if not dimmed)
-  const filter = hovered && !isDimmed
-    ? isBackEdge 
-      ? 'drop-shadow(0 0 4px rgba(245, 158, 11, 0.8))' 
-      : 'drop-shadow(0 0 4px rgba(138, 138, 170, 0.8))' 
-    : undefined;
+  const filter = hovered && !isDimmed ? 'drop-shadow(0 0 4px var(--color-df-edge-default-hover))' : undefined;
 
   // Create a brighter version of the color for the pulse
   const brightenColor = (hex: string, percent: number = 40): string => {
@@ -100,7 +95,7 @@ export function NPCEdgeV2({
       {/* Loop indicator icon for back edges */}
       {isBackEdge && (
         <g transform={`translate(${labelX - 10}, ${labelY - 10})`}>
-          <circle cx="10" cy="10" r="12" fill="#1a1a2e" stroke={strokeColor} strokeWidth="2" />
+          <circle cx="10" cy="10" r="12" fill="var(--color-df-base)" stroke={strokeColor} strokeWidth="2" />
           <text x="10" y="14" textAnchor="middle" fontSize="12" fill={strokeColor}>↺</text>
         </g>
       )}
@@ -128,10 +123,10 @@ export function NPCEdgeV2({
             refY="0"
           >
             <polyline
-              stroke={LOOP_COLOR}
+              stroke="var(--color-df-edge-loop)"
               strokeLinecap="round"
               strokeLinejoin="round"
-              fill={LOOP_COLOR}
+              fill="var(--color-df-edge-loop)"
               points="-5,-4 0,0 -5,4 -5,-4"
             />
           </marker>

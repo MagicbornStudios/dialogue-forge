@@ -1,4 +1,5 @@
-/* Import dialogue-forge component styles - must be before @tailwind */
+/* Import dialogue-forge theme - must be before @tailwind */
+@import '../../src/styles/theme.css';
 @import '../../src/styles/scrollbar.css';
 
 @tailwind base;

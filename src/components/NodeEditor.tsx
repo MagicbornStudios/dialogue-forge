@@ -286,12 +286,20 @@ export function NodeEditor({
     }
   }, [node.id, node.conditionalBlocks?.length, node.choices?.length]); // Only depend on length, not the arrays themselves
   
-  // Determine border color based on node type
+  // Determine border color based on node type - use duller border colors
   const getBorderColor = () => {
-    if (node.type === 'npc') return 'border-[#e94560]';
-    if (node.type === 'player') return 'border-[#8b5cf6]';
-    if (node.type === 'conditional') return 'border-[#3b82f6]';
-    return 'border-[#1a1a2e]';
+    if (node.type === 'npc') return 'border-df-npc-border';
+    if (node.type === 'player') return 'border-df-player-border';
+    if (node.type === 'conditional') return 'border-df-conditional-border';
+    return 'border-df-control-border';
+  };
+
+  // Get node type badge colors
+  const getNodeTypeBadge = () => {
+    if (node.type === 'npc') return 'bg-df-npc-selected/20 text-df-npc-selected';
+    if (node.type === 'player') return 'bg-df-player-selected/20 text-df-player-selected';
+    if (node.type === 'conditional') return 'bg-df-conditional-border/20 text-df-conditional-border';
+    return 'bg-df-control-bg text-df-text-secondary';
   };
 
   return (
@@ -312,14 +320,10 @@ export function NodeEditor({
           }
         }
       `}</style>
-      <aside className={`w-80 border-l ${getBorderColor()} bg-[#0d0d14] overflow-y-auto`}>
+      <aside className={`w-80 border-l ${getBorderColor()} bg-df-sidebar-bg overflow-y-auto`}>
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <span className={`text-xs px-2 py-0.5 rounded ${
-            node.type === 'npc' ? 'bg-[#e94560]/20 text-[#e94560]' : 
-            node.type === 'player' ? 'bg-purple-500/20 text-purple-400' :
-            'bg-blue-500/20 text-blue-400'
-          }`}>
+          <span className={`text-xs px-2 py-0.5 rounded ${getNodeTypeBadge()}`}>
             {node.type === 'npc' ? 'NPC' : node.type === 'player' ? 'PLAYER' : 'CONDITIONAL'}
           </span>
           <div className="flex gap-1">
@@ -359,7 +363,7 @@ export function NodeEditor({
                   type="text"
                   value={node.speaker || ''}
                   onChange={(e) => onUpdate({ speaker: e.target.value })}
-                  className="flex-1 bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-sm text-gray-200 focus:border-[#e94560] outline-none"
+                  className="flex-1 bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
                   placeholder="Character name"
                 />
               </div>
@@ -369,7 +373,7 @@ export function NodeEditor({
               <textarea
                 value={node.content}
                 onChange={(e) => onUpdate({ content: e.target.value })}
-                className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-sm text-gray-200 focus:border-[#e94560] outline-none min-h-[100px] resize-y"
+                className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none min-h-[100px] resize-y"
                 placeholder="What the character says..."
               />
             </div>

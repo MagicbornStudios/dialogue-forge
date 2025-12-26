@@ -1005,6 +1005,123 @@ await saveFile('dialogue.yarn', newYarn);`}
           </div>
         </div>
       )
+    },
+    theming: {
+      title: 'Theming',
+      content: (
+        <div className="space-y-4 text-sm">
+          <p className="text-gray-300">
+            Dialogue Forge uses Tailwind CSS theme variables that you can override in your application. All theme variables are prefixed with <code className="bg-[#0d0d14] px-1 rounded">df-</code> to avoid conflicts.
+          </p>
+
+          <h3 className="text-lg font-semibold mt-6 mb-2 text-white">How to Override Theme</h3>
+          <p className="text-gray-300 mb-3">
+            Copy the theme variables below into your CSS file and override the values you want to change:
+          </p>
+
+          <CodeBlock code={`@theme {
+  /* Base Colors */
+  --color-df-base: oklch(0.15 0.02 250);
+  --color-df-surface: oklch(0.18 0.02 260);
+  --color-df-elevated: oklch(0.22 0.02 270);
+  
+  /* NPC Node Colors */
+  --color-df-npc-bg: oklch(0.25 0.04 45);
+  --color-df-npc-border: oklch(0.40 0.08 35);
+  --color-df-npc-header: oklch(0.30 0.10 25);
+  --color-df-npc-selected: oklch(0.45 0.12 15);
+  
+  /* Player Node Colors */
+  --color-df-player-bg: oklch(0.22 0.08 300);
+  --color-df-player-border: oklch(0.45 0.15 310);
+  --color-df-player-header: oklch(0.28 0.12 290);
+  --color-df-player-selected: oklch(0.55 0.20 280);
+  
+  /* Conditional Node */
+  --color-df-conditional-bg: oklch(0.24 0.06 150);
+  --color-df-conditional-border: oklch(0.42 0.12 140);
+  --color-df-conditional-header: oklch(0.30 0.10 145);
+  
+  /* Start/End */
+  --color-df-start: oklch(0.55 0.15 140);
+  --color-df-start-bg: oklch(0.25 0.08 140);
+  --color-df-end: oklch(0.50 0.15 45);
+  --color-df-end-bg: oklch(0.25 0.08 45);
+  
+  /* Edges */
+  --color-df-edge-default: oklch(0.40 0.03 250);
+  --color-df-edge-default-hover: oklch(0.50 0.05 250);
+  --color-df-edge-choice-1: oklch(0.50 0.18 15);
+  --color-df-edge-choice-2: oklch(0.55 0.20 280);
+  --color-df-edge-choice-3: oklch(0.52 0.18 200);
+  --color-df-edge-choice-4: oklch(0.58 0.16 120);
+  --color-df-edge-choice-5: oklch(0.50 0.15 45);
+  --color-df-edge-loop: oklch(0.55 0.15 60);
+  --color-df-edge-dimmed: oklch(0.25 0.02 250);
+  
+  /* Status Colors */
+  --color-df-error: oklch(0.55 0.22 25);
+  --color-df-warning: oklch(0.65 0.18 70);
+  --color-df-success: oklch(0.60 0.18 150);
+  --color-df-info: oklch(0.55 0.15 220);
+  
+  /* Text Colors */
+  --color-df-text-primary: oklch(0.85 0.02 250);
+  --color-df-text-secondary: oklch(0.65 0.02 250);
+  --color-df-text-tertiary: oklch(0.45 0.02 250);
+  
+  /* UI Control Colors */
+  --color-df-control-bg: oklch(0.18 0.02 260);
+  --color-df-control-border: oklch(0.30 0.03 250);
+  --color-df-control-hover: oklch(0.25 0.03 250);
+  
+  /* Flag Colors */
+  --color-df-flag-dialogue: oklch(0.45 0.03 250);
+  --color-df-flag-dialogue-bg: oklch(0.20 0.02 250);
+  --color-df-flag-quest: oklch(0.50 0.15 220);
+  --color-df-flag-quest-bg: oklch(0.22 0.08 220);
+  --color-df-flag-achievement: oklch(0.60 0.18 70);
+  --color-df-flag-achievement-bg: oklch(0.25 0.10 70);
+  --color-df-flag-item: oklch(0.55 0.15 150);
+  --color-df-flag-item-bg: oklch(0.25 0.08 150);
+  --color-df-flag-stat: oklch(0.55 0.18 280);
+  --color-df-flag-stat-bg: oklch(0.25 0.10 280);
+  --color-df-flag-title: oklch(0.55 0.18 330);
+  --color-df-flag-title-bg: oklch(0.25 0.10 330);
+  --color-df-flag-global: oklch(0.50 0.15 45);
+  --color-df-flag-global-bg: oklch(0.25 0.08 45);
+  
+  /* Canvas/Background */
+  --color-df-canvas-bg: oklch(0.12 0.01 250);
+  --color-df-canvas-grid: oklch(0.20 0.02 250);
+  
+  /* Sidebar/Editor */
+  --color-df-sidebar-bg: oklch(0.18 0.02 260);
+  --color-df-sidebar-border: oklch(0.35 0.05 250);
+  --color-df-editor-bg: oklch(0.15 0.02 240);
+  --color-df-editor-border: oklch(0.30 0.03 250);
+}`} language="css" />
+
+          <h3 className="text-lg font-semibold mt-6 mb-2 text-white">Example: Custom Blue Theme</h3>
+          <CodeBlock code={`@theme {
+  /* Override NPC colors to blue */
+  --color-df-npc-bg: oklch(0.25 0.08 220);
+  --color-df-npc-border: oklch(0.50 0.15 220);
+  --color-df-npc-selected: oklch(0.60 0.20 220);
+  
+  /* Override player colors to purple */
+  --color-df-player-bg: oklch(0.25 0.10 300);
+  --color-df-player-border: oklch(0.55 0.20 300);
+  --color-df-player-selected: oklch(0.65 0.25 300);
+}`} language="css" />
+
+          <div className="bg-[#1a2a3e] border-l-4 border-blue-500 p-4 rounded mt-4">
+            <p className="text-gray-300 text-xs">
+              <strong>Note:</strong> All Dialogue Forge components use these theme classes (e.g., <code className="bg-[#0d0d14] px-1 rounded">bg-df-npc-bg</code>, <code className="bg-[#0d0d14] px-1 rounded">text-df-text-primary</code>). By overriding the CSS variables, you change the colors throughout the entire editor without modifying any component code.
+            </p>
+          </div>
+        </div>
+      )
     }
   };
 

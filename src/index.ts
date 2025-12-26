@@ -11,6 +11,7 @@ export { ExampleLoader } from './components/ExampleLoader';
 
 // Export styles
 import './styles/scrollbar.css';
+import './styles/theme.css';
 
 // Export examples
 export { exampleDialogues, demoFlagSchemas, getExampleDialogue, getDemoFlagSchema, listExamples, listDemoFlagSchemas } from './examples';

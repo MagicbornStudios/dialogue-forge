@@ -60,24 +60,28 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
     }
   }, [blocks.length, node.id, updateNodeInternals]);
 
+  // Border color based on state
+  const borderClass = selected 
+    ? 'border-df-conditional-border shadow-lg shadow-df-glow'
+    : isStartNode 
+      ? 'border-df-start shadow-md'
+      : isEndNode 
+        ? 'border-df-end shadow-md'
+        : 'border-df-conditional-border';
+
   return (
     <div 
-      className={`rounded-lg border-2 transition-all duration-300 ${
-        selected ? 'border-blue-500 shadow-lg shadow-blue-500/20' : 
-        isStartNode ? 'border-green-500 shadow-md shadow-green-500/20' :
-        isEndNode ? 'border-amber-500 shadow-md shadow-amber-500/20' :
-        'border-[#1a1a4a]'
-      } ${isInPath ? 'border-blue-500/70' : ''} bg-[#1a1a2e] min-w-[200px] relative`}
+      className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-conditional-border/70' : ''} bg-df-conditional-bg min-w-[200px] relative`}
       style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
     >
       {/* Start/End badge */}
       {isStartNode && (
-        <div className="absolute -top-2 -left-2 bg-green-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-lg z-10">
+        <div className="absolute -top-2 -left-2 bg-df-start text-df-text-primary text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-lg z-10">
           <Play size={8} fill="currentColor" /> START
         </div>
       )}
       {isEndNode && (
-        <div className="absolute -top-2 -right-2 bg-amber-500 text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-lg z-10">
+        <div className="absolute -top-2 -right-2 bg-df-end text-df-text-primary text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-lg z-10">
           <Flag size={8} /> END
         </div>
       )}
@@ -86,14 +90,14 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
       <Handle 
         type="target" 
         position={targetPosition} 
-        className="!bg-[#2a2a3e] !border-[#4a4a6a] !w-4 !h-4 !rounded-full"
+        className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full"
       />
       
       {/* Header */}
-      <div ref={headerRef} className="px-3 py-1.5 border-b border-[#2a2a3e] bg-[#12121a] flex items-center gap-2 rounded-t-lg">
-        <GitBranch size={12} className="text-blue-400" />
-        <span className="text-[10px] font-mono text-gray-500 truncate flex-1">{node.id}</span>
-        <span className="text-[10px] text-blue-400">IF/ELSE</span>
+      <div ref={headerRef} className="px-3 py-1.5 border-b border-df-control-border bg-df-conditional-header flex items-center gap-2 rounded-t-lg">
+        <GitBranch size={12} className="text-df-conditional-border" />
+        <span className="text-[10px] font-mono text-df-text-secondary truncate flex-1">{node.id}</span>
+        <span className="text-[10px] text-df-conditional-border">IF/ELSE</span>
       </div>
       
       {/* Conditional Blocks */}
@@ -106,14 +110,14 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
             <div
               key={block.id}
               ref={el => { blockRefs.current[idx] = el; }}
-              className="px-3 py-1.5 border-b border-[#2a2a3e] last:border-b-0"
+              className="px-3 py-1.5 border-b border-df-control-border last:border-b-0"
             >
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-black text-white font-semibold">
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-df-base text-df-text-primary font-semibold">
                   {blockType}
                 </span>
                 {block.condition && block.condition.length > 0 && (
-                  <span className="text-[9px] text-gray-500 font-mono truncate flex-1">
+                  <span className="text-[9px] text-df-text-secondary font-mono truncate flex-1">
                     {block.condition.map((c: Condition) => {
                       const varName = `$${c.flag}`;
                       if (c.operator === 'is_set') return varName;
@@ -134,9 +138,9 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
                 )}
               </div>
               {block.speaker && (
-                <div className="text-[9px] text-blue-400 font-medium">{block.speaker}</div>
+                <div className="text-[9px] text-df-conditional-border font-medium">{block.speaker}</div>
               )}
-              <div className="text-[10px] text-gray-300 line-clamp-1 bg-[#0d0d14] border border-[#2a2a3e] rounded px-2 py-1 mt-1">
+              <div className="text-[10px] text-df-text-primary line-clamp-1 bg-df-base border border-df-control-border rounded px-2 py-1 mt-1">
                 &quot;{block.content.slice(0, 40) + (block.content.length > 40 ? '...' : '')}&quot;
               </div>
               

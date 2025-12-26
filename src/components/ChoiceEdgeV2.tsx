@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
 import { BaseEdge, EdgeProps, getSmoothStepPath, getBezierPath, Position } from 'reactflow';
-import { CHOICE_COLORS } from '../utils/reactflow-converter';
-
-// Loop back edge color
-const LOOP_COLOR = '#f59e0b'; // Amber/orange for visibility
 
 export function ChoiceEdgeV2({
   id,
@@ -43,9 +39,10 @@ export function ChoiceEdgeV2({
       });
 
   const choiceIndex = data?.choiceIndex ?? 0;
-  const baseColor = CHOICE_COLORS[choiceIndex % CHOICE_COLORS.length];
-  // Use orange for back edges, otherwise use choice color
-  const color = isBackEdge ? LOOP_COLOR : baseColor;
+  // Map choice index to CSS variable
+  const choiceColorVar = `var(--color-df-edge-choice-${Math.min(choiceIndex % 5, 4) + 1})`;
+  // Use loop color for back edges, otherwise use choice color
+  const colorVar = isBackEdge ? 'var(--color-df-edge-loop)' : choiceColorVar;
   const isSelected = selected || hovered;
   const isDimmed = data?.isDimmed ?? false;
   
@@ -54,22 +51,15 @@ export function ChoiceEdgeV2({
   const strokeWidth = isSelected ? 4 : 2;
   const opacity = isDimmed ? 0.15 : (isSelected ? 1 : 0.7);
   
-  // Use grey color when dimmed
-  const strokeColor = isDimmed ? '#3a3a4a' : color;
+  // Use dimmed color when dimmed
+  const strokeColor = isDimmed ? 'var(--color-df-edge-dimmed)' : colorVar;
   
   // Add glow effect when hovered (only if not dimmed)
-  const filter = hovered && !isDimmed ? `drop-shadow(0 0 4px ${color}80)` : undefined;
+  const filter = hovered && !isDimmed ? `drop-shadow(0 0 4px ${colorVar})` : undefined;
 
-  // Create a brighter version of the color for the pulse
-  const brightenColor = (hex: string, percent: number = 30): string => {
-    const num = parseInt(hex.replace('#', ''), 16);
-    const r = Math.min(255, ((num >> 16) & 0xff) + percent);
-    const g = Math.min(255, ((num >> 8) & 0xff) + percent);
-    const b = Math.min(255, (num & 0xff) + percent);
-    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-  };
-
-  const pulseColor = brightenColor(color, 40);
+  // For pulse animation, we'll use a slightly brighter version
+  // Since we can't easily brighten CSS variables, we'll use the same color with higher opacity
+  const pulseColor = colorVar;
   const shouldAnimate = data?.isInPathToSelected ?? false;
 
   return (
@@ -98,13 +88,13 @@ export function ChoiceEdgeV2({
           // Dashed line for back edges
           strokeDasharray: isBackEdge ? '8 4' : undefined,
         }}
-        markerEnd={isDimmed ? undefined : `url(#react-flow__arrowclosed-${color.replace('#', '')})`}
+        markerEnd={isDimmed ? undefined : `url(#react-flow__arrowclosed-choice-${choiceIndex})`}
       />
       {/* Loop indicator icon for back edges */}
       {isBackEdge && (
         <g transform={`translate(${labelX - 10}, ${labelY - 10})`}>
-          <circle cx="10" cy="10" r="12" fill="#1a1a2e" stroke={color} strokeWidth="2" />
-          <text x="10" y="14" textAnchor="middle" fontSize="12" fill={color}>↺</text>
+          <circle cx="10" cy="10" r="12" fill="var(--color-df-base)" stroke={strokeColor} strokeWidth="2" />
+          <text x="10" y="14" textAnchor="middle" fontSize="12" fill={strokeColor}>↺</text>
         </g>
       )}
       {/* Pulsing forward animation - only if edge is in path to selected node */}
@@ -117,10 +107,10 @@ export function ChoiceEdgeV2({
           />
         </circle>
       )}
-      {/* Define marker for this color */}
+      {/* Define marker for this choice color */}
       <defs>
         <marker
-          id={`react-flow__arrowclosed-${color.replace('#', '')}`}
+          id={`react-flow__arrowclosed-choice-${choiceIndex}`}
           markerWidth="12.5"
           markerHeight="12.5"
           viewBox="-10 -10 20 20"
@@ -130,10 +120,10 @@ export function ChoiceEdgeV2({
           refY="0"
         >
           <polyline
-            stroke={color}
+            stroke={colorVar}
             strokeLinecap="round"
             strokeLinejoin="round"
-            fill={color}
+            fill={colorVar}
             points="-5,-4 0,0 -5,4 -5,-4"
           />
         </marker>

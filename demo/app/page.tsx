@@ -14,6 +14,7 @@ import {
   getDemoFlagSchema 
 } from '@magicborn/dialogue-forge/src/examples';
 import { Play, Layout, FileText } from 'lucide-react';
+import { ThemeSwitcher } from '../components/ThemeSwitcher';
 
 type ViewMode = 'graph' | 'yarn' | 'play';
 
@@ -289,6 +290,15 @@ export default function DialogueForgeDemo() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeSwitcher />
+            <div className="w-px h-6 bg-zinc-700" />
+            <button
+              onClick={() => setShowExamplePicker(true)}
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors"
+            >
+              Load Example
+            </button>
+            <div className="w-px h-6 bg-zinc-700" />
             {/* View Mode Toggle */}
             <div className="flex items-center gap-1 bg-[#12121a] border border-[#2a2a3e] rounded-lg p-1">
               <button

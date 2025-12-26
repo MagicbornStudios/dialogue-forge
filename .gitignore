@@ -27,3 +27,5 @@ coverage/
 .env
 .env.local
 
+demo/.next
+demo/next-env.d.ts

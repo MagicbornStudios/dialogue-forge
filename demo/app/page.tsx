@@ -17,6 +17,9 @@ import { Play, Layout, FileText } from 'lucide-react';
 
 type ViewMode = 'graph' | 'yarn' | 'play';
 
+// Tell Next.js this page is static (no dynamic params/searchParams)
+export const dynamic = 'force-static';
+
 // Demo examples - these are specific to the demo app
 const demoDialogues: Record<string, DialogueTree> = {
   'mysterious-stranger': {

@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   description: 'Interactive demo of Dialogue Forge - a visual node-based dialogue editor with Yarn Spinner support',
 };
 
+// Tell Next.js this layout is static (no dynamic params/searchParams)
+export const dynamic = 'force-static';
+
 export default function RootLayout({
   children,
 }: {
@@ -21,8 +24,8 @@ export default function RootLayout({
         <BrandedLayout
           packageName="Dialogue Forge"
           packageDescription="Visual node-based dialogue editor with Yarn Spinner support"
-          packageRepo="https://github.com/yourusername/dialogue-forge"
-          portfolioUrl="https://your-portfolio.com"
+          packageRepo="https://github.com/MagicbornStudios/dialogue-forge"
+          portfolioUrl="bengarrard.com"
         >
           {children}
         </BrandedLayout>

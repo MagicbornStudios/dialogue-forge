@@ -107,6 +107,77 @@ title: end
 ---
 ===
 `,
+  'linear-story': `title: opening
+---
+Narrator: The old lighthouse stood silent against the storm, its beacon long extinguished.
+Narrator: You've been searching for three days, following the map your grandfather left behind.
+Narrator: The key to the lighthouse door feels cold in your hand, heavy with purpose.
+<<jump lighthouse_entrance>>
+===
+
+title: lighthouse_entrance
+---
+Narrator: The door creaks open with a sound that echoes through the empty tower.
+Narrator: Dust motes dance in the beam of your flashlight as you step inside.
+Narrator: The air is still, thick with the scent of salt and old wood.
+<<jump climbing_stairs>>
+===
+
+title: climbing_stairs
+---
+Narrator: Your footsteps echo on the spiral staircase as you climb.
+Narrator: Each step feels like a journey through time, the wood groaning under your weight.
+Narrator: You count the steps: twenty, thirty, forty... the tower seems endless.
+<<jump lantern_room>>
+===
+
+title: lantern_room
+---
+Narrator: At the top, you find the lantern room—the heart of the lighthouse.
+Narrator: The great lens sits dark and still, its glass covered in years of grime.
+Narrator: But something catches your eye: a small wooden box on the windowsill.
+<<jump finding_box>>
+===
+
+title: finding_box
+---
+Narrator: You approach the box carefully, your heart racing.
+Narrator: Carved into its lid are words you recognize: "For when the light returns."
+Narrator: Inside, you find a letter, yellowed with age, and a single match.
+<<jump reading_letter>>
+===
+
+title: reading_letter
+---
+Narrator: The letter is in your grandfather's handwriting, dated fifty years ago.
+Narrator: "If you're reading this, you've found your way home. Light the beacon."
+Narrator: "The world needs its light again. Trust in what you know to be true."
+<<jump lighting_beacon>>
+===
+
+title: lighting_beacon
+---
+Narrator: You strike the match, its flame dancing in the darkness.
+Narrator: As you light the old lantern, the lens begins to turn, slowly at first.
+Narrator: Light spills across the sea, cutting through the storm like a blade.
+<<jump beacon_awakened>>
+===
+
+title: beacon_awakened
+---
+Narrator: The lighthouse awakens, its beam reaching far across the waters.
+Narrator: In the distance, you see something impossible: ships, long thought lost, returning home.
+Narrator: Your grandfather's promise fulfilled, the light guides them safely to shore.
+<<jump epilogue>>
+===
+
+title: epilogue
+---
+Narrator: The storm breaks, and dawn paints the sky in shades of gold and rose.
+Narrator: You stand at the top of the lighthouse, watching the ships come home.
+Narrator: The beacon burns bright once more, and you know—this is where you belong.
+===
+`,
   // Add more examples here as they're converted to Yarn format
 };
 

@@ -60,6 +60,14 @@ export const examplesRegistry: ExampleMetadata[] = [
     filename: 'variable-operations-example.yarn',
     flagSchemaId: 'rpg',
     features: ['variable-operations', 'variable-interpolation', 'numeric-calculations', 'string-variables']
+  },
+  {
+    id: 'linear-story',
+    title: 'Linear Story Example',
+    description: 'A linear narrative with no branching—just NPCs telling a story. Press Enter to continue.',
+    filename: 'linear-story.yarn',
+    flagSchemaId: 'basic',
+    features: ['linear-narrative', 'npc-only', 'story-driven']
   }
 ];
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DialogueNode, DialogueTree, Choice, ConditionalBlock } from '../types';
 import { FlagSchema } from '../types/flags';
+import { Character } from '../types/characters';
 import { FlagSelector } from './FlagSelector';
+import { CharacterSelector } from './CharacterSelector';
 import { CONDITION_OPERATOR } from '../types/constants';
 import { AlertCircle, CheckCircle, Info, GitBranch, X, User, Maximize2 } from 'lucide-react';
 import { CHOICE_COLORS } from '../utils/reactflow-converter';
@@ -20,6 +22,7 @@ interface NodeEditorProps {
   onPlayFromHere?: (nodeId: string) => void;
   onFocusNode?: (nodeId: string) => void;
   flagSchema?: FlagSchema;
+  characters?: Record<string, Character>;
 }
 
 export function NodeEditor({
@@ -33,7 +36,8 @@ export function NodeEditor({
   onClose,
   onPlayFromHere,
   onFocusNode,
-  flagSchema
+  flagSchema,
+  characters = {},
 }: NodeEditorProps) {
   // Local state for condition input values (keyed by block id for conditional blocks, choice id for choices)
   const [conditionInputs, setConditionInputs] = useState<Record<string, string>>({});
@@ -354,17 +358,36 @@ export function NodeEditor({
         {node.type === 'npc' && (
           <>
             <div>
-              <label className="text-[10px] text-gray-500 uppercase">Speaker</label>
+              <label className="text-[10px] text-df-text-secondary uppercase">Character</label>
+              <CharacterSelector
+                characters={characters}
+                selectedCharacterId={node.characterId}
+                onSelect={(characterId) => {
+                  const character = characterId ? characters[characterId] : undefined;
+                  onUpdate({ 
+                    characterId,
+                    speaker: character ? character.name : node.speaker, // Keep speaker as fallback
+                  });
+                }}
+                placeholder="Select character..."
+                className="mb-2"
+              />
+              <div className="text-[9px] text-df-text-tertiary mt-1">
+                Or enter custom speaker name below
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] text-df-text-secondary uppercase">Speaker (Custom)</label>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#2a2a3e] border border-[#2a2a3e] flex items-center justify-center flex-shrink-0">
-                  <User size={16} className="text-gray-500" />
+                <div className="w-8 h-8 rounded-full bg-df-control-bg border border-df-control-border flex items-center justify-center flex-shrink-0">
+                  <User size={16} className="text-df-text-secondary" />
                 </div>
                 <input
                   type="text"
                   value={node.speaker || ''}
                   onChange={(e) => onUpdate({ speaker: e.target.value })}
                   className="flex-1 bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
-                  placeholder="Character name"
+                  placeholder="Custom speaker name (optional)"
                 />
               </div>
             </div>
@@ -463,11 +486,26 @@ export function NodeEditor({
                         <span className={`text-[9px] px-1.5 py-0.5 rounded ${styles.tagBg} ${styles.tagText} font-semibold`}>
                           {block.type === 'if' ? 'IF' : block.type === 'elseif' ? 'ELSE IF' : 'ELSE'}
                         </span>
-                        {/* Speaker input */}
-                        <div className="flex items-center gap-2 flex-1">
-                          <div className="w-6 h-6 rounded-full bg-[#2a2a2a] flex items-center justify-center flex-shrink-0">
-                            <User size={12} className="text-gray-400" />
-                          </div>
+                        {/* Compact Character Selector */}
+                        <div className="flex items-center gap-1.5 flex-1">
+                          <CharacterSelector
+                            characters={characters}
+                            selectedCharacterId={block.characterId}
+                            onSelect={(characterId) => {
+                              const newBlocks = [...node.conditionalBlocks!];
+                              const character = characterId ? characters[characterId] : undefined;
+                              newBlocks[idx] = { 
+                                ...block, 
+                                characterId,
+                                speaker: character ? character.name : block.speaker, // Keep speaker as fallback
+                              };
+                              onUpdate({ conditionalBlocks: newBlocks });
+                            }}
+                            placeholder="Speaker..."
+                            compact={true}
+                            className="flex-1"
+                          />
+                          {/* Custom speaker input - fallback */}
                           <input
                             type="text"
                             value={block.speaker || ''}
@@ -476,8 +514,8 @@ export function NodeEditor({
                               newBlocks[idx] = { ...block, speaker: e.target.value || undefined };
                               onUpdate({ conditionalBlocks: newBlocks });
                             }}
-                            className={`flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded px-2 py-1 text-xs ${styles.text} focus:border-blue-500 outline-none`}
-                            placeholder="Speaker (optional)"
+                            className={`flex-1 bg-df-elevated border border-df-control-border rounded px-1.5 py-0.5 text-[10px] text-df-text-primary focus:border-df-conditional-selected outline-none`}
+                            placeholder="Custom name"
                           />
                         </div>
                       </div>
@@ -977,17 +1015,36 @@ export function NodeEditor({
         {node.type === 'player' && (
           <div>
             <div>
-              <label className="text-[10px] text-gray-500 uppercase">Speaker</label>
+              <label className="text-[10px] text-df-text-secondary uppercase">Character</label>
+              <CharacterSelector
+                characters={characters}
+                selectedCharacterId={node.characterId}
+                onSelect={(characterId) => {
+                  const character = characterId ? characters[characterId] : undefined;
+                  onUpdate({ 
+                    characterId,
+                    speaker: character ? character.name : node.speaker, // Keep speaker as fallback
+                  });
+                }}
+                placeholder="Select character..."
+                className="mb-2"
+              />
+              <div className="text-[9px] text-df-text-tertiary mt-1">
+                Or enter custom speaker name below
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] text-df-text-secondary uppercase">Speaker (Custom)</label>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#2a2a3e] border border-[#2a2a3e] flex items-center justify-center flex-shrink-0">
-                  <User size={16} className="text-gray-500" />
+                <div className="w-8 h-8 rounded-full bg-df-control-bg border border-df-control-border flex items-center justify-center flex-shrink-0">
+                  <User size={16} className="text-df-text-secondary" />
                 </div>
                 <input
                   type="text"
                   value={node.speaker || ''}
                   onChange={(e) => onUpdate({ speaker: e.target.value })}
-                  className="flex-1 bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-sm text-gray-200 focus:border-[#8b5cf6] outline-none"
-                  placeholder="Character name (optional)"
+                  className="flex-1 bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-player-selected outline-none"
+                  placeholder="Custom speaker name (optional)"
                 />
               </div>
             </div>

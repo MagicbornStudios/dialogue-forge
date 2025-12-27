@@ -22,14 +22,16 @@ export interface ConditionalBlock {
   type: 'if' | 'elseif' | 'else';
   condition?: Condition[]; // Required for 'if' and 'elseif', undefined for 'else'
   content: string;
-  speaker?: string;
+  speaker?: string; // Legacy: text speaker name (deprecated, use characterId)
+  characterId?: string; // Character ID from game state
   nextNodeId?: string; // Optional: where to go after this block's content
 }
 
 export interface DialogueNode {
   id: string;
   type: NodeType;
-  speaker?: string;
+  speaker?: string; // Legacy: text speaker name (deprecated, use characterId)
+  characterId?: string; // Character ID from game state
   content: string;
   choices?: Choice[]; // For player nodes
   nextNodeId?: string;

@@ -11,7 +11,8 @@ import {
   listExamples, 
   getExampleDialogue, 
   listDemoFlagSchemas,
-  getDemoFlagSchema 
+  getDemoFlagSchema,
+  getExampleCharacters
 } from '@magicborn/dialogue-forge/src/examples';
 import { Play, Layout, FileText } from 'lucide-react';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
@@ -31,7 +32,8 @@ const demoDialogues: Record<string, DialogueTree> = {
       'start': {
         id: 'start',
         type: 'npc',
-        speaker: 'Stranger',
+        characterId: 'stranger',
+        speaker: 'Stranger', // Fallback
         x: 300,
         y: 100,
         content: "You find yourself at a crossroads. A cloaked figure emerges from the shadows.",
@@ -40,7 +42,8 @@ const demoDialogues: Record<string, DialogueTree> = {
       'greeting': {
         id: 'greeting',
         type: 'npc',
-        speaker: 'Stranger',
+        characterId: 'stranger',
+        speaker: 'Stranger', // Fallback
         x: 300,
         y: 200,
         content: "\"Traveler... I've been waiting for you. What brings you to these lands?\"",
@@ -82,7 +85,8 @@ const demoDialogues: Record<string, DialogueTree> = {
       'treasure_response': {
         id: 'treasure_response',
         type: 'npc',
-        speaker: 'Stranger',
+        characterId: 'stranger',
+        speaker: 'Stranger', // Fallback
         x: 200,
         y: 450,
         content: "\"Many have sought the same. Take this map—it shows the entrance to the catacombs.\"",
@@ -91,7 +95,8 @@ const demoDialogues: Record<string, DialogueTree> = {
       'knowledge_response': {
         id: 'knowledge_response',
         type: 'npc',
-        speaker: 'Stranger',
+        characterId: 'stranger',
+        speaker: 'Stranger', // Fallback
         x: 400,
         y: 450,
         content: "\"A seeker of truth... Take this tome. It contains the riddles you must solve.\"",
@@ -100,7 +105,8 @@ const demoDialogues: Record<string, DialogueTree> = {
       'high_rep_response': {
         id: 'high_rep_response',
         type: 'npc',
-        speaker: 'Stranger',
+        characterId: 'stranger',
+        speaker: 'Stranger', // Fallback
         x: 500,
         y: 450,
         content: "\"Ah, a hero! Your reputation precedes you. I have something special for you...\"",
@@ -126,7 +132,8 @@ const demoDialogues: Record<string, DialogueTree> = {
       'bartender_greet': {
         id: 'bartender_greet',
         type: 'npc',
-        speaker: 'Bartender',
+        characterId: 'bartender',
+        speaker: 'Bartender', // Fallback
         x: 300,
         y: 150,
         content: "\"Welcome, stranger! What can I get ya? We've got ale, mead, or if you're looking for work, I might have something.\"",
@@ -155,7 +162,8 @@ const demoDialogues: Record<string, DialogueTree> = {
       'drink_ale': {
         id: 'drink_ale',
         type: 'npc',
-        speaker: 'Bartender',
+        characterId: 'bartender',
+        speaker: 'Bartender', // Fallback
         x: 100,
         y: 420,
         content: "\"Coming right up!\" He slides a frothy mug across the bar.",
@@ -164,7 +172,8 @@ const demoDialogues: Record<string, DialogueTree> = {
       'work_info': {
         id: 'work_info',
         type: 'npc',
-        speaker: 'Bartender',
+        characterId: 'bartender',
+        speaker: 'Bartender', // Fallback
         x: 300,
         y: 420,
         content: "\"Rats in the cellar. Big ones. I'll pay 10 gold if you clear 'em out.\"",
@@ -184,7 +193,8 @@ const demoDialogues: Record<string, DialogueTree> = {
       'quest_accepted': {
         id: 'quest_accepted',
         type: 'npc',
-        speaker: 'Bartender',
+        characterId: 'bartender',
+        speaker: 'Bartender', // Fallback
         x: 300,
         y: 680,
         content: "\"Great! The cellar door is in the back. Good luck!\"",
@@ -193,7 +203,8 @@ const demoDialogues: Record<string, DialogueTree> = {
       'observe_tavern': {
         id: 'observe_tavern',
         type: 'npc',
-        speaker: 'Narrator',
+        characterId: 'narrator',
+        speaker: 'Narrator', // Fallback
         x: 500,
         y: 420,
         content: "You notice a hooded figure in the corner, watching you intently...",
@@ -202,7 +213,8 @@ const demoDialogues: Record<string, DialogueTree> = {
       'vip_response': {
         id: 'vip_response',
         type: 'npc',
-        speaker: 'Bartender',
+        characterId: 'bartender',
+        speaker: 'Bartender', // Fallback
         x: 600,
         y: 420,
         content: "\"Of course! Right this way to the VIP lounge. Your reputation grants you access.\"",
@@ -231,6 +243,7 @@ export default function DialogueForgeDemo() {
   const [dialogueTree, setDialogueTree] = useState<DialogueTree>(demoDialogues['mysterious-stranger']);
   const [flagSchema, setFlagSchema] = useState<FlagSchema>(demoFlagSchema);
   const [viewMode, setViewMode] = useState<ViewMode>('graph');
+  const characters = getExampleCharacters(); // Get example characters
   
   // Panel states
   const [showFlagManager, setShowFlagManager] = useState(false);
@@ -343,6 +356,7 @@ export default function DialogueForgeDemo() {
           onChange={setDialogueTree}
           onExportYarn={handleExportYarn}
           flagSchema={flagSchema}
+          characters={characters}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           className="w-full h-full"

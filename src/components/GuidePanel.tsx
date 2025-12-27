@@ -359,9 +359,9 @@ const [gameState, setGameState] = useState<GameState>({
   }}
   flagSchema={flagSchema}
   // Event hooks
-  onNodeAdd={(node) => console.log('Node added:', node.id)}
-  onNodeDelete={(nodeId) => console.log('Node deleted:', nodeId)}
-  onConnect={(source, target) => console.log('Connected:', source, '->', target)}
+  onNodeAdd={(node) => {/* Example: handle node add */}}
+  onNodeDelete={(nodeId) => {/* Example: handle node delete */}}
+  onConnect={(source, target) => {/* Example: handle connect */}}
 />`} language="typescript" />
 
           <h3 className="text-lg font-semibold mt-6 mb-2 text-white">6. Define Game State</h3>
@@ -429,21 +429,21 @@ const gameState: GameState = {
   }}
   // Event hooks
   onNodeEnter={(nodeId, node) => {
-    console.log('Entered node:', nodeId, node);
+    // Example: handle node enter
     // Trigger animations, sound effects, etc.
   }}
   onNodeExit={(nodeId, node) => {
-    console.log('Exited node:', nodeId, node);
+    // Example: handle node exit
   }}
   onChoiceSelect={(nodeId, choice) => {
-    console.log('Selected choice:', choice.text);
+    // Example: handle choice select
     // Track player decisions
   }}
   onDialogueStart={() => {
-    console.log('Dialogue started');
+    // Example: handle dialogue start
   }}
   onDialogueEnd={() => {
-    console.log('Dialogue ended');
+    // Example: handle dialogue end
   }}
 />`} language="typescript" />
 
@@ -503,23 +503,23 @@ const dialogue = importFromYarn(yarnFile, 'Merchant');
   flagSchema={flagSchema}
   // Event hooks
   onNodeAdd={(node) => {
-    console.log('Node added:', node.id);
+    // Example: handle node add
     // Track node creation
   }}
   onNodeDelete={(nodeId) => {
-    console.log('Node deleted:', nodeId);
+    // Example: handle node delete
   }}
   onNodeUpdate={(nodeId, updates) => {
-    console.log('Node updated:', nodeId, updates);
+    // Example: handle node update
   }}
   onConnect={(sourceId, targetId, sourceHandle) => {
-    console.log('Connected:', sourceId, '->', targetId);
+    // Example: handle connect
   }}
   onDisconnect={(edgeId, sourceId, targetId) => {
-    console.log('Disconnected:', sourceId, '->', targetId);
+    // Example: handle disconnect
   }}
   onNodeSelect={(nodeId) => {
-    console.log('Node selected:', nodeId);
+    // Example: handle node select
   }}
 />
 
@@ -535,11 +535,11 @@ const dialogue = importFromYarn(yarnFile, 'Merchant');
     }));
   }}
   onNodeEnter={(nodeId, node) => {
-    console.log('Entered node:', nodeId);
+    // Example: handle node enter
     // Play animations, sound effects
   }}
   onChoiceSelect={(nodeId, choice) => {
-    console.log('Selected:', choice.text);
+    // Example: handle choice select
     // Track player decisions
   }}
 />`} language="typescript" />
@@ -1002,6 +1002,87 @@ await saveFile('dialogue.yarn', newYarn);`}
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )
+    },
+    characters: {
+      title: 'Characters',
+      content: (
+        <div className="space-y-4 text-sm">
+          <p className="text-gray-300">
+            Dialogue Forge supports character assignment for NPC and Player nodes. Characters are defined in your game state and can be selected from a searchable dropdown.
+          </p>
+
+          <h3 className="text-lg font-semibold mt-6 mb-2 text-white">Character System</h3>
+          <p className="text-gray-300 mb-3">
+            Each node (NPC or Player) can be assigned a character from your game state. When a character is assigned:
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-sm ml-2 text-gray-300">
+            <li>The character's avatar and name are displayed on the node in the graph</li>
+            <li>The character name is used as the speaker name</li>
+            <li>You can still override with a custom speaker name if needed</li>
+          </ul>
+
+          <h3 className="text-lg font-semibold mt-6 mb-2 text-white">Game State Structure</h3>
+          <p className="text-gray-300 mb-3">
+            Characters should be defined in your game state under the <code className="bg-[#0d0d14] px-1 rounded">characters</code> property:
+          </p>
+
+          <CodeBlock code={`interface GameState {
+  flags?: FlagState;
+  characters?: {
+    [characterId: string]: Character;
+  };
+}
+
+interface Character {
+  id: string;
+  name: string;
+  avatar?: string; // URL or emoji (e.g., "👤", "🧙", "/avatars/wizard.png")
+  description?: string;
+}`} language="typescript" />
+
+          <h3 className="text-lg font-semibold mt-6 mb-2 text-white">Using Characters</h3>
+          <ol className="list-decimal list-inside space-y-2 text-sm ml-2 text-gray-300">
+            <li><strong>Define characters</strong> in your game state with <code className="bg-[#0d0d14] px-1 rounded">id</code>, <code className="bg-[#0d0d14] px-1 rounded">name</code>, and optionally <code className="bg-[#0d0d14] px-1 rounded">avatar</code></li>
+            <li><strong>Pass characters</strong> to <code className="bg-[#0d0d14] px-1 rounded">DialogueEditorV2</code> via the <code className="bg-[#0d0d14] px-1 rounded">characters</code> prop</li>
+            <li><strong>Select a character</strong> in the Node Editor using the character dropdown (searchable combobox)</li>
+            <li><strong>View on graph</strong> - The character's avatar and name appear on the node</li>
+          </ol>
+
+          <h3 className="text-lg font-semibold mt-6 mb-2 text-white">Example</h3>
+          <CodeBlock code={`// Game state with characters
+const gameState = {
+  flags: { reputation: 50 },
+  characters: {
+    stranger: {
+      id: 'stranger',
+      name: 'Mysterious Stranger',
+      avatar: '👤',
+      description: 'A cloaked figure'
+    },
+    player: {
+      id: 'player',
+      name: 'Player',
+      avatar: '🎮',
+      description: 'The player character'
+    }
+  }
+};
+
+// Pass to DialogueEditorV2
+<DialogueEditorV2
+  dialogue={dialogueTree}
+  characters={gameState.characters}
+  flagSchema={flagSchema}
+  onChange={setDialogueTree}
+/>`} language="typescript" />
+
+          <div className="bg-[#1a2a3e] border-l-4 border-blue-500 p-4 rounded mt-4">
+            <p className="text-gray-300 text-xs">
+              <strong>Note:</strong> If a character is not assigned, you can still use a custom speaker name. The character system is optional but recommended for consistency across your dialogue system.
+            </p>
           </div>
         </div>
       )

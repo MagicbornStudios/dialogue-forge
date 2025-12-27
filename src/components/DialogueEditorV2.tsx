@@ -43,6 +43,7 @@ import { ConditionalNodeV2 } from './ConditionalNodeV2';
 import { ChoiceEdgeV2 } from './ChoiceEdgeV2';
 import { NPCEdgeV2 } from './NPCEdgeV2';
 import { FlagSchema } from '../types/flags';
+import { Character } from '../types/characters';
 import { NODE_WIDTH } from '../utils/constants';
 
 type ViewMode = 'graph' | 'yarn' | 'play';
@@ -61,6 +62,7 @@ const edgeTypes = {
 
 interface DialogueEditorV2InternalProps extends DialogueEditorProps {
   flagSchema?: FlagSchema;
+  characters?: Record<string, Character>; // Characters from game state
   initialViewMode?: ViewMode;
   viewMode?: ViewMode; // Controlled view mode (if provided, overrides initialViewMode)
   onViewModeChange?: (mode: ViewMode) => void; // Callback when view mode changes
@@ -81,6 +83,7 @@ function DialogueEditorV2Internal({
   className = '',
   showTitleEditor = true,
   flagSchema,
+  characters = {},
   initialViewMode = 'graph',
   viewMode: controlledViewMode,
   onViewModeChange,
@@ -112,12 +115,14 @@ function DialogueEditorV2Internal({
   const [layoutDirection, setLayoutDirection] = useState<LayoutDirection>('TB');
   const layoutStrategy = propLayoutStrategy; // Use prop instead of state
   const [autoOrganize, setAutoOrganize] = useState<boolean>(false); // Auto-layout on changes
+  
+  // Track if we've made a direct React Flow update to avoid unnecessary conversions
+  const directUpdateRef = useRef<string | null>(null);
   const [showPathHighlight, setShowPathHighlight] = useState<boolean>(true); // Toggle path highlighting
   const [showBackEdges, setShowBackEdges] = useState<boolean>(true); // Toggle back-edge styling
   const [showLayoutMenu, setShowLayoutMenu] = useState<boolean>(false);
   const lastWheelClickRef = useRef<number>(0);
-  
-  
+
   // Memoize nodeTypes and edgeTypes to prevent React Flow warnings
   const memoizedNodeTypes = useMemo(() => nodeTypes, []);
   const memoizedEdgeTypes = useMemo(() => edgeTypes, []);
@@ -226,13 +231,21 @@ function DialogueEditorV2Internal({
   }, [selectedNodeId, dialogue]);
 
   // Update nodes/edges when dialogue changes externally
+  // Skip conversion if we just made a direct React Flow update (for simple text changes)
   React.useEffect(() => {
     if (dialogue) {
+      // If we just updated a node directly in React Flow, skip full conversion
+      // The direct update already handled the visual change
+      if (directUpdateRef.current) {
+        directUpdateRef.current = null; // Clear the flag
+        return; // Skip conversion - React Flow is already updated
+      }
+      
       const { nodes: newNodes, edges: newEdges } = convertDialogueTreeToReactFlow(dialogue, layoutDirection);
       setNodes(newNodes);
       setEdges(newEdges);
     }
-  }, [dialogue]);
+  }, [dialogue, layoutDirection]);
 
   // Calculate end nodes (nodes with no outgoing connections)
   const endNodeIds = useMemo(() => {
@@ -249,7 +262,7 @@ function DialogueEditorV2Internal({
     return ends;
   }, [dialogue]);
 
-  // Add flagSchema, dim state, and layout direction to node data
+  // Add flagSchema, characters, dim state, and layout direction to node data
   const nodesWithFlags = useMemo(() => {
     const hasSelection = selectedNodeId !== null && showPathHighlight;
     const startNodeId = dialogue?.startNodeId;
@@ -267,6 +280,7 @@ function DialogueEditorV2Internal({
         data: {
           ...node.data,
           flagSchema,
+          characters, // Pass characters to all nodes including conditional
           isDimmed,
           isInPath,
           layoutDirection,
@@ -275,7 +289,7 @@ function DialogueEditorV2Internal({
         },
       };
     });
-  }, [nodes, flagSchema, nodeDepths, selectedNodeId, layoutDirection, showPathHighlight, dialogue, endNodeIds]);
+  }, [nodes, flagSchema, characters, nodeDepths, selectedNodeId, layoutDirection, showPathHighlight, dialogue, endNodeIds]);
 
   if (!dialogue) {
     return (
@@ -876,6 +890,41 @@ function DialogueEditorV2Internal({
   // Handle node updates
   const handleUpdateNode = useCallback((nodeId: string, updates: Partial<DialogueNode>) => {
     const updatedNode = { ...dialogue.nodes[nodeId], ...updates };
+    
+    // Check if this is a "simple" update (just text/content changes, not structural)
+    // Simple updates: speaker, content, characterId (non-structural properties)
+    // Structural updates: choices, conditionalBlocks, nextNodeId (affect edges/connections)
+    const isSimpleUpdate = Object.keys(updates).every(key => 
+      ['speaker', 'content', 'characterId', 'setFlags'].includes(key)
+    );
+    
+    if (isSimpleUpdate && reactFlowInstance) {
+      // For simple updates, update React Flow directly without full tree conversion
+      // This is much faster and avoids expensive recalculations
+      const allNodes = reactFlowInstance.getNodes();
+      const nodeToUpdate = allNodes.find(n => n.id === nodeId);
+      
+      if (nodeToUpdate) {
+        // Mark that we're doing a direct update to skip full conversion
+        directUpdateRef.current = nodeId;
+        
+        // Update the node data directly in React Flow
+        const updatedReactFlowNode = {
+          ...nodeToUpdate,
+          data: {
+            ...nodeToUpdate.data,
+            node: updatedNode, // Update the dialogue node in the data
+          },
+        };
+        
+        // Update just this node in React Flow
+        const updatedNodes = allNodes.map(n => n.id === nodeId ? updatedReactFlowNode : n);
+        reactFlowInstance.setNodes(updatedNodes);
+      }
+    }
+    
+    // Always update the dialogue tree (source of truth) - but this triggers full conversion
+    // The useEffect will handle the full conversion, but React Flow is already updated above
     onChange({
       ...dialogue,
       nodes: {
@@ -883,9 +932,10 @@ function DialogueEditorV2Internal({
         [nodeId]: updatedNode
       }
     });
+    
     // Call onNodeUpdate hook
     onNodeUpdate?.(nodeId, updates);
-  }, [dialogue, onChange, onNodeUpdate]);
+  }, [dialogue, onChange, onNodeUpdate, reactFlowInstance]);
 
   // Handle choice updates
   const handleAddChoice = useCallback((nodeId: string) => {
@@ -1533,6 +1583,7 @@ function DialogueEditorV2Internal({
             <NodeEditor
               node={selectedNode}
               dialogue={dialogue}
+              characters={characters}
               onUpdate={(updates) => handleUpdateNode(selectedNode.id, updates)}
               onFocusNode={(nodeId) => {
                 const targetNode = nodes.find(n => n.id === nodeId);
@@ -1615,7 +1666,8 @@ function DialogueEditorV2Internal({
 }
 
 export function DialogueEditorV2(props: DialogueEditorProps & { 
-  flagSchema?: FlagSchema; 
+  flagSchema?: FlagSchema;
+  characters?: Record<string, Character>; // Characters from game state
   initialViewMode?: ViewMode;
   viewMode?: ViewMode;
   onViewModeChange?: (mode: ViewMode) => void;

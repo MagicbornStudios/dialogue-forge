@@ -24,15 +24,17 @@ export interface FlagState {
  */
 export type GameFlagState = FlagState;
 
+import type { Character } from './characters';
+
 /**
  * Base game state structure that users can extend
  * Must have a 'flags' property, but can have any other structure
  */
 export interface BaseGameState {
   flags?: FlagState;
+  characters?: Record<string, Character>; // Character definitions
   // Users extend this with their own properties:
   // player?: PlayerState;
-  // characters?: Record<string, CharacterState>;
   // etc.
 }
 

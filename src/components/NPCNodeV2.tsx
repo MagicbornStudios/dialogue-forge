@@ -12,7 +12,8 @@
 import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { DialogueNode } from '../types';
-import { MessageSquare, Play, Flag } from 'lucide-react';
+import { Character } from '../types/characters';
+import { MessageSquare, Play, Flag, Hash } from 'lucide-react';
 import { FlagSchema } from '../types/flags';
 import { LayoutDirection } from '../utils/layout';
 
@@ -23,6 +24,7 @@ import { LayoutDirection } from '../utils/layout';
 interface NPCNodeData {
   node: DialogueNode;
   flagSchema?: FlagSchema;
+  characters?: Record<string, Character>;
   isDimmed?: boolean;
   isInPath?: boolean;
   layoutDirection?: LayoutDirection;
@@ -55,13 +57,19 @@ function getFlagColorClass(type: string): string {
 export function NPCNodeV2({ data, selected }: NodeProps<NPCNodeData>) {
   const { 
     node, 
-    flagSchema, 
+    flagSchema,
+    characters = {},
     isDimmed, 
     isInPath, 
     layoutDirection = 'TB', 
     isStartNode, 
     isEndNode 
   } = data;
+
+  // Get character if characterId is set
+  const character = node.characterId ? characters[node.characterId] : undefined;
+  const displayName = character ? character.name : (node.speaker || 'NPC');
+  const avatar = character?.avatar || '👤';
   
   // Handle positions based on layout direction
   const isHorizontal = layoutDirection === 'LR';
@@ -91,23 +99,9 @@ export function NPCNodeV2({ data, selected }: NodeProps<NPCNodeData>) {
 
   return (
     <div 
-      className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-node-selected/70' : ''} bg-df-npc-bg min-w-[200px] relative`}
+      className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-node-selected/70' : ''} bg-df-npc-bg min-w-[320px] max-w-[450px] relative overflow-hidden`}
       style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
     >
-      {/* Start badge */}
-      {isStartNode && (
-        <div className="absolute -top-2 -left-2 bg-df-start text-df-text-primary text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-lg z-10">
-          <Play size={8} fill="currentColor" /> START
-        </div>
-      )}
-      
-      {/* End badge */}
-      {isEndNode && (
-        <div className="absolute -top-2 -right-2 bg-df-end text-df-text-primary text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-lg z-10">
-          <Flag size={8} /> END
-        </div>
-      )}
-      
       {/* Input handle */}
       <Handle 
         type="target" 
@@ -115,32 +109,66 @@ export function NPCNodeV2({ data, selected }: NodeProps<NPCNodeData>) {
         className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full"
       />
       
-      {/* Header */}
-      <div className={`px-3 py-1.5 border-b border-df-control-border flex items-center gap-2 rounded-t-lg ${headerBgClass}`}>
-        <MessageSquare size={12} className="text-df-npc-selected" />
-        <span className="text-[10px] font-mono text-df-text-secondary truncate flex-1">{node.id}</span>
-        <span className="text-[10px] text-df-text-tertiary">NPC</span>
+      {/* Health Bar Style Header */}
+      <div className={`${headerBgClass} border-b-2 border-df-npc-border px-3 py-2.5 flex items-center gap-3 relative`}>
+        {/* Large Avatar - Left side */}
+        <div className="w-14 h-14 rounded-full bg-df-npc-bg border-[3px] border-df-npc-border flex items-center justify-center text-3xl shadow-lg flex-shrink-0">
+          {avatar}
+        </div>
+        
+        {/* Character Name - Center/Left */}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-bold text-df-text-primary truncate leading-tight">
+            {displayName}
+          </h3>
+        </div>
+        
+        {/* Metadata Icons - Right side */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Node ID Icon */}
+          <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-base/50 border border-df-control-border" title={`Node ID: ${node.id}`}>
+            <Hash size={12} className="text-df-text-secondary" />
+            <span className="text-[10px] font-mono text-df-text-secondary">{node.id}</span>
+          </div>
+          
+          {/* Type Icon */}
+          <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-npc-selected/20 border border-df-npc-selected/50" title="NPC Node">
+            <MessageSquare size={14} className="text-df-npc-selected" />
+            <span className="text-[10px] font-semibold text-df-npc-selected">NPC</span>
+          </div>
+        </div>
+        
+        {/* Start/End badge - Overlay on header */}
+        {isStartNode && (
+          <div className="absolute top-1 right-1 bg-df-start text-df-text-primary text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
+            <Play size={8} fill="currentColor" /> START
+          </div>
+        )}
+        {isEndNode && (
+          <div className="absolute top-1 right-1 bg-df-end text-df-text-primary text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
+            <Flag size={8} /> END
+          </div>
+        )}
       </div>
       
-      {/* Content */}
-      <div className="px-3 py-2 min-h-[50px]">
-        {node.speaker && (
-          <div className="text-[10px] text-df-npc-selected font-medium mb-1">{node.speaker}</div>
-        )}
-        <div className="text-xs text-df-text-primary line-clamp-2 bg-df-base border border-df-control-border rounded px-2 py-1">
-          &quot;{contentPreview}&quot;
+      {/* Dialogue Content */}
+      <div className="px-4 py-3">
+        <div className="bg-df-elevated border border-df-control-border rounded-lg px-4 py-3 mb-2">
+          <p className="text-sm text-df-text-primary leading-relaxed">
+            &quot;{contentPreview}&quot;
+          </p>
         </div>
         
         {/* Flag indicators */}
         {node.setFlags && node.setFlags.length > 0 && (
-          <div className="mt-1.5 flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1">
             {node.setFlags.map((flagId: string) => {
               const flag = flagSchema?.flags.find((f: { id: string }) => f.id === flagId);
               const flagType = flag?.type || 'dialogue';
               return (
                 <span 
                   key={flagId} 
-                  className={`text-[8px] px-1 py-0.5 rounded border ${getFlagColorClass(flagType)}`} 
+                  className={`text-[8px] px-1.5 py-0.5 rounded-full border ${getFlagColorClass(flagType)}`} 
                   title={flag?.name || flagId}
                 >
                   {flagType === 'dialogue' ? 't' : flagType[0]}

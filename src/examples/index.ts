@@ -35,6 +35,14 @@ import {
   getExampleFlagSchema
 } from './examples-registry';
 
+// Export character examples
+export {
+  exampleCharacters,
+  getExampleCharacters,
+  getExampleCharacter,
+  listExampleCharacterIds,
+} from './example-characters';
+
 /**
  * Legacy exports for backward compatibility
  * These maintain the old API while we migrate examples to Yarn format

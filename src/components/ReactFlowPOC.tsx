@@ -265,19 +265,19 @@ export function ReactFlowPOC({ dialogue }: { dialogue: DialogueTree }) {
   const onNodesChange = useCallback((changes: any) => {
     // Update dialogue tree positions
     // This would sync back to our DialogueTree structure
-    console.log('Nodes changed:', changes);
+    // Handle node changes
   }, []);
   
   // Handle edge connections
   const onConnect = useCallback((connection: any) => {
     // Handle new edge connections
     // This would update our DialogueTree structure
-    console.log('Connected:', connection);
+    // Handle connection
   }, []);
   
   // Handle edge changes (delete, etc.)
   const onEdgesChange = useCallback((changes: any) => {
-    console.log('Edges changed:', changes);
+    // Handle edge changes
   }, []);
   
   return (

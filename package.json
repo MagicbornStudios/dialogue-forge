@@ -1,6 +1,6 @@
 {
   "name": "@magicborn/dialogue-forge",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Visual node-based dialogue editor with Yarn Spinner support",
   "author": "Ben Garrard <b2gdevs@gmail.com>",
   "license": "MIT",

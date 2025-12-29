@@ -1,4 +1,5 @@
 import { ConditionOperator, NodeType } from './constants';
+export type { ViewMode } from './constants';
 
 export interface Choice {
   id: string;
@@ -49,8 +50,6 @@ export interface DialogueTree {
 }
 
 import { FlagSchema } from './flags';
-
-export type ViewMode = 'graph' | 'yarn' | 'play';
 
 export interface DialogueEditorProps {
   dialogue: DialogueTree | null;

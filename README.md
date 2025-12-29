@@ -156,6 +156,89 @@ See [DATA_STRUCTURES.md](./DATA_STRUCTURES.md) for complete type documentation a
 - `GameFlagState` - Current flag values `{ [flagId]: value }`
 - `DialogueResult` - Result from running dialogue (updated flags, visited nodes)
 
+### Dialogue Editor V2 with View Modes
+
+`DialogueEditorV2` supports graph, yarn, and play views. Use the exported `VIEW_MODE` constant (instead of string literals) alongside the `ViewMode` type so consumers get auto-complete and type safety when switching views.
+
+```tsx
+import { DialogueEditorV2, VIEW_MODE, type DialogueTree, type ViewMode } from '@magicborn/dialogue-forge';
+import { useState } from 'react';
+
+export function DialogueEditorDemo() {
+  const [dialogue, setDialogue] = useState<DialogueTree | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);
+
+  return (
+    <DialogueEditorV2
+      dialogue={dialogue}
+      onChange={setDialogue}
+      viewMode={viewMode}
+      onViewModeChange={setViewMode}
+    />
+  );
+}
+```
+
+### Authoring dialogue data programmatically
+
+You can build dialogue content without the editor and still take advantage of the types and constants that power the scene player. This makes it easy to script nonlinear stories, export them, or feed them directly into `ScenePlayer`.
+
+```ts
+import {
+  NODE_TYPE,
+  type DialogueTree,
+  type DialogueNode,
+  ScenePlayer,
+} from '@magicborn/dialogue-forge';
+
+const nodes: Record<string, DialogueNode> = {
+  npc_1: {
+    id: 'npc_1',
+    type: NODE_TYPE.NPC,
+    speaker: 'Merchant',
+    content: 'Welcome, traveler! Looking for supplies?',
+    nextNodeId: 'player_1',
+    x: 0,
+    y: 0,
+  },
+  player_1: {
+    id: 'player_1',
+    type: NODE_TYPE.PLAYER,
+    content: ' ',
+    choices: [
+      { id: 'buy', text: 'Show me your wares.', nextNodeId: 'npc_2' },
+      { id: 'chat', text: 'Any rumors?', nextNodeId: 'npc_3' },
+    ],
+    x: 320,
+    y: 0,
+  },
+  npc_2: {
+    id: 'npc_2',
+    type: NODE_TYPE.NPC,
+    content: 'Take a look! Fresh stock just arrived.',
+    x: 640,
+    y: -120,
+  },
+  npc_3: {
+    id: 'npc_3',
+    type: NODE_TYPE.NPC,
+    content: 'Bandits have been spotted near the bridge—stay sharp.',
+    x: 640,
+    y: 120,
+  },
+};
+
+const merchantIntro: DialogueTree = {
+  id: 'merchant_intro',
+  title: 'Merchant Greeting',
+  startNodeId: 'npc_1',
+  nodes,
+};
+
+// Render or test the dialogue without the editor
+// <ScenePlayer dialogue={merchantIntro} gameState={yourGameState} onComplete={...} />
+```
+
 ## Complete Example
 
 ```typescript

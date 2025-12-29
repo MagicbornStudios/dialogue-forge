@@ -24,12 +24,13 @@
   },
   "files": [
     "dist",
+    "dist/styles",
     "demo",
     "bin",
     "README.md"
   ],
   "scripts": {
-    "build": "tsc && tsc --module esnext --outDir dist/esm",
+    "build": "tsc && tsc --module esnext --outDir dist/esm && node ./bin/postbuild.js",
     "dev": "cd demo && npm install && npm run dev",
     "dev:watch": "tsc --watch",
     "test": "vitest",

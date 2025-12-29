@@ -39,4 +39,3 @@ export { exportToYarn, importFromYarn } from './lib/yarn-converter';
 export { initializeFlags, mergeFlagUpdates, validateFlags, getFlagValue } from './lib/flag-manager';
 export * from './utils/node-helpers';
 export * from './utils/feature-flags';
-

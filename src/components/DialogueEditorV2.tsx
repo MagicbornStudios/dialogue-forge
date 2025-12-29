@@ -29,7 +29,7 @@ import { ExampleLoaderButton } from './ExampleLoaderButton';
 import { ENABLE_DEBUG_TOOLS } from '../utils/feature-flags';
 import 'reactflow/dist/style.css';
 
-import { DialogueEditorProps, DialogueTree, DialogueNode, Choice, ConditionalBlock } from '../types';
+import { DialogueEditorProps, DialogueTree, DialogueNode, Choice, ConditionalBlock, ViewMode } from '../types';
 import { exportToYarn, importFromYarn } from '../lib/yarn-converter';
 import { convertDialogueTreeToReactFlow, updateDialogueTreeFromReactFlow, CHOICE_COLORS } from '../utils/reactflow-converter';
 import { createNode, deleteNodeFromTree, addChoiceToNode, removeChoiceFromNode, updateChoiceInNode } from '../utils/node-helpers';
@@ -45,8 +45,6 @@ import { NPCEdgeV2 } from './NPCEdgeV2';
 import { FlagSchema } from '../types/flags';
 import { Character } from '../types/characters';
 import { NODE_WIDTH } from '../utils/constants';
-
-type ViewMode = 'graph' | 'yarn' | 'play';
 
 // Define node and edge types outside component for stability
 const nodeTypes = {

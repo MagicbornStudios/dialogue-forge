@@ -7,6 +7,7 @@ import { GuidePanel } from '@magicborn/dialogue-forge/src/components/GuidePanel'
 import { FlagSchema, exampleFlagSchema } from '@magicborn/dialogue-forge/src/types/flags';
 import { DialogueTree } from '@magicborn/dialogue-forge/src/types';
 import { exportToYarn } from '@magicborn/dialogue-forge/src/lib/yarn-converter';
+import type { ViewMode } from '@magicborn/dialogue-forge/src/types';
 import { 
   listExamples, 
   getExampleDialogue, 
@@ -17,7 +18,7 @@ import {
 import { Play, Layout, FileText } from 'lucide-react';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 
-type ViewMode = 'graph' | 'yarn' | 'play';
+
 
 // Tell Next.js this page is static (no dynamic params/searchParams)
 export const dynamic = 'force-static';

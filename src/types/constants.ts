@@ -4,6 +4,17 @@
  */
 
 /**
+ * View modes for DialogueEditorV2
+ */
+export const VIEW_MODE = {
+  GRAPH: 'graph',
+  YARN: 'yarn',
+  PLAY: 'play',
+} as const;
+
+export type ViewMode = typeof VIEW_MODE[keyof typeof VIEW_MODE];
+
+/**
  * Node types in a dialogue tree
  */
 export const NODE_TYPE = {

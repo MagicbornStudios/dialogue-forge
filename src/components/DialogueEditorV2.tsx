@@ -45,6 +45,7 @@ import { NPCEdgeV2 } from './NPCEdgeV2';
 import { FlagSchema } from '../types/flags';
 import { Character } from '../types/characters';
 import { NODE_WIDTH } from '../utils/constants';
+import { VIEW_MODE } from '../types/constants';
 
 // Define node and edge types outside component for stability
 const nodeTypes = {
@@ -82,7 +83,7 @@ function DialogueEditorV2Internal({
   showTitleEditor = true,
   flagSchema,
   characters = {},
-  initialViewMode = 'graph',
+  initialViewMode = VIEW_MODE.GRAPH,
   viewMode: controlledViewMode,
   onViewModeChange,
   layoutStrategy: propLayoutStrategy = 'dagre', // Accept from parent
@@ -1015,7 +1016,7 @@ function DialogueEditorV2Internal({
 
   return (
     <div className={`dialogue-editor-v2 ${className} w-full h-full flex flex-col`}>
-      {viewMode === 'graph' && (
+      {viewMode === VIEW_MODE.GRAPH && (
         <div className="flex-1 flex overflow-hidden">
           {/* React Flow Graph */}
           <div className="flex-1 relative w-full h-full" ref={reactFlowWrapperRef} style={{ minHeight: 0 }}>
@@ -1623,7 +1624,7 @@ function DialogueEditorV2Internal({
         </div>
       )}
 
-      {viewMode === 'yarn' && (
+      {viewMode === VIEW_MODE.YARN && (
         <YarnView
           dialogue={dialogue}
           onExport={() => {
@@ -1653,7 +1654,7 @@ function DialogueEditorV2Internal({
         />
       )}
 
-      {viewMode === 'play' && (
+      {viewMode === VIEW_MODE.PLAY && (
         <PlayView
           dialogue={dialogue}
           flagSchema={flagSchema}

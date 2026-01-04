@@ -188,3 +188,4 @@ NPC: Hello {$player_name}! You have {$stat_gold} gold.
 
 
 
+

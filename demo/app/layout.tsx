@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import 'reactflow/dist/style.css';
 import 'react-tooltip/dist/react-tooltip.css';
 import '../styles/globals.css';
-import '../../../../packages-shared/server-template/styles/globals.css';
-import { BrandedLayout } from '../../../../packages-shared/server-template/components/BrandedLayout';
 
 export const metadata: Metadata = {
   title: 'Dialogue Forge - Visual Dialogue Editor',
@@ -21,14 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <BrandedLayout
-          packageName="Dialogue Forge"
-          packageDescription="Visual node-based dialogue editor with Yarn Spinner support"
-          packageRepo="https://github.com/MagicbornStudios/dialogue-forge"
-          portfolioUrl="bengarrard.com"
-        >
-          {children}
-        </BrandedLayout>
+        {children}
       </body>
     </html>
   );

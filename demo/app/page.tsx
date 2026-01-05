@@ -8,6 +8,7 @@ import { FlagSchema, exampleFlagSchema } from '@magicborn/dialogue-forge/src/typ
 import { DialogueTree } from '@magicborn/dialogue-forge/src/types';
 import { exportToYarn } from '@magicborn/dialogue-forge/src/lib/yarn-converter';
 import type { ViewMode } from '@magicborn/dialogue-forge/src/types';
+import { NODE_TYPE, VIEW_MODE } from '@magicborn/dialogue-forge/src/types/constants';
 import { 
   listExamples, 
   getExampleDialogue, 
@@ -32,7 +33,7 @@ const demoDialogues: Record<string, DialogueTree> = {
     nodes: {
       'start': {
         id: 'start',
-        type: 'npc',
+        type: NODE_TYPE.NPC,
         characterId: 'stranger',
         speaker: 'Stranger', // Fallback
         x: 300,
@@ -42,7 +43,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'greeting': {
         id: 'greeting',
-        type: 'npc',
+        type: NODE_TYPE.NPC,
         characterId: 'stranger',
         speaker: 'Stranger', // Fallback
         x: 300,
@@ -52,7 +53,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'first_choice': {
         id: 'first_choice',
-        type: 'player',
+        type: NODE_TYPE.PLAYER,
         content: '',
         x: 300,
         y: 300,
@@ -85,7 +86,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'treasure_response': {
         id: 'treasure_response',
-        type: 'npc',
+        type: NODE_TYPE.NPC,
         characterId: 'stranger',
         speaker: 'Stranger', // Fallback
         x: 200,
@@ -95,7 +96,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'knowledge_response': {
         id: 'knowledge_response',
-        type: 'npc',
+        type: NODE_TYPE.NPC,
         characterId: 'stranger',
         speaker: 'Stranger', // Fallback
         x: 400,
@@ -105,7 +106,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'high_rep_response': {
         id: 'high_rep_response',
-        type: 'npc',
+        type: NODE_TYPE.NPC,
         characterId: 'stranger',
         speaker: 'Stranger', // Fallback
         x: 500,
@@ -123,7 +124,7 @@ const demoDialogues: Record<string, DialogueTree> = {
     nodes: {
       'enter_tavern': {
         id: 'enter_tavern',
-        type: 'npc',
+        type: NODE_TYPE.NPC,
         speaker: 'Narrator',
         x: 300,
         y: 50,
@@ -132,7 +133,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'bartender_greet': {
         id: 'bartender_greet',
-        type: 'npc',
+        type: NODE_TYPE.NPC,
         characterId: 'bartender',
         speaker: 'Bartender', // Fallback
         x: 300,
@@ -142,7 +143,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'tavern_choice': {
         id: 'tavern_choice',
-        type: 'player',
+        type: NODE_TYPE.PLAYER,
         content: '',
         x: 300,
         y: 280,
@@ -162,7 +163,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'drink_ale': {
         id: 'drink_ale',
-        type: 'npc',
+        type: NODE_TYPE.NPC,
         characterId: 'bartender',
         speaker: 'Bartender', // Fallback
         x: 100,
@@ -172,7 +173,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'work_info': {
         id: 'work_info',
-        type: 'npc',
+        type: NODE_TYPE.NPC,
         characterId: 'bartender',
         speaker: 'Bartender', // Fallback
         x: 300,
@@ -182,7 +183,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'accept_quest': {
         id: 'accept_quest',
-        type: 'player',
+        type: NODE_TYPE.PLAYER,
         content: '',
         x: 300,
         y: 550,
@@ -193,7 +194,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'quest_accepted': {
         id: 'quest_accepted',
-        type: 'npc',
+        type: NODE_TYPE.NPC,
         characterId: 'bartender',
         speaker: 'Bartender', // Fallback
         x: 300,
@@ -203,7 +204,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'observe_tavern': {
         id: 'observe_tavern',
-        type: 'npc',
+        type: NODE_TYPE.NPC,
         characterId: 'narrator',
         speaker: 'Narrator', // Fallback
         x: 500,
@@ -213,7 +214,7 @@ const demoDialogues: Record<string, DialogueTree> = {
       },
       'vip_response': {
         id: 'vip_response',
-        type: 'npc',
+        type: NODE_TYPE.NPC,
         characterId: 'bartender',
         speaker: 'Bartender', // Fallback
         x: 600,
@@ -243,7 +244,7 @@ const demoFlagSchema: FlagSchema = {
 export default function DialogueForgeDemo() {
   const [dialogueTree, setDialogueTree] = useState<DialogueTree>(demoDialogues['mysterious-stranger']);
   const [flagSchema, setFlagSchema] = useState<FlagSchema>(demoFlagSchema);
-  const [viewMode, setViewMode] = useState<ViewMode>('graph');
+  const [viewMode, setViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);
   const characters = getExampleCharacters(); // Get example characters
   
   // Panel states
@@ -316,9 +317,9 @@ export default function DialogueForgeDemo() {
             {/* View Mode Toggle */}
             <div className="flex items-center gap-1 bg-[#12121a] border border-[#2a2a3e] rounded-lg p-1">
               <button
-                onClick={() => setViewMode('graph')}
+                onClick={() => setViewMode(VIEW_MODE.GRAPH)}
                 className={`px-3 py-1.5 text-sm rounded transition-colors flex items-center gap-1.5 ${
-                  viewMode === 'graph'
+                  viewMode === VIEW_MODE.GRAPH
                     ? 'bg-indigo-600 text-white'
                     : 'text-gray-400 hover:text-white'
                 }`}
@@ -328,9 +329,9 @@ export default function DialogueForgeDemo() {
                 <span className="hidden sm:inline">Editor</span>
               </button>
               <button
-                onClick={() => setViewMode('play')}
+                onClick={() => setViewMode(VIEW_MODE.PLAY)}
                 className={`px-3 py-1.5 text-sm rounded transition-colors flex items-center gap-1.5 ${
-                  viewMode === 'play'
+                  viewMode === VIEW_MODE.PLAY
                     ? 'bg-green-600 text-white'
                     : 'text-gray-400 hover:text-white'
                 }`}

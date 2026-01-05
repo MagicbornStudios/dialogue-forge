@@ -1,0 +1,3 @@
+module.exports=[63893,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(40088);a.n(d("[project]/packages/dialogue-forge/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},42040,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(40088);a.n(d("[project]/packages/dialogue-forge/node_modules/next/dist/client/components/builtin/global-error.js"))},62577,a=>{"use strict";a.i(63893);var b=a.i(42040);a.n(b)}];
+
+//# sourceMappingURL=69cdb_next_dist_client_components_builtin_global-error_57478eb5.js.map

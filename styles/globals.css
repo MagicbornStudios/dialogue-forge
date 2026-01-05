@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/* Import dialogue-forge theme */
+@import '../src/styles/theme.css';
+@import '../src/styles/scrollbar.css';
+
+/* Source paths for Tailwind content detection */
+@source "./app/**/*.{js,ts,jsx,tsx,mdx}";
+@source "./components/**/*.{js,ts,jsx,tsx,mdx}";
+@source "./src/**/*.{js,ts,jsx,tsx,mdx}";
+
+/* Custom theme colors */
+@theme {
+  --color-df-base: var(--color-df-base);
+  --color-df-surface: var(--color-df-surface);
+  --color-df-elevated: var(--color-df-elevated);
+  --color-df-node-bg: var(--color-df-node-bg);
+  --color-df-node-border: var(--color-df-node-border);
+  --color-df-node-selected: var(--color-df-node-selected);
+  --color-df-node-dimmed: var(--color-df-node-dimmed);
+  --color-df-npc-bg: var(--color-df-npc-bg);
+  --color-df-npc-border: var(--color-df-npc-border);
+  --color-df-npc-header: var(--color-df-npc-header);
+  --color-df-npc-text: var(--color-df-npc-text);
+  --color-df-npc-selected: var(--color-df-npc-selected);
+  --color-df-player-bg: var(--color-df-player-bg);
+  --color-df-player-border: var(--color-df-player-border);
+  --color-df-player-header: var(--color-df-player-header);
+  --color-df-player-text: var(--color-df-player-text);
+  --color-df-player-selected: var(--color-df-player-selected);
+  --color-df-conditional-bg: var(--color-df-conditional-bg);
+  --color-df-conditional-border: var(--color-df-conditional-border);
+  --color-df-conditional-header: var(--color-df-conditional-header);
+  --color-df-conditional-text: var(--color-df-conditional-text);
+  --color-df-start: var(--color-df-start);
+  --color-df-start-bg: var(--color-df-start-bg);
+  --color-df-end: var(--color-df-end);
+  --color-df-end-bg: var(--color-df-end-bg);
+  --color-df-edge-default: var(--color-df-edge-default);
+  --color-df-edge-default-hover: var(--color-df-edge-default-hover);
+  --color-df-edge-choice-1: var(--color-df-edge-choice-1);
+  --color-df-edge-choice-2: var(--color-df-edge-choice-2);
+  --color-df-edge-choice-3: var(--color-df-edge-choice-3);
+  --color-df-edge-choice-4: var(--color-df-edge-choice-4);
+  --color-df-edge-choice-5: var(--color-df-edge-choice-5);
+  --color-df-edge-loop: var(--color-df-edge-loop);
+  --color-df-edge-dimmed: var(--color-df-edge-dimmed);
+  --color-df-error: var(--color-df-error);
+  --color-df-error-bg: var(--color-df-error-bg);
+  --color-df-warning: var(--color-df-warning);
+  --color-df-warning-bg: var(--color-df-warning-bg);
+  --color-df-success: var(--color-df-success);
+  --color-df-success-bg: var(--color-df-success-bg);
+  --color-df-info: var(--color-df-info);
+  --color-df-info-bg: var(--color-df-info-bg);
+  --color-df-text-primary: var(--color-df-text-primary);
+  --color-df-text-secondary: var(--color-df-text-secondary);
+  --color-df-text-tertiary: var(--color-df-text-tertiary);
+  --color-df-text-muted: var(--color-df-text-muted);
+  --color-df-control-bg: var(--color-df-control-bg);
+  --color-df-control-border: var(--color-df-control-border);
+  --color-df-control-hover: var(--color-df-control-hover);
+  --color-df-control-active: var(--color-df-control-active);
+  --color-df-flag-dialogue: var(--color-df-flag-dialogue);
+  --color-df-flag-dialogue-bg: var(--color-df-flag-dialogue-bg);
+  --color-df-flag-quest: var(--color-df-flag-quest);
+  --color-df-flag-quest-bg: var(--color-df-flag-quest-bg);
+  --color-df-flag-achievement: var(--color-df-flag-achievement);
+  --color-df-flag-achievement-bg: var(--color-df-flag-achievement-bg);
+  --color-df-flag-item: var(--color-df-flag-item);
+  --color-df-flag-item-bg: var(--color-df-flag-item-bg);
+  --color-df-flag-stat: var(--color-df-flag-stat);
+  --color-df-flag-stat-bg: var(--color-df-flag-stat-bg);
+  --color-df-flag-title: var(--color-df-flag-title);
+  --color-df-flag-title-bg: var(--color-df-flag-title-bg);
+  --color-df-flag-global: var(--color-df-flag-global);
+  --color-df-flag-global-bg: var(--color-df-flag-global-bg);
+  --color-df-canvas-bg: var(--color-df-canvas-bg);
+  --color-df-canvas-grid: var(--color-df-canvas-grid);
+  --color-df-sidebar-bg: var(--color-df-sidebar-bg);
+  --color-df-sidebar-border: var(--color-df-sidebar-border);
+  --color-df-editor-bg: var(--color-df-editor-bg);
+  --color-df-editor-border: var(--color-df-editor-border);
+}
+
+:root {
+  --background: #0a0a0f;
+  --foreground: #e4e4e7;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+

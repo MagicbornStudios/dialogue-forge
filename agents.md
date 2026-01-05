@@ -167,16 +167,17 @@ const flagSchema: FlagSchema = {
 
 ### Demo Application
 
-The `demo/` folder is a standalone Next.js application that:
-- **MUST be deployable independently** (no shared package dependencies)
-- Uses `@magicborn/dialogue-forge` as a local file dependency
-- Has its own `package.json` with all required dependencies
-- **DOES NOT** reference shared packages outside the repo
+The Next.js demo application runs from the **root directory**:
+- Next.js app files are in `app/`, `components/`, `public/`, `styles/` at root
+- Uses `@magicborn/dialogue-forge/src/...` imports which resolve via webpack alias
+- All dependencies are in root `package.json`
+- Build command: `npm run build:next` or `next build`
+- Dev command: `npm run dev` or `next dev`
 
-**Important**: When working on the demo:
-- Never import from `../../../../packages-shared/` paths
-- All dependencies must be in `demo/package.json`
-- The layout should be simple (no BrandedLayout or shared components)
+**Important**: 
+- The demo imports source files directly: `@magicborn/dialogue-forge/src/components/...`
+- Webpack is configured in `next.config.mjs` to resolve `@magicborn/dialogue-forge` to root
+- Path mapping in `tsconfig.json` ensures TypeScript resolves imports correctly
 
 ### Building
 
@@ -277,13 +278,16 @@ Tests use Vitest. Key test files:
 2. Run `npm run build`
 3. Run `npm publish`
 
-### Deploying the Demo
+### Deploying to Vercel
 
-The demo is a Next.js app that can be deployed to Vercel:
-1. Ensure `demo/package.json` has all dependencies
-2. No `vercel.json` needed (Vercel auto-detects Next.js)
-3. Build command: `npm run build` (runs in demo folder)
-4. Output directory: `.next`
+The Next.js app runs from the root directory. Configure Vercel as follows:
+
+1. **Root Directory**: Leave empty (use repo root)
+2. **Build Command**: `npm install && npm run build:next`
+3. **Output Directory**: `.next`
+4. **Install Command**: `npm install` (default)
+
+**Note**: The demo imports source files directly (`@magicborn/dialogue-forge/src/...`). Webpack in `next.config.mjs` resolves these imports to the local source files.
 
 ## Important Notes
 

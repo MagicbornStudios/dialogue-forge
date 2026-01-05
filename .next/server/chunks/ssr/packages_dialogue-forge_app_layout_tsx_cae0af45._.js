@@ -1,0 +1,3 @@
+module.exports=[51224,a=>{"use strict";var b=a.i(38309);function c({children:a}){return(0,b.jsx)("html",{lang:"en",children:(0,b.jsx)("body",{children:a})})}a.s(["default",()=>c,"dynamic",0,"force-static","metadata",0,{title:"Dialogue Forge - Visual Dialogue Editor",description:"Interactive demo of Dialogue Forge - a visual node-based dialogue editor with Yarn Spinner support"}])}];
+
+//# sourceMappingURL=packages_dialogue-forge_app_layout_tsx_cae0af45._.js.map

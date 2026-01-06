@@ -8,8 +8,7 @@
 
 export { VariableManager } from './variable-manager';
 export { evaluateCondition, evaluateConditions } from './condition-evaluator';
-export { processNode, isValidNextNode } from './node-processor';
-export type { ProcessedNodeResult } from './node-processor';
+export { processNode, isValidNextNode, ProcessedNodeResult } from './node-processor';
 export { executeVariableOperation, processVariableOperationsInContent } from './variable-operations';
 export type { VariableState } from './condition-evaluator';
 

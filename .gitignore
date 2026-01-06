@@ -27,5 +27,7 @@ coverage/
 .env
 .env.local
 
-demo/.next
-demo/next-env.d.ts
+# Next.js
+.next/
+next-env.d.ts
+*.tsbuildinfo

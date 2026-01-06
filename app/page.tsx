@@ -17,7 +17,7 @@ import {
   getExampleCharacters
 } from '@magicborn/dialogue-forge/src/examples';
 import { Play, Layout, FileText } from 'lucide-react';
-import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { ThemeSwitcher } from '../components/ThemeSwitcher';
 
 
 

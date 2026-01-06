@@ -148,11 +148,6 @@ export function ScenePlayer({
   // Handle Enter key for advancing NPC-only dialogues
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle Enter key when:
-      // 1. Not typing
-      // 2. Current node is NPC
-      // 3. There's a next node to advance to
-      // 4. Not waiting for player choice
       if (
         e.key === 'Enter' &&
         !isTyping &&
@@ -168,6 +163,12 @@ export function ScenePlayer({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isTyping, currentNode, availableChoices, setCurrentNodeId]);
+
+  const handleAdvance = () => {
+    if (!isTyping && currentNode?.type === 'npc' && currentNode.nextNodeId && availableChoices.length === 0) {
+      setCurrentNodeId(currentNode.nextNodeId);
+    }
+  };
 
   const handleChoice = (choice: Choice) => {
     const currentNode = dialogue.nodes[currentNodeId];
@@ -206,18 +207,11 @@ export function ScenePlayer({
       });
     }
   };
-  console.log("isnpc", currentNode?.type === 'npc');
-  console.log("isplayer", currentNode?.type === 'player');
-  console.log("isTyping", isTyping);
-  console.log("availableChoices", availableChoices);
-  console.log("visitedNodes", visitedNodes);
-  console.log("flags", flags);
-  console.log("history", history);
-  console.log("currentNodeId", currentNodeId);
-  console.log("dialogue", dialogue);
+
+  const canAdvance = !isTyping && currentNode?.type === 'npc' && currentNode.nextNodeId && availableChoices.length === 0;
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col h-full cursor-pointer" onClick={handleAdvance}>
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-2xl mx-auto space-y-4">
           {history.map((entry, idx) => (
@@ -252,7 +246,7 @@ export function ScenePlayer({
       </div>
 
       {currentNode?.type === 'player' && !isTyping && availableChoices.length > 0 && (
-        <div className="border-t border-[#1a1a2e] bg-[#0d0d14]/80 backdrop-blur-sm p-4">
+        <div className="border-t border-[#1a1a2e] bg-[#0d0d14]/80 backdrop-blur-sm p-4" onClick={(e) => e.stopPropagation()}>
           <div className="max-w-2xl mx-auto space-y-2">
             {availableChoices.map((choice) => (
               <button
@@ -271,40 +265,22 @@ export function ScenePlayer({
       )}
 
       {currentNode?.type === 'npc' && !currentNode.nextNodeId && !isTyping && (
-        <div className="border-t border-[#1a1a2e] bg-[#0d0d14]/80 backdrop-blur-sm p-4">
+        <div className="border-t border-[#1a1a2e] bg-[#0d0d14]/80 backdrop-blur-sm p-4" onClick={(e) => e.stopPropagation()}>
           <div className="max-w-2xl mx-auto text-center">
-            <p className="text-gray-500 mb-3">Dialogue complete</p>
-            <button
-              onClick={() => onComplete({
-                updatedFlags: flags,
-                dialogueTree: dialogue,
-                completedNodeIds: Array.from(visitedNodes)
-              })}
-              className="px-4 py-2 bg-[#e94560] hover:bg-[#d63850] text-white rounded-lg transition-colors"
-            >
-              Close
-            </button>
+            <p className="text-gray-400 text-sm">End of dialogue</p>
           </div>
         </div>
       )}
 
-      {currentNode?.type === 'npc' && currentNode.nextNodeId && !isTyping && (
-        <div className="border-t border-[#1a1a2e] bg-[#0d0d14]/80 backdrop-blur-sm p-4 sticky bottom-0 z-10">
+      {canAdvance && (
+        <div className="border-t border-[#1a1a2e] bg-[#0d0d14]/80 backdrop-blur-sm p-4">
           <div className="max-w-2xl mx-auto text-center">
-            <p className="text-xs text-gray-400 mb-3">Press <kbd className="px-2 py-1 bg-[#1a1a2e] border border-[#2a2a3e] rounded text-xs">Enter</kbd> to continue</p>
-            <button
-              onClick={() => setCurrentNodeId(currentNode.nextNodeId!)}
-              className="px-6 py-3 bg-[#e94560] hover:bg-[#d63850] text-white rounded-lg transition-colors font-medium shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-              autoFocus
-            >
-              Continue →
-            </button>
+            <p className="text-xs text-gray-500 flex items-center justify-center gap-1">
+              Press <kbd className="px-1.5 py-0.5 bg-[#1a1a2e] border border-[#2a2a3e] rounded text-[10px] font-mono">Enter</kbd> or click to continue
+            </p>
           </div>
         </div>
       )}
     </div>
   );
 }
-
-
-

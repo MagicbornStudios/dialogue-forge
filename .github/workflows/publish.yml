@@ -104,9 +104,9 @@ jobs:
         # Demo dependencies are workspace refs - not needed for publishing
       
       - name: Build package
-        run: npm run build:lib
-        # This builds the library code to dist/ for npm publishing
-        # (npm run build is for Next.js/Vercel)
+        run: npm run build
+        # This builds the library code to dist/
+        # Demo is included as-is in the published package
       
       - name: Check current version and bump if needed
         id: version_check

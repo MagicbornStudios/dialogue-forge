@@ -40,6 +40,24 @@ export function createNode(
       x,
       y
     };
+  } else if (type === NODE_TYPE.STORYLET) {
+    return {
+      id,
+      type,
+      content: 'Storylet',
+      storyletId: undefined,
+      x,
+      y
+    };
+  } else if (type === NODE_TYPE.RANDOMIZER) {
+    return {
+      id,
+      type,
+      content: 'Random Storylet',
+      storyletPool: [],
+      x,
+      y
+    };
   }
   
   // Fallback

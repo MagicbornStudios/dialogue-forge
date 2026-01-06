@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import 'reactflow/dist/style.css';
 import 'react-tooltip/dist/react-tooltip.css';
-import '@/styles/globals.css';
+import '../styles/globals.css';
 
 export const metadata: Metadata = {
   title: 'Dialogue Forge - Visual Dialogue Editor',

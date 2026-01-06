@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { DialogueTree } from '../types';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
+import { DialogueTree, DialogueNode, Choice } from '../types';
 import { FlagSchema, FlagType } from '../types/flags';
-import { GameFlagState, DialogueResult, FlagState } from '../types/game-state';
+import { GameFlagState, DialogueResult, FlagState, BaseGameState } from '../types/game-state';
 import { initializeFlags } from '../lib/flag-manager';
-import { ScenePlayer, ScenePlayerProps } from './ScenePlayer';
+import { GamePlayer } from './GamePlayer';
 
 interface PlayViewProps {
   dialogue: DialogueTree;
@@ -35,33 +35,31 @@ export function PlayView({ dialogue, startNodeId, flagSchema, initialFlags }: Pl
   const initialFlagsRef = useRef<GameFlagState>(initialGameFlags);
   
   const handleComplete = (result: DialogueResult) => {
-    // Update flags from result
     if (result.updatedFlags) {
       setCurrentFlags(result.updatedFlags);
     }
   };
-  
-  const handleFlagUpdate = (flags: FlagState) => {
-    setCurrentFlags(flags);
-    
-    // Track which flags were set during this run
-    if (flagSchema) {
-      setFlagsSetDuringRun(prev => {
-        const next = new Set(prev);
-        Object.keys(flags).forEach(flagId => {
-          const initialValue = initialFlagsRef.current[flagId];
-          const currentValue = flags[flagId];
-          if (initialValue !== currentValue) {
-            next.add(flagId);
-          }
-        });
-        return next;
-      });
-    }
-  };
 
-  // Update gameState when flags change (for ScenePlayer)
-  const currentGameState = useMemo(() => {
+  const handleGameStateChange = useCallback((newState: BaseGameState) => {
+    if (newState.flags) {
+      setCurrentFlags(newState.flags);
+      if (flagSchema) {
+        setFlagsSetDuringRun(prev => {
+          const next = new Set(prev);
+          Object.keys(newState.flags!).forEach(flagId => {
+            const initialValue = initialFlagsRef.current[flagId];
+            const currentValue = newState.flags![flagId];
+            if (initialValue !== currentValue) {
+              next.add(flagId);
+            }
+          });
+          return next;
+        });
+      }
+    }
+  }, [flagSchema]);
+
+  const currentGameState = useMemo((): BaseGameState => {
     return { flags: currentFlags };
   }, [currentFlags]);
   
@@ -191,13 +189,14 @@ export function PlayView({ dialogue, startNodeId, flagSchema, initialFlags }: Pl
         </div>
       )}
       
-      {/* ScenePlayer handles all dialogue playback */}
-      <ScenePlayer
+      {/* GamePlayer handles all dialogue playback */}
+      <GamePlayer<BaseGameState>
         dialogue={dialogue}
         gameState={currentGameState}
+        onGameStateChange={handleGameStateChange}
         startNodeId={startNodeId}
         onComplete={handleComplete}
-        onFlagUpdate={handleFlagUpdate}
+        onClose={() => {}}
       />
     </main>
   );

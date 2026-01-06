@@ -103,4 +103,45 @@
   --shadow-df-md: 0 4px 8px oklch(0 0 0 / 0.4);
   --shadow-df-lg: 0 8px 16px oklch(0 0 0 / 0.5);
   --shadow-df-glow: 0 0 12px oklch(0.45 0.12 15 / 0.3);
+  
+  /* Narrative Node Colors - Act (Gold/Amber) */
+  --color-df-act-bg: oklch(0.22 0.08 65);
+  --color-df-act-border: oklch(0.45 0.12 65);
+  --color-df-act-header: oklch(0.35 0.15 55);
+  --color-df-act-text: oklch(0.90 0.05 65);
+  --color-df-act-selected: oklch(0.65 0.20 55);
+  
+  /* Narrative Node Colors - Chapter (Blue) */
+  --color-df-chapter-bg: oklch(0.20 0.08 240);
+  --color-df-chapter-border: oklch(0.40 0.12 240);
+  --color-df-chapter-header: oklch(0.30 0.15 235);
+  --color-df-chapter-text: oklch(0.88 0.03 240);
+  --color-df-chapter-selected: oklch(0.60 0.20 240);
+  
+  /* Narrative Node Colors - Page (Emerald/Green) */
+  --color-df-page-bg: oklch(0.20 0.06 160);
+  --color-df-page-border: oklch(0.42 0.12 160);
+  --color-df-page-header: oklch(0.28 0.12 155);
+  --color-df-page-text: oklch(0.88 0.04 160);
+  --color-df-page-selected: oklch(0.58 0.18 160);
+  
+  /* Narrative Node Colors - Storylet (Purple) */
+  --color-df-storylet-bg: oklch(0.22 0.10 300);
+  --color-df-storylet-border: oklch(0.45 0.15 300);
+  --color-df-storylet-header: oklch(0.32 0.18 295);
+  --color-df-storylet-text: oklch(0.88 0.04 300);
+  --color-df-storylet-selected: oklch(0.62 0.22 300);
+  
+  /* Narrative Edge Colors */
+  --color-df-edge-act-chapter: oklch(0.55 0.15 65);
+  --color-df-edge-chapter-page: oklch(0.50 0.15 240);
+  --color-df-edge-page-dialogue: oklch(0.55 0.15 160);
+  --color-df-edge-storylet: oklch(0.50 0.18 300);
+}
+
+/* Dialogue Editor theme variant when inside narrative context */
+.df-dialogue-theme {
+  background: radial-gradient(1200px 800px at 20% 0%, rgba(39, 39, 65, 0.35), transparent),
+              radial-gradient(1000px 700px at 80% 20%, rgba(36, 52, 36, 0.25), transparent),
+              var(--color-df-base);
 }

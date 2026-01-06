@@ -10,6 +10,8 @@ export const VIEW_MODE = {
   GRAPH: 'graph',
   YARN: 'yarn',
   PLAY: 'play',
+  NARRATIVE: 'narrative',
+  STORYLETS: 'storylets',
 } as const;
 
 export type ViewMode = typeof VIEW_MODE[keyof typeof VIEW_MODE];
@@ -21,6 +23,8 @@ export const NODE_TYPE = {
   NPC: 'npc',
   PLAYER: 'player',
   CONDITIONAL: 'conditional',
+  STORYLET: 'storylet',
+  RANDOMIZER: 'randomizer',
 } as const;
 
 export type NodeType = typeof NODE_TYPE[keyof typeof NODE_TYPE];

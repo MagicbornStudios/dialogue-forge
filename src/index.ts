@@ -10,6 +10,18 @@ export { CharacterSelector } from './components/CharacterSelector';
 export { ZoomControls } from './components/ZoomControls';
 export { ExampleLoader } from './components/ExampleLoader';
 
+// Narrative Thread Components
+export { NarrativeEditor } from './components/NarrativeEditor';
+export { NarrativeGraphView } from './components/NarrativeGraphView';
+export { NarrativeBreadcrumb } from './components/NarrativeBreadcrumb';
+export { NarrativePlayer } from './components/NarrativePlayer';
+export { StoryletLibrary } from './components/StoryletLibrary';
+export { ActNodeV2 } from './components/ActNodeV2';
+export { ChapterNodeV2 } from './components/ChapterNodeV2';
+export { PageNodeV2 } from './components/PageNodeV2';
+export { StoryletNodeV2 } from './components/StoryletNodeV2';
+export { StartNodeV2, EndNodeV2 } from './components/StartEndNodeV2';
+
 // Export styles
 import './styles/scrollbar.css';
 import './styles/theme.css';
@@ -24,6 +36,7 @@ export * from './types/flags';
 export * from './types/game-state';
 export * from './types/characters';
 export * from './types/constants';
+export * from './types/narrative';
 
 // Export game state utilities
 export { 
@@ -39,3 +52,12 @@ export { exportToYarn, importFromYarn } from './lib/yarn-converter';
 export { initializeFlags, mergeFlagUpdates, validateFlags, getFlagValue } from './lib/flag-manager';
 export * from './utils/node-helpers';
 export * from './utils/feature-flags';
+
+// Export narrative utilities
+export * from './utils/narrative-helpers';
+export {
+  convertNarrativeThreadToReactFlow,
+  updateNarrativeThreadFromReactFlow,
+  getStoryletsForPage,
+  NARRATIVE_EDGE_COLORS,
+} from './utils/narrative-converter';

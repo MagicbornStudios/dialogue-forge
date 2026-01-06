@@ -28,6 +28,12 @@ export interface ConditionalBlock {
   nextNodeId?: string; // Optional: where to go after this block's content
 }
 
+export interface StoryletPoolItem {
+  storyletId: string;
+  weight?: number; // Default: 1. Higher = more likely to be selected
+  conditions?: Condition[]; // Optional conditions for this specific storylet
+}
+
 export interface DialogueNode {
   id: string;
   type: NodeType;
@@ -38,6 +44,8 @@ export interface DialogueNode {
   nextNodeId?: string;
   setFlags?: string[];
   conditionalBlocks?: ConditionalBlock[]; // For conditional nodes (if/elseif/else/endif)
+  storyletId?: string; // For storylet nodes - reference to a storylet
+  storyletPool?: StoryletPoolItem[]; // For randomizer nodes - pool of storylets to pick from
   x: number;
   y: number;
 }

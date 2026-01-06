@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { DialogueNode, DialogueTree, Choice, ConditionalBlock } from '../types';
+import { DialogueNode, DialogueTree, Choice, ConditionalBlock, StoryletPoolItem } from '../types';
 import { FlagSchema } from '../types/flags';
 import { Character } from '../types/characters';
+import { Storylet } from '../types/narrative';
 import { FlagSelector } from './FlagSelector';
 import { CharacterSelector } from './CharacterSelector';
 import { CONDITION_OPERATOR } from '../types/constants';
-import { AlertCircle, CheckCircle, Info, GitBranch, X, User, Maximize2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info, GitBranch, X, User, Maximize2, Bookmark, Shuffle, Plus, Trash2, Percent } from 'lucide-react';
 import { CHOICE_COLORS } from '../utils/reactflow-converter';
 import { EdgeIcon } from './EdgeIcon';
 import { ConditionAutocomplete } from './ConditionAutocomplete';
@@ -23,6 +24,7 @@ interface NodeEditorProps {
   onFocusNode?: (nodeId: string) => void;
   flagSchema?: FlagSchema;
   characters?: Record<string, Character>;
+  storylets?: Record<string, Storylet>;
 }
 
 export function NodeEditor({
@@ -38,6 +40,7 @@ export function NodeEditor({
   onFocusNode,
   flagSchema,
   characters = {},
+  storylets = {},
 }: NodeEditorProps) {
   // Local state for condition input values (keyed by block id for conditional blocks, choice id for choices)
   const [conditionInputs, setConditionInputs] = useState<Record<string, string>>({});
@@ -295,6 +298,8 @@ export function NodeEditor({
     if (node.type === 'npc') return 'border-df-npc-border';
     if (node.type === 'player') return 'border-df-player-border';
     if (node.type === 'conditional') return 'border-df-conditional-border';
+    if (node.type === 'storylet') return 'border-purple-600/50';
+    if (node.type === 'randomizer') return 'border-orange-600/50';
     return 'border-df-control-border';
   };
 
@@ -303,7 +308,19 @@ export function NodeEditor({
     if (node.type === 'npc') return 'bg-df-npc-selected/20 text-df-npc-selected';
     if (node.type === 'player') return 'bg-df-player-selected/20 text-df-player-selected';
     if (node.type === 'conditional') return 'bg-df-conditional-border/20 text-df-conditional-border';
+    if (node.type === 'storylet') return 'bg-purple-500/20 text-purple-400';
+    if (node.type === 'randomizer') return 'bg-orange-500/20 text-orange-400';
     return 'bg-df-control-bg text-df-text-secondary';
+  };
+
+  // Get node type label
+  const getNodeTypeLabel = () => {
+    if (node.type === 'npc') return 'NPC';
+    if (node.type === 'player') return 'PLAYER';
+    if (node.type === 'conditional') return 'CONDITIONAL';
+    if (node.type === 'storylet') return 'STORYLET';
+    if (node.type === 'randomizer') return 'RANDOMIZER';
+    return (node.type as string).toUpperCase();
   };
 
   return (
@@ -328,7 +345,7 @@ export function NodeEditor({
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <span className={`text-xs px-2 py-0.5 rounded ${getNodeTypeBadge()}`}>
-            {node.type === 'npc' ? 'NPC' : node.type === 'player' ? 'PLAYER' : 'CONDITIONAL'}
+            {getNodeTypeLabel()}
           </span>
           <div className="flex gap-1">
             <button onClick={onDelete} className="p-1 text-gray-500 hover:text-red-400" title="Delete node">
@@ -1319,6 +1336,169 @@ export function NodeEditor({
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* Storylet Node Section */}
+        {node.type === 'storylet' && (
+          <div className="space-y-3">
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase flex items-center gap-1">
+                <Bookmark size={10} className="text-purple-400" />
+                Select Storylet
+              </label>
+              <select
+                value={node.storyletId || ''}
+                onChange={(e) => onUpdate({ storyletId: e.target.value || undefined })}
+                className="w-full bg-df-elevated border border-purple-600/30 rounded px-2 py-2 text-sm text-df-text-primary focus:border-purple-400 outline-none mt-1"
+              >
+                <option value="">-- Select Storylet --</option>
+                {Object.values(storylets).map((storylet) => (
+                  <option key={storylet.id} value={storylet.id}>
+                    {storylet.title}
+                  </option>
+                ))}
+              </select>
+              {Object.keys(storylets).length === 0 && (
+                <p className="text-[10px] text-gray-500 mt-1">
+                  No storylets available. Create storylets in the Storylets view first.
+                </p>
+              )}
+            </div>
+            {node.storyletId && storylets[node.storyletId] && (
+              <div className="p-2 bg-purple-900/20 border border-purple-600/30 rounded text-xs">
+                <div className="text-purple-400 font-medium">{storylets[node.storyletId].title}</div>
+                {storylets[node.storyletId].description && (
+                  <div className="text-gray-400 mt-1">{storylets[node.storyletId].description}</div>
+                )}
+                <div className="text-[10px] text-gray-500 mt-1 font-mono">ID: {node.storyletId}</div>
+              </div>
+            )}
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase">Label</label>
+              <input
+                type="text"
+                value={node.content || ''}
+                onChange={(e) => onUpdate({ content: e.target.value })}
+                className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-purple-400 outline-none"
+                placeholder="Node label (optional)"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Randomizer Node Section */}
+        {node.type === 'randomizer' && (
+          <div className="space-y-3">
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase">Label</label>
+              <input
+                type="text"
+                value={node.content || ''}
+                onChange={(e) => onUpdate({ content: e.target.value })}
+                className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-orange-400 outline-none"
+                placeholder="Random Storylet"
+              />
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[10px] text-gray-500 uppercase flex items-center gap-1">
+                  <Shuffle size={10} className="text-orange-400" />
+                  Storylet Pool
+                </label>
+                <button
+                  onClick={() => {
+                    const pool = node.storyletPool || [];
+                    const availableStorylets = Object.keys(storylets).filter(
+                      id => !pool.some(item => item.storyletId === id)
+                    );
+                    if (availableStorylets.length > 0) {
+                      onUpdate({
+                        storyletPool: [...pool, { storyletId: availableStorylets[0], weight: 1 }]
+                      });
+                    }
+                  }}
+                  disabled={Object.keys(storylets).length === 0 || 
+                    (node.storyletPool?.length || 0) >= Object.keys(storylets).length}
+                  className="text-[10px] text-orange-400 hover:text-orange-300 disabled:text-gray-600 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  <Plus size={10} /> Add
+                </button>
+              </div>
+              
+              {Object.keys(storylets).length === 0 ? (
+                <p className="text-[10px] text-gray-500 p-2 bg-gray-800/50 rounded">
+                  No storylets available. Create storylets in the Storylets view first.
+                </p>
+              ) : (node.storyletPool?.length || 0) === 0 ? (
+                <p className="text-[10px] text-gray-500 p-2 bg-gray-800/50 rounded">
+                  No storylets in pool. Add storylets to randomize.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {node.storyletPool?.map((item, idx) => {
+                    const pool = node.storyletPool || [];
+                    const totalWeight = pool.reduce((sum, i) => sum + (i.weight || 1), 0);
+                    const percentage = totalWeight > 0 ? Math.round(((item.weight || 1) / totalWeight) * 100) : 0;
+                    const availableStorylets = Object.keys(storylets).filter(
+                      id => id === item.storyletId || !pool.some(p => p.storyletId === id)
+                    );
+                    
+                    return (
+                      <div key={idx} className="p-2 bg-gray-800/50 border border-orange-600/30 rounded space-y-2">
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={item.storyletId}
+                            onChange={(e) => {
+                              const newPool = [...pool];
+                              newPool[idx] = { ...newPool[idx], storyletId: e.target.value };
+                              onUpdate({ storyletPool: newPool });
+                            }}
+                            className="flex-1 bg-df-elevated border border-df-control-border rounded px-2 py-1 text-xs text-df-text-primary focus:border-orange-400 outline-none"
+                          >
+                            {availableStorylets.map((id) => (
+                              <option key={id} value={id}>
+                                {storylets[id]?.title || id}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => {
+                              const newPool = pool.filter((_, i) => i !== idx);
+                              onUpdate({ storyletPool: newPool });
+                            }}
+                            className="p-1 text-gray-500 hover:text-red-400"
+                            title="Remove from pool"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-[10px] text-gray-500 flex items-center gap-1">
+                            <Percent size={10} className="text-orange-400" />
+                            Weight
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={item.weight || 1}
+                            onChange={(e) => {
+                              const newPool = [...pool];
+                              newPool[idx] = { ...newPool[idx], weight: Math.max(1, parseInt(e.target.value) || 1) };
+                              onUpdate({ storyletPool: newPool });
+                            }}
+                            className="w-16 bg-df-elevated border border-df-control-border rounded px-2 py-1 text-xs text-df-text-primary focus:border-orange-400 outline-none"
+                          />
+                          <span className="text-[10px] text-orange-400 font-medium">{percentage}%</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}

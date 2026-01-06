@@ -40,10 +40,13 @@ import { PlayView } from './PlayView';
 import { NPCNodeV2 } from './NPCNodeV2';
 import { PlayerNodeV2 } from './PlayerNodeV2';
 import { ConditionalNodeV2 } from './ConditionalNodeV2';
+import { StoryletDialogueNodeV2 } from './StoryletDialogueNodeV2';
+import { RandomizerDialogueNodeV2 } from './RandomizerDialogueNodeV2';
 import { ChoiceEdgeV2 } from './ChoiceEdgeV2';
 import { NPCEdgeV2 } from './NPCEdgeV2';
 import { FlagSchema } from '../types/flags';
 import { Character } from '../types/characters';
+import { Storylet } from '../types/narrative';
 import { NODE_WIDTH } from '../utils/constants';
 import { VIEW_MODE } from '../types/constants';
 
@@ -52,6 +55,8 @@ const nodeTypes = {
   npc: NPCNodeV2,
   player: PlayerNodeV2,
   conditional: ConditionalNodeV2,
+  storylet: StoryletDialogueNodeV2,
+  randomizer: RandomizerDialogueNodeV2,
 };
 
 const edgeTypes = {
@@ -59,9 +64,17 @@ const edgeTypes = {
   default: NPCEdgeV2, // Use custom component for NPC edges instead of React Flow default
 };
 
+interface NarrativeContext {
+  nodeId: string;
+  nodeTitle: string;
+  nodeType: 'act' | 'chapter' | 'page';
+  onBack: () => void;
+}
+
 interface DialogueEditorV2InternalProps extends DialogueEditorProps {
   flagSchema?: FlagSchema;
   characters?: Record<string, Character>; // Characters from game state
+  storylets?: Record<string, Storylet>; // Storylets from narrative thread for title lookup
   initialViewMode?: ViewMode;
   viewMode?: ViewMode; // Controlled view mode (if provided, overrides initialViewMode)
   onViewModeChange?: (mode: ViewMode) => void; // Callback when view mode changes
@@ -71,6 +84,7 @@ interface DialogueEditorV2InternalProps extends DialogueEditorProps {
   onOpenGuide?: () => void;
   onLoadExampleDialogue?: (dialogue: DialogueTree) => void;
   onLoadExampleFlags?: (flags: FlagSchema) => void;
+  narrativeContext?: NarrativeContext; // Context when editing dialogue within narrative
   // Event hooks from DialogueEditorProps are already included
 }
 
@@ -83,6 +97,7 @@ function DialogueEditorV2Internal({
   showTitleEditor = true,
   flagSchema,
   characters = {},
+  storylets = {},
   initialViewMode = VIEW_MODE.GRAPH,
   viewMode: controlledViewMode,
   onViewModeChange,
@@ -92,6 +107,7 @@ function DialogueEditorV2Internal({
   onOpenGuide,
   onLoadExampleDialogue,
   onLoadExampleFlags,
+  narrativeContext,
   // Event hooks
   onNodeAdd,
   onNodeDelete,
@@ -261,7 +277,7 @@ function DialogueEditorV2Internal({
     return ends;
   }, [dialogue]);
 
-  // Add flagSchema, characters, dim state, and layout direction to node data
+  // Add flagSchema, characters, storylets, dim state, and layout direction to node data
   const nodesWithFlags = useMemo(() => {
     const hasSelection = selectedNodeId !== null && showPathHighlight;
     const startNodeId = dialogue?.startNodeId;
@@ -269,26 +285,43 @@ function DialogueEditorV2Internal({
     return nodes.map(node => {
       const isInPath = showPathHighlight && nodeDepths.has(node.id);
       const isSelected = node.id === selectedNodeId;
-      // Dim nodes that aren't in the path when something is selected (only if path highlight is on)
       const isDimmed = hasSelection && !isInPath && !isSelected;
       const isStartNode = node.id === startNodeId;
       const isEndNode = endNodeIds.has(node.id);
+      
+      const dialogueNode = node.data.node as DialogueNode;
+      let storyletTitle: string | undefined;
+      let storyletTitles: Record<string, string> | undefined;
+      
+      if (dialogueNode.type === 'storylet' && dialogueNode.storyletId) {
+        const storylet = storylets[dialogueNode.storyletId];
+        storyletTitle = storylet?.title || dialogueNode.storyletId;
+      }
+      if (dialogueNode.type === 'randomizer' && dialogueNode.storyletPool) {
+        storyletTitles = {};
+        dialogueNode.storyletPool.forEach(item => {
+          const storylet = storylets[item.storyletId];
+          storyletTitles![item.storyletId] = storylet?.title || item.storyletId;
+        });
+      }
       
       return {
         ...node,
         data: {
           ...node.data,
           flagSchema,
-          characters, // Pass characters to all nodes including conditional
+          characters,
           isDimmed,
           isInPath,
           layoutDirection,
           isStartNode,
           isEndNode,
+          ...(storyletTitle && { storyletTitle }),
+          ...(storyletTitles && { storyletTitles }),
         },
       };
     });
-  }, [nodes, flagSchema, characters, nodeDepths, selectedNodeId, layoutDirection, showPathHighlight, dialogue, endNodeIds]);
+  }, [nodes, flagSchema, characters, storylets, nodeDepths, selectedNodeId, layoutDirection, showPathHighlight, dialogue, endNodeIds]);
 
   if (!dialogue) {
     return (
@@ -831,7 +864,7 @@ function DialogueEditorV2Internal({
   }, [dialogue, onChange, edges]);
 
   // Add node from context menu or edge drop
-  const handleAddNode = useCallback((type: 'npc' | 'player' | 'conditional', x: number, y: number, autoConnect?: { fromNodeId: string; fromChoiceIdx?: number; fromBlockIdx?: number; sourceHandle?: string }) => {
+  const handleAddNode = useCallback((type: 'npc' | 'player' | 'conditional' | 'storylet' | 'randomizer', x: number, y: number, autoConnect?: { fromNodeId: string; fromChoiceIdx?: number; fromBlockIdx?: number; sourceHandle?: string }) => {
     const newId = `${type}_${Date.now()}`;
     const newNode = createNode(type, newId, x, y);
     
@@ -1379,6 +1412,23 @@ function DialogueEditorV2Internal({
                     >
                       Add Conditional Node
                     </button>
+                    <div className="border-t border-df-sidebar-border my-1" />
+                    <button
+                      onClick={() => {
+                        handleAddNode('storylet', contextMenu.graphX, contextMenu.graphY);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-purple-400 hover:bg-df-elevated rounded"
+                    >
+                      Add Storylet Node
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleAddNode('randomizer', contextMenu.graphX, contextMenu.graphY);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-orange-400 hover:bg-df-elevated rounded"
+                    >
+                      Add Randomizer Node
+                    </button>
                     <button
                       onClick={() => setContextMenu(null)}
                       className="w-full text-left px-3 py-2 text-sm text-df-text-secondary hover:bg-df-elevated rounded"
@@ -1437,6 +1487,33 @@ function DialogueEditorV2Internal({
                       className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
                     >
                       Add Conditional Node
+                    </button>
+                    <div className="border-t border-df-sidebar-border my-1" />
+                    <button
+                      onClick={() => {
+                        handleAddNode('storylet', edgeDropMenu.graphX, edgeDropMenu.graphY, {
+                          fromNodeId: edgeDropMenu.fromNodeId,
+                          fromChoiceIdx: edgeDropMenu.fromChoiceIdx,
+                          fromBlockIdx: edgeDropMenu.fromBlockIdx,
+                          sourceHandle: edgeDropMenu.sourceHandle,
+                        });
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-purple-400 hover:bg-df-elevated rounded"
+                    >
+                      Add Storylet Node
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleAddNode('randomizer', edgeDropMenu.graphX, edgeDropMenu.graphY, {
+                          fromNodeId: edgeDropMenu.fromNodeId,
+                          fromChoiceIdx: edgeDropMenu.fromChoiceIdx,
+                          fromBlockIdx: edgeDropMenu.fromBlockIdx,
+                          sourceHandle: edgeDropMenu.sourceHandle,
+                        });
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-orange-400 hover:bg-df-elevated rounded"
+                    >
+                      Add Randomizer Node
                     </button>
                     <button
                       onClick={() => {
@@ -1583,6 +1660,7 @@ function DialogueEditorV2Internal({
               node={selectedNode}
               dialogue={dialogue}
               characters={characters}
+              storylets={storylets}
               onUpdate={(updates) => handleUpdateNode(selectedNode.id, updates)}
               onFocusNode={(nodeId) => {
                 const targetNode = nodes.find(n => n.id === nodeId);
@@ -1667,6 +1745,7 @@ function DialogueEditorV2Internal({
 export function DialogueEditorV2(props: DialogueEditorProps & { 
   flagSchema?: FlagSchema;
   characters?: Record<string, Character>; // Characters from game state
+  storylets?: Record<string, Storylet>; // Storylets from narrative thread for title lookup
   initialViewMode?: ViewMode;
   viewMode?: ViewMode;
   onViewModeChange?: (mode: ViewMode) => void;

@@ -146,6 +146,34 @@ export function convertDialogueTreeToReactFlow(
         }
       });
     }
+
+    if (node.type === NODE_TYPE.STORYLET && node.nextNodeId) {
+      edges.push({
+        id: `${node.id}-next`,
+        source: node.id,
+        target: node.nextNodeId,
+        sourceHandle: 'next',
+        type: 'default',
+        style: {
+          stroke: '#a855f7',
+          strokeWidth: 2,
+        },
+      } as Edge);
+    }
+
+    if (node.type === NODE_TYPE.RANDOMIZER && node.nextNodeId) {
+      edges.push({
+        id: `${node.id}-next`,
+        source: node.id,
+        target: node.nextNodeId,
+        sourceHandle: 'next',
+        type: 'default',
+        style: {
+          stroke: '#f97316',
+          strokeWidth: 2,
+        },
+      } as Edge);
+    }
   });
 
   return { nodes, edges };
@@ -186,6 +214,11 @@ export function updateDialogueTreeFromReactFlow(
           ...block,
           nextNodeId: undefined,
         })) : [],
+      };
+    } else if (node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.RANDOMIZER) {
+      updatedNodes[node.id] = {
+        ...node,
+        nextNodeId: undefined,
       };
     } else {
       updatedNodes[node.id] = { ...node };
@@ -242,6 +275,18 @@ export function updateDialogueTreeFromReactFlow(
           conditionalBlocks: updatedBlocks,
         };
       }
+    } else if (edge.sourceHandle === 'next' && sourceNode.type === NODE_TYPE.STORYLET) {
+      // Storylet next connection
+      updatedNodes[edge.source] = {
+        ...sourceNode,
+        nextNodeId: edge.target,
+      };
+    } else if (edge.sourceHandle === 'next' && sourceNode.type === NODE_TYPE.RANDOMIZER) {
+      // Randomizer next connection
+      updatedNodes[edge.source] = {
+        ...sourceNode,
+        nextNodeId: edge.target,
+      };
     }
   });
 

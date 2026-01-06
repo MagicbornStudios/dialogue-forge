@@ -1,8 +1,12 @@
 export { DialogueEditorV2 } from './components/DialogueEditorV2';
+// Legacy scene player (use GamePlayer for new experiences)
 export { ScenePlayer } from './components/ScenePlayer';
 export type { ScenePlayerProps } from './components/ScenePlayer';
 // Legacy export for backward compatibility
 export { ScenePlayer as DialogueSimulator } from './components/ScenePlayer';
+export { GamePlayer } from './components/GamePlayer';
+export { useDialogueRunner } from './hooks/useDialogueRunner';
+export { useNarrativeTraversal } from './hooks/useNarrativeTraversal';
 export { GuidePanel } from './components/GuidePanel';
 export { FlagSelector } from './components/FlagSelector';
 export { FlagManager } from './components/FlagManager';

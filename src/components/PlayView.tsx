@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DialogueTree } from '../types';
 import { FlagSchema, FlagType } from '../types/flags';
-import { GameFlagState, DialogueResult, FlagState } from '../types/game-state';
+import { DialogueResult, FlagState, GameFlagState } from '../types/game-state';
 import { initializeFlags } from '../lib/flag-manager';
-import { ScenePlayer, ScenePlayerProps } from './ScenePlayer';
+import { FLAG_TYPE } from '../types/constants';
+import { GamePlayer } from './GamePlayer';
 
 interface PlayViewProps {
   dialogue: DialogueTree;
@@ -22,18 +23,22 @@ export function PlayView({ dialogue, startNodeId, flagSchema, initialFlags }: Pl
     return initialFlags || {};
   }, [flagSchema, initialFlags]);
   
-  // Convert flags to gameState format for ScenePlayer
-  const gameState = useMemo(() => {
-    return { flags: initialGameFlags };
-  }, [initialGameFlags]);
-  
   const [currentFlags, setCurrentFlags] = useState<FlagState>(initialGameFlags);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [flagsSetDuringRun, setFlagsSetDuringRun] = useState<Set<string>>(new Set());
-  
+
   // Track initial flags to detect changes
   const initialFlagsRef = useRef<GameFlagState>(initialGameFlags);
-  
+
+  useEffect(() => {
+    initialFlagsRef.current = initialGameFlags;
+  }, [initialGameFlags]);
+
+  useEffect(() => {
+    setCurrentFlags(initialGameFlags);
+    setFlagsSetDuringRun(new Set());
+  }, [initialGameFlags]);
+
   const handleComplete = (result: DialogueResult) => {
     // Update flags from result
     if (result.updatedFlags) {
@@ -60,25 +65,20 @@ export function PlayView({ dialogue, startNodeId, flagSchema, initialFlags }: Pl
     }
   };
 
-  // Update gameState when flags change (for ScenePlayer)
-  const currentGameState = useMemo(() => {
-    return { flags: currentFlags };
-  }, [currentFlags]);
-  
   // Get all non-dialogue flags from schema
   const gameFlagsList = useMemo(() => {
     if (!flagSchema) return [];
-    return flagSchema.flags.filter(f => f.type !== 'dialogue');
+    return flagSchema.flags.filter(f => f.type !== FLAG_TYPE.DIALOGUE);
   }, [flagSchema]);
-  
+
   const flagTypeColors: Record<FlagType, string> = {
-    dialogue: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
-    quest: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    achievement: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    item: 'bg-green-500/20 text-green-400 border-green-500/30',
-    stat: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    title: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
-    global: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    [FLAG_TYPE.DIALOGUE]: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    [FLAG_TYPE.QUEST]: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    [FLAG_TYPE.ACHIEVEMENT]: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    [FLAG_TYPE.ITEM]: 'bg-green-500/20 text-green-400 border-green-500/30',
+    [FLAG_TYPE.STAT]: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    [FLAG_TYPE.TITLE]: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+    [FLAG_TYPE.GLOBAL]: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
   };
 
   return (
@@ -191,13 +191,13 @@ export function PlayView({ dialogue, startNodeId, flagSchema, initialFlags }: Pl
         </div>
       )}
       
-      {/* ScenePlayer handles all dialogue playback */}
-      <ScenePlayer
+      <GamePlayer
         dialogue={dialogue}
-        gameState={currentGameState}
         startNodeId={startNodeId}
+        flagSchema={flagSchema}
+        initialFlags={initialGameFlags}
         onComplete={handleComplete}
-        onFlagUpdate={handleFlagUpdate}
+        onFlagsChange={handleFlagUpdate}
       />
     </main>
   );

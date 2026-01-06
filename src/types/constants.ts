@@ -21,9 +21,20 @@ export const NODE_TYPE = {
   NPC: 'npc',
   PLAYER: 'player',
   CONDITIONAL: 'conditional',
+  STORYLET: 'storylet',
+  RANDOMIZER: 'randomizer',
 } as const;
 
 export type NodeType = typeof NODE_TYPE[keyof typeof NODE_TYPE];
+
+export const NARRATIVE_ENTITY_TYPE = {
+  ACT: 'act',
+  CHAPTER: 'chapter',
+  PAGE: 'page',
+  STORYLET: 'storylet',
+} as const;
+
+export type NarrativeEntityType = typeof NARRATIVE_ENTITY_TYPE[keyof typeof NARRATIVE_ENTITY_TYPE];
 
 /**
  * Flag types for game state management

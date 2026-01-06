@@ -40,18 +40,22 @@ import { PlayView } from './PlayView';
 import { NPCNodeV2 } from './NPCNodeV2';
 import { PlayerNodeV2 } from './PlayerNodeV2';
 import { ConditionalNodeV2 } from './ConditionalNodeV2';
+import { StoryletDialogueNodeV2 } from './StoryletDialogueNodeV2';
+import { RandomizerDialogueNodeV2 } from './RandomizerDialogueNodeV2';
 import { ChoiceEdgeV2 } from './ChoiceEdgeV2';
 import { NPCEdgeV2 } from './NPCEdgeV2';
 import { FlagSchema } from '../types/flags';
 import { Character } from '../types/characters';
 import { NODE_WIDTH } from '../utils/constants';
-import { VIEW_MODE } from '../types/constants';
+import { NODE_TYPE, type NodeType, VIEW_MODE } from '../types/constants';
 
 // Define node and edge types outside component for stability
 const nodeTypes = {
-  npc: NPCNodeV2,
-  player: PlayerNodeV2,
-  conditional: ConditionalNodeV2,
+  [NODE_TYPE.NPC]: NPCNodeV2,
+  [NODE_TYPE.PLAYER]: PlayerNodeV2,
+  [NODE_TYPE.CONDITIONAL]: ConditionalNodeV2,
+  [NODE_TYPE.STORYLET]: StoryletDialogueNodeV2,
+  [NODE_TYPE.RANDOMIZER]: RandomizerDialogueNodeV2,
 };
 
 const edgeTypes = {
@@ -410,7 +414,7 @@ function DialogueEditorV2Internal({
         if (edge) {
           const sourceNode = dialogue.nodes[edge.source];
           if (sourceNode) {
-            if (edge.sourceHandle === 'next' && sourceNode.type === 'npc') {
+            if (edge.sourceHandle === 'next' && sourceNode.type === NODE_TYPE.NPC) {
               // Remove NPC next connection
               onChange({
                 ...dialogue,
@@ -435,7 +439,7 @@ function DialogueEditorV2Internal({
                   },
                 });
               }
-            } else if (edge.sourceHandle?.startsWith('block-') && sourceNode.type === 'conditional') {
+            } else if (edge.sourceHandle?.startsWith('block-') && sourceNode.type === NODE_TYPE.CONDITIONAL) {
               // Remove Conditional block connection
               const blockIdx = parseInt(edge.sourceHandle.replace('block-', ''));
               if (sourceNode.conditionalBlocks && sourceNode.conditionalBlocks[blockIdx]) {
@@ -470,7 +474,7 @@ function DialogueEditorV2Internal({
       
       const sourceNode = dialogue.nodes[edge.source];
       if (sourceNode) {
-        if (edge.sourceHandle === 'next' && sourceNode.type === 'npc') {
+        if (edge.sourceHandle === 'next' && sourceNode.type === NODE_TYPE.NPC) {
           // Remove NPC next connection
           onChange({
             ...dialogue,
@@ -495,7 +499,7 @@ function DialogueEditorV2Internal({
               },
             });
           }
-        } else if (edge.sourceHandle?.startsWith('block-') && sourceNode.type === 'conditional') {
+        } else if (edge.sourceHandle?.startsWith('block-') && sourceNode.type === NODE_TYPE.CONDITIONAL) {
           // Remove Conditional block connection
           const blockIdx = parseInt(edge.sourceHandle.replace('block-', ''));
           if (sourceNode.conditionalBlocks && sourceNode.conditionalBlocks[blockIdx]) {
@@ -526,7 +530,7 @@ function DialogueEditorV2Internal({
     const sourceNode = dialogue.nodes[nodeId];
     if (!sourceNode) return;
     
-    if (handleId === 'next' && sourceNode.type === 'npc') {
+    if (handleId === 'next' && sourceNode.type === NODE_TYPE.NPC) {
       connectingRef.current = { fromNodeId: nodeId, sourceHandle: 'next' };
     } else if (handleId?.startsWith('choice-')) {
       const choiceIdx = parseInt(handleId.replace('choice-', ''));
@@ -579,7 +583,7 @@ function DialogueEditorV2Internal({
     const sourceNode = dialogue.nodes[connection.source];
     if (!sourceNode) return;
     
-    if (connection.sourceHandle === 'next' && sourceNode.type === 'npc') {
+    if (connection.sourceHandle === 'next' && sourceNode.type === NODE_TYPE.NPC) {
       // NPC next connection
       onChange({
         ...dialogue,
@@ -604,7 +608,7 @@ function DialogueEditorV2Internal({
           },
         });
       }
-    } else if (connection.sourceHandle?.startsWith('block-') && sourceNode.type === 'conditional') {
+    } else if (connection.sourceHandle?.startsWith('block-') && sourceNode.type === NODE_TYPE.CONDITIONAL) {
       // Conditional block connection
       const blockIdx = parseInt(connection.sourceHandle.replace('block-', ''));
       if (sourceNode.conditionalBlocks && sourceNode.conditionalBlocks[blockIdx]) {
@@ -756,7 +760,7 @@ function DialogueEditorV2Internal({
   }, [nodes, reactFlowInstance]);
 
   // Insert node between two connected nodes
-  const handleInsertNode = useCallback((type: 'npc' | 'player' | 'conditional', edgeId: string, x: number, y: number) => {
+  const handleInsertNode = useCallback((type: NodeType, edgeId: string, x: number, y: number) => {
     // Find the edge
     const edge = edges.find(e => e.id === edgeId);
     if (!edge) return;
@@ -774,7 +778,7 @@ function DialogueEditorV2Internal({
     const updatedNodes = { ...dialogue.nodes, [newId]: newNode };
     
     // Break the old connection and reconnect through new node
-    if (edge.sourceHandle === 'next' && sourceNode.type === 'npc') {
+    if (edge.sourceHandle === 'next' && (sourceNode.type === NODE_TYPE.NPC || sourceNode.type === NODE_TYPE.STORYLET)) {
       // NPC connection
       updatedNodes[edge.source] = {
         ...sourceNode,
@@ -820,6 +824,14 @@ function DialogueEditorV2Internal({
           nextNodeId: edge.target, // Connect new node to target
         };
       }
+    } else if (edge.sourceHandle?.startsWith('outcome-') && sourceNode.type === NODE_TYPE.RANDOMIZER) {
+      const optionIdx = parseInt(edge.sourceHandle.replace('outcome-', ''));
+      if (sourceNode.randomizerOptions && sourceNode.randomizerOptions[optionIdx]) {
+        const updatedOptions = [...sourceNode.randomizerOptions];
+        updatedOptions[optionIdx] = { ...updatedOptions[optionIdx], nextNodeId: newId };
+        updatedNodes[edge.source] = { ...sourceNode, randomizerOptions: updatedOptions };
+        updatedNodes[newId] = { ...newNode, nextNodeId: edge.target };
+      }
     }
     
     onChange({
@@ -831,7 +843,7 @@ function DialogueEditorV2Internal({
   }, [dialogue, onChange, edges]);
 
   // Add node from context menu or edge drop
-  const handleAddNode = useCallback((type: 'npc' | 'player' | 'conditional', x: number, y: number, autoConnect?: { fromNodeId: string; fromChoiceIdx?: number; fromBlockIdx?: number; sourceHandle?: string }) => {
+  const handleAddNode = useCallback((type: NodeType, x: number, y: number, autoConnect?: { fromNodeId: string; fromChoiceIdx?: number; fromBlockIdx?: number; sourceHandle?: string }) => {
     const newId = `${type}_${Date.now()}`;
     const newNode = createNode(type, newId, x, y);
     
@@ -848,16 +860,23 @@ function DialogueEditorV2Internal({
     if (autoConnect) {
       const sourceNode = dialogue.nodes[autoConnect.fromNodeId];
       if (sourceNode) {
-        if (autoConnect.sourceHandle === 'next' && sourceNode.type === 'npc') {
+        if (autoConnect.sourceHandle === 'next' && (sourceNode.type === NODE_TYPE.NPC || sourceNode.type === NODE_TYPE.STORYLET)) {
           newDialogue.nodes[autoConnect.fromNodeId] = { ...sourceNode, nextNodeId: newId };
         } else if (autoConnect.fromChoiceIdx !== undefined && sourceNode.choices) {
           const newChoices = [...sourceNode.choices];
           newChoices[autoConnect.fromChoiceIdx] = { ...newChoices[autoConnect.fromChoiceIdx], nextNodeId: newId };
           newDialogue.nodes[autoConnect.fromNodeId] = { ...sourceNode, choices: newChoices };
-        } else if (autoConnect.fromBlockIdx !== undefined && sourceNode.type === 'conditional' && sourceNode.conditionalBlocks) {
+        } else if (autoConnect.fromBlockIdx !== undefined && sourceNode.type === NODE_TYPE.CONDITIONAL && sourceNode.conditionalBlocks) {
           const newBlocks = [...sourceNode.conditionalBlocks];
           newBlocks[autoConnect.fromBlockIdx] = { ...newBlocks[autoConnect.fromBlockIdx], nextNodeId: newId };
           newDialogue.nodes[autoConnect.fromNodeId] = { ...sourceNode, conditionalBlocks: newBlocks };
+        } else if (autoConnect.sourceHandle?.startsWith('outcome-') && sourceNode.type === NODE_TYPE.RANDOMIZER && sourceNode.randomizerOptions) {
+          const optionIdx = parseInt(autoConnect.sourceHandle.replace('outcome-', ''));
+          const newOptions = [...sourceNode.randomizerOptions];
+          if (newOptions[optionIdx]) {
+            newOptions[optionIdx] = { ...newOptions[optionIdx], nextNodeId: newId };
+            newDialogue.nodes[autoConnect.fromNodeId] = { ...sourceNode, randomizerOptions: newOptions };
+          }
         }
       }
     }
@@ -1120,9 +1139,9 @@ function DialogueEditorV2Internal({
                     }}
                     maskColor="rgba(0, 0, 0, 0.7)"
                     nodeColor={(node) => {
-                      if (node.type === 'npc') return '#e94560';
-                      if (node.type === 'player') return '#8b5cf6';
-                      if (node.type === 'conditional') return '#3b82f6';
+                      if (node.type === NODE_TYPE.NPC) return '#e94560';
+                      if (node.type === NODE_TYPE.PLAYER) return '#8b5cf6';
+                      if (node.type === NODE_TYPE.CONDITIONAL) return '#3b82f6';
                       return '#4a4a6a';
                     }}
                     nodeStrokeWidth={2}
@@ -1357,7 +1376,7 @@ function DialogueEditorV2Internal({
                   <div className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-lg p-1 min-w-[150px]">
                     <button
                       onClick={() => {
-                        handleAddNode('npc', contextMenu.graphX, contextMenu.graphY);
+                        handleAddNode(NODE_TYPE.NPC, contextMenu.graphX, contextMenu.graphY);
                       }}
                       className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
                     >
@@ -1365,7 +1384,7 @@ function DialogueEditorV2Internal({
                     </button>
                     <button
                       onClick={() => {
-                        handleAddNode('player', contextMenu.graphX, contextMenu.graphY);
+                        handleAddNode(NODE_TYPE.PLAYER, contextMenu.graphX, contextMenu.graphY);
                       }}
                       className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
                     >
@@ -1373,11 +1392,27 @@ function DialogueEditorV2Internal({
                     </button>
                     <button
                       onClick={() => {
-                        handleAddNode('conditional', contextMenu.graphX, contextMenu.graphY);
+                        handleAddNode(NODE_TYPE.CONDITIONAL, contextMenu.graphX, contextMenu.graphY);
                       }}
                       className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
                     >
                       Add Conditional Node
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleAddNode(NODE_TYPE.STORYLET, contextMenu.graphX, contextMenu.graphY);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
+                    >
+                      Add Storylet Node
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleAddNode(NODE_TYPE.RANDOMIZER, contextMenu.graphX, contextMenu.graphY);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
+                    >
+                      Add Randomizer Node
                     </button>
                     <button
                       onClick={() => setContextMenu(null)}
@@ -1401,7 +1436,7 @@ function DialogueEditorV2Internal({
                     </div>
                     <button
                       onClick={() => {
-                        handleAddNode('npc', edgeDropMenu.graphX, edgeDropMenu.graphY, {
+                        handleAddNode(NODE_TYPE.NPC, edgeDropMenu.graphX, edgeDropMenu.graphY, {
                           fromNodeId: edgeDropMenu.fromNodeId,
                           fromChoiceIdx: edgeDropMenu.fromChoiceIdx,
                           fromBlockIdx: edgeDropMenu.fromBlockIdx,
@@ -1414,7 +1449,7 @@ function DialogueEditorV2Internal({
                     </button>
                     <button
                       onClick={() => {
-                        handleAddNode('player', edgeDropMenu.graphX, edgeDropMenu.graphY, {
+                        handleAddNode(NODE_TYPE.PLAYER, edgeDropMenu.graphX, edgeDropMenu.graphY, {
                           fromNodeId: edgeDropMenu.fromNodeId,
                           fromChoiceIdx: edgeDropMenu.fromChoiceIdx,
                           fromBlockIdx: edgeDropMenu.fromBlockIdx,
@@ -1427,7 +1462,7 @@ function DialogueEditorV2Internal({
                     </button>
                     <button
                       onClick={() => {
-                        handleAddNode('conditional', edgeDropMenu.graphX, edgeDropMenu.graphY, {
+                        handleAddNode(NODE_TYPE.CONDITIONAL, edgeDropMenu.graphX, edgeDropMenu.graphY, {
                           fromNodeId: edgeDropMenu.fromNodeId,
                           fromChoiceIdx: edgeDropMenu.fromChoiceIdx,
                           fromBlockIdx: edgeDropMenu.fromBlockIdx,
@@ -1437,6 +1472,32 @@ function DialogueEditorV2Internal({
                       className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
                     >
                       Add Conditional Node
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleAddNode(NODE_TYPE.STORYLET, edgeDropMenu.graphX, edgeDropMenu.graphY, {
+                          fromNodeId: edgeDropMenu.fromNodeId,
+                          fromChoiceIdx: edgeDropMenu.fromChoiceIdx,
+                          fromBlockIdx: edgeDropMenu.fromBlockIdx,
+                          sourceHandle: edgeDropMenu.sourceHandle,
+                        });
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
+                    >
+                      Add Storylet Node
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleAddNode(NODE_TYPE.RANDOMIZER, edgeDropMenu.graphX, edgeDropMenu.graphY, {
+                          fromNodeId: edgeDropMenu.fromNodeId,
+                          fromChoiceIdx: edgeDropMenu.fromChoiceIdx,
+                          fromBlockIdx: edgeDropMenu.fromBlockIdx,
+                          sourceHandle: edgeDropMenu.sourceHandle,
+                        });
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
+                    >
+                      Add Randomizer Node
                     </button>
                     <button
                       onClick={() => {
@@ -1463,7 +1524,7 @@ function DialogueEditorV2Internal({
                     </div>
                     <button
                       onClick={() => {
-                        handleInsertNode('npc', edgeContextMenu.edgeId, edgeContextMenu.graphX, edgeContextMenu.graphY);
+                        handleInsertNode(NODE_TYPE.NPC, edgeContextMenu.edgeId, edgeContextMenu.graphX, edgeContextMenu.graphY);
                       }}
                       className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
                     >
@@ -1471,7 +1532,7 @@ function DialogueEditorV2Internal({
                     </button>
                     <button
                       onClick={() => {
-                        handleInsertNode('player', edgeContextMenu.edgeId, edgeContextMenu.graphX, edgeContextMenu.graphY);
+                        handleInsertNode(NODE_TYPE.PLAYER, edgeContextMenu.edgeId, edgeContextMenu.graphX, edgeContextMenu.graphY);
                       }}
                       className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
                     >
@@ -1479,11 +1540,27 @@ function DialogueEditorV2Internal({
                     </button>
                     <button
                       onClick={() => {
-                        handleInsertNode('conditional', edgeContextMenu.edgeId, edgeContextMenu.graphX, edgeContextMenu.graphY);
+                        handleInsertNode(NODE_TYPE.CONDITIONAL, edgeContextMenu.edgeId, edgeContextMenu.graphX, edgeContextMenu.graphY);
                       }}
                       className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
                     >
                       Insert Conditional Node
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleInsertNode(NODE_TYPE.STORYLET, edgeContextMenu.edgeId, edgeContextMenu.graphX, edgeContextMenu.graphY);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
+                    >
+                      Insert Storylet Node
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleInsertNode(NODE_TYPE.RANDOMIZER, edgeContextMenu.edgeId, edgeContextMenu.graphX, edgeContextMenu.graphY);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
+                    >
+                      Insert Randomizer Node
                     </button>
                     <button
                       onClick={() => setEdgeContextMenu(null)}
@@ -1520,7 +1597,7 @@ function DialogueEditorV2Internal({
                           >
                             <Edit3 size={14} className="text-df-npc-selected" /> Edit Node
                           </button>
-                          {node.type === 'player' && (
+                          {node.type === NODE_TYPE.PLAYER && (
                             <button
                               onClick={() => {
                                 handleAddChoice(nodeContextMenu.nodeId);
@@ -1531,7 +1608,7 @@ function DialogueEditorV2Internal({
                               <Plus size={14} className="text-df-player-selected" /> Add Choice
                             </button>
                           )}
-                          {node.type === 'npc' && !node.conditionalBlocks && (
+                          {node.type === NODE_TYPE.NPC && !node.conditionalBlocks && (
                             <button
                               onClick={() => {
                                 handleUpdateNode(nodeContextMenu.nodeId, {

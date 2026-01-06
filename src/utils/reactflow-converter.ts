@@ -66,6 +66,8 @@ export function convertDialogueTreeToReactFlow(
         ...block,
         condition: block.condition ? [...block.condition] : undefined,
       })) : undefined,
+      randomizerOptions: node.randomizerOptions ? node.randomizerOptions.map(option => ({ ...option })) : undefined,
+      tags: node.tags ? [...node.tags] : undefined,
     };
     
     nodes.push({
@@ -84,7 +86,7 @@ export function convertDialogueTreeToReactFlow(
 
   // Convert edges - using smoothstep type for cleaner angular look
   Object.values(dialogue.nodes).forEach(node => {
-    if (node.type === NODE_TYPE.NPC && node.nextNodeId) {
+    if ((node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET) && node.nextNodeId) {
       // NPC -> next node (single connection)
       edges.push({
         id: `${node.id}-next`,
@@ -146,6 +148,30 @@ export function convertDialogueTreeToReactFlow(
         }
       });
     }
+
+    if (node.type === NODE_TYPE.RANDOMIZER && node.randomizerOptions) {
+      node.randomizerOptions.forEach((option, idx) => {
+        if (option.nextNodeId) {
+          const color = CHOICE_COLORS[idx % CHOICE_COLORS.length];
+          edges.push({
+            id: `${node.id}-outcome-${idx}`,
+            source: node.id,
+            target: option.nextNodeId,
+            sourceHandle: `outcome-${idx}`,
+            type: 'choice',
+            data: {
+              choiceIndex: idx,
+              choiceId: option.id,
+            },
+            style: {
+              stroke: color,
+              strokeWidth: 2,
+              opacity: 0.7,
+            },
+          } as Edge);
+        }
+      });
+    }
   });
 
   return { nodes, edges };
@@ -166,7 +192,7 @@ export function updateDialogueTreeFromReactFlow(
   
   // First, create copies of all nodes with cleared connections
   Object.values(dialogue.nodes).forEach(node => {
-    if (node.type === NODE_TYPE.NPC) {
+    if (node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET) {
       updatedNodes[node.id] = {
         ...node,
         nextNodeId: undefined,
@@ -185,6 +211,14 @@ export function updateDialogueTreeFromReactFlow(
         conditionalBlocks: node.conditionalBlocks ? node.conditionalBlocks.map(block => ({
           ...block,
           nextNodeId: undefined,
+        })) : [],
+      };
+    } else if (node.type === NODE_TYPE.RANDOMIZER) {
+      updatedNodes[node.id] = {
+        ...node,
+        randomizerOptions: node.randomizerOptions ? node.randomizerOptions.map(option => ({
+          ...option,
+          nextNodeId: '',
         })) : [],
       };
     } else {
@@ -208,7 +242,7 @@ export function updateDialogueTreeFromReactFlow(
     const sourceNode = updatedNodes[edge.source];
     if (!sourceNode) return;
 
-    if (edge.sourceHandle === 'next' && sourceNode.type === NODE_TYPE.NPC) {
+    if (edge.sourceHandle === 'next' && (sourceNode.type === NODE_TYPE.NPC || sourceNode.type === NODE_TYPE.STORYLET)) {
       // NPC next connection - create new node object
       updatedNodes[edge.source] = {
         ...sourceNode,
@@ -240,6 +274,19 @@ export function updateDialogueTreeFromReactFlow(
         updatedNodes[edge.source] = {
           ...sourceNode,
           conditionalBlocks: updatedBlocks,
+        };
+      }
+    } else if (edge.sourceHandle?.startsWith('outcome-') && sourceNode.type === NODE_TYPE.RANDOMIZER) {
+      const optionIdx = parseInt(edge.sourceHandle.replace('outcome-', ''));
+      if (sourceNode.randomizerOptions && sourceNode.randomizerOptions[optionIdx]) {
+        const updatedOptions = [...sourceNode.randomizerOptions];
+        updatedOptions[optionIdx] = {
+          ...updatedOptions[optionIdx],
+          nextNodeId: edge.target,
+        };
+        updatedNodes[edge.source] = {
+          ...sourceNode,
+          randomizerOptions: updatedOptions,
         };
       }
     }

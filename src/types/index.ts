@@ -9,6 +9,13 @@ export interface Choice {
   setFlags?: string[];
 }
 
+export interface RandomizerOption {
+  id: string;
+  label: string;
+  nextNodeId?: string;
+  weight?: number;
+}
+
 export interface Condition {
   flag: string;
   operator: ConditionOperator;
@@ -38,6 +45,10 @@ export interface DialogueNode {
   nextNodeId?: string;
   setFlags?: string[];
   conditionalBlocks?: ConditionalBlock[]; // For conditional nodes (if/elseif/else/endif)
+  storyletId?: string;
+  tags?: string[];
+  weight?: number;
+  randomizerOptions?: RandomizerOption[];
   x: number;
   y: number;
 }

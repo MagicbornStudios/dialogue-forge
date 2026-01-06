@@ -1,4 +1,4 @@
-import { DialogueNode, DialogueTree, Choice } from '../types';
+import { DialogueNode, DialogueTree, Choice, RandomizerOption } from '../types';
 import { NODE_TYPE, NodeType } from '../types/constants';
 
 export function createNode(
@@ -39,6 +39,31 @@ export function createNode(
       }],
       x,
       y
+    };
+  } else if (type === NODE_TYPE.STORYLET) {
+    return {
+      id,
+      type,
+      content: 'Storylet bridge...',
+      storyletId: '',
+      tags: [],
+      nextNodeId: '',
+      x,
+      y,
+    };
+  } else if (type === NODE_TYPE.RANDOMIZER) {
+    const options: RandomizerOption[] = [
+      { id: `r_${Date.now()}`, label: 'Outcome A', weight: 1, nextNodeId: '' },
+      { id: `r_${Date.now() + 1}`, label: 'Outcome B', weight: 1, nextNodeId: '' },
+    ];
+
+    return {
+      id,
+      type,
+      content: 'Randomly select the next beat.',
+      randomizerOptions: options,
+      x,
+      y,
     };
   }
   

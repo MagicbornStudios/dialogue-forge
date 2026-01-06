@@ -4,7 +4,7 @@ import { FlagSchema } from '../types/flags';
 import { Character } from '../types/characters';
 import { FlagSelector } from './FlagSelector';
 import { CharacterSelector } from './CharacterSelector';
-import { CONDITION_OPERATOR } from '../types/constants';
+import { CONDITION_OPERATOR, NODE_TYPE } from '../types/constants';
 import { AlertCircle, CheckCircle, Info, GitBranch, X, User, Maximize2 } from 'lucide-react';
 import { CHOICE_COLORS } from '../utils/reactflow-converter';
 import { EdgeIcon } from './EdgeIcon';
@@ -292,17 +292,21 @@ export function NodeEditor({
   
   // Determine border color based on node type - use duller border colors
   const getBorderColor = () => {
-    if (node.type === 'npc') return 'border-df-npc-border';
-    if (node.type === 'player') return 'border-df-player-border';
-    if (node.type === 'conditional') return 'border-df-conditional-border';
+    if (node.type === NODE_TYPE.NPC) return 'border-df-npc-border';
+    if (node.type === NODE_TYPE.PLAYER) return 'border-df-player-border';
+    if (node.type === NODE_TYPE.CONDITIONAL) return 'border-df-conditional-border';
+    if (node.type === NODE_TYPE.STORYLET) return 'border-df-start';
+    if (node.type === NODE_TYPE.RANDOMIZER) return 'border-df-player-selected';
     return 'border-df-control-border';
   };
 
   // Get node type badge colors
   const getNodeTypeBadge = () => {
-    if (node.type === 'npc') return 'bg-df-npc-selected/20 text-df-npc-selected';
-    if (node.type === 'player') return 'bg-df-player-selected/20 text-df-player-selected';
-    if (node.type === 'conditional') return 'bg-df-conditional-border/20 text-df-conditional-border';
+    if (node.type === NODE_TYPE.NPC) return 'bg-df-npc-selected/20 text-df-npc-selected';
+    if (node.type === NODE_TYPE.PLAYER) return 'bg-df-player-selected/20 text-df-player-selected';
+    if (node.type === NODE_TYPE.CONDITIONAL) return 'bg-df-conditional-border/20 text-df-conditional-border';
+    if (node.type === NODE_TYPE.STORYLET) return 'bg-df-start/10 text-df-start';
+    if (node.type === NODE_TYPE.RANDOMIZER) return 'bg-df-player-selected/10 text-df-player-selected';
     return 'bg-df-control-bg text-df-text-secondary';
   };
 
@@ -328,7 +332,11 @@ export function NodeEditor({
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <span className={`text-xs px-2 py-0.5 rounded ${getNodeTypeBadge()}`}>
-            {node.type === 'npc' ? 'NPC' : node.type === 'player' ? 'PLAYER' : 'CONDITIONAL'}
+            {node.type === NODE_TYPE.NPC && 'NPC'}
+            {node.type === NODE_TYPE.PLAYER && 'PLAYER'}
+            {node.type === NODE_TYPE.CONDITIONAL && 'CONDITIONAL'}
+            {node.type === NODE_TYPE.STORYLET && 'STORYLET'}
+            {node.type === NODE_TYPE.RANDOMIZER && 'RANDOMIZER'}
           </span>
           <div className="flex gap-1">
             <button onClick={onDelete} className="p-1 text-gray-500 hover:text-red-400" title="Delete node">
@@ -355,7 +363,7 @@ export function NodeEditor({
           />
         </div>
 
-        {node.type === 'npc' && (
+        {node.type === NODE_TYPE.NPC && (
           <>
             <div>
               <label className="text-[10px] text-df-text-secondary uppercase">Character</label>
@@ -432,7 +440,7 @@ export function NodeEditor({
           </>
         )}
 
-        {node.type === 'conditional' && (
+        {node.type === NODE_TYPE.CONDITIONAL && (
           <>
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -1012,7 +1020,7 @@ export function NodeEditor({
           </>
         )}
 
-        {node.type === 'player' && (
+        {node.type === NODE_TYPE.PLAYER && (
           <div>
             <div>
               <label className="text-[10px] text-df-text-secondary uppercase">Character</label>
@@ -1316,6 +1324,162 @@ export function NodeEditor({
                       flagSchema={flagSchema}
                       placeholder="Set flags..."
                     />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {node.type === NODE_TYPE.STORYLET && (
+          <div className="space-y-3">
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase">Storylet ID</label>
+              <input
+                type="text"
+                value={node.storyletId || ''}
+                onChange={(e) => onUpdate({ storyletId: e.target.value })}
+                className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-start outline-none"
+                placeholder="Link to storylet registry"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase">Content</label>
+              <textarea
+                value={node.content}
+                onChange={(e) => onUpdate({ content: e.target.value })}
+                className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-start outline-none min-h-[80px]"
+                placeholder="Entry text for this storylet"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase">Tags</label>
+              <input
+                type="text"
+                value={node.tags?.join(', ') || ''}
+                onChange={(e) => onUpdate({ tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean) })}
+                className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-start outline-none"
+                placeholder="combat, intro, quest"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase">Weight</label>
+                <input
+                  type="number"
+                  value={node.weight ?? ''}
+                  onChange={(e) => onUpdate({ weight: e.target.value === '' ? undefined : Number(e.target.value) })}
+                  className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-start outline-none"
+                  placeholder="1"
+                  min={0}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase">Next Node</label>
+                <select
+                  value={node.nextNodeId || ''}
+                  onChange={(e) => onUpdate({ nextNodeId: e.target.value || undefined })}
+                  className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-start outline-none"
+                >
+                  <option value="">— End —</option>
+                  {Object.keys(dialogue.nodes).filter(id => id !== node.id).map(id => (
+                    <option key={id} value={id}>{id}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {node.type === NODE_TYPE.RANDOMIZER && (
+          <div className="space-y-3">
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase">Description</label>
+              <textarea
+                value={node.content}
+                onChange={(e) => onUpdate({ content: e.target.value })}
+                className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-player-selected outline-none min-h-[60px]"
+                placeholder="Explain how this random choice behaves"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] text-gray-500 uppercase">Outcomes</label>
+              <button
+                type="button"
+                className="text-[10px] text-df-player-selected hover:text-white"
+                onClick={() => {
+                  const newOptions = [...(node.randomizerOptions ?? [])];
+                  newOptions.push({ id: `r_${Date.now()}`, label: `Outcome ${newOptions.length + 1}`, weight: 1, nextNodeId: '' });
+                  onUpdate({ randomizerOptions: newOptions });
+                }}
+              >
+                + Add
+              </button>
+            </div>
+            <div className="space-y-2">
+              {(node.randomizerOptions ?? []).map((option, idx) => {
+                const color = CHOICE_COLORS[idx % CHOICE_COLORS.length];
+                return (
+                  <div key={option.id} className="rounded border border-df-control-border bg-df-elevated p-2 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+                      <input
+                        type="text"
+                        value={option.label}
+                        onChange={(e) => {
+                          const newOptions = [...(node.randomizerOptions ?? [])];
+                          newOptions[idx] = { ...option, label: e.target.value };
+                          onUpdate({ randomizerOptions: newOptions });
+                        }}
+                        className="flex-1 bg-df-surface border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-player-selected outline-none"
+                        placeholder="Outcome label"
+                      />
+                      <button
+                        type="button"
+                        className="text-gray-500 hover:text-red-500"
+                        onClick={() => {
+                          const newOptions = [...(node.randomizerOptions ?? [])].filter((_, i) => i !== idx);
+                          onUpdate({ randomizerOptions: newOptions });
+                        }}
+                        title="Remove outcome"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-gray-500 uppercase">Weight</label>
+                        <input
+                          type="number"
+                          value={option.weight ?? ''}
+                          onChange={(e) => {
+                            const newOptions = [...(node.randomizerOptions ?? [])];
+                            newOptions[idx] = { ...option, weight: e.target.value === '' ? undefined : Number(e.target.value) };
+                            onUpdate({ randomizerOptions: newOptions });
+                          }}
+                          className="w-full bg-df-surface border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-player-selected outline-none"
+                          min={0}
+                          placeholder="1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-gray-500 uppercase">Next Node</label>
+                        <select
+                          value={option.nextNodeId || ''}
+                          onChange={(e) => {
+                            const newOptions = [...(node.randomizerOptions ?? [])];
+                            newOptions[idx] = { ...option, nextNodeId: e.target.value || undefined };
+                            onUpdate({ randomizerOptions: newOptions });
+                          }}
+                          className="w-full bg-df-surface border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-player-selected outline-none"
+                        >
+                          <option value="">— Select target —</option>
+                          {Object.keys(dialogue.nodes).filter(id => id !== node.id).map(id => (
+                            <option key={id} value={id}>{id}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 );
               })}

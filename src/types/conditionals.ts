@@ -1,37 +1,31 @@
-import { ConditionOperator } from './constants';
+import { CONDITION_OPERATOR, type ConditionOperator } from './constants';
+
+export const CONDITIONAL_BLOCK_TYPE = {
+  IF: 'if',
+  ELSE_IF: 'elseif',
+  ELSE: 'else',
+} as const;
+
+export type ConditionalBlockType =
+  typeof CONDITIONAL_BLOCK_TYPE[keyof typeof CONDITIONAL_BLOCK_TYPE];
+
+export interface Condition {
+  flag: string;
+  operator: ConditionOperator;
+  value?: boolean | number | string;
+}
 
 /**
- * Conditional block for Yarn Spinner if/elseif/else/endif
+ * Conditional content block for if/elseif/else statements
  */
 export interface ConditionalBlock {
-  type: 'if' | 'elseif' | 'else';
-  condition?: {
-    flag: string;
-    operator: ConditionOperator | 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'greater_equal' | 'less_equal';
-    value?: boolean | number | string;
-  };
-  content: string; // Dialogue content within this block
-  nextNodeId?: string; // Optional jump after this block
-}
-
-/**
- * Extended DialogueNode with conditional support
- */
-export interface ConditionalDialogueNode {
   id: string;
-  type: 'npc' | 'player' | 'conditional';
-  speaker?: string;
+  type: ConditionalBlockType;
+  condition?: Condition[]; // Required for 'if' and 'elseif', undefined for 'else'
   content: string;
-  choices?: any[];
-  nextNodeId?: string;
-  setFlags?: string[];
-  conditionals?: ConditionalBlock[]; // For conditional nodes
-  x: number;
-  y: number;
+  speaker?: string; // Legacy: text speaker name (deprecated, use characterId)
+  characterId?: string; // Character ID from game state
+  nextNodeId?: string; // Optional: where to go after this block's content
 }
 
-
-
-
-
-
+export const CONDITION_OPERATORS = CONDITION_OPERATOR;

@@ -31,7 +31,7 @@ import type { Character } from './characters';
  * Must have a 'flags' property, but can have any other structure
  */
 export interface BaseGameState {
-  flags?: FlagState;
+  flags: FlagState;
   characters?: Record<string, Character>; // Character definitions
   // Users extend this with their own properties:
   // player?: PlayerState;
@@ -41,25 +41,29 @@ export interface BaseGameState {
 /**
  * Convenience type for extending game state
  */
-export type GameState<T extends Record<string, any> = {}> = BaseGameState & T;
+export type GameState<T extends Record<string, unknown> = Record<string, never>> =
+  BaseGameState & T;
 
 /**
  * Updated flags after dialogue completes
  */
-export interface DialogueResult {
+export interface DialogueResult<TGameState extends BaseGameState = BaseGameState> {
   updatedFlags: FlagState;
   dialogueTree: DialogueTree;
   completedNodeIds: string[]; // Nodes that were visited
+  gameState: TGameState;
 }
 
 /**
  * Props for running a dialogue (simulation/play mode)
  */
-export interface DialogueRunProps {
+export interface DialogueRunProps<
+  TGameState extends BaseGameState = BaseGameState,
+> {
   dialogue: DialogueTree;
-  gameState: Record<string, any>; // Any JSON game state (will be flattened)
+  gameState: TGameState; // Any JSON game state (will be flattened)
   startNodeId?: string;
-  onComplete?: (result: DialogueResult) => void;
+  onComplete?: (result: DialogueResult<TGameState>) => void;
   onFlagUpdate?: (flags: FlagState) => void;
 }
 

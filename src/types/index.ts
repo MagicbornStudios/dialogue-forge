@@ -1,5 +1,19 @@
-import { ConditionOperator, NodeType } from './constants';
+import { NodeType } from './constants';
+import type { Condition, ConditionalBlock } from './conditionals';
+import type { RandomizerBranch, StoryletPool } from './narrative';
 export type { ViewMode } from './constants';
+export type { Condition, ConditionalBlock } from './conditionals';
+export type {
+  NarrativeAct,
+  NarrativeChapter,
+  NarrativeElement,
+  NarrativePage,
+  RandomizerBranch,
+  StoryThread,
+  Storylet,
+  StoryletPool,
+  StoryletSelectionMode,
+} from './narrative';
 
 export interface Choice {
   id: string;
@@ -7,25 +21,6 @@ export interface Choice {
   nextNodeId?: string; // Optional - choice can end the dialogue
   conditions?: Condition[];
   setFlags?: string[];
-}
-
-export interface Condition {
-  flag: string;
-  operator: ConditionOperator;
-  value?: boolean | number | string; // Required for comparison operators
-}
-
-/**
- * Conditional content block for if/elseif/else statements
- */
-export interface ConditionalBlock {
-  id: string;
-  type: 'if' | 'elseif' | 'else';
-  condition?: Condition[]; // Required for 'if' and 'elseif', undefined for 'else'
-  content: string;
-  speaker?: string; // Legacy: text speaker name (deprecated, use characterId)
-  characterId?: string; // Character ID from game state
-  nextNodeId?: string; // Optional: where to go after this block's content
 }
 
 export interface DialogueNode {
@@ -38,6 +33,10 @@ export interface DialogueNode {
   nextNodeId?: string;
   setFlags?: string[];
   conditionalBlocks?: ConditionalBlock[]; // For conditional nodes (if/elseif/else/endif)
+  randomizerBranches?: RandomizerBranch[]; // For randomizer nodes
+  storyletPoolId?: string; // For storylet nodes
+  storyletId?: string; // For storylet nodes targeting a specific storylet
+  storyletPool?: StoryletPool; // Inline pool data for storylet pool nodes
   x: number;
   y: number;
 }

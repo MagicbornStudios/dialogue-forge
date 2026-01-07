@@ -10,6 +10,7 @@ import {
   type Storylet,
   type StoryletPool,
 } from '../types/narrative';
+import { createNarrativeThreadClient } from '../utils/narrative-client';
 import {
   ActPanel,
   ChapterPanel,
@@ -107,6 +108,8 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     );
   }, [selectedStoryletKey, storyletEntries]);
 
+  const threadClient = useMemo(() => createNarrativeThreadClient(thread), [thread]);
+
   useEffect(() => {
     const nextAct = selectedAct ?? thread.acts[0];
     if (nextAct?.id !== selectedActId) {
@@ -153,14 +156,7 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
   };
 
   const updateAct = (actId: string, updates: Partial<NarrativeAct>) => {
-    updateThread({
-      ...thread,
-      acts: thread.acts.map(act =>
-        act.id === actId
-          ? { ...act, ...updates, type: act.type ?? NARRATIVE_ELEMENT.ACT }
-          : act
-      ),
-    });
+    updateThread(threadClient.updateAct(actId, updates));
   };
 
   const updateChapter = (
@@ -168,22 +164,7 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     chapterId: string,
     updates: Partial<NarrativeChapter>
   ) => {
-    updateThread({
-      ...thread,
-      acts: thread.acts.map(act =>
-        act.id === actId
-          ? {
-              ...act,
-              chapters: act.chapters.map(chapter =>
-                chapter.id === chapterId
-                  ? { ...chapter, ...updates, type: chapter.type ?? NARRATIVE_ELEMENT.CHAPTER }
-                  : chapter
-              ),
-              type: act.type ?? NARRATIVE_ELEMENT.ACT,
-            }
-          : act
-      ),
-    });
+    updateThread(threadClient.updateChapter(actId, chapterId, updates));
   };
 
   const updatePage = (
@@ -192,30 +173,7 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     pageId: string,
     updates: Partial<NarrativePage>
   ) => {
-    updateThread({
-      ...thread,
-      acts: thread.acts.map(act =>
-        act.id === actId
-          ? {
-              ...act,
-              chapters: act.chapters.map(chapter =>
-                chapter.id === chapterId
-                  ? {
-                      ...chapter,
-                      pages: chapter.pages.map(page =>
-                        page.id === pageId
-                          ? { ...page, ...updates, type: page.type ?? NARRATIVE_ELEMENT.PAGE }
-                          : page
-                      ),
-                      type: chapter.type ?? NARRATIVE_ELEMENT.CHAPTER,
-                    }
-                  : chapter
-              ),
-              type: act.type ?? NARRATIVE_ELEMENT.ACT,
-            }
-          : act
-      ),
-    });
+    updateThread(threadClient.updatePage(actId, chapterId, pageId, updates));
   };
 
   const updateStorylet = (
@@ -225,37 +183,7 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     storyletId: string,
     updates: Partial<Storylet>
   ) => {
-    updateThread({
-      ...thread,
-      acts: thread.acts.map(act =>
-        act.id === actId
-          ? {
-              ...act,
-              chapters: act.chapters.map(chapter =>
-                chapter.id === chapterId
-                  ? {
-                      ...chapter,
-                      storyletPools: (chapter.storyletPools ?? []).map(pool =>
-                        pool.id === poolId
-                          ? {
-                              ...pool,
-                              storylets: pool.storylets.map(storylet =>
-                                storylet.id === storyletId
-                                  ? { ...storylet, ...updates, type: storylet.type ?? NARRATIVE_ELEMENT.STORYLET }
-                                  : storylet
-                              ),
-                            }
-                          : pool
-                      ),
-                      type: chapter.type ?? NARRATIVE_ELEMENT.CHAPTER,
-                    }
-                  : chapter
-              ),
-              type: act.type ?? NARRATIVE_ELEMENT.ACT,
-            }
-          : act
-      ),
-    });
+    updateThread(threadClient.updateStorylet(actId, chapterId, poolId, storyletId, updates));
   };
 
   const updateStoryletPool = (
@@ -264,30 +192,7 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     poolId: string,
     updates: Partial<StoryletPool>
   ) => {
-    updateThread({
-      ...thread,
-      acts: thread.acts.map(act =>
-        act.id === actId
-          ? {
-              ...act,
-              chapters: act.chapters.map(chapter =>
-                chapter.id === chapterId
-                  ? {
-                      ...chapter,
-                      storyletPools: (chapter.storyletPools ?? []).map(pool =>
-                        pool.id === poolId
-                          ? { ...pool, ...updates }
-                          : pool
-                      ),
-                      type: chapter.type ?? NARRATIVE_ELEMENT.CHAPTER,
-                    }
-                  : chapter
-              ),
-              type: act.type ?? NARRATIVE_ELEMENT.ACT,
-            }
-          : act
-      ),
-    });
+    updateThread(threadClient.updateStoryletPool(actId, chapterId, poolId, updates));
   };
 
   const handleAddAct = () => {

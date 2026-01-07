@@ -47,3 +47,4 @@ export * from './utils/node-helpers';
 export * from './utils/feature-flags';
 export * from './utils/narrative-helpers';
 export * from './utils/narrative-converter';
+export * from './utils/narrative-client';

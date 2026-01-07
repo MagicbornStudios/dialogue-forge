@@ -1,25 +1,44 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { BookOpen, CircleDot, LayoutPanelTop, Play, Settings, X } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  BookOpen,
+  CircleDot,
+  Download,
+  FileText,
+  Flag,
+  HelpCircle,
+  Info,
+  LayoutPanelTop,
+  ListTree,
+  Play,
+  Plus,
+  Search,
+  X,
+} from 'lucide-react';
 import { DialogueEditorV2 } from './DialogueEditorV2';
-import { NarrativeEditor, type NarrativeSelection } from './NarrativeEditor';
 import { NarrativeGraphView } from './NarrativeGraphView';
 import { PlayView } from './PlayView';
-import type { DialogueTree } from '../types';
+import { FlagManager } from './FlagManager';
+import { GuidePanel } from './GuidePanel';
+import { YarnView } from './YarnView';
+import type { DialogueTree, ViewMode } from '../types';
 import type { GameFlagState } from '../types/game-state';
 import type { Character } from '../types/characters';
 import type { FlagSchema } from '../types/flags';
 import {
   NARRATIVE_ELEMENT,
   STORYLET_SELECTION_MODE,
+  type NarrativeAct,
+  type NarrativeChapter,
   type NarrativePage,
   type StoryThread,
   type Storylet,
   type StoryletPool,
 } from '../types/narrative';
 import { VIEW_MODE } from '../types/constants';
+import { exportToYarn } from '../lib/yarn-converter';
 import { createNarrativeThreadClient } from '../utils/narrative-client';
 import { createUniqueId, moveItem } from '../utils/narrative-editor-utils';
-import { StoryletPanel } from './narrative-editor';
+import type { NarrativeSelection } from './NarrativeEditor';
 
 interface NarrativeWorkspaceProps {
   initialThread: StoryThread;
@@ -73,9 +92,19 @@ export function NarrativeWorkspace({
 }: NarrativeWorkspaceProps) {
   const [thread, setThread] = useState<StoryThread>(initialThread);
   const [dialogueTree, setDialogueTree] = useState<DialogueTree>(initialDialogue);
+  const [activeFlagSchema, setActiveFlagSchema] = useState<FlagSchema | undefined>(flagSchema);
   const [selection, setSelection] = useState<NarrativeSelection>(() => getInitialSelection(initialThread));
-  const [showStructureEditor, setShowStructureEditor] = useState(false);
   const [showPlayModal, setShowPlayModal] = useState(false);
+  const [showFlagManager, setShowFlagManager] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [narrativeViewMode, setNarrativeViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);
+  const [dialogueViewMode, setDialogueViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);
+  const [storyletTab, setStoryletTab] = useState<'storylets' | 'pools'>('storylets');
+  const [storyletSearch, setStoryletSearch] = useState('');
+  const [poolSearch, setPoolSearch] = useState('');
+  const [activePoolId, setActivePoolId] = useState<string | undefined>(undefined);
+  const [editingStoryletId, setEditingStoryletId] = useState<string | null>(null);
+  const [editingPoolId, setEditingPoolId] = useState<string | null>(null);
 
   const selectedAct = useMemo(
     () => thread.acts.find(act => act.id === selection.actId) ?? thread.acts[0],
@@ -114,6 +143,40 @@ export function NarrativeWorkspace({
   const selectedPool = selectedStoryletEntry
     ? (selectedChapter?.storyletPools ?? []).find(pool => pool.id === selectedStoryletEntry.poolId)
     : undefined;
+  const activePool = (selectedChapter?.storyletPools ?? []).find(pool => pool.id === activePoolId)
+    ?? selectedPool
+    ?? selectedChapter?.storyletPools?.[0];
+
+  useEffect(() => {
+    if (!selectedChapter) return;
+    const pools = selectedChapter.storyletPools ?? [];
+    if (!activePoolId && pools[0]) {
+      setActivePoolId(pools[0].id);
+    }
+  }, [activePoolId, selectedChapter]);
+
+  useEffect(() => {
+    setActiveFlagSchema(flagSchema);
+  }, [flagSchema]);
+
+  const filteredStoryletEntries = useMemo(() => {
+    const query = storyletSearch.trim().toLowerCase();
+    if (!query) return storyletEntries;
+    return storyletEntries.filter(entry => {
+      const title = entry.storylet.title ?? entry.storylet.id;
+      return title.toLowerCase().includes(query) || entry.storylet.id.toLowerCase().includes(query);
+    });
+  }, [storyletEntries, storyletSearch]);
+
+  const filteredPools = useMemo(() => {
+    const pools = selectedChapter?.storyletPools ?? [];
+    const query = poolSearch.trim().toLowerCase();
+    if (!query) return pools;
+    return pools.filter(pool => {
+      const title = pool.title ?? pool.id;
+      return title.toLowerCase().includes(query) || pool.id.toLowerCase().includes(query);
+    });
+  }, [selectedChapter, poolSearch]);
 
   const handleDialogueChange = useCallback((nextScopedDialogue: DialogueTree) => {
     if (!selectedPage || !selectedAct || !selectedChapter) {
@@ -158,6 +221,17 @@ export function NarrativeWorkspace({
       )
     );
   }, [selectedAct, selectedChapter, selectedPage]);
+
+  const handleExportYarn = useCallback((dialogue: DialogueTree) => {
+    const yarn = exportToYarn(dialogue);
+    const blob = new Blob([yarn], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${dialogue.title.replace(/\s+/g, '_')}.yarn`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, []);
 
   const updateThread = useCallback((nextThread: StoryThread) => {
     setThread({
@@ -216,7 +290,7 @@ export function NarrativeWorkspace({
   const handleAddStorylet = () => {
     if (!selectedAct || !selectedChapter) return;
     const pools = selectedChapter.storyletPools ?? [];
-    let targetPoolId = pools[0]?.id;
+    let targetPoolId = activePool?.id ?? pools[0]?.id;
 
     if (!targetPoolId) {
       const nextPoolId = createUniqueId([], 'pool');
@@ -257,6 +331,8 @@ export function NarrativeWorkspace({
       ...prev,
       storyletKey: `${targetPoolId}:${nextStorylet.id}`,
     }));
+    setActivePoolId(targetPoolId);
+    setEditingStoryletId(nextStorylet.id);
   };
 
   const handleDeleteStorylet = () => {
@@ -289,22 +365,32 @@ export function NarrativeWorkspace({
     });
   };
 
-  const handleStoryletUpdate = (updates: Partial<Storylet>) => {
-    if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
-    const { poolId, storylet } = selectedStoryletEntry;
-    const nextId = updates.id ?? storylet.id;
-    updateStorylet(selectedAct.id, selectedChapter.id, poolId, storylet.id, updates);
-    if (updates.id && nextId !== storylet.id) {
+  const handleStoryletUpdate = (entry: { poolId: string; storylet: Storylet }, updates: Partial<Storylet>) => {
+    if (!selectedAct || !selectedChapter) return;
+    const nextId = updates.id ?? entry.storylet.id;
+    updateStorylet(selectedAct.id, selectedChapter.id, entry.poolId, entry.storylet.id, updates);
+    if (updates.id && nextId !== entry.storylet.id) {
       setSelection(prev => ({
         ...prev,
-        storyletKey: `${poolId}:${nextId}`,
+        storyletKey: `${entry.poolId}:${nextId}`,
       }));
+      if (editingStoryletId === entry.storylet.id) {
+        setEditingStoryletId(nextId);
+      }
     }
   };
 
-  const handleStoryletPoolUpdate = (updates: Partial<StoryletPool>) => {
-    if (!selectedAct || !selectedChapter || !selectedPool) return;
-    updateStoryletPool(selectedAct.id, selectedChapter.id, selectedPool.id, updates);
+  const handleStoryletPoolUpdate = (poolId: string, updates: Partial<StoryletPool>) => {
+    if (!selectedAct || !selectedChapter) return;
+    updateStoryletPool(selectedAct.id, selectedChapter.id, poolId, updates);
+    if (updates.id && updates.id !== poolId) {
+      if (activePoolId === poolId) {
+        setActivePoolId(updates.id);
+      }
+      if (editingPoolId === poolId) {
+        setEditingPoolId(updates.id);
+      }
+    }
   };
 
   const handleStoryletPoolChange = (nextPoolId: string) => {
@@ -336,23 +422,105 @@ export function NarrativeWorkspace({
       ...prev,
       storyletKey: `${nextPoolId}:${storylet.id}`,
     }));
+    setActivePoolId(nextPoolId);
+  };
+
+  const handleAddAct = () => {
+    const nextId = createUniqueId(
+      thread.acts.map(act => act.id),
+      'act'
+    );
+    const nextAct: NarrativeAct = {
+      id: nextId,
+      title: `Act ${thread.acts.length + 1}`,
+      summary: '',
+      chapters: [],
+      type: NARRATIVE_ELEMENT.ACT,
+    };
+    updateThread({
+      ...thread,
+      acts: [...thread.acts, nextAct],
+    });
+    setSelection(prev => ({
+      ...prev,
+      actId: nextAct.id,
+      chapterId: nextAct.chapters[0]?.id,
+      pageId: nextAct.chapters[0]?.pages[0]?.id,
+    }));
+  };
+
+  const handleAddChapter = () => {
+    if (!selectedAct) return;
+    const nextId = createUniqueId(
+      selectedAct.chapters.map(chapter => chapter.id),
+      'chapter'
+    );
+    const nextChapter: NarrativeChapter = {
+      id: nextId,
+      title: `Chapter ${selectedAct.chapters.length + 1}`,
+      summary: '',
+      pages: [],
+      storyletPools: [],
+      type: NARRATIVE_ELEMENT.CHAPTER,
+    };
+    updateThread({
+      ...thread,
+      acts: thread.acts.map(act =>
+        act.id === selectedAct.id
+          ? { ...act, chapters: [...act.chapters, nextChapter] }
+          : act
+      ),
+    });
+    setSelection(prev => ({
+      ...prev,
+      chapterId: nextChapter.id,
+      pageId: nextChapter.pages[0]?.id,
+    }));
+  };
+
+  const handleAddPage = () => {
+    if (!selectedAct || !selectedChapter) return;
+    const nextId = createUniqueId(
+      selectedChapter.pages.map(page => page.id),
+      'page'
+    );
+    const nextPage: NarrativePage = {
+      id: nextId,
+      title: `Page ${selectedChapter.pages.length + 1}`,
+      summary: '',
+      nodeIds: [],
+      type: NARRATIVE_ELEMENT.PAGE,
+    };
+    updateThread({
+      ...thread,
+      acts: thread.acts.map(act =>
+        act.id === selectedAct.id
+          ? {
+              ...act,
+              chapters: act.chapters.map(chapter =>
+                chapter.id === selectedChapter.id
+                  ? { ...chapter, pages: [...chapter.pages, nextPage] }
+                  : chapter
+              ),
+            }
+          : act
+      ),
+    });
+    setSelection(prev => ({
+      ...prev,
+      pageId: nextPage.id,
+    }));
   };
 
   const playTitle = selectedPage?.title ?? 'Play Page';
   const playSubtitle = selectedPage?.summary ?? 'Preview the dialogue for this page.';
+  const editingStoryletEntry = storyletEntries.find(entry => entry.storylet.id === editingStoryletId) ?? null;
+  const editingPool = (selectedChapter?.storyletPools ?? []).find(pool => pool.id === editingPoolId) ?? null;
 
   return (
     <div className={`flex h-full w-full flex-col ${className}`}>
-      <div className="flex items-center justify-between border-b border-df-sidebar-border bg-df-base/80 px-4 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-df-sidebar-border bg-df-base/80 px-4 py-2">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-2 text-df-text-secondary hover:text-df-text-primary"
-            onClick={() => setShowStructureEditor(true)}
-            title="Open narrative structure"
-          >
-            <Settings size={16} />
-          </button>
           <button
             type="button"
             className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-2 text-df-text-secondary hover:text-df-text-primary"
@@ -361,104 +529,397 @@ export function NarrativeWorkspace({
           >
             <Play size={16} />
           </button>
+          <button
+            type="button"
+            className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-2 text-df-text-secondary hover:text-df-text-primary"
+            onClick={() => {
+              if (activeFlagSchema) {
+                setShowFlagManager(true);
+              }
+            }}
+            title="Manage flags"
+          >
+            <Flag size={16} />
+          </button>
+          <button
+            type="button"
+            className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-2 text-df-text-secondary hover:text-df-text-primary"
+            onClick={() => setShowGuide(true)}
+            title="Open guide"
+          >
+            <HelpCircle size={16} />
+          </button>
         </div>
-        <div className="flex items-center gap-2 text-xs text-df-text-tertiary">
-          <span className="inline-flex items-center gap-1">
-            <CircleDot size={12} />
-            {selectedAct?.title ?? 'Act'}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <BookOpen size={12} />
-            {selectedChapter?.title ?? 'Chapter'}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <LayoutPanelTop size={12} />
-            {selectedPage?.title ?? 'Page'}
-          </span>
+
+        <div className="flex flex-wrap items-center gap-2 text-xs text-df-text-tertiary">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1">
+              <CircleDot size={12} />
+              Act
+            </span>
+            <select
+              className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-xs text-df-text-primary"
+              value={selectedAct?.id ?? ''}
+              onChange={event => {
+                const actId = event.target.value;
+                const act = thread.acts.find(item => item.id === actId);
+                setSelection(prev => ({
+                  ...prev,
+                  actId,
+                  chapterId: act?.chapters[0]?.id,
+                  pageId: act?.chapters[0]?.pages[0]?.id,
+                }));
+              }}
+              title="Select act"
+            >
+              {thread.acts.map(act => (
+                <option key={act.id} value={act.id}>
+                  {act.title ?? act.id}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
+              onClick={handleAddAct}
+              title="Add act"
+            >
+              <Plus size={12} />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1">
+              <BookOpen size={12} />
+              Chapter
+            </span>
+            <select
+              className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-xs text-df-text-primary"
+              value={selectedChapter?.id ?? ''}
+              onChange={event => {
+                const chapterId = event.target.value;
+                const chapter = selectedAct?.chapters.find(item => item.id === chapterId);
+                setSelection(prev => ({
+                  ...prev,
+                  chapterId,
+                  pageId: chapter?.pages[0]?.id,
+                }));
+              }}
+              title="Select chapter"
+            >
+              {(selectedAct?.chapters ?? []).map(chapter => (
+                <option key={chapter.id} value={chapter.id}>
+                  {chapter.title ?? chapter.id}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
+              onClick={handleAddChapter}
+              title="Add chapter"
+            >
+              <Plus size={12} />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1">
+              <LayoutPanelTop size={12} />
+              Page
+            </span>
+            <select
+              className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-xs text-df-text-primary"
+              value={selectedPage?.id ?? ''}
+              onChange={event => setSelection(prev => ({ ...prev, pageId: event.target.value }))}
+              title="Select page"
+            >
+              {(selectedChapter?.pages ?? []).map(page => (
+                <option key={page.id} value={page.id}>
+                  {page.title ?? page.id}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
+              onClick={handleAddPage}
+              title="Add page"
+            >
+              <Plus size={12} />
+            </button>
+          </div>
         </div>
+
         <div className="flex items-center gap-2">{toolbarActions}</div>
       </div>
 
       <div className="flex min-h-0 flex-1 gap-4 p-4">
         <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
-            <CircleDot size={12} />
-            Narrative Graph
+          <div className="flex items-center justify-between rounded-lg border border-df-node-border bg-df-editor-bg px-3 py-2">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
+              <CircleDot size={12} />
+              Narrative Graph
+              <span title="Shows act/chapter/page hierarchy.">
+                <Info size={12} />
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
+                onClick={() => setNarrativeViewMode(VIEW_MODE.GRAPH)}
+                title="Graph view"
+              >
+                <ListTree size={12} />
+                Graph
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
+                onClick={() => setNarrativeViewMode(VIEW_MODE.YARN)}
+                title="Yarn view"
+              >
+                <FileText size={12} />
+                Yarn
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
+                onClick={() => handleExportYarn(dialogueTree)}
+                title="Export yarn"
+              >
+                <Download size={12} />
+                Export
+              </button>
+            </div>
           </div>
           <div className="h-[220px] min-h-[200px]">
-            <NarrativeGraphView thread={thread} className="h-full" />
+            {narrativeViewMode === VIEW_MODE.GRAPH ? (
+              <NarrativeGraphView thread={thread} className="h-full" />
+            ) : (
+              <YarnView dialogue={dialogueTree} onExport={() => handleExportYarn(dialogueTree)} />
+            )}
           </div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
-            <LayoutPanelTop size={12} />
-            Dialogue Graph
+          <div className="flex items-center justify-between rounded-lg border border-df-node-border bg-df-editor-bg px-3 py-2">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
+              <LayoutPanelTop size={12} />
+              Dialogue Graph
+              <span
+                title={selectedPage?.title ? `Editing page: ${selectedPage.title}` : 'Editing page scope.'}
+              >
+                <Info size={12} />
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-df-text-tertiary">
+              <span className="inline-flex items-center gap-1 rounded-full border border-df-control-border bg-df-control-bg px-2 py-1">
+                {selectedPage?.title ?? 'Page'}
+              </span>
+              {selectedStoryletEntry && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-df-control-border bg-df-control-bg px-2 py-1">
+                  Storylet: {selectedStoryletEntry.storylet.title ?? selectedStoryletEntry.storylet.id}
+                </span>
+              )}
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
+                onClick={() => setDialogueViewMode(VIEW_MODE.GRAPH)}
+                title="Graph view"
+              >
+                <ListTree size={12} />
+                Graph
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
+                onClick={() => setDialogueViewMode(VIEW_MODE.YARN)}
+                title="Yarn view"
+              >
+                <FileText size={12} />
+                Yarn
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
+                onClick={() => handleExportYarn(scopedDialogue)}
+                title="Export yarn"
+              >
+                <Download size={12} />
+                Export
+              </button>
+            </div>
           </div>
           <div className="flex-1 min-h-0">
-            <DialogueEditorV2
-              dialogue={scopedDialogue}
-              onChange={handleDialogueChange}
-              flagSchema={flagSchema}
-              characters={characters}
-              viewMode={VIEW_MODE.GRAPH}
-              className="h-full"
-            />
+            {dialogueViewMode === VIEW_MODE.GRAPH ? (
+              <DialogueEditorV2
+                dialogue={scopedDialogue}
+                onChange={handleDialogueChange}
+                flagSchema={activeFlagSchema}
+                characters={characters}
+                viewMode={VIEW_MODE.GRAPH}
+                className="h-full"
+              />
+            ) : (
+              <YarnView dialogue={scopedDialogue} onExport={() => handleExportYarn(scopedDialogue)} />
+            )}
           </div>
         </div>
 
         <div className="flex w-[320px] min-w-[280px] flex-col gap-3">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
-            <BookOpen size={12} />
-            Storylets
+          <div className="flex items-center justify-between rounded-lg border border-df-node-border bg-df-editor-bg px-3 py-2">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
+              <BookOpen size={12} />
+              Storylets
+              <span title="Manage storylets and pools for the selected chapter.">
+                <Info size={12} />
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <button
+                type="button"
+                className={`rounded-md px-2 py-1 ${storyletTab === 'storylets' ? 'bg-df-control-active text-df-text-primary' : 'text-df-text-secondary'}`}
+                onClick={() => setStoryletTab('storylets')}
+                title="Storylets tab"
+              >
+                Storylets
+              </button>
+              <button
+                type="button"
+                className={`rounded-md px-2 py-1 ${storyletTab === 'pools' ? 'bg-df-control-active text-df-text-primary' : 'text-df-text-secondary'}`}
+                onClick={() => setStoryletTab('pools')}
+                title="Pools tab"
+              >
+                Pools
+              </button>
+            </div>
           </div>
-          <div className="flex-1 min-h-0">
-            <StoryletPanel
-              entries={storyletEntries}
-              pools={selectedChapter?.storyletPools ?? []}
-              selectedKey={selection.storyletKey}
-              selectedPool={selectedPool}
-              onSelect={storyletKey =>
-                setSelection(prev => ({
-                  ...prev,
-                  storyletKey,
-                }))
-              }
-              onAddPool={handleAddStoryletPool}
-              onAddStorylet={handleAddStorylet}
-              onMove={handleMoveStorylet}
-              onDelete={handleDeleteStorylet}
-              onUpdateStorylet={handleStoryletUpdate}
-              onUpdatePool={handleStoryletPoolUpdate}
-              onChangePool={handleStoryletPoolChange}
-            />
+          <div className="flex-1 min-h-0 rounded-lg border border-df-node-border bg-df-editor-bg p-3">
+            {storyletTab === 'storylets' ? (
+              <div className="flex h-full flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search size={14} className="absolute left-2 top-2.5 text-df-text-tertiary" />
+                    <input
+                      value={storyletSearch}
+                      onChange={event => setStoryletSearch(event.target.value)}
+                      placeholder="Search storylets..."
+                      className="w-full rounded-md border border-df-control-border bg-df-control-bg py-2 pl-7 pr-2 text-xs text-df-text-primary"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-2 text-df-text-secondary hover:text-df-text-primary"
+                    onClick={handleAddStorylet}
+                    title="Add storylet"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto space-y-2">
+                  {filteredStoryletEntries.map(entry => {
+                    const isSelected = selection.storyletKey === `${entry.poolId}:${entry.storylet.id}`;
+                    return (
+                      <button
+                        key={entry.storylet.id}
+                        type="button"
+                        onClick={() => {
+                          setSelection(prev => ({ ...prev, storyletKey: `${entry.poolId}:${entry.storylet.id}` }));
+                          setActivePoolId(entry.poolId);
+                        }}
+                        className={`w-full rounded-lg border px-3 py-2 text-left text-xs ${
+                          isSelected ? 'border-df-node-selected bg-df-control-active/30 text-df-text-primary' : 'border-df-node-border text-df-text-secondary hover:border-df-node-selected'
+                        }`}
+                        title="Select storylet"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="font-semibold">{entry.storylet.title ?? entry.storylet.id}</div>
+                          <button
+                            type="button"
+                            className="text-df-text-tertiary hover:text-df-text-primary"
+                            onClick={event => {
+                              event.stopPropagation();
+                              setEditingStoryletId(entry.storylet.id);
+                              setActivePoolId(entry.poolId);
+                            }}
+                            title="Edit storylet"
+                          >
+                            <Info size={14} />
+                          </button>
+                        </div>
+                        <div className="text-[10px] text-df-text-tertiary">{entry.storylet.id}</div>
+                      </button>
+                    );
+                  })}
+                  {filteredStoryletEntries.length === 0 && (
+                    <div className="rounded-lg border border-df-node-border bg-df-control-bg p-3 text-xs text-df-text-tertiary">
+                      No storylets found.
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex h-full flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search size={14} className="absolute left-2 top-2.5 text-df-text-tertiary" />
+                    <input
+                      value={poolSearch}
+                      onChange={event => setPoolSearch(event.target.value)}
+                      placeholder="Search pools..."
+                      className="w-full rounded-md border border-df-control-border bg-df-control-bg py-2 pl-7 pr-2 text-xs text-df-text-primary"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-2 text-df-text-secondary hover:text-df-text-primary"
+                    onClick={handleAddStoryletPool}
+                    title="Add pool"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto space-y-2">
+                  {filteredPools.map(pool => {
+                    const isSelected = activePool?.id === pool.id;
+                    return (
+                      <button
+                        key={pool.id}
+                        type="button"
+                        onClick={() => setActivePoolId(pool.id)}
+                        className={`w-full rounded-lg border px-3 py-2 text-left text-xs ${
+                          isSelected ? 'border-df-node-selected bg-df-control-active/30 text-df-text-primary' : 'border-df-node-border text-df-text-secondary hover:border-df-node-selected'
+                        }`}
+                        title="Select pool"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="font-semibold">{pool.title ?? pool.id}</div>
+                          <button
+                            type="button"
+                            className="text-df-text-tertiary hover:text-df-text-primary"
+                            onClick={event => {
+                              event.stopPropagation();
+                              setEditingPoolId(pool.id);
+                            }}
+                            title="Edit pool"
+                          >
+                            <Info size={14} />
+                          </button>
+                        </div>
+                        <div className="text-[10px] text-df-text-tertiary">{pool.storylets.length} storylets</div>
+                      </button>
+                    );
+                  })}
+                  {filteredPools.length === 0 && (
+                    <div className="rounded-lg border border-df-node-border bg-df-control-bg p-3 text-xs text-df-text-tertiary">
+                      No pools found.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      {showStructureEditor && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
-          <div className="relative flex h-full max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-df-editor-border bg-df-editor-bg">
-            <div className="flex items-center justify-between border-b border-df-node-border px-4 py-3">
-              <div className="text-sm font-semibold text-df-text-primary">Narrative Structure</div>
-              <button
-                type="button"
-                className="rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => setShowStructureEditor(false)}
-                title="Close narrative structure"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="flex-1 min-h-0 overflow-hidden p-4">
-              <NarrativeEditor
-                thread={thread}
-                onChange={setThread}
-                selection={selection}
-                onSelectionChange={setSelection}
-                className="h-full"
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       {showPlayModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
@@ -482,10 +943,166 @@ export function NarrativeWorkspace({
               <PlayView
                 dialogue={scopedDialogue}
                 startNodeId={scopedDialogue.startNodeId}
-                flagSchema={flagSchema}
+                flagSchema={activeFlagSchema}
                 gameStateFlags={gameStateFlags}
                 narrativeThread={thread}
               />
+            </div>
+          </div>
+        </div>
+      )}
+      {showFlagManager && activeFlagSchema && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
+          <div className="relative flex h-full max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-df-editor-border bg-df-editor-bg">
+            <div className="flex items-center justify-between border-b border-df-node-border px-4 py-3">
+              <div className="text-sm font-semibold text-df-text-primary">Flag Manager</div>
+              <button
+                type="button"
+                className="rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
+                onClick={() => setShowFlagManager(false)}
+                title="Close flag manager"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="flex-1 min-h-0">
+              <FlagManager
+                flagSchema={activeFlagSchema}
+                dialogue={dialogueTree}
+                onUpdate={setActiveFlagSchema}
+                onClose={() => setShowFlagManager(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <GuidePanel isOpen={showGuide} onClose={() => setShowGuide(false)} />
+
+      {editingStoryletEntry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
+          <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-df-editor-border bg-df-editor-bg">
+            <div className="flex items-center justify-between border-b border-df-node-border px-4 py-3">
+              <div className="text-sm font-semibold text-df-text-primary">Storylet Details</div>
+              <button
+                type="button"
+                className="rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
+                onClick={() => setEditingStoryletId(null)}
+                title="Close storylet editor"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-3 p-4 text-xs text-df-text-secondary">
+              <label className="flex flex-col gap-1">
+                <span>ID</span>
+                <input
+                  value={editingStoryletEntry.storylet.id}
+                  onChange={event =>
+                    handleStoryletUpdate(editingStoryletEntry, { id: event.target.value })
+                  }
+                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span>Title</span>
+                <input
+                  value={editingStoryletEntry.storylet.title ?? ''}
+                  onChange={event =>
+                    handleStoryletUpdate(editingStoryletEntry, { title: event.target.value })
+                  }
+                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span>Summary</span>
+                <textarea
+                  value={editingStoryletEntry.storylet.summary ?? ''}
+                  onChange={event =>
+                    handleStoryletUpdate(editingStoryletEntry, { summary: event.target.value })
+                  }
+                  className="min-h-[80px] rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span>Weight</span>
+                <input
+                  type="number"
+                  value={editingStoryletEntry.storylet.weight ?? 1}
+                  onChange={event =>
+                    handleStoryletUpdate(editingStoryletEntry, { weight: Number(event.target.value) })
+                  }
+                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingPool && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
+          <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-df-editor-border bg-df-editor-bg">
+            <div className="flex items-center justify-between border-b border-df-node-border px-4 py-3">
+              <div className="text-sm font-semibold text-df-text-primary">Pool Details</div>
+              <button
+                type="button"
+                className="rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
+                onClick={() => setEditingPoolId(null)}
+                title="Close pool editor"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-3 p-4 text-xs text-df-text-secondary">
+              <label className="flex flex-col gap-1">
+                <span>ID</span>
+                <input
+                  value={editingPool.id}
+                  onChange={event =>
+                    handleStoryletPoolUpdate(editingPool.id, { id: event.target.value })
+                  }
+                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span>Title</span>
+                <input
+                  value={editingPool.title ?? ''}
+                  onChange={event =>
+                    handleStoryletPoolUpdate(editingPool.id, { title: event.target.value })
+                  }
+                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span>Summary</span>
+                <textarea
+                  value={editingPool.summary ?? ''}
+                  onChange={event =>
+                    handleStoryletPoolUpdate(editingPool.id, { summary: event.target.value })
+                  }
+                  className="min-h-[80px] rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span>Selection Mode</span>
+                <select
+                  value={editingPool.selectionMode ?? STORYLET_SELECTION_MODE.WEIGHTED}
+                  onChange={event =>
+                    handleStoryletPoolUpdate(editingPool.id, {
+                      selectionMode: event.target.value as StoryletPool['selectionMode'],
+                    })
+                  }
+                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
+                >
+                  {Object.values(STORYLET_SELECTION_MODE).map(mode => (
+                    <option key={mode} value={mode}>
+                      {mode}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           </div>
         </div>

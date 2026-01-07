@@ -1,4 +1,6 @@
 export { DialogueEditorV2 } from './components/DialogueEditorV2';
+export { NarrativeEditor } from './components/NarrativeEditor';
+export { NarrativeGraphView } from './components/NarrativeGraphView';
 // Legacy scene player (use GamePlayer for new experiences)
 export { ScenePlayer } from './components/ScenePlayer';
 export type { ScenePlayerProps } from './components/ScenePlayer';
@@ -45,3 +47,5 @@ export * from './utils/node-helpers';
 export * from './utils/feature-flags';
 export * from './utils/narrative-helpers';
 export * from './utils/narrative-converter';
+export * from './utils/narrative-client';
+export * from './utils/narrative-editor-utils';

@@ -110,6 +110,29 @@ All constants are exported from `src/types/constants.ts`:
 3. **IDE Support**: Autocomplete and IntelliSense work better
 4. **Consistency**: Prevents typos and inconsistencies
 
+## Maintainability Guidelines
+
+### Component Organization
+- **Small, focused files**: Keep reusable UI elements in their own files (e.g., `ListPanel.tsx`, `StoryletPanel.tsx`) and compose higher-level components from them.
+- **Feature folders are OK**: For larger UIs, group related components under a folder (e.g., `src/components/narrative-editor/`) with a local `index.ts`.
+- **Prefer single-purpose exports**: Export one component per file unless helpers are tightly coupled and only used together.
+
+### Utilities & Data Flow
+- **UI vs. domain logic**: Keep data transformations in `src/utils/` and keep components focused on rendering + wiring handlers.
+- **Explicit props over implicit coupling**: Pass state and handlers into subcomponents; avoid hidden imports or global state.
+- **Use immutable updates**: Always return new arrays/objects when modifying nested structures to keep React updates predictable.
+- **Prefer client helpers for navigation**: When nested data access gets verbose, add a small “client” helper (e.g., `createNarrativeThreadClient`) that encapsulates lookups and updates.
+- **Deduplicate helpers**: If a helper is reused across components (e.g., ID generation or list parsing), promote it to `src/utils/` instead of re-implementing it.
+
+### Stability & Bug Prevention
+- **Guard optional data**: Fail fast when required selections are missing, and provide clear empty states.
+- **Keep side-effects localized**: Use `useEffect` sparingly and keep its dependencies explicit.
+- **Be conservative with edits**: Prefer small, reviewable changes over sweeping rewrites.
+
+### Documentation Style
+- **Structure matters**: Use headings and short lists; avoid large paragraphs.
+- **Include intent**: Document the “why” in addition to the “what” for non-obvious decisions.
+
 ## Key Concepts
 
 ### Dialogue Tree Structure

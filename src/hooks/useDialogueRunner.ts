@@ -27,7 +27,7 @@ export interface DialogueStep {
 interface DialogueRunnerOptions {
   dialogue: DialogueTree;
   startNodeId?: string;
-  initialFlags?: FlagState;
+  gameStateFlags?: FlagState;
   flagSchema?: FlagSchema;
   onComplete?: (result: DialogueResult) => void;
   onFlagsChange?: (flags: FlagState) => void;
@@ -174,14 +174,14 @@ function isDialogueFlag(flagId: string, flagSchema?: FlagSchema): boolean {
 export function useDialogueRunner({
   dialogue,
   startNodeId,
-  initialFlags,
+  gameStateFlags,
   flagSchema,
   onComplete,
   onFlagsChange,
 }: DialogueRunnerOptions) {
   const initialNodeId = startNodeId || dialogue.startNodeId;
   const [currentNodeId, setCurrentNodeId] = useState(initialNodeId);
-  const [flags, setFlags] = useState<FlagState>(initialFlags || {});
+  const [flags, setFlags] = useState<FlagState>(gameStateFlags || {});
   const [history, setHistory] = useState<DialogueHistoryEntry[]>([]);
   const [currentStep, setCurrentStep] = useState<DialogueStep | null>(null);
   const [status, setStatus] = useState<'running' | 'completed'>('running');
@@ -204,14 +204,14 @@ export function useDialogueRunner({
   useEffect(() => {
     visitedNodesRef.current = new Set();
     memoryFlagsRef.current = new Set(
-      Object.keys(initialFlags || {}).filter(flagId => isDialogueFlag(flagId, flagSchema))
+      Object.keys(gameStateFlags || {}).filter(flagId => isDialogueFlag(flagId, flagSchema))
     );
     hasCompletedRef.current = false;
     setHistory([]);
-    setFlags(initialFlags || {});
+    setFlags(gameStateFlags || {});
     setStatus('running');
     setCurrentNodeId(initialNodeId);
-  }, [dialogue.id, initialNodeId, initialFlags, flagSchema]);
+  }, [dialogue.id, initialNodeId, gameStateFlags, flagSchema]);
 
   const completeDialogue = useCallback(
     (latestFlags?: FlagState) => {
@@ -334,15 +334,15 @@ export function useDialogueRunner({
   const resetDialogue = useCallback(() => {
     visitedNodesRef.current = new Set();
     memoryFlagsRef.current = new Set(
-      Object.keys(initialFlags || {}).filter(flagId => isDialogueFlag(flagId, flagSchema))
+      Object.keys(gameStateFlags || {}).filter(flagId => isDialogueFlag(flagId, flagSchema))
     );
     hasCompletedRef.current = false;
     setHistory([]);
-    setFlags(initialFlags || {});
+    setFlags(gameStateFlags || {});
     setStatus('running');
     setCurrentNodeId(initialNodeId);
     setCurrentStep(null);
-  }, [flagSchema, initialFlags, initialNodeId]);
+  }, [flagSchema, gameStateFlags, initialNodeId]);
 
   const availableChoices = useMemo(() => {
     if (!currentStep || !currentStep.isChoice) return [];

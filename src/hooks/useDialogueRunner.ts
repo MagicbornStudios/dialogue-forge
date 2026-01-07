@@ -159,6 +159,9 @@ function buildCompletionResult(
     updatedFlags: flags,
     dialogueTree: dialogue,
     completedNodeIds: Array.from(visited),
+    gameState: {
+      flags,
+    },
   };
 }
 

@@ -95,6 +95,16 @@ export function convertDialogueTreeToReactFlow(
       } as Edge);
     }
 
+    if ((node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL) && node.nextNodeId) {
+      edges.push({
+        id: `${node.id}-next`,
+        source: node.id,
+        target: node.nextNodeId,
+        sourceHandle: 'next',
+        type: 'default',
+      } as Edge);
+    }
+
     if (node.type === NODE_TYPE.PLAYER && node.choices) {
       // Player -> multiple choices (one edge per choice)
       node.choices.forEach((choice, idx) => {
@@ -146,6 +156,30 @@ export function convertDialogueTreeToReactFlow(
         }
       });
     }
+
+    if (node.type === NODE_TYPE.RANDOMIZER && node.randomizerBranches) {
+      node.randomizerBranches.forEach((branch, idx) => {
+        if (branch.nextNodeId) {
+          const color = CHOICE_COLORS[idx % CHOICE_COLORS.length];
+          edges.push({
+            id: `${node.id}-branch-${idx}`,
+            source: node.id,
+            target: branch.nextNodeId,
+            sourceHandle: `branch-${idx}`,
+            type: 'choice',
+            data: {
+              branchIndex: idx,
+              branchId: branch.id,
+            },
+            style: {
+              stroke: color,
+              strokeWidth: 2,
+              opacity: 0.7,
+            },
+          } as Edge);
+        }
+      });
+    }
   });
 
   return { nodes, edges };
@@ -166,7 +200,7 @@ export function updateDialogueTreeFromReactFlow(
   
   // First, create copies of all nodes with cleared connections
   Object.values(dialogue.nodes).forEach(node => {
-    if (node.type === NODE_TYPE.NPC) {
+    if (node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL) {
       updatedNodes[node.id] = {
         ...node,
         nextNodeId: undefined,
@@ -184,6 +218,14 @@ export function updateDialogueTreeFromReactFlow(
         ...node,
         conditionalBlocks: node.conditionalBlocks ? node.conditionalBlocks.map(block => ({
           ...block,
+          nextNodeId: undefined,
+        })) : [],
+      };
+    } else if (node.type === NODE_TYPE.RANDOMIZER) {
+      updatedNodes[node.id] = {
+        ...node,
+        randomizerBranches: node.randomizerBranches ? node.randomizerBranches.map(branch => ({
+          ...branch,
           nextNodeId: undefined,
         })) : [],
       };
@@ -208,7 +250,7 @@ export function updateDialogueTreeFromReactFlow(
     const sourceNode = updatedNodes[edge.source];
     if (!sourceNode) return;
 
-    if (edge.sourceHandle === 'next' && sourceNode.type === NODE_TYPE.NPC) {
+    if (edge.sourceHandle === 'next' && (sourceNode.type === NODE_TYPE.NPC || sourceNode.type === NODE_TYPE.STORYLET || sourceNode.type === NODE_TYPE.STORYLET_POOL)) {
       // NPC next connection - create new node object
       updatedNodes[edge.source] = {
         ...sourceNode,
@@ -242,6 +284,19 @@ export function updateDialogueTreeFromReactFlow(
           conditionalBlocks: updatedBlocks,
         };
       }
+    } else if (edge.sourceHandle?.startsWith('branch-') && sourceNode.type === NODE_TYPE.RANDOMIZER) {
+      const branchIdx = parseInt(edge.sourceHandle.replace('branch-', ''));
+      if (sourceNode.randomizerBranches && sourceNode.randomizerBranches[branchIdx]) {
+        const updatedBranches = [...sourceNode.randomizerBranches];
+        updatedBranches[branchIdx] = {
+          ...updatedBranches[branchIdx],
+          nextNodeId: edge.target,
+        };
+        updatedNodes[edge.source] = {
+          ...sourceNode,
+          randomizerBranches: updatedBranches,
+        };
+      }
     }
   });
 
@@ -250,4 +305,3 @@ export function updateDialogueTreeFromReactFlow(
     nodes: updatedNodes,
   };
 }
-

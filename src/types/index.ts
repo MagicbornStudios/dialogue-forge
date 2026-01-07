@@ -1,5 +1,6 @@
 import { ConditionOperator, NodeType } from './constants';
 export type { ViewMode } from './constants';
+export * from './narrative';
 
 export interface Choice {
   id: string;
@@ -89,4 +90,3 @@ export interface DraggingEdge {
   endX: number;
   endY: number;
 }
-

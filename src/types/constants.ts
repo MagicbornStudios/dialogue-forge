@@ -26,6 +26,29 @@ export const NODE_TYPE = {
 export type NodeType = typeof NODE_TYPE[keyof typeof NODE_TYPE];
 
 /**
+ * Narrative node types
+ */
+export const NARRATIVE_NODE_TYPE = {
+  ACT: 'narrative_act',
+  CHAPTER: 'narrative_chapter',
+  PAGE: 'narrative_page',
+  STORYLET: 'narrative_storylet',
+} as const;
+
+export type NarrativeNodeType = typeof NARRATIVE_NODE_TYPE[keyof typeof NARRATIVE_NODE_TYPE];
+
+/**
+ * Narrative edge types
+ */
+export const NARRATIVE_EDGE_TYPE = {
+  ACT_TO_CHAPTER: 'narrative_act_to_chapter',
+  CHAPTER_TO_PAGE: 'narrative_chapter_to_page',
+  STORYLET_LINK: 'narrative_storylet_link',
+} as const;
+
+export type NarrativeEdgeType = typeof NARRATIVE_EDGE_TYPE[keyof typeof NARRATIVE_EDGE_TYPE];
+
+/**
  * Flag types for game state management
  */
 export const FLAG_TYPE = {
@@ -77,4 +100,3 @@ export const QUEST_STATE = {
 } as const;
 
 export type QuestState = typeof QUEST_STATE[keyof typeof QUEST_STATE];
-

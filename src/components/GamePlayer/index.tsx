@@ -13,7 +13,7 @@ export interface GamePlayerProps {
   dialogue: DialogueTree;
   startNodeId?: string;
   flagSchema?: FlagSchema;
-  initialFlags?: FlagState;
+  gameStateFlags?: FlagState;
   onComplete?: (result: DialogueResult) => void;
   onFlagsChange?: (flags: FlagState) => void;
   narrativeThread?: NarrativeThread;
@@ -55,7 +55,7 @@ export function GamePlayer({
   dialogue,
   startNodeId,
   flagSchema,
-  initialFlags,
+  gameStateFlags,
   onComplete,
   onFlagsChange,
   narrativeThread,
@@ -64,7 +64,7 @@ export function GamePlayer({
     dialogue,
     startNodeId,
     flagSchema,
-    initialFlags,
+    gameStateFlags,
     onComplete,
     onFlagsChange,
   });

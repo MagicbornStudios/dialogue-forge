@@ -42,7 +42,7 @@ export function ScenePlayer({
   onDialogueEnd,
 }: ScenePlayerProps) {
   // Validate and extract flags from gameState
-  const initialFlags = useMemo(() => {
+  const gameStateFlags = useMemo(() => {
     try {
       validateGameState(gameState);
       return extractFlagsFromGameState(gameState, flattenConfig);
@@ -53,7 +53,7 @@ export function ScenePlayer({
   }, [gameState, flattenConfig]);
   
   const [currentNodeId, setCurrentNodeId] = useState<string>(startNodeId || dialogue.startNodeId);
-  const [flags, setFlags] = useState<FlagState>(initialFlags);
+  const [flags, setFlags] = useState<FlagState>(gameStateFlags);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [visitedNodes, setVisitedNodes] = useState<Set<string>>(new Set());

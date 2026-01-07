@@ -30,6 +30,7 @@ import { ENABLE_DEBUG_TOOLS } from '../utils/feature-flags';
 import 'reactflow/dist/style.css';
 
 import { DialogueEditorProps, DialogueTree, DialogueNode, Choice, ConditionalBlock, ViewMode } from '../types';
+import type { GameFlagState } from '../types/game-state';
 import { exportToYarn, importFromYarn } from '../lib/yarn-converter';
 import { convertDialogueTreeToReactFlow, updateDialogueTreeFromReactFlow, CHOICE_COLORS } from '../utils/reactflow-converter';
 import { createNode, deleteNodeFromTree, addChoiceToNode, removeChoiceFromNode, updateChoiceInNode } from '../utils/node-helpers';
@@ -75,6 +76,7 @@ const edgeTypes = {
 interface DialogueEditorV2InternalProps extends DialogueEditorProps {
   flagSchema?: FlagSchema;
   characters?: Record<string, Character>; // Characters from game state
+  gameStateFlags?: GameFlagState;
   initialViewMode?: ViewMode;
   viewMode?: ViewMode; // Controlled view mode (if provided, overrides initialViewMode)
   onViewModeChange?: (mode: ViewMode) => void; // Callback when view mode changes
@@ -96,6 +98,7 @@ function DialogueEditorV2Internal({
   showTitleEditor = true,
   flagSchema,
   characters = {},
+  gameStateFlags,
   initialViewMode = VIEW_MODE.GRAPH,
   viewMode: controlledViewMode,
   onViewModeChange,
@@ -1769,7 +1772,7 @@ function DialogueEditorV2Internal({
         <PlayView
           dialogue={dialogue}
           flagSchema={flagSchema}
-          initialGameStateFlags={initialFlags}
+          gameStateFlags={gameStateFlags}
         />
       )}
     </div>

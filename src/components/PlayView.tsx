@@ -10,7 +10,7 @@ interface PlayViewProps {
   dialogue: DialogueTree;
   startNodeId?: string;
   flagSchema?: FlagSchema;
-  initialGameStateFlags?: GameFlagState;
+  gameStateFlags?: GameFlagState;
   narrativeThread?: NarrativeThread;
 }
 
@@ -18,33 +18,33 @@ export function PlayView({
   dialogue,
   startNodeId,
   flagSchema,
-  initialGameStateFlags,
+  gameStateFlags,
   narrativeThread,
 }: PlayViewProps) {
-  // Initialize game flags with defaults from schema, then merge with initialGameStateFlags
-  const initialGameFlags = useMemo(() => {
+  // Initialize game flags with defaults from schema, then merge with gameStateFlags
+  const resolvedGameStateFlags = useMemo(() => {
     if (flagSchema) {
       const defaults = initializeFlags(flagSchema);
-      return { ...defaults, ...initialGameStateFlags };
+      return { ...defaults, ...gameStateFlags };
     }
-    return initialGameStateFlags || {};
-  }, [flagSchema, initialGameStateFlags]);
+    return gameStateFlags || {};
+  }, [flagSchema, gameStateFlags]);
   
-  const [currentFlags, setCurrentFlags] = useState<FlagState>(initialGameFlags);
+  const [currentFlags, setCurrentFlags] = useState<FlagState>(resolvedGameStateFlags);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [flagsSetDuringRun, setFlagsSetDuringRun] = useState<Set<string>>(new Set());
 
-  // Track initial flags to detect changes
-  const initialFlagsRef = useRef<GameFlagState>(initialGameFlags);
+  // Track baseline flags to detect changes
+  const baseFlagsRef = useRef<GameFlagState>(resolvedGameStateFlags);
 
   useEffect(() => {
-    initialFlagsRef.current = initialGameFlags;
-  }, [initialGameFlags]);
+    baseFlagsRef.current = resolvedGameStateFlags;
+  }, [resolvedGameStateFlags]);
 
   useEffect(() => {
-    setCurrentFlags(initialGameFlags);
+    setCurrentFlags(resolvedGameStateFlags);
     setFlagsSetDuringRun(new Set());
-  }, [initialGameFlags]);
+  }, [resolvedGameStateFlags]);
 
   const handleComplete = (result: DialogueResult) => {
     // Update flags from result
@@ -61,7 +61,7 @@ export function PlayView({
       setFlagsSetDuringRun(prev => {
         const next = new Set(prev);
         Object.keys(flags).forEach(flagId => {
-          const initialValue = initialFlagsRef.current[flagId];
+          const initialValue = baseFlagsRef.current[flagId];
           const currentValue = flags[flagId];
           if (initialValue !== currentValue) {
             next.add(flagId);
@@ -202,7 +202,7 @@ export function PlayView({
         dialogue={dialogue}
         startNodeId={startNodeId}
         flagSchema={flagSchema}
-        initialFlags={initialGameFlags}
+        gameStateFlags={resolvedGameStateFlags}
         onComplete={handleComplete}
         onFlagsChange={handleFlagUpdate}
         narrativeThread={narrativeThread}

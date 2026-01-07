@@ -9,6 +9,7 @@ import {
   Info,
   LayoutPanelTop,
   ListTree,
+  Map,
   Play,
   Plus,
   Search,
@@ -99,6 +100,8 @@ export function NarrativeWorkspace({
   const [showGuide, setShowGuide] = useState(false);
   const [narrativeViewMode, setNarrativeViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);
   const [dialogueViewMode, setDialogueViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);
+  const [showNarrativeMiniMap, setShowNarrativeMiniMap] = useState(true);
+  const [showDialogueMiniMap, setShowDialogueMiniMap] = useState(true);
   const [storyletTab, setStoryletTab] = useState<'storylets' | 'pools'>('storylets');
   const [storyletSearch, setStoryletSearch] = useState('');
   const [poolSearch, setPoolSearch] = useState('');
@@ -519,7 +522,7 @@ export function NarrativeWorkspace({
 
   return (
     <div className={`flex h-full w-full flex-col ${className}`}>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-df-sidebar-border bg-df-base/80 px-4 py-2">
+      <div className="flex items-center justify-between border-b border-df-sidebar-border bg-df-base/80 px-3 py-2">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -537,7 +540,7 @@ export function NarrativeWorkspace({
                 setShowFlagManager(true);
               }
             }}
-            title="Manage flags"
+            title="Game state"
           >
             <Flag size={16} />
           </button>
@@ -550,113 +553,12 @@ export function NarrativeWorkspace({
             <HelpCircle size={16} />
           </button>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2 text-xs text-df-text-tertiary">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1">
-              <CircleDot size={12} />
-              Act
-            </span>
-            <select
-              className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-xs text-df-text-primary"
-              value={selectedAct?.id ?? ''}
-              onChange={event => {
-                const actId = event.target.value;
-                const act = thread.acts.find(item => item.id === actId);
-                setSelection(prev => ({
-                  ...prev,
-                  actId,
-                  chapterId: act?.chapters[0]?.id,
-                  pageId: act?.chapters[0]?.pages[0]?.id,
-                }));
-              }}
-              title="Select act"
-            >
-              {thread.acts.map(act => (
-                <option key={act.id} value={act.id}>
-                  {act.title ?? act.id}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
-              onClick={handleAddAct}
-              title="Add act"
-            >
-              <Plus size={12} />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1">
-              <BookOpen size={12} />
-              Chapter
-            </span>
-            <select
-              className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-xs text-df-text-primary"
-              value={selectedChapter?.id ?? ''}
-              onChange={event => {
-                const chapterId = event.target.value;
-                const chapter = selectedAct?.chapters.find(item => item.id === chapterId);
-                setSelection(prev => ({
-                  ...prev,
-                  chapterId,
-                  pageId: chapter?.pages[0]?.id,
-                }));
-              }}
-              title="Select chapter"
-            >
-              {(selectedAct?.chapters ?? []).map(chapter => (
-                <option key={chapter.id} value={chapter.id}>
-                  {chapter.title ?? chapter.id}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
-              onClick={handleAddChapter}
-              title="Add chapter"
-            >
-              <Plus size={12} />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1">
-              <LayoutPanelTop size={12} />
-              Page
-            </span>
-            <select
-              className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-xs text-df-text-primary"
-              value={selectedPage?.id ?? ''}
-              onChange={event => setSelection(prev => ({ ...prev, pageId: event.target.value }))}
-              title="Select page"
-            >
-              {(selectedChapter?.pages ?? []).map(page => (
-                <option key={page.id} value={page.id}>
-                  {page.title ?? page.id}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
-              onClick={handleAddPage}
-              title="Add page"
-            >
-              <Plus size={12} />
-            </button>
-          </div>
-        </div>
-
         <div className="flex items-center gap-2">{toolbarActions}</div>
       </div>
 
-      <div className="flex min-h-0 flex-1 gap-4 p-4">
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <div className="flex items-center justify-between rounded-lg border border-df-node-border bg-df-editor-bg px-3 py-2">
+      <div className="flex min-h-0 flex-1 gap-2 p-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-df-node-border bg-df-editor-bg px-2 py-1.5">
             <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
               <CircleDot size={12} />
               Narrative Graph
@@ -664,7 +566,105 @@ export function NarrativeWorkspace({
                 <Info size={12} />
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 text-[11px] text-df-text-tertiary">
+                <span className="inline-flex items-center gap-1">
+                  <CircleDot size={12} />
+                  Act
+                </span>
+                <select
+                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-primary"
+                  value={selectedAct?.id ?? ''}
+                  onChange={event => {
+                    const actId = event.target.value;
+                    const act = thread.acts.find(item => item.id === actId);
+                    setSelection(prev => ({
+                      ...prev,
+                      actId,
+                      chapterId: act?.chapters[0]?.id,
+                      pageId: act?.chapters[0]?.pages[0]?.id,
+                    }));
+                  }}
+                  title="Select act"
+                >
+                  {thread.acts.map(act => (
+                    <option key={act.id} value={act.id}>
+                      {act.title ?? act.id}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
+                  onClick={handleAddAct}
+                  title="Add act"
+                >
+                  <Plus size={12} />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1 text-[11px] text-df-text-tertiary">
+                <span className="inline-flex items-center gap-1">
+                  <BookOpen size={12} />
+                  Chapter
+                </span>
+                <select
+                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-primary"
+                  value={selectedChapter?.id ?? ''}
+                  onChange={event => {
+                    const chapterId = event.target.value;
+                    const chapter = selectedAct?.chapters.find(item => item.id === chapterId);
+                    setSelection(prev => ({
+                      ...prev,
+                      chapterId,
+                      pageId: chapter?.pages[0]?.id,
+                    }));
+                  }}
+                  title="Select chapter"
+                >
+                  {(selectedAct?.chapters ?? []).map(chapter => (
+                    <option key={chapter.id} value={chapter.id}>
+                      {chapter.title ?? chapter.id}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
+                  onClick={handleAddChapter}
+                  title="Add chapter"
+                >
+                  <Plus size={12} />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1 text-[11px] text-df-text-tertiary">
+                <span className="inline-flex items-center gap-1">
+                  <LayoutPanelTop size={12} />
+                  Page
+                </span>
+                <select
+                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-primary"
+                  value={selectedPage?.id ?? ''}
+                  onChange={event => setSelection(prev => ({ ...prev, pageId: event.target.value }))}
+                  title="Select page"
+                >
+                  {(selectedChapter?.pages ?? []).map(page => (
+                    <option key={page.id} value={page.id}>
+                      {page.title ?? page.id}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
+                  onClick={handleAddPage}
+                  title="Add page"
+                >
+                  <Plus size={12} />
+                </button>
+              </div>
+
               <button
                 type="button"
                 className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
@@ -686,6 +686,15 @@ export function NarrativeWorkspace({
               <button
                 type="button"
                 className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
+                onClick={() => setShowNarrativeMiniMap(prev => !prev)}
+                title={showNarrativeMiniMap ? 'Hide minimap' : 'Show minimap'}
+              >
+                <Map size={12} />
+                Mini
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
                 onClick={() => handleExportYarn(dialogueTree)}
                 title="Export yarn"
               >
@@ -694,14 +703,55 @@ export function NarrativeWorkspace({
               </button>
             </div>
           </div>
-          <div className="h-[220px] min-h-[200px]">
+          <div className="h-[220px] min-h-[200px] rounded-lg border border-df-node-border bg-df-editor-bg p-1">
             {narrativeViewMode === VIEW_MODE.GRAPH ? (
-              <NarrativeGraphView thread={thread} className="h-full" />
+              <NarrativeGraphView
+                thread={thread}
+                className="h-full"
+                showMiniMap={showNarrativeMiniMap}
+                onSelectElement={(elementType, elementId) => {
+                  if (elementType === NARRATIVE_ELEMENT.ACT) {
+                    const act = thread.acts.find(item => item.id === elementId);
+                    setSelection(prev => ({
+                      ...prev,
+                      actId: elementId,
+                      chapterId: act?.chapters[0]?.id,
+                      pageId: act?.chapters[0]?.pages[0]?.id,
+                    }));
+                  }
+                  if (elementType === NARRATIVE_ELEMENT.CHAPTER) {
+                    const actForChapter = thread.acts.find(act =>
+                      act.chapters.some(item => item.id === elementId)
+                    );
+                    const chapter = actForChapter?.chapters.find(item => item.id === elementId);
+                    setSelection(prev => ({
+                      ...prev,
+                      actId: actForChapter?.id ?? prev.actId,
+                      chapterId: elementId,
+                      pageId: chapter?.pages[0]?.id,
+                    }));
+                  }
+                  if (elementType === NARRATIVE_ELEMENT.PAGE) {
+                    const actForPage = thread.acts.find(act =>
+                      act.chapters.some(chapter => chapter.pages.some(page => page.id === elementId))
+                    );
+                    const chapterForPage = actForPage?.chapters.find(chapter =>
+                      chapter.pages.some(page => page.id === elementId)
+                    );
+                    setSelection(prev => ({
+                      ...prev,
+                      actId: actForPage?.id ?? prev.actId,
+                      chapterId: chapterForPage?.id ?? prev.chapterId,
+                      pageId: elementId,
+                    }));
+                  }
+                }}
+              />
             ) : (
               <YarnView dialogue={dialogueTree} onExport={() => handleExportYarn(dialogueTree)} />
             )}
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-df-node-border bg-df-editor-bg px-3 py-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-df-node-border bg-df-editor-bg px-2 py-1.5">
             <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
               <LayoutPanelTop size={12} />
               Dialogue Graph
@@ -711,7 +761,7 @@ export function NarrativeWorkspace({
                 <Info size={12} />
               </span>
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-df-text-tertiary">
+            <div className="flex flex-wrap items-center gap-2 text-[11px] text-df-text-tertiary">
               <span className="inline-flex items-center gap-1 rounded-full border border-df-control-border bg-df-control-bg px-2 py-1">
                 {selectedPage?.title ?? 'Page'}
               </span>
@@ -741,6 +791,15 @@ export function NarrativeWorkspace({
               <button
                 type="button"
                 className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
+                onClick={() => setShowDialogueMiniMap(prev => !prev)}
+                title={showDialogueMiniMap ? 'Hide minimap' : 'Show minimap'}
+              >
+                <Map size={12} />
+                Mini
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
                 onClick={() => handleExportYarn(scopedDialogue)}
                 title="Export yarn"
               >
@@ -749,7 +808,7 @@ export function NarrativeWorkspace({
               </button>
             </div>
           </div>
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 rounded-lg border border-df-node-border bg-df-editor-bg p-1">
             {dialogueViewMode === VIEW_MODE.GRAPH ? (
               <DialogueEditorV2
                 dialogue={scopedDialogue}
@@ -758,6 +817,7 @@ export function NarrativeWorkspace({
                 characters={characters}
                 viewMode={VIEW_MODE.GRAPH}
                 className="h-full"
+                showMiniMap={showDialogueMiniMap}
               />
             ) : (
               <YarnView dialogue={scopedDialogue} onExport={() => handleExportYarn(scopedDialogue)} />
@@ -765,8 +825,8 @@ export function NarrativeWorkspace({
           </div>
         </div>
 
-        <div className="flex w-[320px] min-w-[280px] flex-col gap-3">
-          <div className="flex items-center justify-between rounded-lg border border-df-node-border bg-df-editor-bg px-3 py-2">
+        <div className="flex w-[320px] min-w-[280px] flex-col gap-2">
+          <div className="flex items-center justify-between rounded-lg border border-df-node-border bg-df-editor-bg px-2 py-1.5">
             <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
               <BookOpen size={12} />
               Storylets
@@ -793,7 +853,7 @@ export function NarrativeWorkspace({
               </button>
             </div>
           </div>
-          <div className="flex-1 min-h-0 rounded-lg border border-df-node-border bg-df-editor-bg p-3">
+          <div className="flex-1 min-h-0 rounded-lg border border-df-node-border bg-df-editor-bg p-2">
             {storyletTab === 'storylets' ? (
               <div className="flex h-full flex-col gap-3">
                 <div className="flex items-center gap-2">
@@ -955,7 +1015,7 @@ export function NarrativeWorkspace({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
           <div className="relative flex h-full max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-df-editor-border bg-df-editor-bg">
             <div className="flex items-center justify-between border-b border-df-node-border px-4 py-3">
-              <div className="text-sm font-semibold text-df-text-primary">Flag Manager</div>
+              <div className="text-sm font-semibold text-df-text-primary">Game State</div>
               <button
                 type="button"
                 className="rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
@@ -965,13 +1025,49 @@ export function NarrativeWorkspace({
                 <X size={16} />
               </button>
             </div>
-            <div className="flex-1 min-h-0">
-              <FlagManager
-                flagSchema={activeFlagSchema}
-                dialogue={dialogueTree}
-                onUpdate={setActiveFlagSchema}
-                onClose={() => setShowFlagManager(false)}
-              />
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_280px]">
+              <div className="min-h-0">
+                <FlagManager
+                  flagSchema={activeFlagSchema}
+                  dialogue={dialogueTree}
+                  onUpdate={setActiveFlagSchema}
+                  onClose={() => setShowFlagManager(false)}
+                />
+              </div>
+              <div className="border-l border-df-node-border bg-df-base/60 p-4 space-y-4 text-xs text-df-text-secondary">
+                <div>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
+                    <CircleDot size={12} />
+                    Player
+                  </div>
+                  <div className="mt-2 rounded-md border border-df-control-border bg-df-control-bg px-3 py-2 text-[11px] text-df-text-secondary">
+                    Player profile settings coming soon.
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
+                    <BookOpen size={12} />
+                    Characters
+                  </div>
+                  <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
+                    {characters && Object.values(characters).length > 0 ? (
+                      Object.values(characters).map(character => (
+                        <div
+                          key={character.id}
+                          className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-2 text-[11px]"
+                        >
+                          <div className="text-df-text-primary font-semibold">{character.name}</div>
+                          <div className="text-df-text-tertiary">{character.id}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-2 text-[11px] text-df-text-tertiary">
+                        No characters loaded.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

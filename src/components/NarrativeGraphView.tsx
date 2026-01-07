@@ -21,6 +21,8 @@ import { NPCEdgeV2 } from './NPCEdgeV2';
 interface NarrativeGraphViewProps {
   thread: StoryThread;
   className?: string;
+  showMiniMap?: boolean;
+  onSelectElement?: (element: NarrativeElement, id: string) => void;
 }
 
 const elementMeta: Record<
@@ -110,7 +112,12 @@ const edgeTypes = {
   default: NPCEdgeV2,
 };
 
-export function NarrativeGraphView({ thread, className = '' }: NarrativeGraphViewProps) {
+export function NarrativeGraphView({
+  thread,
+  className = '',
+  showMiniMap = true,
+  onSelectElement,
+}: NarrativeGraphViewProps) {
   const { nodes, edges } = useMemo(() => convertNarrativeToReactFlow(thread), [thread]);
 
   return (
@@ -124,18 +131,26 @@ export function NarrativeGraphView({ thread, className = '' }: NarrativeGraphVie
         className="bg-df-canvas-bg"
         minZoom={0.1}
         maxZoom={1.5}
+        onNodeClick={(_, node) => {
+          const elementType = node.type as NarrativeElement | undefined;
+          if (elementType) {
+            onSelectElement?.(elementType, node.id);
+          }
+        }}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-        <MiniMap
-          nodeColor={node => {
-            if (node.type === NARRATIVE_ELEMENT.ACT) return 'var(--color-df-player-border)';
-            if (node.type === NARRATIVE_ELEMENT.CHAPTER) return 'var(--color-df-conditional-border)';
-            if (node.type === NARRATIVE_ELEMENT.PAGE) return 'var(--color-df-node-border)';
-            return 'var(--color-df-npc-border)';
-          }}
-          maskColor="rgba(11, 11, 20, 0.8)"
-          className="border border-df-node-border"
-        />
+        {showMiniMap && (
+          <MiniMap
+            nodeColor={node => {
+              if (node.type === NARRATIVE_ELEMENT.ACT) return 'var(--color-df-player-border)';
+              if (node.type === NARRATIVE_ELEMENT.CHAPTER) return 'var(--color-df-conditional-border)';
+              if (node.type === NARRATIVE_ELEMENT.PAGE) return 'var(--color-df-node-border)';
+              return 'var(--color-df-npc-border)';
+            }}
+            maskColor="rgba(11, 11, 20, 0.8)"
+            className="border border-df-node-border"
+          />
+        )}
         <Controls className="bg-[#0f0f1a] border border-[#1f1f2e]" />
       </ReactFlow>
     </div>

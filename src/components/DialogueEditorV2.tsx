@@ -86,6 +86,7 @@ interface DialogueEditorV2InternalProps extends DialogueEditorProps {
   onOpenGuide?: () => void;
   onLoadExampleDialogue?: (dialogue: DialogueTree) => void;
   onLoadExampleFlags?: (flags: FlagSchema) => void;
+  showMiniMap?: boolean;
   // Event hooks from DialogueEditorProps are already included
 }
 
@@ -108,6 +109,7 @@ function DialogueEditorV2Internal({
   onOpenGuide,
   onLoadExampleDialogue,
   onLoadExampleFlags,
+  showMiniMap = true,
   // Event hooks
   onNodeAdd,
   onNodeDelete,
@@ -1213,35 +1215,37 @@ function DialogueEditorV2Internal({
               <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#1a1a2e" />
               
               {/* Enhanced MiniMap with title */}
-              <Panel position="bottom-right" className="!p-0 !m-2">
-                <div className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg overflow-hidden shadow-xl">
-                  <div className="px-3 py-1.5 border-b border-df-sidebar-border flex items-center justify-between bg-df-elevated">
-                    <span className="text-[10px] font-medium text-df-text-secondary uppercase tracking-wider">Overview</span>
-                    <div className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-df-npc-selected" title="NPC / Storylet" />
-                      <span className="w-2 h-2 rounded-full bg-df-player-selected" title="Player / Randomizer" />
-                      <span className="w-2 h-2 rounded-full bg-df-conditional-border" title="Conditional" />
+              {showMiniMap && (
+                <Panel position="bottom-right" className="!p-0 !m-2">
+                  <div className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg overflow-hidden shadow-xl">
+                    <div className="px-3 py-1.5 border-b border-df-sidebar-border flex items-center justify-between bg-df-elevated">
+                      <span className="text-[10px] font-medium text-df-text-secondary uppercase tracking-wider">Overview</span>
+                      <div className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-df-npc-selected" title="NPC / Storylet" />
+                        <span className="w-2 h-2 rounded-full bg-df-player-selected" title="Player / Randomizer" />
+                        <span className="w-2 h-2 rounded-full bg-df-conditional-border" title="Conditional" />
+                      </div>
                     </div>
+                    <MiniMap 
+                      style={{ 
+                        width: 180, 
+                        height: 120,
+                        backgroundColor: '#08080c',
+                      }}
+                      maskColor="rgba(0, 0, 0, 0.7)"
+                      nodeColor={(node) => {
+                        if (node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL) return '#e94560';
+                        if (node.type === NODE_TYPE.PLAYER || node.type === NODE_TYPE.RANDOMIZER) return '#8b5cf6';
+                        if (node.type === NODE_TYPE.CONDITIONAL) return '#3b82f6';
+                        return '#4a4a6a';
+                      }}
+                      nodeStrokeWidth={2}
+                      pannable
+                      zoomable
+                    />
                   </div>
-                  <MiniMap 
-                    style={{ 
-                      width: 180, 
-                      height: 120,
-                      backgroundColor: '#08080c',
-                    }}
-                    maskColor="rgba(0, 0, 0, 0.7)"
-                    nodeColor={(node) => {
-                      if (node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL) return '#e94560';
-                      if (node.type === NODE_TYPE.PLAYER || node.type === NODE_TYPE.RANDOMIZER) return '#8b5cf6';
-                      if (node.type === NODE_TYPE.CONDITIONAL) return '#3b82f6';
-                      return '#4a4a6a';
-                    }}
-                    nodeStrokeWidth={2}
-                    pannable
-                    zoomable
-                  />
-                </div>
-              </Panel>
+                </Panel>
+              )}
               
               {/* Left Toolbar - Layout, Flags, Guide */}
               <Panel position="top-left" className="!bg-transparent !border-0 !p-0 !m-2">
@@ -1789,6 +1793,7 @@ export function DialogueEditorV2(props: DialogueEditorProps & {
   onLayoutStrategyChange?: (strategy: string) => void;
   onOpenFlagManager?: () => void;
   onOpenGuide?: () => void;
+  showMiniMap?: boolean;
 }) {
   return (
     <ReactFlowProvider>

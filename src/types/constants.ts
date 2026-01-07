@@ -21,6 +21,9 @@ export const NODE_TYPE = {
   NPC: 'npc',
   PLAYER: 'player',
   CONDITIONAL: 'conditional',
+  STORYLET: 'storylet',
+  STORYLET_POOL: 'storylet_pool',
+  RANDOMIZER: 'randomizer',
 } as const;
 
 export type NodeType = typeof NODE_TYPE[keyof typeof NODE_TYPE];

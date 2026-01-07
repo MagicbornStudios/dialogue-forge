@@ -270,6 +270,10 @@ Tests use Vitest. Key test files:
 - `src/**/*.test.ts`: Unit tests
 - Test utilities in `src/utils/` if needed
 
+### Build Requirement
+
+Always run `npm run build` after making changes to ensure the app builds cleanly. If the build fails, fix the issue before finalizing your work.
+
 ## Deployment
 
 ### Publishing the Package
@@ -340,4 +344,3 @@ When in doubt:
 2. Look at existing component implementations
 3. Follow the patterns in `DialogueEditorV2.tsx`
 4. Ensure demo works independently
-

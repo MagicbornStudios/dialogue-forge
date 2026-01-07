@@ -4,7 +4,6 @@ import { FLAG_TYPE } from '../types/constants';
 import { FlagSchema, FlagType } from '../types/flags';
 import { DialogueResult, FlagState, GameFlagState } from '../types/game-state';
 import { initializeFlags } from '../lib/flag-manager';
-import { FLAG_TYPE } from '../types/constants';
 import { GamePlayer } from './GamePlayer';
 
 interface PlayViewProps {

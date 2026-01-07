@@ -13,7 +13,7 @@ export function DialogueBox({ history, currentStep, status }: DialogueBoxProps) 
     <section className="bg-[#0b0b14]/90 border border-[#1a1a2e] rounded-2xl backdrop-blur">
       <div className="px-5 py-4 flex flex-col gap-3 max-h-[200px] overflow-y-auto">
         {history.length === 0 && (
-          <p className="text-gray-500 text-sm">Use the choice cards to begin the scene.</p>
+          <p className="text-gray-500 text-sm">Use the choice cards to begin this page.</p>
         )}
 
         {history.map(entry => (

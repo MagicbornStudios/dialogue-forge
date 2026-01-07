@@ -14,6 +14,7 @@ import {
   type NarrativeChapter,
   type NarrativePage,
   type NarrativeStorylet,
+  type NarrativeStoryletExit,
   type NarrativeStructure,
   DEFAULT_NARRATIVE_ENTITY_LABELS,
 } from '../types/narrative';
@@ -31,11 +32,16 @@ export function NarrativeEditor({ narrative: narrativeProp, onChange, onSelectSt
   const [selectedActId, setSelectedActId] = useState<string>(narrative.startActId || narrative.acts[0]?.id || '');
   const [selectedChapterId, setSelectedChapterId] = useState<string>(narrative.startChapterId || narrative.acts[0]?.chapters[0]?.id || '');
   const [selectedPageId, setSelectedPageId] = useState<string>(narrative.startPageId || narrative.acts[0]?.chapters[0]?.pages[0]?.id || '');
+  const [selectedStoryletId, setSelectedStoryletId] = useState<string>(
+    narrative.acts[0]?.chapters[0]?.pages[0]?.startStoryletId || narrative.acts[0]?.chapters[0]?.pages[0]?.storylets[0]?.id || ''
+  );
 
   const selectedAct = narrative.acts.find(act => act.id === selectedActId) || narrative.acts[0];
   const selectedChapter = selectedAct?.chapters.find(ch => ch.id === selectedChapterId) || selectedAct?.chapters[0];
   const selectedPage = selectedChapter?.pages.find(p => p.id === selectedPageId) || selectedChapter?.pages[0];
-  const selectedStorylet = selectedPage?.storylets.find(s => s.id === selectedPage?.startStoryletId) || selectedPage?.storylets[0];
+  const selectedStorylet = selectedPage?.storylets.find(s => s.id === selectedStoryletId)
+    || selectedPage?.storylets.find(s => s.id === selectedPage?.startStoryletId)
+    || selectedPage?.storylets[0];
 
   useEffect(() => {
     if (!selectedAct && narrative.acts[0]) {
@@ -55,12 +61,20 @@ export function NarrativeEditor({ narrative: narrativeProp, onChange, onSelectSt
     }
   }, [selectedChapter, selectedPage]);
 
+  useEffect(() => {
+    if (!selectedPage) return;
+    const hasStorylet = selectedPage.storylets.some(storylet => storylet.id === selectedStoryletId);
+    if (!hasStorylet) {
+      setSelectedStoryletId(selectedPage.startStoryletId || selectedPage.storylets[0]?.id || '');
+    }
+  }, [selectedPage, selectedStoryletId]);
+
   const handleStoryletUpdate = (updates: Partial<NarrativeStorylet>) => {
     if (!selectedAct || !selectedChapter || !selectedPage || !selectedStorylet) return;
     onChange(updateStorylet(narrative, selectedAct.id, selectedChapter.id, selectedPage.id, selectedStorylet.id, updates));
   };
 
-  const handleExitUpdate = (exitId: string, updates: Partial<NarrativeStorylet['exits'][number]>) => {
+  const handleExitUpdate = (exitId: string, updates: Partial<NarrativeStoryletExit>) => {
     if (!selectedAct || !selectedChapter || !selectedPage || !selectedStorylet) return;
     onChange(updateStoryletExit(narrative, selectedAct.id, selectedChapter.id, selectedPage.id, selectedStorylet.id, exitId, updates));
   };
@@ -154,7 +168,10 @@ export function NarrativeEditor({ narrative: narrativeProp, onChange, onSelectSt
             {selectedPage?.storylets.map(storylet => (
               <button
                 key={storylet.id}
-                onClick={() => onSelectStorylet?.(storylet, selectedPage, selectedChapter!, selectedAct!)}
+                onClick={() => {
+                  setSelectedStoryletId(storylet.id);
+                  onSelectStorylet?.(storylet, selectedPage, selectedChapter!, selectedAct!);
+                }}
                 className={`text-left border rounded-lg px-3 py-2 transition-colors ${
                   selectedStorylet?.id === storylet.id ? 'border-df-start bg-df-start/10' : 'border-df-border bg-df-elevated'
                 }`}

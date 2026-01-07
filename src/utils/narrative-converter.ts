@@ -24,6 +24,12 @@ export interface NarrativeFlowNodeData {
 export type NarrativeFlowNode = Node<NarrativeFlowNodeData>;
 export type NarrativeFlowEdge = Edge;
 
+interface NarrativeIndexTracker {
+  chapter: number;
+  page: number;
+  storylet: number;
+}
+
 function basePosition(index: number, depth: number, direction: LayoutDirection): { x: number; y: number } {
   const spacingX = 320;
   const spacingY = 220;
@@ -37,7 +43,8 @@ function addActNodes(
   nodes: NarrativeFlowNode[],
   edges: NarrativeFlowEdge[],
   narrative: NarrativeStructure,
-  direction: LayoutDirection
+  direction: LayoutDirection,
+  tracker: NarrativeIndexTracker
 ): void {
   narrative.acts.forEach((act, actIdx) => {
     nodes.push({
@@ -53,7 +60,7 @@ function addActNodes(
       sourcePosition: direction === 'LR' ? Position.Right : Position.Bottom,
       targetPosition: direction === 'LR' ? Position.Left : Position.Top,
     });
-    addChapterNodes(nodes, edges, act, actIdx, direction);
+    addChapterNodes(nodes, edges, act, direction, tracker);
   });
 }
 
@@ -61,11 +68,12 @@ function addChapterNodes(
   nodes: NarrativeFlowNode[],
   edges: NarrativeFlowEdge[],
   act: NarrativeAct,
-  actIdx: number,
-  direction: LayoutDirection
+  direction: LayoutDirection,
+  tracker: NarrativeIndexTracker
 ): void {
-  act.chapters.forEach((chapter, chapterIdx) => {
-    const position = basePosition(chapterIdx, 1, direction);
+  act.chapters.forEach((chapter) => {
+    const position = basePosition(tracker.chapter, 1, direction);
+    tracker.chapter += 1;
     nodes.push({
       id: chapter.id,
       type: 'default',
@@ -87,7 +95,7 @@ function addChapterNodes(
       animated: act.startChapterId === chapter.id,
     });
 
-    addPageNodes(nodes, edges, act, chapter, chapterIdx, direction);
+    addPageNodes(nodes, edges, act, chapter, direction, tracker);
   });
 }
 
@@ -96,11 +104,12 @@ function addPageNodes(
   edges: NarrativeFlowEdge[],
   act: NarrativeAct,
   chapter: NarrativeChapter,
-  chapterIdx: number,
-  direction: LayoutDirection
+  direction: LayoutDirection,
+  tracker: NarrativeIndexTracker
 ): void {
-  chapter.pages.forEach((page, pageIdx) => {
-    const position = basePosition(pageIdx, 2, direction);
+  chapter.pages.forEach((page) => {
+    const position = basePosition(tracker.page, 2, direction);
+    tracker.page += 1;
     nodes.push({
       id: page.id,
       type: 'default',
@@ -122,7 +131,7 @@ function addPageNodes(
       animated: chapter.startPageId === page.id,
     });
 
-    addStoryletNodes(nodes, edges, act, chapter, page, pageIdx, direction);
+    addStoryletNodes(nodes, edges, act, chapter, page, direction, tracker);
   });
 }
 
@@ -132,11 +141,12 @@ function addStoryletNodes(
   act: NarrativeAct,
   chapter: NarrativeChapter,
   page: NarrativePage,
-  pageIdx: number,
-  direction: LayoutDirection
+  direction: LayoutDirection,
+  tracker: NarrativeIndexTracker
 ): void {
-  page.storylets.forEach((storylet, storyletIdx) => {
-    const position = basePosition(storyletIdx, 3, direction);
+  page.storylets.forEach((storylet) => {
+    const position = basePosition(tracker.storylet, 3, direction);
+    tracker.storylet += 1;
     nodes.push({
       id: storylet.id,
       type: 'default',
@@ -194,8 +204,13 @@ export function convertNarrativeToReactFlow(
 ): { nodes: NarrativeFlowNode[]; edges: NarrativeFlowEdge[] } {
   const nodes: NarrativeFlowNode[] = [];
   const edges: NarrativeFlowEdge[] = [];
+  const tracker: NarrativeIndexTracker = {
+    chapter: 0,
+    page: 0,
+    storylet: 0,
+  };
 
-  addActNodes(nodes, edges, narrative, direction);
+  addActNodes(nodes, edges, narrative, direction, tracker);
 
   return { nodes, edges };
 }

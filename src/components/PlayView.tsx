@@ -10,7 +10,7 @@ interface PlayViewProps {
   dialogue: DialogueTree;
   startNodeId?: string;
   flagSchema?: FlagSchema;
-  initialFlags?: GameFlagState;
+  initialGameStateFlags?: GameFlagState;
   narrativeThread?: NarrativeThread;
 }
 
@@ -18,17 +18,17 @@ export function PlayView({
   dialogue,
   startNodeId,
   flagSchema,
-  initialFlags,
+  initialGameStateFlags,
   narrativeThread,
 }: PlayViewProps) {
-  // Initialize game flags with defaults from schema, then merge with initialFlags
+  // Initialize game flags with defaults from schema, then merge with initialGameStateFlags
   const initialGameFlags = useMemo(() => {
     if (flagSchema) {
       const defaults = initializeFlags(flagSchema);
-      return { ...defaults, ...initialFlags };
+      return { ...defaults, ...initialGameStateFlags };
     }
-    return initialFlags || {};
-  }, [flagSchema, initialFlags]);
+    return initialGameStateFlags || {};
+  }, [flagSchema, initialGameStateFlags]);
   
   const [currentFlags, setCurrentFlags] = useState<FlagState>(initialGameFlags);
   const [showDebugPanel, setShowDebugPanel] = useState(false);

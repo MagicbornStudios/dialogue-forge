@@ -1769,6 +1769,7 @@ function DialogueEditorV2Internal({
         <PlayView
           dialogue={dialogue}
           flagSchema={flagSchema}
+          initialGameStateFlags={initialFlags}
         />
       )}
     </div>

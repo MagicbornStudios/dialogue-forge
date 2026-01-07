@@ -122,6 +122,7 @@ All constants are exported from `src/types/constants.ts`:
 - **Explicit props over implicit coupling**: Pass state and handlers into subcomponents; avoid hidden imports or global state.
 - **Use immutable updates**: Always return new arrays/objects when modifying nested structures to keep React updates predictable.
 - **Prefer client helpers for navigation**: When nested data access gets verbose, add a small “client” helper (e.g., `createNarrativeThreadClient`) that encapsulates lookups and updates.
+- **Deduplicate helpers**: If a helper is reused across components (e.g., ID generation or list parsing), promote it to `src/utils/` instead of re-implementing it.
 
 ### Stability & Bug Prevention
 - **Guard optional data**: Fail fast when required selections are missing, and provide clear empty states.

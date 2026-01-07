@@ -11,6 +11,7 @@ import {
   type StoryletPool,
 } from '../types/narrative';
 import { createNarrativeThreadClient } from '../utils/narrative-client';
+import { createUniqueId, moveItem, parseDelimitedList } from '../utils/narrative-editor-utils';
 import {
   ActPanel,
   ChapterPanel,
@@ -42,30 +43,6 @@ interface StoryletEntry {
 }
 
 const DEFAULT_POOL_TITLE = 'Storylet Pool';
-
-function createUniqueId(existingIds: string[], prefix: string): string {
-  let index = Math.max(existingIds.length, 0) + 1;
-  let nextId = `${prefix}-${index}`;
-  while (existingIds.includes(nextId)) {
-    index += 1;
-    nextId = `${prefix}-${index}`;
-  }
-  return nextId;
-}
-
-function moveItem<T>(items: T[], fromIndex: number, toIndex: number): T[] {
-  const nextItems = [...items];
-  const [item] = nextItems.splice(fromIndex, 1);
-  nextItems.splice(toIndex, 0, item);
-  return nextItems;
-}
-
-function parseDelimitedList(input: string): string[] {
-  return input
-    .split(/\s*,\s*|\n/g)
-    .map(value => value.trim())
-    .filter(Boolean);
-}
 
 export function NarrativeEditor({ thread, onChange, onAction, className = '' }: NarrativeEditorProps) {
   const [selectedActId, setSelectedActId] = useState<string | undefined>(

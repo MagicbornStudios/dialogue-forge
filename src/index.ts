@@ -48,3 +48,4 @@ export * from './utils/feature-flags';
 export * from './utils/narrative-helpers';
 export * from './utils/narrative-converter';
 export * from './utils/narrative-client';
+export * from './utils/narrative-editor-utils';

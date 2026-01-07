@@ -3,7 +3,7 @@
 import { NarrativeWorkspace } from '@magicborn/dialogue-forge/src/components/NarrativeWorkspace';
 import { FlagSchema, exampleFlagSchema } from '@magicborn/dialogue-forge/src/types/flags';
 import type { DialogueTree, StoryThread } from '@magicborn/dialogue-forge/src/types';
-import { NARRATIVE_ELEMENT } from '@magicborn/dialogue-forge/src/types/narrative';
+import { NARRATIVE_ELEMENT, STORYLET_SELECTION_MODE } from '@magicborn/dialogue-forge/src/types/narrative';
 import { CONDITION_OPERATOR, FLAG_TYPE, NODE_TYPE } from '@magicborn/dialogue-forge/src/types/constants';
 import { getExampleCharacters } from '@magicborn/dialogue-forge/src/examples';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
@@ -261,7 +261,30 @@ const demoNarrativeThread: StoryThread = {
               type: NARRATIVE_ELEMENT.PAGE,
             },
           ],
-          storyletPools: [],
+          storyletPools: [
+            {
+              id: 'storylet-pool-crossroads',
+              title: 'Crossroads Encounters',
+              summary: 'Optional beats triggered at the crossroads.',
+              selectionMode: STORYLET_SELECTION_MODE.WEIGHTED,
+              storylets: [
+                {
+                  id: 'storylet-whisper',
+                  title: 'Whispered Warning',
+                  summary: 'A spectral whisper hints at a hidden path.',
+                  weight: 3,
+                  type: NARRATIVE_ELEMENT.STORYLET,
+                },
+                {
+                  id: 'storylet-shadow',
+                  title: 'Shadowy Observer',
+                  summary: 'A lurking shadow tests the traveler’s resolve.',
+                  weight: 1,
+                  type: NARRATIVE_ELEMENT.STORYLET,
+                },
+              ],
+            },
+          ],
         },
       ],
     },
@@ -274,18 +297,6 @@ export default function DialogueForgeDemo() {
 
   return (
     <div className="w-full h-screen flex flex-col">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex-shrink-0 w-full">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white mb-1">Dialogue Forge Workspace</h1>
-            <p className="text-zinc-400 text-sm">
-              Plan narrative arcs, edit dialogue pages, and preview gameplay in one workspace.
-            </p>
-          </div>
-          <ThemeSwitcher />
-        </div>
-      </div>
-
       <div className="flex-1 w-full min-h-0">
         <NarrativeWorkspace
           initialDialogue={initialDialogue}
@@ -293,6 +304,7 @@ export default function DialogueForgeDemo() {
           flagSchema={demoFlagSchema}
           characters={characters}
           className="h-full"
+          toolbarActions={<ThemeSwitcher />}
         />
       </div>
     </div>

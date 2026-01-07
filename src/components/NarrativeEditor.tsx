@@ -34,7 +34,16 @@ interface NarrativeEditorProps {
   thread: StoryThread;
   onChange: (thread: StoryThread) => void;
   onAction?: (action: NarrativeEditorAction) => void;
+  selection?: NarrativeSelection;
+  onSelectionChange?: (selection: NarrativeSelection) => void;
   className?: string;
+}
+
+export interface NarrativeSelection {
+  actId?: string;
+  chapterId?: string;
+  pageId?: string;
+  storyletKey?: string;
 }
 
 interface StoryletEntry {
@@ -44,17 +53,33 @@ interface StoryletEntry {
 
 const DEFAULT_POOL_TITLE = 'Storylet Pool';
 
-export function NarrativeEditor({ thread, onChange, onAction, className = '' }: NarrativeEditorProps) {
-  const [selectedActId, setSelectedActId] = useState<string | undefined>(
-    thread.acts[0]?.id
-  );
-  const [selectedChapterId, setSelectedChapterId] = useState<string | undefined>(
-    thread.acts[0]?.chapters[0]?.id
-  );
-  const [selectedPageId, setSelectedPageId] = useState<string | undefined>(
-    thread.acts[0]?.chapters[0]?.pages[0]?.id
-  );
-  const [selectedStoryletKey, setSelectedStoryletKey] = useState<string | undefined>();
+export function NarrativeEditor({
+  thread,
+  onChange,
+  onAction,
+  selection,
+  onSelectionChange,
+  className = '',
+}: NarrativeEditorProps) {
+  const isSelectionControlled = selection !== undefined;
+  const [internalSelection, setInternalSelection] = useState<NarrativeSelection>(() => ({
+    actId: thread.acts[0]?.id,
+    chapterId: thread.acts[0]?.chapters[0]?.id,
+    pageId: thread.acts[0]?.chapters[0]?.pages[0]?.id,
+    storyletKey: undefined,
+  }));
+  const activeSelection = selection ?? internalSelection;
+  const selectedActId = activeSelection.actId;
+  const selectedChapterId = activeSelection.chapterId;
+  const selectedPageId = activeSelection.pageId;
+  const selectedStoryletKey = activeSelection.storyletKey;
+
+  const updateSelection = (nextSelection: NarrativeSelection) => {
+    if (!isSelectionControlled) {
+      setInternalSelection(nextSelection);
+    }
+    onSelectionChange?.(nextSelection);
+  };
 
   const selectedAct = useMemo(
     () => thread.acts.find(act => act.id === selectedActId),
@@ -89,21 +114,15 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
 
   useEffect(() => {
     const nextAct = selectedAct ?? thread.acts[0];
-    if (nextAct?.id !== selectedActId) {
-      setSelectedActId(nextAct?.id);
-    }
+    const nextActId = nextAct?.id;
 
     const nextChapter = nextAct?.chapters.find(chapter => chapter.id === selectedChapterId)
       ?? nextAct?.chapters[0];
-    if (nextChapter?.id !== selectedChapterId) {
-      setSelectedChapterId(nextChapter?.id);
-    }
+    const nextChapterId = nextChapter?.id;
 
     const nextPage = nextChapter?.pages.find(page => page.id === selectedPageId)
       ?? nextChapter?.pages[0];
-    if (nextPage?.id !== selectedPageId) {
-      setSelectedPageId(nextPage?.id);
-    }
+    const nextPageId = nextPage?.id;
 
     const nextStoryletKey = selectedStoryletEntry
       ? `${selectedStoryletEntry.poolId}:${selectedStoryletEntry.storylet.id}`
@@ -111,8 +130,20 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
         ? `${storyletEntries[0].poolId}:${storyletEntries[0].storylet.id}`
         : undefined;
 
-    if (nextStoryletKey !== selectedStoryletKey) {
-      setSelectedStoryletKey(nextStoryletKey);
+    const nextSelection: NarrativeSelection = {
+      actId: nextActId,
+      chapterId: nextChapterId,
+      pageId: nextPageId,
+      storyletKey: nextStoryletKey,
+    };
+
+    if (
+      nextSelection.actId !== selectedActId
+      || nextSelection.chapterId !== selectedChapterId
+      || nextSelection.pageId !== selectedPageId
+      || nextSelection.storyletKey !== selectedStoryletKey
+    ) {
+      updateSelection(nextSelection);
     }
   }, [
     selectedAct,
@@ -188,7 +219,12 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
       ...thread,
       acts: [...thread.acts, nextAct],
     });
-    setSelectedActId(nextAct.id);
+    updateSelection({
+      ...activeSelection,
+      actId: nextAct.id,
+      chapterId: nextAct.chapters[0]?.id,
+      pageId: nextAct.chapters[0]?.pages[0]?.id,
+    });
     onAction?.({ type: 'create', element: NARRATIVE_ELEMENT.ACT, id: nextAct.id });
   };
 
@@ -210,7 +246,11 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     updateAct(selectedAct.id, {
       chapters: [...selectedAct.chapters, nextChapter],
     });
-    setSelectedChapterId(nextChapter.id);
+    updateSelection({
+      ...activeSelection,
+      chapterId: nextChapter.id,
+      pageId: nextChapter.pages[0]?.id,
+    });
     onAction?.({
       type: 'create',
       element: NARRATIVE_ELEMENT.CHAPTER,
@@ -236,7 +276,10 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     updateChapter(selectedAct.id, selectedChapter.id, {
       pages: [...selectedChapter.pages, nextPage],
     });
-    setSelectedPageId(nextPage.id);
+    updateSelection({
+      ...activeSelection,
+      pageId: nextPage.id,
+    });
     onAction?.({
       type: 'create',
       element: NARRATIVE_ELEMENT.PAGE,
@@ -305,7 +348,10 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     updateChapter(selectedAct.id, selectedChapter.id, {
       storyletPools: updatedPools,
     });
-    setSelectedStoryletKey(`${targetPoolId}:${nextStorylet.id}`);
+    updateSelection({
+      ...activeSelection,
+      storyletKey: `${targetPoolId}:${nextStorylet.id}`,
+    });
     onAction?.({
       type: 'create',
       element: NARRATIVE_ELEMENT.STORYLET,
@@ -476,7 +522,10 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     updateChapter(selectedAct.id, selectedChapter.id, {
       storyletPools: updatedPools,
     });
-    setSelectedStoryletKey(`${nextPoolId}:${storylet.id}`);
+    updateSelection({
+      ...activeSelection,
+      storyletKey: `${nextPoolId}:${storylet.id}`,
+    });
   };
 
   const handleActUpdate = (updates: Partial<NarrativeAct>) => {
@@ -484,7 +533,10 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     const nextId = updates.id ?? selectedAct.id;
     updateAct(selectedAct.id, updates);
     if (updates.id && nextId !== selectedAct.id) {
-      setSelectedActId(nextId);
+      updateSelection({
+        ...activeSelection,
+        actId: nextId,
+      });
     }
   };
 
@@ -493,7 +545,10 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     const nextId = updates.id ?? selectedChapter.id;
     updateChapter(selectedAct.id, selectedChapter.id, updates);
     if (updates.id && nextId !== selectedChapter.id) {
-      setSelectedChapterId(nextId);
+      updateSelection({
+        ...activeSelection,
+        chapterId: nextId,
+      });
     }
   };
 
@@ -502,7 +557,10 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     const nextId = updates.id ?? selectedPage.id;
     updatePage(selectedAct.id, selectedChapter.id, selectedPage.id, updates);
     if (updates.id && nextId !== selectedPage.id) {
-      setSelectedPageId(nextId);
+      updateSelection({
+        ...activeSelection,
+        pageId: nextId,
+      });
     }
   };
 
@@ -512,7 +570,10 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     const nextId = updates.id ?? storylet.id;
     updateStorylet(selectedAct.id, selectedChapter.id, poolId, storylet.id, updates);
     if (updates.id && nextId !== storylet.id) {
-      setSelectedStoryletKey(`${poolId}:${nextId}`);
+      updateSelection({
+        ...activeSelection,
+        storyletKey: `${poolId}:${nextId}`,
+      });
     }
   };
 
@@ -539,7 +600,12 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
         <ActPanel
           acts={thread.acts}
           selectedActId={selectedActId}
-          onSelect={setSelectedActId}
+          onSelect={actId =>
+            updateSelection({
+              ...activeSelection,
+              actId,
+            })
+          }
           onAdd={handleAddAct}
           onMove={handleMoveAct}
           onDelete={handleDeleteAct}
@@ -549,7 +615,12 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
         <ChapterPanel
           chapters={selectedAct?.chapters ?? []}
           selectedChapterId={selectedChapterId}
-          onSelect={setSelectedChapterId}
+          onSelect={chapterId =>
+            updateSelection({
+              ...activeSelection,
+              chapterId,
+            })
+          }
           onAdd={handleAddChapter}
           onMove={handleMoveChapter}
           onDelete={handleDeleteChapter}
@@ -559,7 +630,12 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
         <PagePanel
           pages={selectedChapter?.pages ?? []}
           selectedPageId={selectedPageId}
-          onSelect={setSelectedPageId}
+          onSelect={pageId =>
+            updateSelection({
+              ...activeSelection,
+              pageId,
+            })
+          }
           onAdd={handleAddPage}
           onMove={handleMovePage}
           onDelete={handleDeletePage}
@@ -577,7 +653,12 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
           pools={storyletPools}
           selectedKey={selectedStoryletKey}
           selectedPool={selectedPool}
-          onSelect={setSelectedStoryletKey}
+          onSelect={storyletKey =>
+            updateSelection({
+              ...activeSelection,
+              storyletKey,
+            })
+          }
           onAddPool={handleAddStoryletPool}
           onAddStorylet={handleAddStorylet}
           onMove={handleMoveStorylet}

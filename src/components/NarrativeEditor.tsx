@@ -17,6 +17,7 @@ import {
   type NarrativeStructure,
   DEFAULT_NARRATIVE_ENTITY_LABELS,
 } from '../types/narrative';
+import { NARRATIVE_ENTITY_TYPE } from '../types/constants';
 
 interface NarrativeEditorProps {
   narrative?: NarrativeStructure;
@@ -68,7 +69,9 @@ export function NarrativeEditor({ narrative: narrativeProp, onChange, onSelectSt
     <div className={`grid grid-cols-1 lg:grid-cols-5 gap-4 ${className}`}>
       <div className="lg:col-span-2 space-y-3 bg-df-surface border border-df-border rounded-lg p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-df-text">{DEFAULT_NARRATIVE_ENTITY_LABELS.act}</h3>
+          <h3 className="text-sm font-semibold text-df-text">
+            {DEFAULT_NARRATIVE_ENTITY_LABELS[NARRATIVE_ENTITY_TYPE.ACT]}
+          </h3>
           <button
             className="text-xs text-df-primary hover:text-white"
             onClick={() => onChange(addAct(narrative))}
@@ -87,7 +90,9 @@ export function NarrativeEditor({ narrative: narrativeProp, onChange, onSelectSt
         </select>
 
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-df-text">{DEFAULT_NARRATIVE_ENTITY_LABELS.chapter}</h3>
+          <h3 className="text-sm font-semibold text-df-text">
+            {DEFAULT_NARRATIVE_ENTITY_LABELS[NARRATIVE_ENTITY_TYPE.CHAPTER]}
+          </h3>
           {selectedAct && (
             <button
               className="text-xs text-df-primary hover:text-white"
@@ -108,7 +113,9 @@ export function NarrativeEditor({ narrative: narrativeProp, onChange, onSelectSt
         </select>
 
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-df-text">{DEFAULT_NARRATIVE_ENTITY_LABELS.page}</h3>
+          <h3 className="text-sm font-semibold text-df-text">
+            {DEFAULT_NARRATIVE_ENTITY_LABELS[NARRATIVE_ENTITY_TYPE.PAGE]}
+          </h3>
           {selectedAct && selectedChapter && (
             <button
               className="text-xs text-df-primary hover:text-white"

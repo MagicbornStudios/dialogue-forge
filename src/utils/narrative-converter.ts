@@ -1,6 +1,6 @@
 import { Node, Edge, Position } from 'reactflow';
 import { LayoutDirection } from './layout';
-import { NARRATIVE_ENTITY_TYPE } from '../types/constants';
+import { NARRATIVE_ENTITY_TYPE, type NarrativeEntityType } from '../types/constants';
 import {
   type NarrativeStructure,
   type NarrativeAct,
@@ -11,7 +11,7 @@ import {
 
 export interface NarrativeFlowNodeData {
   label: string;
-  type: string;
+  type: NarrativeEntityType;
   meta: {
     actId?: string;
     chapterId?: string;

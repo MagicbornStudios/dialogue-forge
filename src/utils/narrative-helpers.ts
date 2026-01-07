@@ -7,6 +7,7 @@ import {
   type NarrativeStorylet,
   type NarrativeStoryletExit,
   type NarrativeStructure,
+  DEFAULT_NARRATIVE_ENTITY_LABELS,
 } from '../types/narrative';
 
 function createId(prefix: string): string {
@@ -17,10 +18,10 @@ function createId(prefix: string): string {
 }
 
 export function createEmptyNarrative(title = 'Untitled Narrative'): NarrativeStructure {
-  const actId = createId('act');
-  const chapterId = createId('chapter');
-  const pageId = createId('page');
-  const storyletId = createId('storylet');
+  const actId = createId(NARRATIVE_ENTITY_TYPE.ACT);
+  const chapterId = createId(NARRATIVE_ENTITY_TYPE.CHAPTER);
+  const pageId = createId(NARRATIVE_ENTITY_TYPE.PAGE);
+  const storyletId = createId(NARRATIVE_ENTITY_TYPE.STORYLET);
 
   const starterStorylet: NarrativeStorylet = {
     id: storyletId,
@@ -61,10 +62,10 @@ export function createEmptyNarrative(title = 'Untitled Narrative'): NarrativeStr
 }
 
 export function addAct(narrative: NarrativeStructure, title = 'New Act'): NarrativeStructure {
-  const actId = createId('act');
-  const chapterId = createId('chapter');
-  const pageId = createId('page');
-  const storyletId = createId('storylet');
+  const actId = createId(NARRATIVE_ENTITY_TYPE.ACT);
+  const chapterId = createId(NARRATIVE_ENTITY_TYPE.CHAPTER);
+  const pageId = createId(NARRATIVE_ENTITY_TYPE.PAGE);
+  const storyletId = createId(NARRATIVE_ENTITY_TYPE.STORYLET);
 
   const starterStorylet: NarrativeStorylet = {
     id: storyletId,
@@ -105,9 +106,9 @@ export function addChapter(
   actId: string,
   title = 'New Chapter'
 ): NarrativeStructure {
-  const chapterId = createId('chapter');
-  const pageId = createId('page');
-  const storyletId = createId('storylet');
+  const chapterId = createId(NARRATIVE_ENTITY_TYPE.CHAPTER);
+  const pageId = createId(NARRATIVE_ENTITY_TYPE.PAGE);
+  const storyletId = createId(NARRATIVE_ENTITY_TYPE.STORYLET);
 
   const starterStorylet: NarrativeStorylet = {
     id: storyletId,
@@ -149,8 +150,8 @@ export function addPage(
   chapterId: string,
   title = 'New Page'
 ): NarrativeStructure {
-  const pageId = createId('page');
-  const storyletId = createId('storylet');
+  const pageId = createId(NARRATIVE_ENTITY_TYPE.PAGE);
+  const storyletId = createId(NARRATIVE_ENTITY_TYPE.STORYLET);
 
   const starterStorylet: NarrativeStorylet = {
     id: storyletId,
@@ -191,7 +192,7 @@ export function addStorylet(
   pageId: string,
   title = 'New Storylet'
 ): NarrativeStructure {
-  const storyletId = createId('storylet');
+  const storyletId = createId(NARRATIVE_ENTITY_TYPE.STORYLET);
   const storylet: NarrativeStorylet = {
     id: storyletId,
     title,
@@ -368,18 +369,7 @@ export function getStorylet(
 }
 
 export function getEntityLabel(meta: NarrativeEntityMeta): string {
-  switch (meta.type) {
-    case NARRATIVE_ENTITY_TYPE.ACT:
-      return 'Act';
-    case NARRATIVE_ENTITY_TYPE.CHAPTER:
-      return 'Chapter';
-    case NARRATIVE_ENTITY_TYPE.PAGE:
-      return 'Page';
-    case NARRATIVE_ENTITY_TYPE.STORYLET:
-      return 'Storylet';
-    default:
-      return 'Entity';
-  }
+  return DEFAULT_NARRATIVE_ENTITY_LABELS[meta.type] ?? 'Entity';
 }
 
 export function flattenNarrative(narrative: NarrativeStructure): NarrativeEntityMeta[] {

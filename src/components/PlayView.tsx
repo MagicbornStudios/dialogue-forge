@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { DialogueTree } from '../types';
+import { FLAG_TYPE } from '../types/constants';
 import { FlagSchema, FlagType } from '../types/flags';
 import { GameFlagState, DialogueResult, FlagState } from '../types/game-state';
 import { initializeFlags } from '../lib/flag-manager';
@@ -68,17 +69,17 @@ export function PlayView({ dialogue, startNodeId, flagSchema, initialFlags }: Pl
   // Get all non-dialogue flags from schema
   const gameFlagsList = useMemo(() => {
     if (!flagSchema) return [];
-    return flagSchema.flags.filter(f => f.type !== 'dialogue');
+    return flagSchema.flags.filter(f => f.type !== FLAG_TYPE.DIALOGUE);
   }, [flagSchema]);
   
   const flagTypeColors: Record<FlagType, string> = {
-    dialogue: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
-    quest: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    achievement: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    item: 'bg-green-500/20 text-green-400 border-green-500/30',
-    stat: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    title: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
-    global: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    [FLAG_TYPE.DIALOGUE]: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    [FLAG_TYPE.QUEST]: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    [FLAG_TYPE.ACHIEVEMENT]: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    [FLAG_TYPE.ITEM]: 'bg-green-500/20 text-green-400 border-green-500/30',
+    [FLAG_TYPE.STAT]: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    [FLAG_TYPE.TITLE]: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+    [FLAG_TYPE.GLOBAL]: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
   };
 
   return (

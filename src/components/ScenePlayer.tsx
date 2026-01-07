@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DialogueTree, DialogueNode, Choice } from '../types';
-import { FlagState, DialogueResult } from '../types/game-state';
+import { CONDITION_OPERATOR, NODE_TYPE } from '../types/constants';
+import { BaseGameState, FlagState, DialogueResult } from '../types/game-state';
 import { mergeFlagUpdates } from '../lib/flag-manager';
 import { validateGameState, extractFlagsFromGameState, type FlattenConfig } from '../utils/game-state-flattener';
 
 export interface ScenePlayerProps {
   dialogue: DialogueTree;
-  gameState: Record<string, any>; // Any JSON game state (must have valid structure)
+  gameState: BaseGameState; // Any JSON game state (must have valid structure)
   startNodeId?: string;
-  onComplete: (result: DialogueResult) => void;
+  onComplete: (result: DialogueResult<BaseGameState>) => void;
   onFlagUpdate?: (flags: FlagState) => void;
   // Flattening configuration
   flattenConfig?: FlattenConfig;
@@ -22,7 +23,7 @@ export interface ScenePlayerProps {
 
 interface HistoryEntry {
   nodeId: string;
-  type: 'npc' | 'player';
+  type: typeof NODE_TYPE.NPC | typeof NODE_TYPE.PLAYER;
   speaker?: string;
   content: string;
 }
@@ -84,23 +85,24 @@ export function ScenePlayer({
     // Call onNodeEnter hook
     onNodeEnter?.(currentNodeId, node);
 
-    if (node.type === 'npc') {
+    if (node.type === NODE_TYPE.NPC) {
       setIsTyping(true);
       const timer = setTimeout(() => {
         // Mark as visited
         setVisitedNodes(prev => new Set([...prev, node.id]));
         
         // Update flags
+        let nextFlags = flags;
         if (node.setFlags && node.setFlags.length > 0) {
-          const updated = mergeFlagUpdates(flags, node.setFlags);
-          setFlags(updated);
-          onFlagUpdate?.(updated);
+          nextFlags = mergeFlagUpdates(flags, node.setFlags);
+          setFlags(nextFlags);
+          onFlagUpdate?.(nextFlags);
         }
         
         // Add to history
         setHistory(prev => [...prev, {
           nodeId: node.id,
-          type: 'npc',
+          type: NODE_TYPE.NPC,
           speaker: node.speaker,
           content: node.content
         }]);
@@ -116,9 +118,10 @@ export function ScenePlayer({
           // Dialogue complete
           onDialogueEnd?.();
           onComplete({
-            updatedFlags: flags,
+            updatedFlags: nextFlags,
             dialogueTree: dialogue,
-            completedNodeIds: Array.from(visitedNodes)
+            completedNodeIds: Array.from(visitedNodes),
+            gameState: { ...gameState, flags: nextFlags }
           });
         }
         // If there's a nextNodeId, we'll wait for user to press Enter or click Continue
@@ -140,8 +143,8 @@ export function ScenePlayer({
     return choice.conditions.every(cond => {
       const flagValue = flags[cond.flag];
       const hasFlag = flagValue !== undefined && flagValue !== false && flagValue !== 0 && flagValue !== '';
-      
-      return cond.operator === 'is_set' ? hasFlag : !hasFlag;
+
+      return cond.operator === CONDITION_OPERATOR.IS_SET ? hasFlag : !hasFlag;
     });
   }) || [];
 
@@ -156,7 +159,7 @@ export function ScenePlayer({
       if (
         e.key === 'Enter' &&
         !isTyping &&
-        currentNode?.type === 'npc' &&
+        currentNode?.type === NODE_TYPE.NPC &&
         currentNode.nextNodeId &&
         availableChoices.length === 0
       ) {
@@ -183,15 +186,16 @@ export function ScenePlayer({
     // Add to history
     setHistory(prev => [...prev, {
       nodeId: choice.id,
-      type: 'player',
+      type: NODE_TYPE.PLAYER,
       content: choice.text
     }]);
     
     // Update flags
+    let nextFlags = flags;
     if (choice.setFlags && choice.setFlags.length > 0) {
-      const updated = mergeFlagUpdates(flags, choice.setFlags);
-      setFlags(updated);
-      onFlagUpdate?.(updated);
+      nextFlags = mergeFlagUpdates(flags, choice.setFlags);
+      setFlags(nextFlags);
+      onFlagUpdate?.(nextFlags);
     }
     
     // Move to next node
@@ -200,14 +204,15 @@ export function ScenePlayer({
     } else {
       // Choice leads nowhere - dialogue complete
       onComplete({
-        updatedFlags: flags,
+        updatedFlags: nextFlags,
         dialogueTree: dialogue,
-        completedNodeIds: Array.from(visitedNodes)
+        completedNodeIds: Array.from(visitedNodes),
+        gameState: { ...gameState, flags: nextFlags }
       });
     }
   };
-  console.log("isnpc", currentNode?.type === 'npc');
-  console.log("isplayer", currentNode?.type === 'player');
+  console.log("isnpc", currentNode?.type === NODE_TYPE.NPC);
+  console.log("isplayer", currentNode?.type === NODE_TYPE.PLAYER);
   console.log("isTyping", isTyping);
   console.log("availableChoices", availableChoices);
   console.log("visitedNodes", visitedNodes);
@@ -221,13 +226,13 @@ export function ScenePlayer({
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-2xl mx-auto space-y-4">
           {history.map((entry, idx) => (
-            <div key={idx} className={`flex ${entry.type === 'player' ? 'justify-end' : 'justify-start'}`}>
+            <div key={idx} className={`flex ${entry.type === NODE_TYPE.PLAYER ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                entry.type === 'player' 
+                entry.type === NODE_TYPE.PLAYER 
                   ? 'bg-[#e94560] text-white rounded-br-md' 
                   : 'bg-[#1a1a2e] text-gray-100 rounded-bl-md'
               }`}>
-                {entry.type === 'npc' && entry.speaker && (
+                {entry.type === NODE_TYPE.NPC && entry.speaker && (
                   <div className="text-xs text-[#e94560] font-medium mb-1">{entry.speaker}</div>
                 )}
                 <div className="whitespace-pre-wrap">{entry.content}</div>
@@ -251,7 +256,7 @@ export function ScenePlayer({
         </div>
       </div>
 
-      {currentNode?.type === 'player' && !isTyping && availableChoices.length > 0 && (
+      {currentNode?.type === NODE_TYPE.PLAYER && !isTyping && availableChoices.length > 0 && (
         <div className="border-t border-[#1a1a2e] bg-[#0d0d14]/80 backdrop-blur-sm p-4">
           <div className="max-w-2xl mx-auto space-y-2">
             {availableChoices.map((choice) => (
@@ -270,7 +275,7 @@ export function ScenePlayer({
         </div>
       )}
 
-      {currentNode?.type === 'npc' && !currentNode.nextNodeId && !isTyping && (
+      {currentNode?.type === NODE_TYPE.NPC && !currentNode.nextNodeId && !isTyping && (
         <div className="border-t border-[#1a1a2e] bg-[#0d0d14]/80 backdrop-blur-sm p-4">
           <div className="max-w-2xl mx-auto text-center">
             <p className="text-gray-500 mb-3">Dialogue complete</p>
@@ -278,7 +283,8 @@ export function ScenePlayer({
               onClick={() => onComplete({
                 updatedFlags: flags,
                 dialogueTree: dialogue,
-                completedNodeIds: Array.from(visitedNodes)
+                completedNodeIds: Array.from(visitedNodes),
+                gameState: { ...gameState, flags }
               })}
               className="px-4 py-2 bg-[#e94560] hover:bg-[#d63850] text-white rounded-lg transition-colors"
             >
@@ -288,7 +294,7 @@ export function ScenePlayer({
         </div>
       )}
 
-      {currentNode?.type === 'npc' && currentNode.nextNodeId && !isTyping && (
+      {currentNode?.type === NODE_TYPE.NPC && currentNode.nextNodeId && !isTyping && (
         <div className="border-t border-[#1a1a2e] bg-[#0d0d14]/80 backdrop-blur-sm p-4 sticky bottom-0 z-10">
           <div className="max-w-2xl mx-auto text-center">
             <p className="text-xs text-gray-400 mb-3">Press <kbd className="px-2 py-1 bg-[#1a1a2e] border border-[#2a2a3e] rounded text-xs">Enter</kbd> to continue</p>
@@ -305,6 +311,3 @@ export function ScenePlayer({
     </div>
   );
 }
-
-
-

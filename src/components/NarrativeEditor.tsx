@@ -15,7 +15,7 @@ import {
   ChapterPanel,
   PagePanel,
   StoryletPanel,
-} from './NarrativeEditorPanels';
+} from './narrative-editor';
 
 export type NarrativeEditorAction =
   | { type: 'create'; element: NarrativeElement; id: string; parentId?: string }

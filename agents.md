@@ -112,10 +112,24 @@ All constants are exported from `src/types/constants.ts`:
 
 ## Maintainability Guidelines
 
-- **Keep components lean**: If a component grows beyond ~300 lines or repeats panel/layout patterns, split it into focused subcomponents (e.g., `<ActPanel />`, `<ChapterPanel />`) in `src/components/` or a feature folder.
-- **Co-locate helpers**: Extract pure UI helpers (list items, detail fields) into local component files when used by multiple panels; keep domain logic (data transforms) in `src/utils/`.
-- **Favor explicit props over implicit coupling**: Pass handlers/data into subcomponents rather than reading from shared state via imports.
-- **Avoid monolithic render blocks**: Prefer small, named components to improve readability and reduce merge conflicts.
+### Component Organization
+- **Small, focused files**: Keep reusable UI elements in their own files (e.g., `ListPanel.tsx`, `StoryletPanel.tsx`) and compose higher-level components from them.
+- **Feature folders are OK**: For larger UIs, group related components under a folder (e.g., `src/components/narrative-editor/`) with a local `index.ts`.
+- **Prefer single-purpose exports**: Export one component per file unless helpers are tightly coupled and only used together.
+
+### Utilities & Data Flow
+- **UI vs. domain logic**: Keep data transformations in `src/utils/` and keep components focused on rendering + wiring handlers.
+- **Explicit props over implicit coupling**: Pass state and handlers into subcomponents; avoid hidden imports or global state.
+- **Use immutable updates**: Always return new arrays/objects when modifying nested structures to keep React updates predictable.
+
+### Stability & Bug Prevention
+- **Guard optional data**: Fail fast when required selections are missing, and provide clear empty states.
+- **Keep side-effects localized**: Use `useEffect` sparingly and keep its dependencies explicit.
+- **Be conservative with edits**: Prefer small, reviewable changes over sweeping rewrites.
+
+### Documentation Style
+- **Structure matters**: Use headings and short lists; avoid large paragraphs.
+- **Include intent**: Document the “why” in addition to the “what” for non-obvious decisions.
 
 ## Key Concepts
 

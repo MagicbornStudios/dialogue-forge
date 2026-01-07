@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DialogueTree } from '../types';
 import { FLAG_TYPE } from '../types/constants';
 import { FlagSchema, FlagType } from '../types/flags';
-import { GameFlagState, DialogueResult, FlagState } from '../types/game-state';
+import { DialogueResult, FlagState, GameFlagState } from '../types/game-state';
 import { initializeFlags } from '../lib/flag-manager';
-import { ScenePlayer, ScenePlayerProps } from './ScenePlayer';
+import { FLAG_TYPE } from '../types/constants';
+import { GamePlayer } from './GamePlayer';
 
 interface PlayViewProps {
   dialogue: DialogueTree;
@@ -23,18 +24,22 @@ export function PlayView({ dialogue, startNodeId, flagSchema, initialFlags }: Pl
     return initialFlags || {};
   }, [flagSchema, initialFlags]);
   
-  // Convert flags to gameState format for ScenePlayer
-  const gameState = useMemo(() => {
-    return { flags: initialGameFlags };
-  }, [initialGameFlags]);
-  
   const [currentFlags, setCurrentFlags] = useState<FlagState>(initialGameFlags);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [flagsSetDuringRun, setFlagsSetDuringRun] = useState<Set<string>>(new Set());
-  
+
   // Track initial flags to detect changes
   const initialFlagsRef = useRef<GameFlagState>(initialGameFlags);
-  
+
+  useEffect(() => {
+    initialFlagsRef.current = initialGameFlags;
+  }, [initialGameFlags]);
+
+  useEffect(() => {
+    setCurrentFlags(initialGameFlags);
+    setFlagsSetDuringRun(new Set());
+  }, [initialGameFlags]);
+
   const handleComplete = (result: DialogueResult) => {
     // Update flags from result
     if (result.updatedFlags) {
@@ -61,17 +66,12 @@ export function PlayView({ dialogue, startNodeId, flagSchema, initialFlags }: Pl
     }
   };
 
-  // Update gameState when flags change (for ScenePlayer)
-  const currentGameState = useMemo(() => {
-    return { flags: currentFlags };
-  }, [currentFlags]);
-  
   // Get all non-dialogue flags from schema
   const gameFlagsList = useMemo(() => {
     if (!flagSchema) return [];
     return flagSchema.flags.filter(f => f.type !== FLAG_TYPE.DIALOGUE);
   }, [flagSchema]);
-  
+
   const flagTypeColors: Record<FlagType, string> = {
     [FLAG_TYPE.DIALOGUE]: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
     [FLAG_TYPE.QUEST]: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -192,13 +192,13 @@ export function PlayView({ dialogue, startNodeId, flagSchema, initialFlags }: Pl
         </div>
       )}
       
-      {/* ScenePlayer handles all dialogue playback */}
-      <ScenePlayer
+      <GamePlayer
         dialogue={dialogue}
-        gameState={currentGameState}
         startNodeId={startNodeId}
+        flagSchema={flagSchema}
+        initialFlags={initialGameFlags}
         onComplete={handleComplete}
-        onFlagUpdate={handleFlagUpdate}
+        onFlagsChange={handleFlagUpdate}
       />
     </main>
   );

@@ -8,6 +8,7 @@ export type {
   NarrativeChapter,
   NarrativeElement,
   NarrativePage,
+  NarrativeThread,
   RandomizerBranch,
   StoryThread,
   Storylet,
@@ -88,4 +89,3 @@ export interface DraggingEdge {
   endX: number;
   endY: number;
 }
-

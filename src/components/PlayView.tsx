@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { DialogueTree } from '../types';
+import { DialogueTree, type NarrativeThread } from '../types';
 import { FLAG_TYPE } from '../types/constants';
 import { FlagSchema, FlagType } from '../types/flags';
 import { DialogueResult, FlagState, GameFlagState } from '../types/game-state';
@@ -11,9 +11,16 @@ interface PlayViewProps {
   startNodeId?: string;
   flagSchema?: FlagSchema;
   initialFlags?: GameFlagState;
+  narrativeThread?: NarrativeThread;
 }
 
-export function PlayView({ dialogue, startNodeId, flagSchema, initialFlags }: PlayViewProps) {
+export function PlayView({
+  dialogue,
+  startNodeId,
+  flagSchema,
+  initialFlags,
+  narrativeThread,
+}: PlayViewProps) {
   // Initialize game flags with defaults from schema, then merge with initialFlags
   const initialGameFlags = useMemo(() => {
     if (flagSchema) {
@@ -198,6 +205,7 @@ export function PlayView({ dialogue, startNodeId, flagSchema, initialFlags }: Pl
         initialFlags={initialGameFlags}
         onComplete={handleComplete}
         onFlagsChange={handleFlagUpdate}
+        narrativeThread={narrativeThread}
       />
     </main>
   );

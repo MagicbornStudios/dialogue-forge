@@ -5,12 +5,11 @@ import { NODE_TYPE } from '../../types/constants';
 interface ReadingPaneProps {
   history: DialogueHistoryEntry[];
   currentStep: DialogueStep | null;
-  currentPage: number;
   status: 'running' | 'completed';
 }
 
-export function ReadingPane({ history, currentStep, currentPage, status }: ReadingPaneProps) {
-  const visibleHistory = history.slice(0, Math.max(currentPage + 1, 0));
+export function ReadingPane({ history, currentStep, status }: ReadingPaneProps) {
+  const visibleHistory = history;
 
   return (
     <section className="flex-1 flex flex-col bg-[#0d0d14]">

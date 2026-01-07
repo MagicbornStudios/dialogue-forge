@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import {
   NARRATIVE_ELEMENT,
   STORYLET_SELECTION_MODE,
@@ -11,6 +10,12 @@ import {
   type Storylet,
   type StoryletPool,
 } from '../types/narrative';
+import {
+  ActPanel,
+  ChapterPanel,
+  PagePanel,
+  StoryletPanel,
+} from './NarrativeEditorPanels';
 
 export type NarrativeEditorAction =
   | { type: 'create'; element: NarrativeElement; id: string; parentId?: string }
@@ -592,6 +597,48 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
     setSelectedStoryletKey(`${nextPoolId}:${storylet.id}`);
   };
 
+  const handleActUpdate = (updates: Partial<NarrativeAct>) => {
+    if (!selectedAct) return;
+    const nextId = updates.id ?? selectedAct.id;
+    updateAct(selectedAct.id, updates);
+    if (updates.id && nextId !== selectedAct.id) {
+      setSelectedActId(nextId);
+    }
+  };
+
+  const handleChapterUpdate = (updates: Partial<NarrativeChapter>) => {
+    if (!selectedAct || !selectedChapter) return;
+    const nextId = updates.id ?? selectedChapter.id;
+    updateChapter(selectedAct.id, selectedChapter.id, updates);
+    if (updates.id && nextId !== selectedChapter.id) {
+      setSelectedChapterId(nextId);
+    }
+  };
+
+  const handlePageUpdate = (updates: Partial<NarrativePage>) => {
+    if (!selectedAct || !selectedChapter || !selectedPage) return;
+    const nextId = updates.id ?? selectedPage.id;
+    updatePage(selectedAct.id, selectedChapter.id, selectedPage.id, updates);
+    if (updates.id && nextId !== selectedPage.id) {
+      setSelectedPageId(nextId);
+    }
+  };
+
+  const handleStoryletUpdate = (updates: Partial<Storylet>) => {
+    if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
+    const { poolId, storylet } = selectedStoryletEntry;
+    const nextId = updates.id ?? storylet.id;
+    updateStorylet(selectedAct.id, selectedChapter.id, poolId, storylet.id, updates);
+    if (updates.id && nextId !== storylet.id) {
+      setSelectedStoryletKey(`${poolId}:${nextId}`);
+    }
+  };
+
+  const handleStoryletPoolUpdate = (updates: Partial<StoryletPool>) => {
+    if (!selectedAct || !selectedChapter || !selectedPool) return;
+    updateStoryletPool(selectedAct.id, selectedChapter.id, selectedPool.id, updates);
+  };
+
   return (
     <div
       className={`bg-[#0b0b14] border border-[#1a1a2e] rounded-xl p-4 space-y-4 ${className}`}
@@ -607,566 +654,56 @@ export function NarrativeEditor({ thread, onChange, onAction, className = '' }: 
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
-        <section className="bg-[#10101a] border border-[#1f1f2e] rounded-lg overflow-hidden flex flex-col">
-          <div className="px-3 py-2 border-b border-[#1f1f2e] flex items-center justify-between">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500">Acts</p>
-              <h3 className="text-sm font-semibold text-white">Acts</h3>
-            </div>
-            <button
-              type="button"
-              onClick={handleAddAct}
-              className="p-1.5 bg-[#e94560] hover:bg-[#d63850] text-white rounded"
-              title="Add Act"
-            >
-              <Plus size={14} />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
-            {thread.acts.map((act, index) => (
-              <div
-                key={act.id}
-                className={`border rounded-lg p-2 transition-colors flex items-center justify-between gap-2 ${
-                  act.id === selectedActId
-                    ? 'border-[#e94560] bg-[#1a1a2a]'
-                    : 'border-[#232336] bg-[#12121a] hover:border-[#35354a]'
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => setSelectedActId(act.id)}
-                  className="flex-1 text-left"
-                >
-                  <div className="text-sm text-white font-medium truncate">
-                    {act.title || `Act ${index + 1}`}
-                  </div>
-                  <div className="text-[10px] text-gray-500 font-mono truncate">{act.id}</div>
-                </button>
-                <div className="flex flex-col gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleMoveAct('up')}
-                    className="text-gray-500 hover:text-white"
-                    aria-label="Move act up"
-                  >
-                    <ChevronUp size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMoveAct('down')}
-                    className="text-gray-500 hover:text-white"
-                    aria-label="Move act down"
-                  >
-                    <ChevronDown size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-            {thread.acts.length === 0 && (
-              <p className="text-xs text-gray-500">No acts yet. Add your first act.</p>
-            )}
-          </div>
-          <div className="border-t border-[#1f1f2e] p-3 space-y-2">
-            {selectedAct ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400 uppercase">Act Details</span>
-                  <button
-                    type="button"
-                    onClick={handleDeleteAct}
-                    className="text-gray-500 hover:text-[#e94560]"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-                <label className="text-[10px] text-gray-500 uppercase">ID</label>
-                <input
-                  value={selectedAct.id}
-                  onChange={event => {
-                    const nextId = event.target.value;
-                    updateAct(selectedAct.id, { id: nextId });
-                    setSelectedActId(nextId);
-                  }}
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                />
-                <label className="text-[10px] text-gray-500 uppercase">Title</label>
-                <input
-                  value={selectedAct.title ?? ''}
-                  onChange={event => updateAct(selectedAct.id, { title: event.target.value })}
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                />
-                <label className="text-[10px] text-gray-500 uppercase">Summary</label>
-                <textarea
-                  value={selectedAct.summary ?? ''}
-                  onChange={event => updateAct(selectedAct.id, { summary: event.target.value })}
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200 min-h-[60px]"
-                />
-              </>
-            ) : (
-              <p className="text-xs text-gray-500">Select an act to edit details.</p>
-            )}
-          </div>
-        </section>
+        <ActPanel
+          acts={thread.acts}
+          selectedActId={selectedActId}
+          onSelect={setSelectedActId}
+          onAdd={handleAddAct}
+          onMove={handleMoveAct}
+          onDelete={handleDeleteAct}
+          onUpdate={handleActUpdate}
+        />
 
-        <section className="bg-[#10101a] border border-[#1f1f2e] rounded-lg overflow-hidden flex flex-col">
-          <div className="px-3 py-2 border-b border-[#1f1f2e] flex items-center justify-between">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500">Chapters</p>
-              <h3 className="text-sm font-semibold text-white">Chapters</h3>
-            </div>
-            <button
-              type="button"
-              onClick={handleAddChapter}
-              className="p-1.5 bg-[#e94560] hover:bg-[#d63850] text-white rounded"
-              title="Add Chapter"
-            >
-              <Plus size={14} />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
-            {(selectedAct?.chapters ?? []).map((chapter, index) => (
-              <div
-                key={chapter.id}
-                className={`border rounded-lg p-2 transition-colors flex items-center justify-between gap-2 ${
-                  chapter.id === selectedChapterId
-                    ? 'border-[#e94560] bg-[#1a1a2a]'
-                    : 'border-[#232336] bg-[#12121a] hover:border-[#35354a]'
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => setSelectedChapterId(chapter.id)}
-                  className="flex-1 text-left"
-                >
-                  <div className="text-sm text-white font-medium truncate">
-                    {chapter.title || `Chapter ${index + 1}`}
-                  </div>
-                  <div className="text-[10px] text-gray-500 font-mono truncate">{chapter.id}</div>
-                </button>
-                <div className="flex flex-col gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleMoveChapter('up')}
-                    className="text-gray-500 hover:text-white"
-                    aria-label="Move chapter up"
-                  >
-                    <ChevronUp size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMoveChapter('down')}
-                    className="text-gray-500 hover:text-white"
-                    aria-label="Move chapter down"
-                  >
-                    <ChevronDown size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-            {(selectedAct?.chapters.length ?? 0) === 0 && (
-              <p className="text-xs text-gray-500">Select an act and add chapters.</p>
-            )}
-          </div>
-          <div className="border-t border-[#1f1f2e] p-3 space-y-2">
-            {selectedChapter ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400 uppercase">Chapter Details</span>
-                  <button
-                    type="button"
-                    onClick={handleDeleteChapter}
-                    className="text-gray-500 hover:text-[#e94560]"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-                <label className="text-[10px] text-gray-500 uppercase">ID</label>
-                <input
-                  value={selectedChapter.id}
-                  onChange={event => {
-                    const nextId = event.target.value;
-                    updateChapter(selectedAct?.id ?? '', selectedChapter.id, { id: nextId });
-                    setSelectedChapterId(nextId);
-                  }}
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                />
-                <label className="text-[10px] text-gray-500 uppercase">Title</label>
-                <input
-                  value={selectedChapter.title ?? ''}
-                  onChange={event =>
-                    updateChapter(selectedAct?.id ?? '', selectedChapter.id, {
-                      title: event.target.value,
-                    })
-                  }
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                />
-                <label className="text-[10px] text-gray-500 uppercase">Summary</label>
-                <textarea
-                  value={selectedChapter.summary ?? ''}
-                  onChange={event =>
-                    updateChapter(selectedAct?.id ?? '', selectedChapter.id, {
-                      summary: event.target.value,
-                    })
-                  }
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200 min-h-[60px]"
-                />
-              </>
-            ) : (
-              <p className="text-xs text-gray-500">Select a chapter to edit details.</p>
-            )}
-          </div>
-        </section>
+        <ChapterPanel
+          chapters={selectedAct?.chapters ?? []}
+          selectedChapterId={selectedChapterId}
+          onSelect={setSelectedChapterId}
+          onAdd={handleAddChapter}
+          onMove={handleMoveChapter}
+          onDelete={handleDeleteChapter}
+          onUpdate={handleChapterUpdate}
+        />
 
-        <section className="bg-[#10101a] border border-[#1f1f2e] rounded-lg overflow-hidden flex flex-col">
-          <div className="px-3 py-2 border-b border-[#1f1f2e] flex items-center justify-between">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500">Pages</p>
-              <h3 className="text-sm font-semibold text-white">Pages</h3>
-            </div>
-            <button
-              type="button"
-              onClick={handleAddPage}
-              className="p-1.5 bg-[#e94560] hover:bg-[#d63850] text-white rounded"
-              title="Add Page"
-            >
-              <Plus size={14} />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
-            {(selectedChapter?.pages ?? []).map((page, index) => (
-              <div
-                key={page.id}
-                className={`border rounded-lg p-2 transition-colors flex items-center justify-between gap-2 ${
-                  page.id === selectedPageId
-                    ? 'border-[#e94560] bg-[#1a1a2a]'
-                    : 'border-[#232336] bg-[#12121a] hover:border-[#35354a]'
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => setSelectedPageId(page.id)}
-                  className="flex-1 text-left"
-                >
-                  <div className="text-sm text-white font-medium truncate">
-                    {page.title || `Page ${index + 1}`}
-                  </div>
-                  <div className="text-[10px] text-gray-500 font-mono truncate">{page.id}</div>
-                </button>
-                <div className="flex flex-col gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleMovePage('up')}
-                    className="text-gray-500 hover:text-white"
-                    aria-label="Move page up"
-                  >
-                    <ChevronUp size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMovePage('down')}
-                    className="text-gray-500 hover:text-white"
-                    aria-label="Move page down"
-                  >
-                    <ChevronDown size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-            {(selectedChapter?.pages.length ?? 0) === 0 && (
-              <p className="text-xs text-gray-500">Select a chapter and add pages.</p>
-            )}
-          </div>
-          <div className="border-t border-[#1f1f2e] p-3 space-y-2">
-            {selectedPage ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400 uppercase">Page Details</span>
-                  <button
-                    type="button"
-                    onClick={handleDeletePage}
-                    className="text-gray-500 hover:text-[#e94560]"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-                <label className="text-[10px] text-gray-500 uppercase">ID</label>
-                <input
-                  value={selectedPage.id}
-                  onChange={event => {
-                    const nextId = event.target.value;
-                    updatePage(selectedAct?.id ?? '', selectedChapter?.id ?? '', selectedPage.id, {
-                      id: nextId,
-                    });
-                    setSelectedPageId(nextId);
-                  }}
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                />
-                <label className="text-[10px] text-gray-500 uppercase">Title</label>
-                <input
-                  value={selectedPage.title ?? ''}
-                  onChange={event =>
-                    updatePage(selectedAct?.id ?? '', selectedChapter?.id ?? '', selectedPage.id, {
-                      title: event.target.value,
-                    })
-                  }
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                />
-                <label className="text-[10px] text-gray-500 uppercase">Summary</label>
-                <textarea
-                  value={selectedPage.summary ?? ''}
-                  onChange={event =>
-                    updatePage(selectedAct?.id ?? '', selectedChapter?.id ?? '', selectedPage.id, {
-                      summary: event.target.value,
-                    })
-                  }
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200 min-h-[60px]"
-                />
-                <label className="text-[10px] text-gray-500 uppercase">Node IDs</label>
-                <textarea
-                  value={selectedPage.nodeIds.join(', ')}
-                  onChange={event =>
-                    updatePage(selectedAct?.id ?? '', selectedChapter?.id ?? '', selectedPage.id, {
-                      nodeIds: parseDelimitedList(event.target.value),
-                    })
-                  }
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200 min-h-[60px]"
-                />
-              </>
-            ) : (
-              <p className="text-xs text-gray-500">Select a page to edit details.</p>
-            )}
-          </div>
-        </section>
+        <PagePanel
+          pages={selectedChapter?.pages ?? []}
+          selectedPageId={selectedPageId}
+          onSelect={setSelectedPageId}
+          onAdd={handleAddPage}
+          onMove={handleMovePage}
+          onDelete={handleDeletePage}
+          onUpdate={handlePageUpdate}
+          onUpdateNodeIds={value => {
+            if (!selectedAct || !selectedChapter || !selectedPage) return;
+            updatePage(selectedAct.id, selectedChapter.id, selectedPage.id, {
+              nodeIds: parseDelimitedList(value),
+            });
+          }}
+        />
 
-        <section className="bg-[#10101a] border border-[#1f1f2e] rounded-lg overflow-hidden flex flex-col">
-          <div className="px-3 py-2 border-b border-[#1f1f2e] flex items-center justify-between">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500">Storylets</p>
-              <h3 className="text-sm font-semibold text-white">Storylets</h3>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleAddStoryletPool}
-                className="px-2 py-1 bg-[#1a1a2a] hover:bg-[#242438] text-xs text-gray-200 rounded"
-              >
-                New Pool
-              </button>
-              <button
-                type="button"
-                onClick={handleAddStorylet}
-                className="p-1.5 bg-[#e94560] hover:bg-[#d63850] text-white rounded"
-                title="Add Storylet"
-              >
-                <Plus size={14} />
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
-            {storyletEntries.map((entry, index) => (
-              <div
-                key={`${entry.poolId}-${entry.storylet.id}`}
-                className={`border rounded-lg p-2 transition-colors flex items-center justify-between gap-2 ${
-                  selectedStoryletKey === `${entry.poolId}:${entry.storylet.id}`
-                    ? 'border-[#e94560] bg-[#1a1a2a]'
-                    : 'border-[#232336] bg-[#12121a] hover:border-[#35354a]'
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => setSelectedStoryletKey(`${entry.poolId}:${entry.storylet.id}`)}
-                  className="flex-1 text-left"
-                >
-                  <div className="text-sm text-white font-medium truncate">
-                    {entry.storylet.title || `Storylet ${index + 1}`}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-gray-500 font-mono truncate">
-                      {entry.storylet.id}
-                    </span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#0f0f18] border border-[#2a2a3e] text-gray-400">
-                      {entry.poolId}
-                    </span>
-                  </div>
-                </button>
-                <div className="flex flex-col gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleMoveStorylet('up')}
-                    className="text-gray-500 hover:text-white"
-                    aria-label="Move storylet up"
-                  >
-                    <ChevronUp size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMoveStorylet('down')}
-                    className="text-gray-500 hover:text-white"
-                    aria-label="Move storylet down"
-                  >
-                    <ChevronDown size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-            {storyletEntries.length === 0 && (
-              <p className="text-xs text-gray-500">Add storylet pools and storylets.</p>
-            )}
-          </div>
-          <div className="border-t border-[#1f1f2e] p-3 space-y-2">
-            {selectedStoryletEntry ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400 uppercase">Storylet Details</span>
-                  <button
-                    type="button"
-                    onClick={handleDeleteStorylet}
-                    className="text-gray-500 hover:text-[#e94560]"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-                <label className="text-[10px] text-gray-500 uppercase">ID</label>
-                <input
-                  value={selectedStoryletEntry.storylet.id}
-                  onChange={event => {
-                    const nextId = event.target.value;
-                    updateStorylet(
-                      selectedAct?.id ?? '',
-                      selectedChapter?.id ?? '',
-                      selectedStoryletEntry.poolId,
-                      selectedStoryletEntry.storylet.id,
-                      { id: nextId }
-                    );
-                    setSelectedStoryletKey(`${selectedStoryletEntry.poolId}:${nextId}`);
-                  }}
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                />
-                <label className="text-[10px] text-gray-500 uppercase">Title</label>
-                <input
-                  value={selectedStoryletEntry.storylet.title ?? ''}
-                  onChange={event =>
-                    updateStorylet(
-                      selectedAct?.id ?? '',
-                      selectedChapter?.id ?? '',
-                      selectedStoryletEntry.poolId,
-                      selectedStoryletEntry.storylet.id,
-                      { title: event.target.value }
-                    )
-                  }
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                />
-                <label className="text-[10px] text-gray-500 uppercase">Summary</label>
-                <textarea
-                  value={selectedStoryletEntry.storylet.summary ?? ''}
-                  onChange={event =>
-                    updateStorylet(
-                      selectedAct?.id ?? '',
-                      selectedChapter?.id ?? '',
-                      selectedStoryletEntry.poolId,
-                      selectedStoryletEntry.storylet.id,
-                      { summary: event.target.value }
-                    )
-                  }
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200 min-h-[60px]"
-                />
-                <label className="text-[10px] text-gray-500 uppercase">Weight</label>
-                <input
-                  type="number"
-                  value={selectedStoryletEntry.storylet.weight ?? 1}
-                  onChange={event =>
-                    updateStorylet(
-                      selectedAct?.id ?? '',
-                      selectedChapter?.id ?? '',
-                      selectedStoryletEntry.poolId,
-                      selectedStoryletEntry.storylet.id,
-                      { weight: Number(event.target.value) }
-                    )
-                  }
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                />
-                <label className="text-[10px] text-gray-500 uppercase">Next Node ID</label>
-                <input
-                  value={selectedStoryletEntry.storylet.nextNodeId ?? ''}
-                  onChange={event =>
-                    updateStorylet(
-                      selectedAct?.id ?? '',
-                      selectedChapter?.id ?? '',
-                      selectedStoryletEntry.poolId,
-                      selectedStoryletEntry.storylet.id,
-                      { nextNodeId: event.target.value }
-                    )
-                  }
-                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                />
-
-                <div className="pt-2 border-t border-[#1f1f2e] space-y-2">
-                  <span className="text-[10px] text-gray-500 uppercase">Storylet Pool</span>
-                  <select
-                    value={selectedStoryletEntry.poolId}
-                    onChange={event => handleStoryletPoolChange(event.target.value)}
-                    className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                  >
-                    {storyletPools.map(pool => (
-                      <option key={pool.id} value={pool.id}>
-                        {pool.title || pool.id}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedPool && (
-                    <>
-                      <label className="text-[10px] text-gray-500 uppercase">Pool Title</label>
-                      <input
-                        value={selectedPool.title ?? ''}
-                        onChange={event =>
-                          updateStoryletPool(
-                            selectedAct?.id ?? '',
-                            selectedChapter?.id ?? '',
-                            selectedPool.id,
-                            { title: event.target.value }
-                          )
-                        }
-                        className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                      />
-                      <label className="text-[10px] text-gray-500 uppercase">Selection Mode</label>
-                      <select
-                        value={selectedPool.selectionMode ?? STORYLET_SELECTION_MODE.WEIGHTED}
-                        onChange={event =>
-                          updateStoryletPool(
-                            selectedAct?.id ?? '',
-                            selectedChapter?.id ?? '',
-                            selectedPool.id,
-                            { selectionMode: event.target.value as StoryletPool['selectionMode'] }
-                          )
-                        }
-                        className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                      >
-                        <option value={STORYLET_SELECTION_MODE.WEIGHTED}>Weighted</option>
-                        <option value={STORYLET_SELECTION_MODE.SEQUENTIAL}>Sequential</option>
-                        <option value={STORYLET_SELECTION_MODE.RANDOM}>Random</option>
-                      </select>
-                      <label className="text-[10px] text-gray-500 uppercase">Fallback Node ID</label>
-                      <input
-                        value={selectedPool.fallbackNodeId ?? ''}
-                        onChange={event =>
-                          updateStoryletPool(
-                            selectedAct?.id ?? '',
-                            selectedChapter?.id ?? '',
-                            selectedPool.id,
-                            { fallbackNodeId: event.target.value }
-                          )
-                        }
-                        className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-                      />
-                    </>
-                  )}
-                </div>
-              </>
-            ) : (
-              <p className="text-xs text-gray-500">Select a storylet to edit details.</p>
-            )}
-          </div>
-        </section>
+        <StoryletPanel
+          entries={storyletEntries}
+          pools={storyletPools}
+          selectedKey={selectedStoryletKey}
+          selectedPool={selectedPool}
+          onSelect={setSelectedStoryletKey}
+          onAddPool={handleAddStoryletPool}
+          onAddStorylet={handleAddStorylet}
+          onMove={handleMoveStorylet}
+          onDelete={handleDeleteStorylet}
+          onUpdateStorylet={handleStoryletUpdate}
+          onUpdatePool={handleStoryletPoolUpdate}
+          onChangePool={handleStoryletPoolChange}
+        />
       </div>
     </div>
   );

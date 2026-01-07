@@ -110,6 +110,13 @@ All constants are exported from `src/types/constants.ts`:
 3. **IDE Support**: Autocomplete and IntelliSense work better
 4. **Consistency**: Prevents typos and inconsistencies
 
+## Maintainability Guidelines
+
+- **Keep components lean**: If a component grows beyond ~300 lines or repeats panel/layout patterns, split it into focused subcomponents (e.g., `<ActPanel />`, `<ChapterPanel />`) in `src/components/` or a feature folder.
+- **Co-locate helpers**: Extract pure UI helpers (list items, detail fields) into local component files when used by multiple panels; keep domain logic (data transforms) in `src/utils/`.
+- **Favor explicit props over implicit coupling**: Pass handlers/data into subcomponents rather than reading from shared state via imports.
+- **Avoid monolithic render blocks**: Prefer small, named components to improve readability and reduce merge conflicts.
+
 ## Key Concepts
 
 ### Dialogue Tree Structure

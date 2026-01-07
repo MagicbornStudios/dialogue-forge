@@ -11,6 +11,7 @@ interface ChoiceListProps {
 export function ChoiceList({ currentStep, onContinue, onChoose, status }: ChoiceListProps) {
   const isChoice = currentStep?.isChoice;
   const noAvailableChoices = isChoice && currentStep?.choices.length === 0;
+  const hasStep = Boolean(currentStep);
 
   return (
     <div className="space-y-3">
@@ -39,13 +40,19 @@ export function ChoiceList({ currentStep, onContinue, onChoose, status }: Choice
           </button>
         ))}
 
-        {!isChoice && status !== 'completed' && (
+        {!isChoice && hasStep && status !== 'completed' && (
           <button
             onClick={onContinue}
             className="w-full px-4 py-3 bg-[#e94560] hover:bg-[#d63850] text-white rounded-xl transition-colors font-medium shadow-md"
           >
             Continue
           </button>
+        )}
+
+        {!hasStep && status !== 'completed' && (
+          <div className="text-xs text-gray-500 bg-[#0f0f1a] border border-dashed border-[#2a2a3e] rounded-xl p-3">
+            No dialogue is available for this page yet. Move to another page to continue.
+          </div>
         )}
 
         {status === 'completed' && (

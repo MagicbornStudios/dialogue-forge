@@ -89,7 +89,18 @@ export function GamePlayer({
     }
   }, [goToPage, runner.history, sequence]);
 
-  const totalNodes = useMemo(() => Object.keys(dialogue.nodes).length, [dialogue.nodes]);
+  const totalPages = sequence.length;
+  const hasPages = totalPages > 0;
+  const visitedPages = useMemo(() => {
+    if (!hasPages) {
+      return 0;
+    }
+    const visitedNodeIds = new Set(runner.visitedNodeIds);
+    return sequence.reduce((count, step) => {
+      const pageVisited = step.page.nodeIds.some(nodeId => visitedNodeIds.has(nodeId));
+      return pageVisited ? count + 1 : count;
+    }, 0);
+  }, [hasPages, runner.visitedNodeIds, sequence]);
   const currentPageHistory = useMemo(() => {
     if (!currentStep) {
       return [];
@@ -106,8 +117,9 @@ export function GamePlayer({
         progress={progress}
         onNextPage={nextPage}
         onPreviousPage={previousPage}
-        visitedNodes={runner.visitedNodeIds.length}
-        totalNodes={totalNodes}
+        visitedPages={visitedPages}
+        totalPages={totalPages}
+        hasPages={hasPages}
         isOpen={isOverlayOpen}
         onToggle={() => setIsOverlayOpen(open => !open)}
       />

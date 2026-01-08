@@ -4,8 +4,9 @@ import {
   type NarrativeChapter,
   type NarrativePage,
   type StoryThread,
-  type Storylet,
+  type StoryletPoolMember,
   type StoryletPool,
+  type StoryletTemplate,
 } from '../types/narrative';
 
 export interface NarrativeSequenceStep {
@@ -29,15 +30,21 @@ type NarrativePageInput = Omit<NarrativePage, 'dialogueId' | 'type'> & {
   dialogueId?: string;
 };
 
-function normalizeStorylet(storylet: Storylet): Storylet {
+function normalizeStoryletTemplate(storylet: StoryletTemplate): StoryletTemplate {
   return {
     id: storylet.id,
     title: storylet.title,
     summary: storylet.summary,
+    dialogueId: storylet.dialogueId,
     conditions: storylet.conditions ? [...storylet.conditions] : undefined,
-    weight: storylet.weight,
-    nextNodeId: storylet.nextNodeId,
     type: NARRATIVE_ELEMENT.STORYLET,
+  };
+}
+
+function normalizeStoryletMember(member: StoryletPoolMember): StoryletPoolMember {
+  return {
+    templateId: member.templateId,
+    weight: member.weight,
   };
 }
 
@@ -47,8 +54,8 @@ function normalizeStoryletPool(pool: StoryletPool): StoryletPool {
     title: pool.title,
     summary: pool.summary,
     selectionMode: pool.selectionMode,
-    storylets: pool.storylets.map(normalizeStorylet),
-    fallbackNodeId: pool.fallbackNodeId,
+    members: pool.members.map(normalizeStoryletMember),
+    fallbackTemplateId: pool.fallbackTemplateId,
   };
 }
 
@@ -68,6 +75,9 @@ function normalizeChapter(chapter: NarrativeChapterInput): NarrativeChapter {
     title: chapter.title,
     summary: chapter.summary,
     pages: chapter.pages ? chapter.pages.map(normalizePage) : [],
+    storyletTemplates: chapter.storyletTemplates
+      ? chapter.storyletTemplates.map(normalizeStoryletTemplate)
+      : undefined,
     storyletPools: chapter.storyletPools
       ? chapter.storyletPools.map(normalizeStoryletPool)
       : undefined,
@@ -128,9 +138,14 @@ export function addPage(chapter: NarrativeChapter, page: NarrativePageInput): Na
 export function addStorylet(
   chapter: NarrativeChapter,
   poolId: string,
-  storylet: Storylet
+  storylet: StoryletTemplate,
+  member?: StoryletPoolMember
 ): NarrativeChapter {
-  const normalizedStorylet = normalizeStorylet(storylet);
+  const normalizedStorylet = normalizeStoryletTemplate(storylet);
+  const normalizedMember = normalizeStoryletMember(
+    member ?? { templateId: normalizedStorylet.id }
+  );
+  const existingTemplates = chapter.storyletTemplates ?? [];
   const existingPools = chapter.storyletPools ?? [];
   const poolIndex = existingPools.findIndex(pool => pool.id === poolId);
 
@@ -139,17 +154,20 @@ export function addStorylet(
     const pool = existingPools[poolIndex];
     updatedPools[poolIndex] = {
       ...pool,
-      storylets: [...pool.storylets.map(normalizeStorylet), normalizedStorylet],
+      members: [...pool.members.map(normalizeStoryletMember), normalizedMember],
     };
   } else {
     updatedPools.push({
       id: poolId,
-      storylets: [normalizedStorylet],
+      members: [normalizedMember],
     });
   }
 
   return {
     ...chapter,
+    storyletTemplates: existingTemplates.some(item => item.id === normalizedStorylet.id)
+      ? existingTemplates
+      : [...existingTemplates, normalizedStorylet],
     storyletPools: updatedPools,
     type: chapter.type ?? NARRATIVE_ELEMENT.CHAPTER,
   };
@@ -157,10 +175,11 @@ export function addStorylet(
 
 export function removeStorylet(
   chapter: NarrativeChapter,
-  storyletId: string,
+  templateId: string,
   poolId?: string
 ): NarrativeChapter {
   const existingPools = chapter.storyletPools ?? [];
+  const existingTemplates = chapter.storyletTemplates ?? [];
 
   const updatedPools = existingPools.map(pool => {
     if (poolId && pool.id !== poolId) {
@@ -169,12 +188,15 @@ export function removeStorylet(
 
     return {
       ...pool,
-      storylets: pool.storylets.filter(storylet => storylet.id !== storyletId),
+      members: pool.members.filter(member => member.templateId !== templateId),
     };
   });
 
+  const remainingTemplateIds = new Set(updatedPools.flatMap(pool => pool.members.map(member => member.templateId)));
+
   return {
     ...chapter,
+    storyletTemplates: existingTemplates.filter(template => remainingTemplateIds.has(template.id)),
     storyletPools: updatedPools,
     type: chapter.type ?? NARRATIVE_ELEMENT.CHAPTER,
   };

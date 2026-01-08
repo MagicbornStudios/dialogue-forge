@@ -4,13 +4,15 @@ import {
   type NarrativeChapter,
   type NarrativePage,
   type StoryThread,
-  type Storylet,
   type StoryletPool,
+  type StoryletPoolMember,
+  type StoryletTemplate,
 } from '../types/narrative';
 
 interface StoryletEntry {
   pool: StoryletPool;
-  storylet: Storylet;
+  member: StoryletPoolMember;
+  template: StoryletTemplate;
 }
 
 export interface NarrativeThreadClient {
@@ -22,7 +24,7 @@ export interface NarrativeThreadClient {
     actId: string,
     chapterId: string,
     poolId: string,
-    storyletId: string
+    templateId: string
   ) => StoryletEntry | undefined;
   updateAct: (actId: string, updates: Partial<NarrativeAct>) => StoryThread;
   updateChapter: (
@@ -36,12 +38,18 @@ export interface NarrativeThreadClient {
     pageId: string,
     updates: Partial<NarrativePage>
   ) => StoryThread;
-  updateStorylet: (
+  updateStoryletMember: (
     actId: string,
     chapterId: string,
     poolId: string,
-    storyletId: string,
-    updates: Partial<Storylet>
+    templateId: string,
+    updates: Partial<StoryletPoolMember>
+  ) => StoryThread;
+  updateStoryletTemplate: (
+    actId: string,
+    chapterId: string,
+    templateId: string,
+    updates: Partial<StoryletTemplate>
   ) => StoryThread;
   updateStoryletPool: (
     actId: string,
@@ -67,13 +75,17 @@ export function createNarrativeThreadClient(thread: StoryThread): NarrativeThrea
     actId: string,
     chapterId: string,
     poolId: string,
-    storyletId: string
+    templateId: string
   ) => {
     const pool = getStoryletPool(actId, chapterId, poolId);
     if (!pool) return undefined;
-    const storylet = pool.storylets.find(item => item.id === storyletId);
-    if (!storylet) return undefined;
-    return { pool, storylet };
+    const member = pool.members.find(item => item.templateId === templateId);
+    if (!member) return undefined;
+    const template = getChapter(actId, chapterId)?.storyletTemplates?.find(
+      item => item.id === templateId
+    );
+    if (!template) return undefined;
+    return { pool, member, template };
   };
 
   const updateAct = (actId: string, updates: Partial<NarrativeAct>) => ({
@@ -132,12 +144,12 @@ export function createNarrativeThreadClient(thread: StoryThread): NarrativeThrea
     ),
   });
 
-  const updateStorylet = (
+  const updateStoryletMember = (
     actId: string,
     chapterId: string,
     poolId: string,
-    storyletId: string,
-    updates: Partial<Storylet>
+    templateId: string,
+    updates: Partial<StoryletPoolMember>
   ) => ({
     ...thread,
     acts: thread.acts.map(act =>
@@ -152,14 +164,13 @@ export function createNarrativeThreadClient(thread: StoryThread): NarrativeThrea
                       pool.id === poolId
                         ? {
                             ...pool,
-                            storylets: pool.storylets.map(storylet =>
-                              storylet.id === storyletId
+                            members: pool.members.map(member =>
+                              member.templateId === templateId
                                 ? {
-                                    ...storylet,
+                                    ...member,
                                     ...updates,
-                                    type: storylet.type ?? NARRATIVE_ELEMENT.STORYLET,
                                   }
-                                : storylet
+                                : member
                             ),
                           }
                         : pool
@@ -168,6 +179,50 @@ export function createNarrativeThreadClient(thread: StoryThread): NarrativeThrea
                   }
                 : chapter
             ),
+            type: act.type ?? NARRATIVE_ELEMENT.ACT,
+          }
+        : act
+    ),
+  });
+
+  const updateStoryletTemplate = (
+    actId: string,
+    chapterId: string,
+    templateId: string,
+    updates: Partial<StoryletTemplate>
+  ) => ({
+    ...thread,
+    acts: thread.acts.map(act =>
+      act.id === actId
+        ? {
+            ...act,
+            chapters: act.chapters.map(chapter => {
+              if (chapter.id !== chapterId) {
+                return chapter;
+              }
+              const nextTemplateId = updates.id ?? templateId;
+              return {
+                ...chapter,
+                storyletTemplates: (chapter.storyletTemplates ?? []).map(template =>
+                  template.id === templateId
+                    ? {
+                        ...template,
+                        ...updates,
+                        type: template.type ?? NARRATIVE_ELEMENT.STORYLET,
+                      }
+                    : template
+                ),
+                storyletPools: (chapter.storyletPools ?? []).map(pool => ({
+                  ...pool,
+                  members: pool.members.map(member =>
+                    member.templateId === templateId
+                      ? { ...member, templateId: nextTemplateId }
+                      : member
+                  ),
+                })),
+                type: chapter.type ?? NARRATIVE_ELEMENT.CHAPTER,
+              };
+            }),
             type: act.type ?? NARRATIVE_ELEMENT.ACT,
           }
         : act
@@ -213,7 +268,8 @@ export function createNarrativeThreadClient(thread: StoryThread): NarrativeThrea
     updateAct,
     updateChapter,
     updatePage,
-    updateStorylet,
+    updateStoryletMember,
+    updateStoryletTemplate,
     updateStoryletPool,
   };
 }

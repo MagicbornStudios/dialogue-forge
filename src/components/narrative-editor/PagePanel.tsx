@@ -11,7 +11,7 @@ interface PagePanelProps {
   onMove: (direction: 'up' | 'down') => void;
   onDelete: () => void;
   onUpdate: (updates: Partial<NarrativePage>) => void;
-  onUpdateNodeIds: (value: string) => void;
+  onUpdateDialogueId: (value: string) => void;
 }
 
 export function PagePanel({
@@ -22,7 +22,7 @@ export function PagePanel({
   onMove,
   onDelete,
   onUpdate,
-  onUpdateNodeIds,
+  onUpdateDialogueId,
 }: PagePanelProps) {
   const selectedPage = pages.find(page => page.id === selectedPageId);
 
@@ -72,11 +72,11 @@ export function PagePanel({
                 className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200 min-h-[60px]"
               />
             </DetailField>
-            <DetailField label="Node IDs">
-              <textarea
-                value={selectedPage.nodeIds.join(', ')}
-                onChange={event => onUpdateNodeIds(event.target.value)}
-                className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200 min-h-[60px]"
+            <DetailField label="Dialogue ID">
+              <input
+                value={selectedPage.dialogueId}
+                onChange={event => onUpdateDialogueId(event.target.value)}
+                className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
               />
             </DetailField>
           </>

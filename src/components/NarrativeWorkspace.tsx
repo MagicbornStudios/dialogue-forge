@@ -116,26 +116,14 @@ const buildScopedDialogue = (
   }
 
   if (!page) return dialogue;
-  const scopedNodes = page.nodeIds.reduce<Record<string, DialogueTree['nodes'][string]>>(
-    (acc, nodeId) => {
-      const node = dialogue.nodes[nodeId];
-      if (node) {
-        acc[nodeId] = node;
-      }
-      return acc;
-    },
-    {}
-  );
-  const fallbackStartNodeId = page.nodeIds.find(nodeId => scopedNodes[nodeId]) ?? '';
-  const startNodeId = scopedNodes[dialogue.startNodeId]
-    ? dialogue.startNodeId
-    : fallbackStartNodeId;
-
-  return {
-    ...dialogue,
-    nodes: scopedNodes,
-    startNodeId,
-  };
+  if (page.dialogueId && page.dialogueId !== dialogue.id) {
+    return {
+      ...dialogue,
+      nodes: {},
+      startNodeId: '',
+    };
+  }
+  return dialogue;
 };
 
 export function NarrativeWorkspace({
@@ -269,48 +257,8 @@ export function NarrativeWorkspace({
   }, [selectedChapter, poolSearch]);
 
   const handleDialogueChange = useCallback((nextScopedDialogue: DialogueTree) => {
-    if (!selectedPage || !selectedAct || !selectedChapter) {
-      setDialogueTree(nextScopedDialogue);
-      return;
-    }
-
-    setDialogueTree(prevDialogue => {
-      const updatedNodes = { ...prevDialogue.nodes };
-      selectedPage.nodeIds.forEach(nodeId => {
-        if (!nextScopedDialogue.nodes[nodeId]) {
-          delete updatedNodes[nodeId];
-        }
-      });
-      Object.entries(nextScopedDialogue.nodes).forEach(([nodeId, node]) => {
-        updatedNodes[nodeId] = node;
-      });
-
-      const fallbackStartNodeId = Object.keys(updatedNodes)[0] ?? '';
-      const nextStartNodeId = updatedNodes[prevDialogue.startNodeId]
-        ? prevDialogue.startNodeId
-        : nextScopedDialogue.startNodeId || fallbackStartNodeId;
-
-      return {
-        ...prevDialogue,
-        nodes: updatedNodes,
-        startNodeId: nextStartNodeId,
-      };
-    });
-
-    const scopedNodeIds = Object.keys(nextScopedDialogue.nodes);
-    const retainedNodeIds = selectedPage.nodeIds.filter(nodeId => nextScopedDialogue.nodes[nodeId]);
-    const addedNodeIds = scopedNodeIds.filter(nodeId => !selectedPage.nodeIds.includes(nodeId));
-    const nextNodeIds = [...retainedNodeIds, ...addedNodeIds];
-
-    setThread(prevThread =>
-      createNarrativeThreadClient(prevThread).updatePage(
-        selectedAct.id,
-        selectedChapter.id,
-        selectedPage.id,
-        { nodeIds: nextNodeIds }
-      )
-    );
-  }, [selectedAct, selectedChapter, selectedPage]);
+    setDialogueTree(nextScopedDialogue);
+  }, []);
 
   const handleExportYarn = useCallback((dialogue: DialogueTree) => {
     const yarn = exportToYarn(dialogue);
@@ -582,7 +530,7 @@ export function NarrativeWorkspace({
       id: nextId,
       title: `Page ${selectedChapter.pages.length + 1}`,
       summary: '',
-      nodeIds: [],
+      dialogueId: dialogueTree.id,
       type: NARRATIVE_ELEMENT.PAGE,
     };
     updateThread({

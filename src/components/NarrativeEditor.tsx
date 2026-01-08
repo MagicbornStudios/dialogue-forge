@@ -11,7 +11,7 @@ import {
   type StoryletPool,
 } from '../types/narrative';
 import { createNarrativeThreadClient } from '../utils/narrative-client';
-import { createUniqueId, moveItem, parseDelimitedList } from '../utils/narrative-editor-utils';
+import { createUniqueId, moveItem } from '../utils/narrative-editor-utils';
 import {
   ActPanel,
   ChapterPanel,
@@ -269,7 +269,7 @@ export function NarrativeEditor({
       id: nextId,
       title: `Page ${selectedChapter.pages.length + 1}`,
       summary: '',
-      nodeIds: [],
+      dialogueId: '',
       type: NARRATIVE_ELEMENT.PAGE,
     };
 
@@ -640,10 +640,10 @@ export function NarrativeEditor({
           onMove={handleMovePage}
           onDelete={handleDeletePage}
           onUpdate={handlePageUpdate}
-          onUpdateNodeIds={value => {
+          onUpdateDialogueId={value => {
             if (!selectedAct || !selectedChapter || !selectedPage) return;
             updatePage(selectedAct.id, selectedChapter.id, selectedPage.id, {
-              nodeIds: parseDelimitedList(value),
+              dialogueId: value,
             });
           }}
         />

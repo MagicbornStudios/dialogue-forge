@@ -21,8 +21,6 @@ export interface GamePlayerProps {
 }
 
 function buildFallbackNarrativeThread(dialogue: DialogueTree): NarrativeThread {
-  const nodeIds = Object.keys(dialogue.nodes);
-
   return {
     id: `thread-${dialogue.id}`,
     title: dialogue.title,
@@ -38,7 +36,7 @@ function buildFallbackNarrativeThread(dialogue: DialogueTree): NarrativeThread {
               {
                 id: `page-${dialogue.id}`,
                 title: dialogue.title ?? 'Untitled Page',
-                nodeIds,
+                dialogueId: dialogue.id,
                 type: NARRATIVE_ELEMENT.PAGE,
               },
             ],
@@ -83,11 +81,11 @@ export function GamePlayer({
   useEffect(() => {
     const latestEntry = runner.history[runner.history.length - 1];
     if (!latestEntry) return;
-    const pageIndex = sequence.findIndex(step => step.page.nodeIds.includes(latestEntry.nodeId));
+    const pageIndex = sequence.findIndex(step => step.page.dialogueId === dialogue.id);
     if (pageIndex >= 0) {
       goToPage(pageIndex);
     }
-  }, [goToPage, runner.history, sequence]);
+  }, [dialogue.id, goToPage, runner.history, sequence]);
 
   const totalPages = sequence.length;
   const hasPages = totalPages > 0;
@@ -95,19 +93,18 @@ export function GamePlayer({
     if (!hasPages) {
       return 0;
     }
-    const visitedNodeIds = new Set(runner.visitedNodeIds);
+    const visitedDialogueIds = runner.history.length > 0 ? new Set([dialogue.id]) : new Set<string>();
     return sequence.reduce((count, step) => {
-      const pageVisited = step.page.nodeIds.some(nodeId => visitedNodeIds.has(nodeId));
+      const pageVisited = visitedDialogueIds.has(step.page.dialogueId);
       return pageVisited ? count + 1 : count;
     }, 0);
-  }, [hasPages, runner.visitedNodeIds, sequence]);
+  }, [dialogue.id, hasPages, runner.history.length, sequence]);
   const currentPageHistory = useMemo(() => {
     if (!currentStep) {
       return [];
     }
-    const nodeIds = new Set(currentStep.page.nodeIds);
-    return runner.history.filter(entry => nodeIds.has(entry.nodeId));
-  }, [currentStep, runner.history]);
+    return currentStep.page.dialogueId === dialogue.id ? runner.history : [];
+  }, [currentStep, dialogue.id, runner.history]);
 
   return (
     <div className="relative border border-[#1a1a2e] rounded-3xl overflow-hidden bg-[#0f0f1a] h-full min-h-[480px]">

@@ -24,7 +24,7 @@ import ReactFlow, {
   ConnectionLineType,
   BackgroundVariant,
 } from 'reactflow';
-import { Edit3, Plus, Trash2, Play, Layout, ArrowDown, ArrowRight, Magnet, Sparkles, Undo2, Flag, Home, Target, BookOpen, Settings, Grid3x3 } from 'lucide-react';
+import { Edit3, Plus, Trash2, Play, Layout, ArrowDown, ArrowRight, Magnet, Sparkles, Undo2, Flag, Home, Target, BookOpen, Settings, Grid3x3, Map as MapIcon } from 'lucide-react';
 import { ExampleLoaderButton } from './ExampleLoaderButton';
 import { ENABLE_DEBUG_TOOLS } from '../utils/feature-flags';
 import 'reactflow/dist/style.css';
@@ -87,6 +87,7 @@ interface DialogueEditorV2InternalProps extends DialogueEditorProps {
   onLoadExampleDialogue?: (dialogue: DialogueTree) => void;
   onLoadExampleFlags?: (flags: FlagSchema) => void;
   showMiniMap?: boolean;
+  onToggleMiniMap?: () => void;
   // Event hooks from DialogueEditorProps are already included
 }
 
@@ -110,6 +111,7 @@ function DialogueEditorV2Internal({
   onLoadExampleDialogue,
   onLoadExampleFlags,
   showMiniMap = true,
+  onToggleMiniMap,
   // Event hooks
   onNodeAdd,
   onNodeDelete,
@@ -1290,6 +1292,19 @@ function DialogueEditorV2Internal({
                       </div>
                     )}
                   </div>
+                  {onToggleMiniMap && (
+                    <button
+                      onClick={onToggleMiniMap}
+                      className={`p-1.5 rounded transition-colors ${
+                        showMiniMap
+                          ? 'bg-df-npc-selected/20 text-df-npc-selected border border-df-npc-selected'
+                          : 'bg-df-elevated border border-df-control-border text-df-text-secondary hover:text-df-text-primary hover:border-df-control-hover'
+                      }`}
+                      title={showMiniMap ? 'Hide minimap' : 'Show minimap'}
+                    >
+                      <MapIcon size={14} />
+                    </button>
+                  )}
                   
                   {/* Flag Manager */}
                   {onOpenFlagManager && (
@@ -1794,6 +1809,7 @@ export function DialogueEditorV2(props: DialogueEditorProps & {
   onOpenFlagManager?: () => void;
   onOpenGuide?: () => void;
   showMiniMap?: boolean;
+  onToggleMiniMap?: () => void;
 }) {
   return (
     <ReactFlowProvider>

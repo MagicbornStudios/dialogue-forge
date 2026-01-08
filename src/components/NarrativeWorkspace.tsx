@@ -9,7 +9,6 @@ import {
   Info,
   LayoutPanelTop,
   ListTree,
-  Map,
   Play,
   Plus,
   Search,
@@ -22,7 +21,7 @@ import { FlagManager } from './FlagManager';
 import { GuidePanel } from './GuidePanel';
 import { YarnView } from './YarnView';
 import type { DialogueTree, ViewMode } from '../types';
-import type { GameFlagState } from '../types/game-state';
+import type { BaseGameState } from '../types/game-state';
 import type { Character } from '../types/characters';
 import type { FlagSchema } from '../types/flags';
 import {
@@ -35,7 +34,7 @@ import {
   type Storylet,
   type StoryletPool,
 } from '../types/narrative';
-import { VIEW_MODE } from '../types/constants';
+import { NODE_TYPE, VIEW_MODE, FLAG_TYPE } from '../types/constants';
 import { exportToYarn } from '../lib/yarn-converter';
 import { createNarrativeThreadClient } from '../utils/narrative-client';
 import { createUniqueId, moveItem } from '../utils/narrative-editor-utils';
@@ -46,7 +45,7 @@ interface NarrativeWorkspaceProps {
   initialDialogue: DialogueTree;
   flagSchema?: FlagSchema;
   characters?: Record<string, Character>;
-  gameStateFlags?: GameFlagState;
+  gameState?: BaseGameState;
   className?: string;
   toolbarActions?: React.ReactNode;
 }
@@ -58,7 +57,64 @@ const getInitialSelection = (thread: StoryThread): NarrativeSelection => ({
   storyletKey: undefined,
 });
 
-const buildScopedDialogue = (dialogue: DialogueTree, page?: NarrativePage): DialogueTree => {
+const collectDialogueSubgraph = (dialogue: DialogueTree, startNodeId: string) => {
+  const visited = new Set<string>();
+  const queue = [startNodeId];
+  while (queue.length > 0) {
+    const nodeId = queue.shift();
+    if (!nodeId || visited.has(nodeId)) continue;
+    const node = dialogue.nodes[nodeId];
+    if (!node) continue;
+    visited.add(nodeId);
+
+    const nextIds: Array<string | undefined> = [];
+    if (node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL) {
+      nextIds.push(node.nextNodeId);
+    }
+    if (node.type === NODE_TYPE.PLAYER) {
+      node.choices?.forEach(choice => nextIds.push(choice.nextNodeId));
+    }
+    if (node.type === NODE_TYPE.CONDITIONAL) {
+      node.conditionalBlocks?.forEach(block => nextIds.push(block.nextNodeId));
+    }
+    if (node.type === NODE_TYPE.RANDOMIZER) {
+      node.randomizerBranches?.forEach(branch => nextIds.push(branch.nextNodeId));
+    }
+
+    nextIds.filter(Boolean).forEach(nextId => {
+      if (nextId && !visited.has(nextId)) {
+        queue.push(nextId);
+      }
+    });
+  }
+  return visited;
+};
+
+const buildScopedDialogue = (
+  dialogue: DialogueTree,
+  page: NarrativePage | undefined,
+  storyletFocusId: string | null,
+  scope: 'page' | 'storylet'
+): DialogueTree => {
+  if (scope === 'storylet' && storyletFocusId && dialogue.nodes[storyletFocusId]) {
+    const scopedIds = collectDialogueSubgraph(dialogue, storyletFocusId);
+    const scopedNodes = Array.from(scopedIds).reduce<Record<string, DialogueTree['nodes'][string]>>(
+      (acc, nodeId) => {
+        const node = dialogue.nodes[nodeId];
+        if (node) {
+          acc[nodeId] = node;
+        }
+        return acc;
+      },
+      {}
+    );
+    return {
+      ...dialogue,
+      nodes: scopedNodes,
+      startNodeId: storyletFocusId,
+    };
+  }
+
   if (!page) return dialogue;
   const scopedNodes = page.nodeIds.reduce<Record<string, DialogueTree['nodes'][string]>>(
     (acc, nodeId) => {
@@ -87,13 +143,14 @@ export function NarrativeWorkspace({
   initialDialogue,
   flagSchema,
   characters,
-  gameStateFlags,
+  gameState,
   className = '',
   toolbarActions,
 }: NarrativeWorkspaceProps) {
   const [thread, setThread] = useState<StoryThread>(initialThread);
   const [dialogueTree, setDialogueTree] = useState<DialogueTree>(initialDialogue);
   const [activeFlagSchema, setActiveFlagSchema] = useState<FlagSchema | undefined>(flagSchema);
+  const [activeGameState, setActiveGameState] = useState<BaseGameState>(() => gameState ?? { flags: {} });
   const [selection, setSelection] = useState<NarrativeSelection>(() => getInitialSelection(initialThread));
   const [showPlayModal, setShowPlayModal] = useState(false);
   const [showFlagManager, setShowFlagManager] = useState(false);
@@ -102,12 +159,22 @@ export function NarrativeWorkspace({
   const [dialogueViewMode, setDialogueViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);
   const [showNarrativeMiniMap, setShowNarrativeMiniMap] = useState(true);
   const [showDialogueMiniMap, setShowDialogueMiniMap] = useState(true);
+  const [dialogueScope, setDialogueScope] = useState<'page' | 'storylet'>('page');
+  const [storyletFocusId, setStoryletFocusId] = useState<string | null>(null);
   const [storyletTab, setStoryletTab] = useState<'storylets' | 'pools'>('storylets');
   const [storyletSearch, setStoryletSearch] = useState('');
   const [poolSearch, setPoolSearch] = useState('');
   const [activePoolId, setActivePoolId] = useState<string | undefined>(undefined);
   const [editingStoryletId, setEditingStoryletId] = useState<string | null>(null);
   const [editingPoolId, setEditingPoolId] = useState<string | null>(null);
+  const [storyletContextMenu, setStoryletContextMenu] = useState<{
+    x: number;
+    y: number;
+    entry: { poolId: string; storylet: Storylet };
+  } | null>(null);
+  const [narrativeContextMenu, setNarrativeContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [gameStateDraft, setGameStateDraft] = useState(() => JSON.stringify(gameState ?? { flags: {} }, null, 2));
+  const [gameStateError, setGameStateError] = useState<string | null>(null);
 
   const selectedAct = useMemo(
     () => thread.acts.find(act => act.id === selection.actId) ?? thread.acts[0],
@@ -125,8 +192,8 @@ export function NarrativeWorkspace({
   );
 
   const scopedDialogue = useMemo(
-    () => buildScopedDialogue(dialogueTree, selectedPage),
-    [dialogueTree, selectedPage]
+    () => buildScopedDialogue(dialogueTree, selectedPage, storyletFocusId, dialogueScope),
+    [dialogueTree, dialogueScope, selectedPage, storyletFocusId]
   );
 
   const storyletEntries = useMemo(() => {
@@ -161,6 +228,26 @@ export function NarrativeWorkspace({
   useEffect(() => {
     setActiveFlagSchema(flagSchema);
   }, [flagSchema]);
+
+  useEffect(() => {
+    setActiveGameState(gameState ?? { flags: {} });
+  }, [gameState]);
+
+  useEffect(() => {
+    setGameStateDraft(JSON.stringify(activeGameState, null, 2));
+  }, [activeGameState]);
+
+  const resolvedCharacters = activeGameState.characters ?? characters ?? {};
+  const counts = useMemo(() => {
+    const actCount = thread.acts.length;
+    const chapterCount = thread.acts.reduce((sum, act) => sum + act.chapters.length, 0);
+    const pageCount = thread.acts.reduce(
+      (sum, act) => sum + act.chapters.reduce((acc, chapter) => acc + chapter.pages.length, 0),
+      0
+    );
+    const characterCount = Object.keys(resolvedCharacters).length;
+    return { actCount, chapterCount, pageCount, characterCount };
+  }, [resolvedCharacters, thread.acts]);
 
   const filteredStoryletEntries = useMemo(() => {
     const query = storyletSearch.trim().toLowerCase();
@@ -450,6 +537,8 @@ export function NarrativeWorkspace({
       chapterId: nextAct.chapters[0]?.id,
       pageId: nextAct.chapters[0]?.pages[0]?.id,
     }));
+    setDialogueScope('page');
+    setStoryletFocusId(null);
   };
 
   const handleAddChapter = () => {
@@ -479,6 +568,8 @@ export function NarrativeWorkspace({
       chapterId: nextChapter.id,
       pageId: nextChapter.pages[0]?.id,
     }));
+    setDialogueScope('page');
+    setStoryletFocusId(null);
   };
 
   const handleAddPage = () => {
@@ -513,6 +604,8 @@ export function NarrativeWorkspace({
       ...prev,
       pageId: nextPage.id,
     }));
+    setDialogueScope('page');
+    setStoryletFocusId(null);
   };
 
   const playTitle = selectedPage?.title ?? 'Play Page';
@@ -521,7 +614,13 @@ export function NarrativeWorkspace({
   const editingPool = (selectedChapter?.storyletPools ?? []).find(pool => pool.id === editingPoolId) ?? null;
 
   return (
-    <div className={`flex h-full w-full flex-col ${className}`}>
+    <div
+      className={`flex h-full w-full flex-col ${className}`}
+      onMouseDown={() => {
+        setNarrativeContextMenu(null);
+        setStoryletContextMenu(null);
+      }}
+    >
       <div className="flex items-center justify-between border-b border-df-sidebar-border bg-df-base/80 px-3 py-2">
         <div className="flex items-center gap-2">
           <button
@@ -552,6 +651,9 @@ export function NarrativeWorkspace({
           >
             <HelpCircle size={16} />
           </button>
+        </div>
+        <div className="text-[11px] text-df-text-tertiary">
+          {counts.actCount} acts · {counts.chapterCount} chapters · {counts.pageCount} pages · {counts.characterCount} characters
         </div>
         <div className="flex items-center gap-2">{toolbarActions}</div>
       </div>
@@ -584,6 +686,8 @@ export function NarrativeWorkspace({
                       chapterId: act?.chapters[0]?.id,
                       pageId: act?.chapters[0]?.pages[0]?.id,
                     }));
+                    setDialogueScope('page');
+                    setStoryletFocusId(null);
                   }}
                   title="Select act"
                 >
@@ -593,14 +697,6 @@ export function NarrativeWorkspace({
                     </option>
                   ))}
                 </select>
-                <button
-                  type="button"
-                  className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
-                  onClick={handleAddAct}
-                  title="Add act"
-                >
-                  <Plus size={12} />
-                </button>
               </div>
 
               <div className="flex items-center gap-1 text-[11px] text-df-text-tertiary">
@@ -619,6 +715,8 @@ export function NarrativeWorkspace({
                       chapterId,
                       pageId: chapter?.pages[0]?.id,
                     }));
+                    setDialogueScope('page');
+                    setStoryletFocusId(null);
                   }}
                   title="Select chapter"
                 >
@@ -628,14 +726,6 @@ export function NarrativeWorkspace({
                     </option>
                   ))}
                 </select>
-                <button
-                  type="button"
-                  className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
-                  onClick={handleAddChapter}
-                  title="Add chapter"
-                >
-                  <Plus size={12} />
-                </button>
               </div>
 
               <div className="flex items-center gap-1 text-[11px] text-df-text-tertiary">
@@ -646,7 +736,11 @@ export function NarrativeWorkspace({
                 <select
                   className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-primary"
                   value={selectedPage?.id ?? ''}
-                  onChange={event => setSelection(prev => ({ ...prev, pageId: event.target.value }))}
+                  onChange={event => {
+                    setSelection(prev => ({ ...prev, pageId: event.target.value }));
+                    setDialogueScope('page');
+                    setStoryletFocusId(null);
+                  }}
                   title="Select page"
                 >
                   {(selectedChapter?.pages ?? []).map(page => (
@@ -655,43 +749,34 @@ export function NarrativeWorkspace({
                     </option>
                   ))}
                 </select>
-                <button
-                  type="button"
-                  className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
-                  onClick={handleAddPage}
-                  title="Add page"
-                >
-                  <Plus size={12} />
-                </button>
               </div>
 
-              <button
-                type="button"
-                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => setNarrativeViewMode(VIEW_MODE.GRAPH)}
-                title="Graph view"
-              >
-                <ListTree size={12} />
-                Graph
-              </button>
-              <button
-                type="button"
-                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => setNarrativeViewMode(VIEW_MODE.YARN)}
-                title="Yarn view"
-              >
-                <FileText size={12} />
-                Yarn
-              </button>
-              <button
-                type="button"
-                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => setShowNarrativeMiniMap(prev => !prev)}
-                title={showNarrativeMiniMap ? 'Hide minimap' : 'Show minimap'}
-              >
-                <Map size={12} />
-                Mini
-              </button>
+              <div className="flex items-center rounded-md border border-df-control-border bg-df-control-bg p-0.5" role="tablist">
+                <button
+                  type="button"
+                  className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
+                    narrativeViewMode === VIEW_MODE.GRAPH ? 'bg-df-control-active text-df-text-primary' : 'text-df-text-secondary'
+                  }`}
+                  onClick={() => setNarrativeViewMode(VIEW_MODE.GRAPH)}
+                  title="Graph view"
+                  role="tab"
+                >
+                  <ListTree size={12} />
+                  Graph
+                </button>
+                <button
+                  type="button"
+                  className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
+                    narrativeViewMode === VIEW_MODE.YARN ? 'bg-df-control-active text-df-text-primary' : 'text-df-text-secondary'
+                  }`}
+                  onClick={() => setNarrativeViewMode(VIEW_MODE.YARN)}
+                  title="Yarn view"
+                  role="tab"
+                >
+                  <FileText size={12} />
+                  Yarn
+                </button>
+              </div>
               <button
                 type="button"
                 className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
@@ -709,6 +794,15 @@ export function NarrativeWorkspace({
                 thread={thread}
                 className="h-full"
                 showMiniMap={showNarrativeMiniMap}
+                onToggleMiniMap={() => setShowNarrativeMiniMap(prev => !prev)}
+                onPaneContextMenu={event => {
+                  event.preventDefault();
+                  setNarrativeContextMenu({
+                    x: event.clientX,
+                    y: event.clientY,
+                  });
+                }}
+                onPaneClick={() => setNarrativeContextMenu(null)}
                 onSelectElement={(elementType, elementId) => {
                   if (elementType === NARRATIVE_ELEMENT.ACT) {
                     const act = thread.acts.find(item => item.id === elementId);
@@ -718,6 +812,8 @@ export function NarrativeWorkspace({
                       chapterId: act?.chapters[0]?.id,
                       pageId: act?.chapters[0]?.pages[0]?.id,
                     }));
+                    setDialogueScope('page');
+                    setStoryletFocusId(null);
                   }
                   if (elementType === NARRATIVE_ELEMENT.CHAPTER) {
                     const actForChapter = thread.acts.find(act =>
@@ -730,6 +826,8 @@ export function NarrativeWorkspace({
                       chapterId: elementId,
                       pageId: chapter?.pages[0]?.id,
                     }));
+                    setDialogueScope('page');
+                    setStoryletFocusId(null);
                   }
                   if (elementType === NARRATIVE_ELEMENT.PAGE) {
                     const actForPage = thread.acts.find(act =>
@@ -744,6 +842,8 @@ export function NarrativeWorkspace({
                       chapterId: chapterForPage?.id ?? prev.chapterId,
                       pageId: elementId,
                     }));
+                    setDialogueScope('page');
+                    setStoryletFocusId(null);
                   }
                 }}
               />
@@ -763,40 +863,36 @@ export function NarrativeWorkspace({
             </div>
             <div className="flex flex-wrap items-center gap-2 text-[11px] text-df-text-tertiary">
               <span className="inline-flex items-center gap-1 rounded-full border border-df-control-border bg-df-control-bg px-2 py-1">
-                {selectedPage?.title ?? 'Page'}
+                {dialogueScope === 'storylet' ? 'Storylet' : 'Page'} · {dialogueScope === 'storylet'
+                  ? (selectedStoryletEntry?.storylet.title ?? 'Storylet')
+                  : (selectedPage?.title ?? 'Page')}
               </span>
-              {selectedStoryletEntry && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-df-control-border bg-df-control-bg px-2 py-1">
-                  Storylet: {selectedStoryletEntry.storylet.title ?? selectedStoryletEntry.storylet.id}
-                </span>
-              )}
-              <button
-                type="button"
-                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => setDialogueViewMode(VIEW_MODE.GRAPH)}
-                title="Graph view"
-              >
-                <ListTree size={12} />
-                Graph
-              </button>
-              <button
-                type="button"
-                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => setDialogueViewMode(VIEW_MODE.YARN)}
-                title="Yarn view"
-              >
-                <FileText size={12} />
-                Yarn
-              </button>
-              <button
-                type="button"
-                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => setShowDialogueMiniMap(prev => !prev)}
-                title={showDialogueMiniMap ? 'Hide minimap' : 'Show minimap'}
-              >
-                <Map size={12} />
-                Mini
-              </button>
+              <div className="flex items-center rounded-md border border-df-control-border bg-df-control-bg p-0.5" role="tablist">
+                <button
+                  type="button"
+                  className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
+                    dialogueViewMode === VIEW_MODE.GRAPH ? 'bg-df-control-active text-df-text-primary' : 'text-df-text-secondary'
+                  }`}
+                  onClick={() => setDialogueViewMode(VIEW_MODE.GRAPH)}
+                  title="Graph view"
+                  role="tab"
+                >
+                  <ListTree size={12} />
+                  Graph
+                </button>
+                <button
+                  type="button"
+                  className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
+                    dialogueViewMode === VIEW_MODE.YARN ? 'bg-df-control-active text-df-text-primary' : 'text-df-text-secondary'
+                  }`}
+                  onClick={() => setDialogueViewMode(VIEW_MODE.YARN)}
+                  title="Yarn view"
+                  role="tab"
+                >
+                  <FileText size={12} />
+                  Yarn
+                </button>
+              </div>
               <button
                 type="button"
                 className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
@@ -814,10 +910,11 @@ export function NarrativeWorkspace({
                 dialogue={scopedDialogue}
                 onChange={handleDialogueChange}
                 flagSchema={activeFlagSchema}
-                characters={characters}
+                characters={resolvedCharacters}
                 viewMode={VIEW_MODE.GRAPH}
                 className="h-full"
                 showMiniMap={showDialogueMiniMap}
+                onToggleMiniMap={() => setShowDialogueMiniMap(prev => !prev)}
               />
             ) : (
               <YarnView dialogue={scopedDialogue} onExport={() => handleExportYarn(scopedDialogue)} />
@@ -885,6 +982,16 @@ export function NarrativeWorkspace({
                         onClick={() => {
                           setSelection(prev => ({ ...prev, storyletKey: `${entry.poolId}:${entry.storylet.id}` }));
                           setActivePoolId(entry.poolId);
+                          setDialogueScope('page');
+                          setStoryletFocusId(null);
+                        }}
+                        onContextMenu={event => {
+                          event.preventDefault();
+                          setStoryletContextMenu({
+                            x: event.clientX,
+                            y: event.clientY,
+                            entry,
+                          });
                         }}
                         className={`w-full rounded-lg border px-3 py-2 text-left text-xs ${
                           isSelected ? 'border-df-node-selected bg-df-control-active/30 text-df-text-primary' : 'border-df-node-border text-df-text-secondary hover:border-df-node-selected'
@@ -981,6 +1088,81 @@ export function NarrativeWorkspace({
         </div>
       </div>
 
+      {narrativeContextMenu && (
+        <div
+          className="fixed z-50 rounded-lg border border-df-node-border bg-df-editor-bg shadow-xl text-xs text-df-text-secondary"
+          style={{ top: narrativeContextMenu.y, left: narrativeContextMenu.x }}
+          onMouseDown={event => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="block w-full px-3 py-2 text-left hover:bg-df-control-hover"
+            onClick={() => {
+              handleAddAct();
+              setNarrativeContextMenu(null);
+            }}
+          >
+            Add Act
+          </button>
+          <button
+            type="button"
+            className="block w-full px-3 py-2 text-left hover:bg-df-control-hover disabled:opacity-50"
+            disabled={!selectedAct}
+            onClick={() => {
+              handleAddChapter();
+              setNarrativeContextMenu(null);
+            }}
+          >
+            Add Chapter
+          </button>
+          <button
+            type="button"
+            className="block w-full px-3 py-2 text-left hover:bg-df-control-hover disabled:opacity-50"
+            disabled={!selectedChapter}
+            onClick={() => {
+              handleAddPage();
+              setNarrativeContextMenu(null);
+            }}
+          >
+            Add Page
+          </button>
+        </div>
+      )}
+
+      {storyletContextMenu && (
+        <div
+          className="fixed z-50 rounded-lg border border-df-node-border bg-df-editor-bg shadow-xl text-xs text-df-text-secondary"
+          style={{ top: storyletContextMenu.y, left: storyletContextMenu.x }}
+          onMouseDown={event => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="block w-full px-3 py-2 text-left hover:bg-df-control-hover"
+            onClick={() => {
+              setSelection(prev => ({
+                ...prev,
+                storyletKey: `${storyletContextMenu.entry.poolId}:${storyletContextMenu.entry.storylet.id}`,
+              }));
+              setStoryletFocusId(storyletContextMenu.entry.storylet.id);
+              setDialogueScope('storylet');
+              setStoryletContextMenu(null);
+            }}
+          >
+            Load Dialogue Graph
+          </button>
+          <button
+            type="button"
+            className="block w-full px-3 py-2 text-left hover:bg-df-control-hover"
+            onClick={() => {
+              setEditingStoryletId(storyletContextMenu.entry.storylet.id);
+              setStoryletContextMenu(null);
+            }}
+          >
+            Edit Metadata
+          </button>
+        </div>
+      )}
+
       {showPlayModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
           <div className="relative flex h-full max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-df-editor-border bg-df-editor-bg">
@@ -1004,7 +1186,7 @@ export function NarrativeWorkspace({
                 dialogue={scopedDialogue}
                 startNodeId={scopedDialogue.startNodeId}
                 flagSchema={activeFlagSchema}
-                gameStateFlags={gameStateFlags}
+                gameStateFlags={activeGameState?.flags}
                 narrativeThread={thread}
               />
             </div>
@@ -1025,7 +1207,7 @@ export function NarrativeWorkspace({
                 <X size={16} />
               </button>
             </div>
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_280px]">
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_320px]">
               <div className="min-h-0">
                 <FlagManager
                   flagSchema={activeFlagSchema}
@@ -1038,10 +1220,46 @@ export function NarrativeWorkspace({
                 <div>
                   <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
                     <CircleDot size={12} />
-                    Player
+                    Game State JSON
                   </div>
-                  <div className="mt-2 rounded-md border border-df-control-border bg-df-control-bg px-3 py-2 text-[11px] text-df-text-secondary">
-                    Player profile settings coming soon.
+                  <textarea
+                    value={gameStateDraft}
+                    onChange={event => setGameStateDraft(event.target.value)}
+                    className="mt-2 h-32 w-full rounded-md border border-df-control-border bg-df-control-bg px-3 py-2 text-[11px] text-df-text-primary"
+                  />
+                  {gameStateError && (
+                    <div className="mt-2 text-[11px] text-df-error">{gameStateError}</div>
+                  )}
+                  <div className="mt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
+                      onClick={() => {
+                        try {
+                          const nextState = JSON.parse(gameStateDraft) as BaseGameState;
+                          if (!nextState.flags) {
+                            setGameStateError('Game state must include a flags object.');
+                            return;
+                          }
+                          setActiveGameState(nextState);
+                          setGameStateError(null);
+                        } catch {
+                          setGameStateError('Invalid JSON. Fix errors before saving.');
+                        }
+                      }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
+                      onClick={() => {
+                        setGameStateDraft(JSON.stringify(activeGameState, null, 2));
+                        setGameStateError(null);
+                      }}
+                    >
+                      Reset
+                    </button>
                   </div>
                 </div>
                 <div>
@@ -1050,8 +1268,8 @@ export function NarrativeWorkspace({
                     Characters
                   </div>
                   <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
-                    {characters && Object.values(characters).length > 0 ? (
-                      Object.values(characters).map(character => (
+                    {Object.values(resolvedCharacters).length > 0 ? (
+                      Object.values(resolvedCharacters).map(character => (
                         <div
                           key={character.id}
                           className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-2 text-[11px]"
@@ -1063,6 +1281,34 @@ export function NarrativeWorkspace({
                     ) : (
                       <div className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-2 text-[11px] text-df-text-tertiary">
                         No characters loaded.
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
+                    <Flag size={12} />
+                    Flag Catalog
+                  </div>
+                  <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
+                    {activeFlagSchema?.flags.length ? (
+                      Object.values(FLAG_TYPE).map(flagType => {
+                        const flags = activeFlagSchema.flags.filter(flag => flag.type === flagType);
+                        if (flags.length === 0) return null;
+                        return (
+                          <div key={flagType} className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-2">
+                            <div className="text-[11px] font-semibold text-df-text-primary">{flagType}</div>
+                            <ul className="mt-1 space-y-1 text-[11px] text-df-text-tertiary">
+                              {flags.map(flag => (
+                                <li key={flag.id}>{flag.id}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-2 text-[11px] text-df-text-tertiary">
+                        No flag schema loaded.
                       </div>
                     )}
                   </div>
@@ -1090,16 +1336,6 @@ export function NarrativeWorkspace({
               </button>
             </div>
             <div className="space-y-3 p-4 text-xs text-df-text-secondary">
-              <label className="flex flex-col gap-1">
-                <span>ID</span>
-                <input
-                  value={editingStoryletEntry.storylet.id}
-                  onChange={event =>
-                    handleStoryletUpdate(editingStoryletEntry, { id: event.target.value })
-                  }
-                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
-                />
-              </label>
               <label className="flex flex-col gap-1">
                 <span>Title</span>
                 <input
@@ -1151,16 +1387,6 @@ export function NarrativeWorkspace({
               </button>
             </div>
             <div className="space-y-3 p-4 text-xs text-df-text-secondary">
-              <label className="flex flex-col gap-1">
-                <span>ID</span>
-                <input
-                  value={editingPool.id}
-                  onChange={event =>
-                    handleStoryletPoolUpdate(editingPool.id, { id: event.target.value })
-                  }
-                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
-                />
-              </label>
               <label className="flex flex-col gap-1">
                 <span>Title</span>
                 <input

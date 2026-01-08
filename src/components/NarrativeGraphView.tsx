@@ -5,10 +5,11 @@ import ReactFlow, {
   Controls,
   Handle,
   MiniMap,
+  Panel,
   Position,
   type NodeProps,
 } from 'reactflow';
-import { BookOpen, Files, Layers, ScrollText } from 'lucide-react';
+import { BookOpen, Files, Layers, ScrollText, Map } from 'lucide-react';
 import 'reactflow/dist/style.css';
 
 import { NARRATIVE_ELEMENT, type NarrativeElement, type StoryThread } from '../types/narrative';
@@ -23,6 +24,9 @@ interface NarrativeGraphViewProps {
   className?: string;
   showMiniMap?: boolean;
   onSelectElement?: (element: NarrativeElement, id: string) => void;
+  onToggleMiniMap?: () => void;
+  onPaneContextMenu?: (event: React.MouseEvent) => void;
+  onPaneClick?: () => void;
 }
 
 const elementMeta: Record<
@@ -117,6 +121,9 @@ export function NarrativeGraphView({
   className = '',
   showMiniMap = true,
   onSelectElement,
+  onToggleMiniMap,
+  onPaneContextMenu,
+  onPaneClick,
 }: NarrativeGraphViewProps) {
   const { nodes, edges } = useMemo(() => convertNarrativeToReactFlow(thread), [thread]);
 
@@ -137,8 +144,22 @@ export function NarrativeGraphView({
             onSelectElement?.(elementType, node.id);
           }
         }}
+        onPaneContextMenu={event => onPaneContextMenu?.(event)}
+        onPaneClick={() => onPaneClick?.()}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+        {onToggleMiniMap && (
+          <Panel position="top-left" className="!p-0 !m-2">
+            <button
+              type="button"
+              onClick={onToggleMiniMap}
+              className="rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
+              title={showMiniMap ? 'Hide minimap' : 'Show minimap'}
+            >
+              <Map size={14} />
+            </button>
+          </Panel>
+        )}
         {showMiniMap && (
           <MiniMap
             nodeColor={node => {

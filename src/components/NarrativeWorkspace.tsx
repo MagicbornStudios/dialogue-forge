@@ -502,6 +502,24 @@ export function NarrativeWorkspace({
     setActivePoolId(nextPoolId);
   };
 
+  const resolveStoryletTemplate = useCallback((templateId: string) => {
+    return selectedChapter?.storyletTemplates?.find(template => template.id === templateId);
+  }, [selectedChapter]);
+
+  const handleOpenStoryletTemplate = useCallback((templateId: string) => {
+    const template = resolveStoryletTemplate(templateId);
+    if (!template) return;
+    setStoryletFocusId(template.dialogueId);
+    setDialogueScope('storylet');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('storyletTemplate.openRequested', {
+          detail: { templateId, dialogueId: template.dialogueId },
+        })
+      );
+    }
+  }, [resolveStoryletTemplate]);
+
   const handleAddAct = () => {
     const nextId = createUniqueId(
       thread.acts.map(act => act.id),
@@ -1131,8 +1149,7 @@ export function NarrativeWorkspace({
                 ...prev,
                 storyletKey: `${storyletContextMenu.entry.poolId}:${storyletContextMenu.entry.template.id}`,
               }));
-              setStoryletFocusId(storyletContextMenu.entry.template.dialogueId);
-              setDialogueScope('storylet');
+              handleOpenStoryletTemplate(storyletContextMenu.entry.template.id);
               setStoryletContextMenu(null);
             }}
           >

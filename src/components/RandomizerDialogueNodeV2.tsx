@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { Shuffle, Hash, Flag, Play, GitBranch } from 'lucide-react';
+import { Layers, Hash, Flag, Play, GitBranch } from 'lucide-react';
 import { DialogueNode } from '../types';
 import { LayoutDirection } from '../utils/layout';
 import { RandomizerBranch } from '../types/narrative';
@@ -83,11 +83,11 @@ export function RandomizerDialogueNodeV2({ data, selected }: NodeProps<Randomize
         className={`${headerBgClass} border-b-2 border-df-player-border px-3 py-2.5 flex items-center gap-3 relative`}
       >
         <div className="w-14 h-14 rounded-full bg-df-player-bg border-[3px] border-df-player-border flex items-center justify-center text-3xl shadow-lg flex-shrink-0">
-          <Shuffle size={20} className="text-df-player-selected" />
+          <Layers size={20} className="text-df-player-selected" />
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-df-text-primary truncate leading-tight">Randomizer</h3>
+          <h3 className="text-base font-bold text-df-text-primary truncate leading-tight">Storylet Node Group</h3>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -96,9 +96,9 @@ export function RandomizerDialogueNodeV2({ data, selected }: NodeProps<Randomize
             <span className="text-[10px] font-mono text-df-text-secondary">{node.id}</span>
           </div>
 
-          <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-player-selected/20 border border-df-player-selected/50" title="Randomizer Node">
-            <Shuffle size={14} className="text-df-player-selected" />
-            <span className="text-[10px] font-semibold text-df-player-selected">RANDOMIZER</span>
+          <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-player-selected/20 border border-df-player-selected/50" title="Storylet Node Group">
+            <Layers size={14} className="text-df-player-selected" />
+            <span className="text-[10px] font-semibold text-df-player-selected">NODE GROUP</span>
           </div>
         </div>
 
@@ -117,13 +117,13 @@ export function RandomizerDialogueNodeV2({ data, selected }: NodeProps<Randomize
       <div className="px-4 py-3">
         {branches.length === 0 ? (
           <div className="text-xs text-df-text-secondary bg-df-elevated border border-df-control-border rounded px-3 py-2 text-center">
-            No randomizer branches yet.
+            No group entries yet.
           </div>
         ) : (
           <div className="space-y-2">
             {branches.map((branch, idx) => {
               const color = RANDOMIZER_COLORS[idx % RANDOMIZER_COLORS.length];
-              const label = branch.label || `Branch ${idx + 1}`;
+              const label = branch.label || `Entry ${idx + 1}`;
 
               return (
                 <div
@@ -137,11 +137,6 @@ export function RandomizerDialogueNodeV2({ data, selected }: NodeProps<Randomize
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-df-base text-df-text-primary font-semibold">
                       {label}
                     </span>
-                    {branch.weight !== undefined && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-df-player-selected/20 text-df-player-selected border border-df-player-selected/40 font-semibold">
-                        wt {branch.weight}
-                      </span>
-                    )}
                   </div>
 
                   <div className="text-xs text-df-text-secondary space-y-1">
@@ -154,7 +149,7 @@ export function RandomizerDialogueNodeV2({ data, selected }: NodeProps<Randomize
                       <div className="text-df-text-tertiary">No target node</div>
                     )}
                     {branch.storyletPoolId && (
-                      <div className="text-[10px] text-df-text-secondary font-mono">Pool: {branch.storyletPoolId}</div>
+                      <div className="text-[10px] text-df-text-secondary font-mono">Group: {branch.storyletPoolId}</div>
                     )}
                   </div>
 

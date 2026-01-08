@@ -1,13 +1,11 @@
 import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Hash, BookOpen, Flag, Play } from 'lucide-react';
+import { Hash, Layers, Flag, Play } from 'lucide-react';
 import { DialogueNode } from '../types';
-import { FlagSchema } from '../types/flags';
 import { LayoutDirection } from '../utils/layout';
 
-interface StoryletNodeData {
+interface StoryletNodeGroupData {
   node: DialogueNode;
-  flagSchema?: FlagSchema;
   isDimmed?: boolean;
   isInPath?: boolean;
   layoutDirection?: LayoutDirection;
@@ -15,24 +13,9 @@ interface StoryletNodeData {
   isEndNode?: boolean;
 }
 
-const FLAG_COLORS: Record<string, string> = {
-  dialogue: 'bg-df-flag-dialogue-bg text-df-flag-dialogue border-df-flag-dialogue',
-  quest: 'bg-df-flag-quest-bg text-df-flag-quest border-df-flag-quest',
-  achievement: 'bg-df-flag-achievement-bg text-df-flag-achievement border-df-flag-achievement',
-  item: 'bg-df-flag-item-bg text-df-flag-item border-df-flag-item',
-  stat: 'bg-df-flag-stat-bg text-df-flag-stat border-df-flag-stat',
-  title: 'bg-df-flag-title-bg text-df-flag-title border-df-flag-title',
-  global: 'bg-df-flag-global-bg text-df-flag-global border-df-flag-global',
-};
-
-function getFlagColorClass(type: string): string {
-  return FLAG_COLORS[type] || FLAG_COLORS.dialogue;
-}
-
-export function StoryletDialogueNodeV2({ data, selected }: NodeProps<StoryletNodeData>) {
+export function StoryletNodeGroupDialogueNodeV2({ data, selected }: NodeProps<StoryletNodeGroupData>) {
   const {
     node,
-    flagSchema,
     isDimmed,
     isInPath,
     layoutDirection = 'TB',
@@ -63,8 +46,8 @@ export function StoryletDialogueNodeV2({ data, selected }: NodeProps<StoryletNod
     : node.content || 'No description yet.';
 
   const templateId = node.storyletCall?.templateId;
+  const entryPolicy = node.storyletCall?.entryPolicy;
   const returnNodeId = node.storyletCall?.returnNodeId;
-  const primaryIdLabel = 'Template ID';
 
   return (
     <div
@@ -79,11 +62,11 @@ export function StoryletDialogueNodeV2({ data, selected }: NodeProps<StoryletNod
 
       <div className={`${headerBgClass} border-b-2 border-df-npc-border px-3 py-2.5 flex items-center gap-3 relative`}>
         <div className="w-14 h-14 rounded-full bg-df-npc-bg border-[3px] border-df-npc-border flex items-center justify-center text-3xl shadow-lg flex-shrink-0">
-          <BookOpen size={20} className="text-df-npc-selected" />
+          <Layers size={20} className="text-df-npc-selected" />
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-df-text-primary truncate leading-tight">Storylet</h3>
+          <h3 className="text-base font-bold text-df-text-primary truncate leading-tight">Storylet Node Group</h3>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -92,9 +75,9 @@ export function StoryletDialogueNodeV2({ data, selected }: NodeProps<StoryletNod
             <span className="text-[10px] font-mono text-df-text-secondary">{node.id}</span>
           </div>
 
-          <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-npc-selected/20 border border-df-npc-selected/50" title="Storylet Node">
-            <BookOpen size={14} className="text-df-npc-selected" />
-            <span className="text-[10px] font-semibold text-df-npc-selected">STORYLET</span>
+          <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-npc-selected/20 border border-df-npc-selected/50" title="Storylet Node Group">
+            <Layers size={14} className="text-df-npc-selected" />
+            <span className="text-[10px] font-semibold text-df-npc-selected">NODE GROUP</span>
           </div>
         </div>
 
@@ -116,9 +99,16 @@ export function StoryletDialogueNodeV2({ data, selected }: NodeProps<StoryletNod
         </div>
 
         <div className="space-y-1">
-          <div className="text-[10px] text-df-text-secondary uppercase">{primaryIdLabel}</div>
+          <div className="text-[10px] text-df-text-secondary uppercase">Group ID</div>
           <div className="text-xs text-df-text-primary font-mono bg-df-base/40 border border-df-control-border rounded px-2 py-1">
             {templateId || 'Not set'}
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <div className="text-[10px] text-df-text-secondary uppercase">Entry Policy</div>
+          <div className="text-xs text-df-text-primary font-mono bg-df-base/40 border border-df-control-border rounded px-2 py-1">
+            {entryPolicy || 'Default'}
           </div>
         </div>
 
@@ -128,24 +118,6 @@ export function StoryletDialogueNodeV2({ data, selected }: NodeProps<StoryletNod
             {returnNodeId || 'Not set'}
           </div>
         </div>
-
-        {node.setFlags && node.setFlags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {node.setFlags.map((flagId: string) => {
-              const flag = flagSchema?.flags.find((f: { id: string }) => f.id === flagId);
-              const flagType = flag?.type || 'dialogue';
-              return (
-                <span
-                  key={flagId}
-                  className={`text-[8px] px-1.5 py-0.5 rounded-full border ${getFlagColorClass(flagType)}`}
-                  title={flag?.name || flagId}
-                >
-                  {flagType === 'dialogue' ? 't' : flagType[0]}
-                </span>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       <Handle

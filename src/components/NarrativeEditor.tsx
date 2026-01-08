@@ -7,8 +7,9 @@ import {
   type NarrativeElement,
   type NarrativePage,
   type StoryThread,
-  type Storylet,
   type StoryletPool,
+  type StoryletPoolMember,
+  type StoryletTemplate,
 } from '../types/narrative';
 import { createNarrativeThreadClient } from '../utils/narrative-client';
 import { createUniqueId, moveItem } from '../utils/narrative-editor-utils';
@@ -48,7 +49,8 @@ export interface NarrativeSelection {
 
 interface StoryletEntry {
   poolId: string;
-  storylet: Storylet;
+  member: StoryletPoolMember;
+  template: StoryletTemplate;
 }
 
 const DEFAULT_POOL_TITLE = 'Storylet Pool';
@@ -98,15 +100,25 @@ export function NarrativeEditor({
 
   const storyletEntries = useMemo<StoryletEntry[]>(() => {
     const pools = selectedChapter?.storyletPools ?? [];
+    const templates = selectedChapter?.storyletTemplates ?? [];
     return pools.flatMap(pool =>
-      pool.storylets.map(storylet => ({ poolId: pool.id, storylet }))
+      pool.members.map(member => ({
+        poolId: pool.id,
+        member,
+        template: templates.find(item => item.id === member.templateId)
+          ?? {
+            id: member.templateId,
+            dialogueId: '',
+            type: NARRATIVE_ELEMENT.STORYLET,
+          },
+      }))
     );
   }, [selectedChapter]);
 
   const selectedStoryletEntry = useMemo(() => {
     if (!selectedStoryletKey) return storyletEntries[0];
     return storyletEntries.find(
-      entry => `${entry.poolId}:${entry.storylet.id}` === selectedStoryletKey
+      entry => `${entry.poolId}:${entry.template.id}` === selectedStoryletKey
     );
   }, [selectedStoryletKey, storyletEntries]);
 
@@ -125,9 +137,9 @@ export function NarrativeEditor({
     const nextPageId = nextPage?.id;
 
     const nextStoryletKey = selectedStoryletEntry
-      ? `${selectedStoryletEntry.poolId}:${selectedStoryletEntry.storylet.id}`
+      ? `${selectedStoryletEntry.poolId}:${selectedStoryletEntry.template.id}`
       : storyletEntries[0]
-        ? `${storyletEntries[0].poolId}:${storyletEntries[0].storylet.id}`
+        ? `${storyletEntries[0].poolId}:${storyletEntries[0].template.id}`
         : undefined;
 
     const nextSelection: NarrativeSelection = {
@@ -184,14 +196,23 @@ export function NarrativeEditor({
     updateThread(threadClient.updatePage(actId, chapterId, pageId, updates));
   };
 
-  const updateStorylet = (
+  const updateStoryletMember = (
     actId: string,
     chapterId: string,
     poolId: string,
-    storyletId: string,
-    updates: Partial<Storylet>
+    templateId: string,
+    updates: Partial<StoryletPoolMember>
   ) => {
-    updateThread(threadClient.updateStorylet(actId, chapterId, poolId, storyletId, updates));
+    updateThread(threadClient.updateStoryletMember(actId, chapterId, poolId, templateId, updates));
+  };
+
+  const updateStoryletTemplate = (
+    actId: string,
+    chapterId: string,
+    templateId: string,
+    updates: Partial<StoryletTemplate>
+  ) => {
+    updateThread(threadClient.updateStoryletTemplate(actId, chapterId, templateId, updates));
   };
 
   const updateStoryletPool = (
@@ -239,6 +260,7 @@ export function NarrativeEditor({
       title: `Chapter ${selectedAct.chapters.length + 1}`,
       summary: '',
       pages: [],
+      storyletTemplates: [],
       storyletPools: [],
       type: NARRATIVE_ELEMENT.CHAPTER,
     };
@@ -300,7 +322,7 @@ export function NarrativeEditor({
       title: DEFAULT_POOL_TITLE,
       summary: '',
       selectionMode: STORYLET_SELECTION_MODE.WEIGHTED,
-      storylets: [],
+      members: [],
     };
 
     updateChapter(selectedAct.id, selectedChapter.id, {
@@ -323,29 +345,35 @@ export function NarrativeEditor({
             title: DEFAULT_POOL_TITLE,
             summary: '',
             selectionMode: STORYLET_SELECTION_MODE.WEIGHTED,
-            storylets: [],
+            members: [],
           },
         ],
       });
     }
 
-    const currentStoryletIds = pools.flatMap(pool => pool.storylets.map(storylet => storylet.id));
+    const templates = selectedChapter.storyletTemplates ?? [];
+    const currentStoryletIds = templates.map(storylet => storylet.id);
     const nextId = createUniqueId(currentStoryletIds, 'storylet');
-    const nextStorylet: Storylet = {
+    const nextStorylet: StoryletTemplate = {
       id: nextId,
       title: 'New Storylet',
       summary: '',
-      weight: 1,
+      dialogueId: selectedPage?.dialogueId ?? '',
       type: NARRATIVE_ELEMENT.STORYLET,
+    };
+    const nextMember: StoryletPoolMember = {
+      templateId: nextId,
+      weight: 1,
     };
 
     const updatedPools = (selectedChapter.storyletPools ?? []).map(pool =>
       pool.id === targetPoolId
-        ? { ...pool, storylets: [...pool.storylets, nextStorylet] }
+        ? { ...pool, members: [...pool.members, nextMember] }
         : pool
     );
 
     updateChapter(selectedAct.id, selectedChapter.id, {
+      storyletTemplates: [...templates, nextStorylet],
       storyletPools: updatedPools,
     });
     updateSelection({
@@ -397,18 +425,27 @@ export function NarrativeEditor({
 
   const handleDeleteStorylet = () => {
     if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
-    const { poolId, storylet } = selectedStoryletEntry;
+    const { poolId, template } = selectedStoryletEntry;
+    const updatedPools = (selectedChapter.storyletPools ?? []).map(pool => {
+      if (pool.id !== poolId) return pool;
+      return {
+        ...pool,
+        members: pool.members.filter(member => member.templateId !== template.id),
+      };
+    });
+    const remainingTemplateIds = new Set(
+      updatedPools.flatMap(pool => pool.members.map(member => member.templateId))
+    );
     updateChapter(selectedAct.id, selectedChapter.id, {
-      storyletPools: (selectedChapter.storyletPools ?? []).map(pool =>
-        pool.id === poolId
-          ? { ...pool, storylets: pool.storylets.filter(item => item.id !== storylet.id) }
-          : pool
+      storyletTemplates: (selectedChapter.storyletTemplates ?? []).filter(item =>
+        remainingTemplateIds.has(item.id)
       ),
+      storyletPools: updatedPools,
     });
     onAction?.({
       type: 'delete',
       element: NARRATIVE_ELEMENT.STORYLET,
-      id: storylet.id,
+      id: template.id,
       parentId: poolId,
     });
   };
@@ -469,24 +506,24 @@ export function NarrativeEditor({
 
   const handleMoveStorylet = (direction: 'up' | 'down') => {
     if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
-    const { poolId, storylet } = selectedStoryletEntry;
+    const { poolId, template } = selectedStoryletEntry;
     const pool = (selectedChapter.storyletPools ?? []).find(item => item.id === poolId);
     if (!pool) return;
-    const index = pool.storylets.findIndex(item => item.id === storylet.id);
+    const index = pool.members.findIndex(item => item.templateId === template.id);
     const nextIndex = direction === 'up' ? index - 1 : index + 1;
-    if (nextIndex < 0 || nextIndex >= pool.storylets.length) return;
+    if (nextIndex < 0 || nextIndex >= pool.members.length) return;
 
     updateChapter(selectedAct.id, selectedChapter.id, {
       storyletPools: (selectedChapter.storyletPools ?? []).map(item =>
         item.id === poolId
-          ? { ...item, storylets: moveItem(item.storylets, index, nextIndex) }
+          ? { ...item, members: moveItem(item.members, index, nextIndex) }
           : item
       ),
     });
     onAction?.({
       type: 'reorder',
       element: NARRATIVE_ELEMENT.STORYLET,
-      id: storylet.id,
+      id: template.id,
       parentId: poolId,
       direction,
     });
@@ -500,20 +537,20 @@ export function NarrativeEditor({
   const handleStoryletPoolChange = (nextPoolId: string) => {
     if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
 
-    const { poolId, storylet } = selectedStoryletEntry;
+    const { poolId, member, template } = selectedStoryletEntry;
     if (poolId === nextPoolId) return;
 
     const updatedPools = (selectedChapter.storyletPools ?? []).map(pool => {
       if (pool.id === poolId) {
         return {
           ...pool,
-          storylets: pool.storylets.filter(item => item.id !== storylet.id),
+          members: pool.members.filter(item => item.templateId !== template.id),
         };
       }
       if (pool.id === nextPoolId) {
         return {
           ...pool,
-          storylets: [...pool.storylets, storylet],
+          members: [...pool.members, member],
         };
       }
       return pool;
@@ -524,7 +561,7 @@ export function NarrativeEditor({
     });
     updateSelection({
       ...activeSelection,
-      storyletKey: `${nextPoolId}:${storylet.id}`,
+      storyletKey: `${nextPoolId}:${template.id}`,
     });
   };
 
@@ -564,17 +601,23 @@ export function NarrativeEditor({
     }
   };
 
-  const handleStoryletUpdate = (updates: Partial<Storylet>) => {
+  const handleStoryletTemplateUpdate = (updates: Partial<StoryletTemplate>) => {
     if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
-    const { poolId, storylet } = selectedStoryletEntry;
-    const nextId = updates.id ?? storylet.id;
-    updateStorylet(selectedAct.id, selectedChapter.id, poolId, storylet.id, updates);
-    if (updates.id && nextId !== storylet.id) {
+    const { poolId, template } = selectedStoryletEntry;
+    const nextId = updates.id ?? template.id;
+    updateStoryletTemplate(selectedAct.id, selectedChapter.id, template.id, updates);
+    if (updates.id && nextId !== template.id) {
       updateSelection({
         ...activeSelection,
         storyletKey: `${poolId}:${nextId}`,
       });
     }
+  };
+
+  const handleStoryletMemberUpdate = (updates: Partial<StoryletPoolMember>) => {
+    if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
+    const { poolId, template } = selectedStoryletEntry;
+    updateStoryletMember(selectedAct.id, selectedChapter.id, poolId, template.id, updates);
   };
 
   const handleStoryletPoolUpdate = (updates: Partial<StoryletPool>) => {
@@ -663,7 +706,8 @@ export function NarrativeEditor({
           onAddStorylet={handleAddStorylet}
           onMove={handleMoveStorylet}
           onDelete={handleDeleteStorylet}
-          onUpdateStorylet={handleStoryletUpdate}
+          onUpdateTemplate={handleStoryletTemplateUpdate}
+          onUpdateMember={handleStoryletMemberUpdate}
           onUpdatePool={handleStoryletPoolUpdate}
           onChangePool={handleStoryletPoolChange}
         />

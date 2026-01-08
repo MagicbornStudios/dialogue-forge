@@ -11,9 +11,8 @@ export const NARRATIVE_ELEMENT = {
 export type NarrativeElement = typeof NARRATIVE_ELEMENT[keyof typeof NARRATIVE_ELEMENT];
 
 export const STORYLET_SELECTION_MODE = {
-  WEIGHTED: 'weighted',
-  SEQUENTIAL: 'sequential',
-  RANDOM: 'random',
+  WEIGHTED: 'WEIGHTED',
+  UNIFORM: 'UNIFORM',
 } as const;
 
 export type StoryletSelectionMode =
@@ -32,6 +31,7 @@ export interface NarrativeChapter {
   title?: string;
   summary?: string;
   pages: NarrativePage[];
+  storyletTemplates?: StoryletTemplate[];
   storyletPools?: StoryletPool[];
   type?: typeof NARRATIVE_ELEMENT.CHAPTER;
 }
@@ -54,14 +54,18 @@ export interface StoryThread {
 
 export type NarrativeThread = StoryThread;
 
-export interface Storylet {
+export interface StoryletTemplate {
   id: string;
   title?: string;
   summary?: string;
+  dialogueId: string;
   conditions?: Condition[];
-  weight?: number;
-  nextNodeId?: string;
   type?: typeof NARRATIVE_ELEMENT.STORYLET;
+}
+
+export interface StoryletPoolMember {
+  templateId: string;
+  weight?: number;
 }
 
 export interface StoryletPool {
@@ -69,8 +73,8 @@ export interface StoryletPool {
   title?: string;
   summary?: string;
   selectionMode?: StoryletSelectionMode;
-  storylets: Storylet[];
-  fallbackNodeId?: string;
+  members: StoryletPoolMember[];
+  fallbackTemplateId?: string;
 }
 
 export interface RandomizerBranch {

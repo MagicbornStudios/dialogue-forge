@@ -2,14 +2,16 @@ import React from 'react';
 import { Trash2 } from 'lucide-react';
 import {
   STORYLET_SELECTION_MODE,
-  type Storylet,
+  type StoryletPoolMember,
   type StoryletPool,
+  type StoryletTemplate,
 } from '../../types/narrative';
 import { DetailField, ListItem, ListPanel } from './ListPanel';
 
 interface StoryletEntry {
   poolId: string;
-  storylet: Storylet;
+  member: StoryletPoolMember;
+  template: StoryletTemplate;
 }
 
 interface StoryletPanelProps {
@@ -22,7 +24,8 @@ interface StoryletPanelProps {
   onAddStorylet: () => void;
   onMove: (direction: 'up' | 'down') => void;
   onDelete: () => void;
-  onUpdateStorylet: (updates: Partial<Storylet>) => void;
+  onUpdateTemplate: (updates: Partial<StoryletTemplate>) => void;
+  onUpdateMember: (updates: Partial<StoryletPoolMember>) => void;
   onUpdatePool: (updates: Partial<StoryletPool>) => void;
   onChangePool: (poolId: string) => void;
 }
@@ -37,11 +40,12 @@ export function StoryletPanel({
   onAddStorylet,
   onMove,
   onDelete,
-  onUpdateStorylet,
+  onUpdateTemplate,
+  onUpdateMember,
   onUpdatePool,
   onChangePool,
 }: StoryletPanelProps) {
-  const selectedEntry = entries.find(entry => `${entry.poolId}:${entry.storylet.id}` === selectedKey)
+  const selectedEntry = entries.find(entry => `${entry.poolId}:${entry.template.id}` === selectedKey)
     ?? entries[0];
 
   return (
@@ -63,12 +67,12 @@ export function StoryletPanel({
       <div className="flex-1 overflow-y-auto p-2 space-y-2">
         {entries.map((entry, index) => (
           <ListItem
-            key={`${entry.poolId}-${entry.storylet.id}`}
-            title={entry.storylet.title || `Storylet ${index + 1}`}
-            subtitle={entry.storylet.id}
+            key={`${entry.poolId}-${entry.template.id}`}
+            title={entry.template.title || `Storylet ${index + 1}`}
+            subtitle={entry.template.id}
             badge={entry.poolId}
-            selected={`${entry.poolId}:${entry.storylet.id}` === selectedKey}
-            onSelect={() => onSelect(`${entry.poolId}:${entry.storylet.id}`)}
+            selected={`${entry.poolId}:${entry.template.id}` === selectedKey}
+            onSelect={() => onSelect(`${entry.poolId}:${entry.template.id}`)}
             onMoveUp={() => onMove('up')}
             onMoveDown={() => onMove('down')}
           />
@@ -86,37 +90,37 @@ export function StoryletPanel({
             </div>
             <DetailField label="ID">
               <input
-                value={selectedEntry.storylet.id}
-                onChange={event => onUpdateStorylet({ id: event.target.value })}
+                value={selectedEntry.template.id}
+                onChange={event => onUpdateTemplate({ id: event.target.value })}
                 className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
               />
             </DetailField>
             <DetailField label="Title">
               <input
-                value={selectedEntry.storylet.title ?? ''}
-                onChange={event => onUpdateStorylet({ title: event.target.value })}
+                value={selectedEntry.template.title ?? ''}
+                onChange={event => onUpdateTemplate({ title: event.target.value })}
                 className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
               />
             </DetailField>
             <DetailField label="Summary">
               <textarea
-                value={selectedEntry.storylet.summary ?? ''}
-                onChange={event => onUpdateStorylet({ summary: event.target.value })}
+                value={selectedEntry.template.summary ?? ''}
+                onChange={event => onUpdateTemplate({ summary: event.target.value })}
                 className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200 min-h-[60px]"
+              />
+            </DetailField>
+            <DetailField label="Dialogue ID">
+              <input
+                value={selectedEntry.template.dialogueId}
+                onChange={event => onUpdateTemplate({ dialogueId: event.target.value })}
+                className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
               />
             </DetailField>
             <DetailField label="Weight">
               <input
                 type="number"
-                value={selectedEntry.storylet.weight ?? 1}
-                onChange={event => onUpdateStorylet({ weight: Number(event.target.value) })}
-                className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
-              />
-            </DetailField>
-            <DetailField label="Next Node ID">
-              <input
-                value={selectedEntry.storylet.nextNodeId ?? ''}
-                onChange={event => onUpdateStorylet({ nextNodeId: event.target.value })}
+                value={selectedEntry.member.weight ?? 1}
+                onChange={event => onUpdateMember({ weight: Number(event.target.value) })}
                 className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
               />
             </DetailField>
@@ -154,14 +158,13 @@ export function StoryletPanel({
                       className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
                     >
                       <option value={STORYLET_SELECTION_MODE.WEIGHTED}>Weighted</option>
-                      <option value={STORYLET_SELECTION_MODE.SEQUENTIAL}>Sequential</option>
-                      <option value={STORYLET_SELECTION_MODE.RANDOM}>Random</option>
+                      <option value={STORYLET_SELECTION_MODE.UNIFORM}>Uniform</option>
                     </select>
                   </DetailField>
-                  <DetailField label="Fallback Node ID">
+                  <DetailField label="Fallback Template ID">
                     <input
-                      value={selectedPool.fallbackNodeId ?? ''}
-                      onChange={event => onUpdatePool({ fallbackNodeId: event.target.value })}
+                      value={selectedPool.fallbackTemplateId ?? ''}
+                      onChange={event => onUpdatePool({ fallbackTemplateId: event.target.value })}
                       className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-200"
                     />
                   </DetailField>

@@ -261,26 +261,36 @@ const demoNarrativeThread: StoryThread = {
               type: NARRATIVE_ELEMENT.PAGE,
             },
           ],
+          storyletTemplates: [
+            {
+              id: 'storylet-whisper',
+              title: 'Whispered Warning',
+              summary: 'A spectral whisper hints at a hidden path.',
+              dialogueId: 'mysterious-stranger',
+              type: NARRATIVE_ELEMENT.STORYLET,
+            },
+            {
+              id: 'storylet-shadow',
+              title: 'Shadowy Observer',
+              summary: 'A lurking shadow tests the traveler’s resolve.',
+              dialogueId: 'mysterious-stranger',
+              type: NARRATIVE_ELEMENT.STORYLET,
+            },
+          ],
           storyletPools: [
             {
               id: 'storylet-pool-crossroads',
               title: 'Crossroads Encounters',
               summary: 'Optional beats triggered at the crossroads.',
               selectionMode: STORYLET_SELECTION_MODE.WEIGHTED,
-              storylets: [
+              members: [
                 {
-                  id: 'storylet-whisper',
-                  title: 'Whispered Warning',
-                  summary: 'A spectral whisper hints at a hidden path.',
+                  templateId: 'storylet-whisper',
                   weight: 3,
-                  type: NARRATIVE_ELEMENT.STORYLET,
                 },
                 {
-                  id: 'storylet-shadow',
-                  title: 'Shadowy Observer',
-                  summary: 'A lurking shadow tests the traveler’s resolve.',
+                  templateId: 'storylet-shadow',
                   weight: 1,
-                  type: NARRATIVE_ELEMENT.STORYLET,
                 },
               ],
             },

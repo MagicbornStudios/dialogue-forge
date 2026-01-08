@@ -11,7 +11,8 @@ export type {
   NarrativeThread,
   RandomizerBranch,
   StoryThread,
-  Storylet,
+  StoryletPoolMember,
+  StoryletTemplate,
   StoryletPool,
   StoryletSelectionMode,
 } from './narrative';

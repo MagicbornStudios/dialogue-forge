@@ -6,8 +6,9 @@ import {
   type NarrativeElement,
   type NarrativePage,
   type StoryThread,
-  type Storylet,
   type StoryletPool,
+  type StoryletPoolMember,
+  type StoryletTemplate,
 } from '../types/narrative';
 
 export interface NarrativeFlowNodeData {
@@ -30,15 +31,21 @@ const PAGE_SPACING = 140;
 const CHAPTER_GAP = 80;
 const ACT_GAP = 140;
 
-function normalizeStorylet(storylet: Storylet): Storylet {
+function normalizeStoryletTemplate(storylet: StoryletTemplate): StoryletTemplate {
   return {
     id: storylet.id,
     title: storylet.title,
     summary: storylet.summary,
+    dialogueId: storylet.dialogueId,
     conditions: storylet.conditions ? [...storylet.conditions] : undefined,
-    weight: storylet.weight,
-    nextNodeId: storylet.nextNodeId,
     type: NARRATIVE_ELEMENT.STORYLET,
+  };
+}
+
+function normalizeStoryletMember(member: StoryletPoolMember): StoryletPoolMember {
+  return {
+    templateId: member.templateId,
+    weight: member.weight,
   };
 }
 
@@ -48,8 +55,8 @@ function normalizeStoryletPool(pool: StoryletPool): StoryletPool {
     title: pool.title,
     summary: pool.summary,
     selectionMode: pool.selectionMode,
-    storylets: pool.storylets.map(normalizeStorylet),
-    fallbackNodeId: pool.fallbackNodeId,
+    members: pool.members.map(normalizeStoryletMember),
+    fallbackTemplateId: pool.fallbackTemplateId,
   };
 }
 
@@ -79,6 +86,9 @@ function stripChapter(chapter: NarrativeChapter): NarrativeChapter {
     title: chapter.title,
     summary: chapter.summary,
     pages: [],
+    storyletTemplates: chapter.storyletTemplates
+      ? chapter.storyletTemplates.map(normalizeStoryletTemplate)
+      : undefined,
     storyletPools: chapter.storyletPools
       ? chapter.storyletPools.map(normalizeStoryletPool)
       : undefined,
@@ -224,6 +234,9 @@ function coerceChapter(node: Node<NarrativeFlowNodeData>): NarrativeChapter {
     title: element?.title,
     summary: element?.summary,
     pages: [],
+    storyletTemplates: element?.storyletTemplates
+      ? element.storyletTemplates.map(normalizeStoryletTemplate)
+      : undefined,
     storyletPools: element?.storyletPools
       ? element.storyletPools.map(normalizeStoryletPool)
       : undefined,

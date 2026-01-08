@@ -31,8 +31,9 @@ import {
   type NarrativeChapter,
   type NarrativePage,
   type StoryThread,
-  type Storylet,
   type StoryletPool,
+  type StoryletPoolMember,
+  type StoryletTemplate,
 } from '../types/narrative';
 import { NODE_TYPE, VIEW_MODE, FLAG_TYPE } from '../types/constants';
 import { exportToYarn } from '../lib/yarn-converter';
@@ -93,26 +94,19 @@ const collectDialogueSubgraph = (dialogue: DialogueTree, startNodeId: string) =>
 const buildScopedDialogue = (
   dialogue: DialogueTree,
   page: NarrativePage | undefined,
-  storyletFocusId: string | null,
+  storyletDialogueId: string | null,
   scope: 'page' | 'storylet'
 ): DialogueTree => {
-  if (scope === 'storylet' && storyletFocusId && dialogue.nodes[storyletFocusId]) {
-    const scopedIds = collectDialogueSubgraph(dialogue, storyletFocusId);
-    const scopedNodes = Array.from(scopedIds).reduce<Record<string, DialogueTree['nodes'][string]>>(
-      (acc, nodeId) => {
-        const node = dialogue.nodes[nodeId];
-        if (node) {
-          acc[nodeId] = node;
-        }
-        return acc;
-      },
-      {}
-    );
-    return {
-      ...dialogue,
-      nodes: scopedNodes,
-      startNodeId: storyletFocusId,
-    };
+  if (scope === 'storylet') {
+    if (!storyletDialogueId) return dialogue;
+    if (storyletDialogueId !== dialogue.id) {
+      return {
+        ...dialogue,
+        nodes: {},
+        startNodeId: '',
+      };
+    }
+    return dialogue;
   }
 
   if (!page) return dialogue;
@@ -158,7 +152,7 @@ export function NarrativeWorkspace({
   const [storyletContextMenu, setStoryletContextMenu] = useState<{
     x: number;
     y: number;
-    entry: { poolId: string; storylet: Storylet };
+    entry: { poolId: string; member: StoryletPoolMember; template: StoryletTemplate };
   } | null>(null);
   const [narrativeContextMenu, setNarrativeContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [gameStateDraft, setGameStateDraft] = useState(() => JSON.stringify(gameState ?? { flags: {} }, null, 2));
@@ -186,15 +180,25 @@ export function NarrativeWorkspace({
 
   const storyletEntries = useMemo(() => {
     const pools = selectedChapter?.storyletPools ?? [];
+    const templates = selectedChapter?.storyletTemplates ?? [];
     return pools.flatMap(pool =>
-      pool.storylets.map(storylet => ({ poolId: pool.id, storylet }))
+      pool.members.map(member => ({
+        poolId: pool.id,
+        member,
+        template: templates.find(item => item.id === member.templateId)
+          ?? {
+            id: member.templateId,
+            dialogueId: '',
+            type: NARRATIVE_ELEMENT.STORYLET,
+          },
+      }))
     );
   }, [selectedChapter]);
 
   const selectedStoryletEntry = useMemo(() => {
     if (!selection.storyletKey) return storyletEntries[0];
     return storyletEntries.find(
-      entry => `${entry.poolId}:${entry.storylet.id}` === selection.storyletKey
+      entry => `${entry.poolId}:${entry.template.id}` === selection.storyletKey
     );
   }, [selection.storyletKey, storyletEntries]);
 
@@ -241,8 +245,8 @@ export function NarrativeWorkspace({
     const query = storyletSearch.trim().toLowerCase();
     if (!query) return storyletEntries;
     return storyletEntries.filter(entry => {
-      const title = entry.storylet.title ?? entry.storylet.id;
-      return title.toLowerCase().includes(query) || entry.storylet.id.toLowerCase().includes(query);
+      const title = entry.template.title ?? entry.template.id;
+      return title.toLowerCase().includes(query) || entry.template.id.toLowerCase().includes(query);
     });
   }, [storyletEntries, storyletSearch]);
 
@@ -286,14 +290,23 @@ export function NarrativeWorkspace({
     updateThread(createNarrativeThreadClient(thread).updateChapter(actId, chapterId, updates));
   }, [thread, updateThread]);
 
-  const updateStorylet = useCallback((
+  const updateStoryletMember = useCallback((
     actId: string,
     chapterId: string,
     poolId: string,
-    storyletId: string,
-    updates: Partial<Storylet>
+    templateId: string,
+    updates: Partial<StoryletPoolMember>
   ) => {
-    updateThread(createNarrativeThreadClient(thread).updateStorylet(actId, chapterId, poolId, storyletId, updates));
+    updateThread(createNarrativeThreadClient(thread).updateStoryletMember(actId, chapterId, poolId, templateId, updates));
+  }, [thread, updateThread]);
+
+  const updateStoryletTemplate = useCallback((
+    actId: string,
+    chapterId: string,
+    templateId: string,
+    updates: Partial<StoryletTemplate>
+  ) => {
+    updateThread(createNarrativeThreadClient(thread).updateStoryletTemplate(actId, chapterId, templateId, updates));
   }, [thread, updateThread]);
 
   const updateStoryletPool = useCallback((
@@ -317,7 +330,7 @@ export function NarrativeWorkspace({
       title: 'Storylet Pool',
       summary: '',
       selectionMode: STORYLET_SELECTION_MODE.WEIGHTED,
-      storylets: [],
+      members: [],
     };
 
     updateChapter(selectedAct.id, selectedChapter.id, {
@@ -340,29 +353,35 @@ export function NarrativeWorkspace({
             title: 'Storylet Pool',
             summary: '',
             selectionMode: STORYLET_SELECTION_MODE.WEIGHTED,
-            storylets: [],
+            members: [],
           },
         ],
       });
     }
 
-    const currentStoryletIds = pools.flatMap(pool => pool.storylets.map(storylet => storylet.id));
+    const templates = selectedChapter.storyletTemplates ?? [];
+    const currentStoryletIds = templates.map(template => template.id);
     const nextId = createUniqueId(currentStoryletIds, 'storylet');
-    const nextStorylet: Storylet = {
+    const nextStorylet: StoryletTemplate = {
       id: nextId,
       title: 'New Storylet',
       summary: '',
-      weight: 1,
+      dialogueId: selectedPage?.dialogueId ?? '',
       type: NARRATIVE_ELEMENT.STORYLET,
+    };
+    const nextMember: StoryletPoolMember = {
+      templateId: nextId,
+      weight: 1,
     };
 
     const updatedPools = (selectedChapter.storyletPools ?? []).map(pool =>
       pool.id === targetPoolId
-        ? { ...pool, storylets: [...pool.storylets, nextStorylet] }
+        ? { ...pool, members: [...pool.members, nextMember] }
         : pool
     );
 
     updateChapter(selectedAct.id, selectedChapter.id, {
+      storyletTemplates: [...templates, nextStorylet],
       storyletPools: updatedPools,
     });
     setSelection(prev => ({
@@ -375,47 +394,67 @@ export function NarrativeWorkspace({
 
   const handleDeleteStorylet = () => {
     if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
-    const { poolId, storylet } = selectedStoryletEntry;
+    const { poolId, template } = selectedStoryletEntry;
+    const updatedPools = (selectedChapter.storyletPools ?? []).map(pool => {
+      if (pool.id !== poolId) return pool;
+      return {
+        ...pool,
+        members: pool.members.filter(member => member.templateId !== template.id),
+      };
+    });
+    const remainingTemplateIds = new Set(
+      updatedPools.flatMap(pool => pool.members.map(member => member.templateId))
+    );
     updateChapter(selectedAct.id, selectedChapter.id, {
-      storyletPools: (selectedChapter.storyletPools ?? []).map(pool =>
-        pool.id === poolId
-          ? { ...pool, storylets: pool.storylets.filter(item => item.id !== storylet.id) }
-          : pool
+      storyletTemplates: (selectedChapter.storyletTemplates ?? []).filter(item =>
+        remainingTemplateIds.has(item.id)
       ),
+      storyletPools: updatedPools,
     });
   };
 
   const handleMoveStorylet = (direction: 'up' | 'down') => {
     if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
-    const { poolId, storylet } = selectedStoryletEntry;
+    const { poolId, template } = selectedStoryletEntry;
     const pool = (selectedChapter.storyletPools ?? []).find(item => item.id === poolId);
     if (!pool) return;
-    const index = pool.storylets.findIndex(item => item.id === storylet.id);
+    const index = pool.members.findIndex(item => item.templateId === template.id);
     const nextIndex = direction === 'up' ? index - 1 : index + 1;
-    if (nextIndex < 0 || nextIndex >= pool.storylets.length) return;
+    if (nextIndex < 0 || nextIndex >= pool.members.length) return;
 
     updateChapter(selectedAct.id, selectedChapter.id, {
       storyletPools: (selectedChapter.storyletPools ?? []).map(item =>
         item.id === poolId
-          ? { ...item, storylets: moveItem(item.storylets, index, nextIndex) }
+          ? { ...item, members: moveItem(item.members, index, nextIndex) }
           : item
       ),
     });
   };
 
-  const handleStoryletUpdate = (entry: { poolId: string; storylet: Storylet }, updates: Partial<Storylet>) => {
+  const handleStoryletTemplateUpdate = (
+    entry: { poolId: string; template: StoryletTemplate },
+    updates: Partial<StoryletTemplate>
+  ) => {
     if (!selectedAct || !selectedChapter) return;
-    const nextId = updates.id ?? entry.storylet.id;
-    updateStorylet(selectedAct.id, selectedChapter.id, entry.poolId, entry.storylet.id, updates);
-    if (updates.id && nextId !== entry.storylet.id) {
+    const nextId = updates.id ?? entry.template.id;
+    updateStoryletTemplate(selectedAct.id, selectedChapter.id, entry.template.id, updates);
+    if (updates.id && nextId !== entry.template.id) {
       setSelection(prev => ({
         ...prev,
         storyletKey: `${entry.poolId}:${nextId}`,
       }));
-      if (editingStoryletId === entry.storylet.id) {
+      if (editingStoryletId === entry.template.id) {
         setEditingStoryletId(nextId);
       }
     }
+  };
+
+  const handleStoryletMemberUpdate = (
+    entry: { poolId: string; template: StoryletTemplate },
+    updates: Partial<StoryletPoolMember>
+  ) => {
+    if (!selectedAct || !selectedChapter) return;
+    updateStoryletMember(selectedAct.id, selectedChapter.id, entry.poolId, entry.template.id, updates);
   };
 
   const handleStoryletPoolUpdate = (poolId: string, updates: Partial<StoryletPool>) => {
@@ -434,20 +473,20 @@ export function NarrativeWorkspace({
   const handleStoryletPoolChange = (nextPoolId: string) => {
     if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
 
-    const { poolId, storylet } = selectedStoryletEntry;
+    const { poolId, member, template } = selectedStoryletEntry;
     if (poolId === nextPoolId) return;
 
     const updatedPools = (selectedChapter.storyletPools ?? []).map(pool => {
       if (pool.id === poolId) {
         return {
           ...pool,
-          storylets: pool.storylets.filter(item => item.id !== storylet.id),
+          members: pool.members.filter(item => item.templateId !== template.id),
         };
       }
       if (pool.id === nextPoolId) {
         return {
           ...pool,
-          storylets: [...pool.storylets, storylet],
+          members: [...pool.members, member],
         };
       }
       return pool;
@@ -458,7 +497,7 @@ export function NarrativeWorkspace({
     });
     setSelection(prev => ({
       ...prev,
-      storyletKey: `${nextPoolId}:${storylet.id}`,
+      storyletKey: `${nextPoolId}:${template.id}`,
     }));
     setActivePoolId(nextPoolId);
   };
@@ -500,6 +539,7 @@ export function NarrativeWorkspace({
       title: `Chapter ${selectedAct.chapters.length + 1}`,
       summary: '',
       pages: [],
+      storyletTemplates: [],
       storyletPools: [],
       type: NARRATIVE_ELEMENT.CHAPTER,
     };
@@ -558,7 +598,7 @@ export function NarrativeWorkspace({
 
   const playTitle = selectedPage?.title ?? 'Play Page';
   const playSubtitle = selectedPage?.summary ?? 'Preview the dialogue for this page.';
-  const editingStoryletEntry = storyletEntries.find(entry => entry.storylet.id === editingStoryletId) ?? null;
+  const editingStoryletEntry = storyletEntries.find(entry => entry.template.id === editingStoryletId) ?? null;
   const editingPool = (selectedChapter?.storyletPools ?? []).find(pool => pool.id === editingPoolId) ?? null;
 
   return (
@@ -812,7 +852,7 @@ export function NarrativeWorkspace({
             <div className="flex flex-wrap items-center gap-2 text-[11px] text-df-text-tertiary">
               <span className="inline-flex items-center gap-1 rounded-full border border-df-control-border bg-df-control-bg px-2 py-1">
                 {dialogueScope === 'storylet' ? 'Storylet' : 'Page'} · {dialogueScope === 'storylet'
-                  ? (selectedStoryletEntry?.storylet.title ?? 'Storylet')
+                  ? (selectedStoryletEntry?.template.title ?? 'Storylet')
                   : (selectedPage?.title ?? 'Page')}
               </span>
               <div className="flex items-center rounded-md border border-df-control-border bg-df-control-bg p-0.5" role="tablist">
@@ -922,13 +962,13 @@ export function NarrativeWorkspace({
                 </div>
                 <div className="flex-1 overflow-y-auto space-y-2">
                   {filteredStoryletEntries.map(entry => {
-                    const isSelected = selection.storyletKey === `${entry.poolId}:${entry.storylet.id}`;
+                    const isSelected = selection.storyletKey === `${entry.poolId}:${entry.template.id}`;
                     return (
                       <button
-                        key={entry.storylet.id}
+                        key={entry.template.id}
                         type="button"
                         onClick={() => {
-                          setSelection(prev => ({ ...prev, storyletKey: `${entry.poolId}:${entry.storylet.id}` }));
+                          setSelection(prev => ({ ...prev, storyletKey: `${entry.poolId}:${entry.template.id}` }));
                           setActivePoolId(entry.poolId);
                           setDialogueScope('page');
                           setStoryletFocusId(null);
@@ -947,13 +987,13 @@ export function NarrativeWorkspace({
                         title="Select storylet"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <div className="font-semibold">{entry.storylet.title ?? entry.storylet.id}</div>
+                          <div className="font-semibold">{entry.template.title ?? entry.template.id}</div>
                           <button
                             type="button"
                             className="text-df-text-tertiary hover:text-df-text-primary"
                             onClick={event => {
                               event.stopPropagation();
-                              setEditingStoryletId(entry.storylet.id);
+                              setEditingStoryletId(entry.template.id);
                               setActivePoolId(entry.poolId);
                             }}
                             title="Edit storylet"
@@ -961,7 +1001,7 @@ export function NarrativeWorkspace({
                             <Info size={14} />
                           </button>
                         </div>
-                        <div className="text-[10px] text-df-text-tertiary">{entry.storylet.id}</div>
+                        <div className="text-[10px] text-df-text-tertiary">{entry.template.id}</div>
                       </button>
                     );
                   })}
@@ -1020,7 +1060,7 @@ export function NarrativeWorkspace({
                             <Info size={14} />
                           </button>
                         </div>
-                        <div className="text-[10px] text-df-text-tertiary">{pool.storylets.length} storylets</div>
+                        <div className="text-[10px] text-df-text-tertiary">{pool.members.length} storylets</div>
                       </button>
                     );
                   })}
@@ -1089,9 +1129,9 @@ export function NarrativeWorkspace({
             onClick={() => {
               setSelection(prev => ({
                 ...prev,
-                storyletKey: `${storyletContextMenu.entry.poolId}:${storyletContextMenu.entry.storylet.id}`,
+                storyletKey: `${storyletContextMenu.entry.poolId}:${storyletContextMenu.entry.template.id}`,
               }));
-              setStoryletFocusId(storyletContextMenu.entry.storylet.id);
+              setStoryletFocusId(storyletContextMenu.entry.template.dialogueId);
               setDialogueScope('storylet');
               setStoryletContextMenu(null);
             }}
@@ -1102,7 +1142,7 @@ export function NarrativeWorkspace({
             type="button"
             className="block w-full px-3 py-2 text-left hover:bg-df-control-hover"
             onClick={() => {
-              setEditingStoryletId(storyletContextMenu.entry.storylet.id);
+              setEditingStoryletId(storyletContextMenu.entry.template.id);
               setStoryletContextMenu(null);
             }}
           >
@@ -1287,9 +1327,9 @@ export function NarrativeWorkspace({
               <label className="flex flex-col gap-1">
                 <span>Title</span>
                 <input
-                  value={editingStoryletEntry.storylet.title ?? ''}
+                  value={editingStoryletEntry.template.title ?? ''}
                   onChange={event =>
-                    handleStoryletUpdate(editingStoryletEntry, { title: event.target.value })
+                    handleStoryletTemplateUpdate(editingStoryletEntry, { title: event.target.value })
                   }
                   className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
                 />
@@ -1297,20 +1337,30 @@ export function NarrativeWorkspace({
               <label className="flex flex-col gap-1">
                 <span>Summary</span>
                 <textarea
-                  value={editingStoryletEntry.storylet.summary ?? ''}
+                  value={editingStoryletEntry.template.summary ?? ''}
                   onChange={event =>
-                    handleStoryletUpdate(editingStoryletEntry, { summary: event.target.value })
+                    handleStoryletTemplateUpdate(editingStoryletEntry, { summary: event.target.value })
                   }
                   className="min-h-[80px] rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span>Dialogue ID</span>
+                <input
+                  value={editingStoryletEntry.template.dialogueId}
+                  onChange={event =>
+                    handleStoryletTemplateUpdate(editingStoryletEntry, { dialogueId: event.target.value })
+                  }
+                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
                 />
               </label>
               <label className="flex flex-col gap-1">
                 <span>Weight</span>
                 <input
                   type="number"
-                  value={editingStoryletEntry.storylet.weight ?? 1}
+                  value={editingStoryletEntry.member.weight ?? 1}
                   onChange={event =>
-                    handleStoryletUpdate(editingStoryletEntry, { weight: Number(event.target.value) })
+                    handleStoryletMemberUpdate(editingStoryletEntry, { weight: Number(event.target.value) })
                   }
                   className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
                 />

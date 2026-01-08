@@ -23,7 +23,7 @@ export interface NarrativePage {
   id: string;
   title?: string;
   summary?: string;
-  nodeIds: string[];
+  dialogueId: string;
   type?: typeof NARRATIVE_ELEMENT.PAGE;
 }
 

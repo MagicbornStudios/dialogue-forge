@@ -25,8 +25,8 @@ type NarrativeChapterInput = Omit<NarrativeChapter, 'pages' | 'type'> & {
   pages?: NarrativePage[];
 };
 
-type NarrativePageInput = Omit<NarrativePage, 'nodeIds' | 'type'> & {
-  nodeIds?: string[];
+type NarrativePageInput = Omit<NarrativePage, 'dialogueId' | 'type'> & {
+  dialogueId?: string;
 };
 
 function normalizeStorylet(storylet: Storylet): Storylet {
@@ -57,7 +57,7 @@ function normalizePage(page: NarrativePageInput): NarrativePage {
     id: page.id,
     title: page.title,
     summary: page.summary,
-    nodeIds: page.nodeIds ? [...page.nodeIds] : [],
+    dialogueId: page.dialogueId ?? '',
     type: NARRATIVE_ELEMENT.PAGE,
   };
 }
@@ -182,15 +182,11 @@ export function removeStorylet(
 
 export function attachDialogueToPage(
   page: NarrativePage,
-  nodeIds: string[] | string
+  dialogueId: string
 ): NarrativePage {
-  const incoming = Array.isArray(nodeIds) ? nodeIds : [nodeIds];
-  const nextNodeIds = new Set(page.nodeIds);
-  incoming.forEach(id => nextNodeIds.add(id));
-
   return {
     ...page,
-    nodeIds: Array.from(nextNodeIds),
+    dialogueId,
     type: page.type ?? NARRATIVE_ELEMENT.PAGE,
   };
 }

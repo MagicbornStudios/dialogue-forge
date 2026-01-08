@@ -91,7 +91,7 @@ function stripPage(page: NarrativePage): NarrativePage {
     id: page.id,
     title: page.title,
     summary: page.summary,
-    nodeIds: [...page.nodeIds],
+    dialogueId: page.dialogueId,
     type: NARRATIVE_ELEMENT.PAGE,
   };
 }
@@ -237,7 +237,7 @@ function coercePage(node: Node<NarrativeFlowNodeData>): NarrativePage {
     id: element?.id ?? node.id,
     title: element?.title,
     summary: element?.summary,
-    nodeIds: element?.nodeIds ? [...element.nodeIds] : [],
+    dialogueId: element?.dialogueId ?? '',
     type: NARRATIVE_ELEMENT.PAGE,
   };
 }

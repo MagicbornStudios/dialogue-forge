@@ -24,7 +24,7 @@ import ReactFlow, {
   ConnectionLineType,
   BackgroundVariant,
 } from 'reactflow';
-import { Edit3, Plus, Trash2, Play, Layout, ArrowDown, ArrowRight, Magnet, Sparkles, Undo2, Flag, Home, Target, BookOpen, Settings, Grid3x3 } from 'lucide-react';
+import { Edit3, Plus, Trash2, Play, Layout, ArrowDown, ArrowRight, Magnet, Sparkles, Undo2, Flag, Home, Target, BookOpen, Settings, Grid3x3, Map as MapIcon } from 'lucide-react';
 import { ExampleLoaderButton } from './ExampleLoaderButton';
 import { ENABLE_DEBUG_TOOLS } from '../utils/feature-flags';
 import 'reactflow/dist/style.css';
@@ -86,6 +86,8 @@ interface DialogueEditorV2InternalProps extends DialogueEditorProps {
   onOpenGuide?: () => void;
   onLoadExampleDialogue?: (dialogue: DialogueTree) => void;
   onLoadExampleFlags?: (flags: FlagSchema) => void;
+  showMiniMap?: boolean;
+  onToggleMiniMap?: () => void;
   // Event hooks from DialogueEditorProps are already included
 }
 
@@ -108,6 +110,8 @@ function DialogueEditorV2Internal({
   onOpenGuide,
   onLoadExampleDialogue,
   onLoadExampleFlags,
+  showMiniMap = true,
+  onToggleMiniMap,
   // Event hooks
   onNodeAdd,
   onNodeDelete,
@@ -1213,35 +1217,37 @@ function DialogueEditorV2Internal({
               <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#1a1a2e" />
               
               {/* Enhanced MiniMap with title */}
-              <Panel position="bottom-right" className="!p-0 !m-2">
-                <div className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg overflow-hidden shadow-xl">
-                  <div className="px-3 py-1.5 border-b border-df-sidebar-border flex items-center justify-between bg-df-elevated">
-                    <span className="text-[10px] font-medium text-df-text-secondary uppercase tracking-wider">Overview</span>
-                    <div className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-df-npc-selected" title="NPC / Storylet" />
-                      <span className="w-2 h-2 rounded-full bg-df-player-selected" title="Player / Randomizer" />
-                      <span className="w-2 h-2 rounded-full bg-df-conditional-border" title="Conditional" />
+              {showMiniMap && (
+                <Panel position="bottom-right" className="!p-0 !m-2">
+                  <div className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg overflow-hidden shadow-xl">
+                    <div className="px-3 py-1.5 border-b border-df-sidebar-border flex items-center justify-between bg-df-elevated">
+                      <span className="text-[10px] font-medium text-df-text-secondary uppercase tracking-wider">Overview</span>
+                      <div className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-df-npc-selected" title="NPC / Storylet" />
+                        <span className="w-2 h-2 rounded-full bg-df-player-selected" title="Player / Randomizer" />
+                        <span className="w-2 h-2 rounded-full bg-df-conditional-border" title="Conditional" />
+                      </div>
                     </div>
+                    <MiniMap 
+                      style={{ 
+                        width: 180, 
+                        height: 120,
+                        backgroundColor: '#08080c',
+                      }}
+                      maskColor="rgba(0, 0, 0, 0.7)"
+                      nodeColor={(node) => {
+                        if (node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL) return '#e94560';
+                        if (node.type === NODE_TYPE.PLAYER || node.type === NODE_TYPE.RANDOMIZER) return '#8b5cf6';
+                        if (node.type === NODE_TYPE.CONDITIONAL) return '#3b82f6';
+                        return '#4a4a6a';
+                      }}
+                      nodeStrokeWidth={2}
+                      pannable
+                      zoomable
+                    />
                   </div>
-                  <MiniMap 
-                    style={{ 
-                      width: 180, 
-                      height: 120,
-                      backgroundColor: '#08080c',
-                    }}
-                    maskColor="rgba(0, 0, 0, 0.7)"
-                    nodeColor={(node) => {
-                      if (node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL) return '#e94560';
-                      if (node.type === NODE_TYPE.PLAYER || node.type === NODE_TYPE.RANDOMIZER) return '#8b5cf6';
-                      if (node.type === NODE_TYPE.CONDITIONAL) return '#3b82f6';
-                      return '#4a4a6a';
-                    }}
-                    nodeStrokeWidth={2}
-                    pannable
-                    zoomable
-                  />
-                </div>
-              </Panel>
+                </Panel>
+              )}
               
               {/* Left Toolbar - Layout, Flags, Guide */}
               <Panel position="top-left" className="!bg-transparent !border-0 !p-0 !m-2">
@@ -1286,6 +1292,19 @@ function DialogueEditorV2Internal({
                       </div>
                     )}
                   </div>
+                  {onToggleMiniMap && (
+                    <button
+                      onClick={onToggleMiniMap}
+                      className={`p-1.5 rounded transition-colors ${
+                        showMiniMap
+                          ? 'bg-df-npc-selected/20 text-df-npc-selected border border-df-npc-selected'
+                          : 'bg-df-elevated border border-df-control-border text-df-text-secondary hover:text-df-text-primary hover:border-df-control-hover'
+                      }`}
+                      title={showMiniMap ? 'Hide minimap' : 'Show minimap'}
+                    >
+                      <MapIcon size={14} />
+                    </button>
+                  )}
                   
                   {/* Flag Manager */}
                   {onOpenFlagManager && (
@@ -1789,6 +1808,8 @@ export function DialogueEditorV2(props: DialogueEditorProps & {
   onLayoutStrategyChange?: (strategy: string) => void;
   onOpenFlagManager?: () => void;
   onOpenGuide?: () => void;
+  showMiniMap?: boolean;
+  onToggleMiniMap?: () => void;
 }) {
   return (
     <ReactFlowProvider>

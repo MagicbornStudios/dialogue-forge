@@ -42,6 +42,7 @@ import { NPCNodeV2 } from './NPCNodeV2';
 import { PlayerNodeV2 } from './PlayerNodeV2';
 import { ConditionalNodeV2 } from './ConditionalNodeV2';
 import { StoryletDialogueNodeV2 } from './StoryletDialogueNodeV2';
+import { StoryletNodeGroupDialogueNodeV2 } from './StoryletNodeGroupDialogueNodeV2';
 import { RandomizerDialogueNodeV2 } from './RandomizerDialogueNodeV2';
 import { ChoiceEdgeV2 } from './ChoiceEdgeV2';
 import { NPCEdgeV2 } from './NPCEdgeV2';
@@ -56,7 +57,7 @@ const nodeTypes = {
   [NODE_TYPE.PLAYER]: PlayerNodeV2,
   [NODE_TYPE.CONDITIONAL]: ConditionalNodeV2,
   [NODE_TYPE.STORYLET]: StoryletDialogueNodeV2,
-  [NODE_TYPE.STORYLET_POOL]: StoryletDialogueNodeV2,
+  [NODE_TYPE.STORYLET_POOL]: StoryletNodeGroupDialogueNodeV2,
   [NODE_TYPE.RANDOMIZER]: RandomizerDialogueNodeV2,
 };
 
@@ -1009,7 +1010,7 @@ function DialogueEditorV2Internal({
     // Simple updates: speaker, content, characterId (non-structural properties)
     // Structural updates: choices, conditionalBlocks, nextNodeId (affect edges/connections)
     const isSimpleUpdate = Object.keys(updates).every(key =>
-      ['speaker', 'content', 'characterId', 'setFlags', 'storyletId', 'storyletPoolId'].includes(key)
+      ['speaker', 'content', 'characterId', 'setFlags', 'storyletCall', 'storyletId', 'storyletPoolId'].includes(key)
     );
     
     if (isSimpleUpdate && reactFlowInstance) {

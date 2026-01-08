@@ -25,6 +25,240 @@ interface NodeEditorProps {
   characters?: Record<string, Character>;
 }
 
+interface NextNodeSelectorProps {
+  nodeId: string;
+  nextNodeId?: string;
+  dialogue: DialogueTree;
+  onUpdate: (updates: Partial<DialogueNode>) => void;
+  onFocusNode?: (nodeId: string) => void;
+  label?: string;
+}
+
+function NextNodeSelector({
+  nodeId,
+  nextNodeId,
+  dialogue,
+  onUpdate,
+  onFocusNode,
+  label = 'Next Node',
+}: NextNodeSelectorProps) {
+  return (
+    <div>
+      <label className="text-[10px] text-gray-500 uppercase">{label}</label>
+      <div className="flex items-center gap-2">
+        {nextNodeId && onFocusNode && (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onFocusNode(nextNodeId);
+            }}
+            className="transition-colors cursor-pointer flex-shrink-0 group"
+            title={`Focus on node: ${nextNodeId}`}
+          >
+            <EdgeIcon size={16} color="#2a2a3e" className="group-hover:[&_circle]:fill-[#2a2a3e] group-hover:[&_line]:stroke-[#2a2a3e] transition-colors" />
+          </button>
+        )}
+        <select
+          value={nextNodeId || ''}
+          onChange={(event) => onUpdate({ nextNodeId: event.target.value || undefined })}
+          className="flex-1 bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-sm text-gray-200 outline-none"
+        >
+          <option value="">— End —</option>
+          {Object.keys(dialogue.nodes).filter(id => id !== nodeId).map(id => (
+            <option key={id} value={id}>{id}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
+interface StoryletCallFieldsProps {
+  storyletCall?: DialogueNode['storyletCall'];
+  onUpdateStoryletCall: (updates: Partial<NonNullable<DialogueNode['storyletCall']>>) => void;
+}
+
+function StoryletCallFields({ storyletCall, onUpdateStoryletCall }: StoryletCallFieldsProps) {
+  return (
+    <>
+      <div>
+        <label className="text-[10px] text-gray-500 uppercase">Template ID</label>
+        <input
+          type="text"
+          value={storyletCall?.templateId || ''}
+          onChange={(event) => onUpdateStoryletCall({ templateId: event.target.value || undefined })}
+          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          placeholder="template_id"
+        />
+      </div>
+      <div>
+        <label className="text-[10px] text-gray-500 uppercase">Entry Policy</label>
+        <input
+          type="text"
+          value={storyletCall?.entryPolicy || ''}
+          onChange={(event) => onUpdateStoryletCall({ entryPolicy: event.target.value || undefined })}
+          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          placeholder="entry_policy"
+        />
+      </div>
+      <div>
+        <label className="text-[10px] text-gray-500 uppercase">Entry Node ID</label>
+        <input
+          type="text"
+          value={storyletCall?.entryNodeId || ''}
+          onChange={(event) => onUpdateStoryletCall({ entryNodeId: event.target.value || undefined })}
+          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          placeholder="entry_node_id"
+        />
+      </div>
+      <div>
+        <label className="text-[10px] text-gray-500 uppercase">Return Policy</label>
+        <input
+          type="text"
+          value={storyletCall?.returnPolicy || ''}
+          onChange={(event) => onUpdateStoryletCall({ returnPolicy: event.target.value || undefined })}
+          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          placeholder="return_policy"
+        />
+      </div>
+      <div>
+        <label className="text-[10px] text-gray-500 uppercase">Return Node ID</label>
+        <input
+          type="text"
+          value={storyletCall?.returnNodeId || ''}
+          onChange={(event) => onUpdateStoryletCall({ returnNodeId: event.target.value || undefined })}
+          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          placeholder="return_node_id"
+        />
+      </div>
+    </>
+  );
+}
+
+interface NpcNodeFieldsProps {
+  node: DialogueNode;
+  dialogue: DialogueTree;
+  characters: Record<string, Character>;
+  onUpdate: (updates: Partial<DialogueNode>) => void;
+  onFocusNode?: (nodeId: string) => void;
+}
+
+function NpcNodeFields({ node, dialogue, characters, onUpdate, onFocusNode }: NpcNodeFieldsProps) {
+  return (
+    <>
+      <div>
+        <label className="text-[10px] text-df-text-secondary uppercase">Character</label>
+        <CharacterSelector
+          characters={characters}
+          selectedCharacterId={node.characterId}
+          onSelect={(characterId) => {
+            const character = characterId ? characters[characterId] : undefined;
+            onUpdate({
+              characterId,
+              speaker: character ? character.name : node.speaker,
+            });
+          }}
+          placeholder="Select character..."
+          className="mb-2"
+        />
+        <div className="text-[9px] text-df-text-tertiary mt-1">
+          Or enter custom speaker name below
+        </div>
+      </div>
+      <div>
+        <label className="text-[10px] text-df-text-secondary uppercase">Speaker (Custom)</label>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-df-control-bg border border-df-control-border flex items-center justify-center flex-shrink-0">
+            <User size={16} className="text-df-text-secondary" />
+          </div>
+          <input
+            type="text"
+            value={node.speaker || ''}
+            onChange={(event) => onUpdate({ speaker: event.target.value })}
+            className="flex-1 bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+            placeholder="Custom speaker name (optional)"
+          />
+        </div>
+      </div>
+      <div>
+        <label className="text-[10px] text-gray-500 uppercase">Content</label>
+        <textarea
+          value={node.content}
+          onChange={(event) => onUpdate({ content: event.target.value })}
+          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none min-h-[100px] resize-y"
+          placeholder="What the character says..."
+        />
+      </div>
+      <NextNodeSelector
+        nodeId={node.id}
+        nextNodeId={node.nextNodeId}
+        dialogue={dialogue}
+        onUpdate={onUpdate}
+        onFocusNode={onFocusNode}
+      />
+    </>
+  );
+}
+
+interface StoryletNodeFieldsProps {
+  node: DialogueNode;
+  dialogue: DialogueTree;
+  onUpdate: (updates: Partial<DialogueNode>) => void;
+  onFocusNode?: (nodeId: string) => void;
+  onUpdateStoryletCall: (updates: Partial<NonNullable<DialogueNode['storyletCall']>>) => void;
+}
+
+function StoryletNodeFields({
+  node,
+  dialogue,
+  onUpdate,
+  onFocusNode,
+  onUpdateStoryletCall,
+}: StoryletNodeFieldsProps) {
+  return (
+    <>
+      <StoryletCallFields storyletCall={node.storyletCall} onUpdateStoryletCall={onUpdateStoryletCall} />
+      <NextNodeSelector
+        nodeId={node.id}
+        nextNodeId={node.nextNodeId}
+        dialogue={dialogue}
+        onUpdate={onUpdate}
+        onFocusNode={onFocusNode}
+      />
+    </>
+  );
+}
+
+interface StoryletNodeGroupFieldsProps {
+  node: DialogueNode;
+  dialogue: DialogueTree;
+  onUpdate: (updates: Partial<DialogueNode>) => void;
+  onFocusNode?: (nodeId: string) => void;
+  onUpdateStoryletCall: (updates: Partial<NonNullable<DialogueNode['storyletCall']>>) => void;
+}
+
+function StoryletNodeGroupFields({
+  node,
+  dialogue,
+  onUpdate,
+  onFocusNode,
+  onUpdateStoryletCall,
+}: StoryletNodeGroupFieldsProps) {
+  return (
+    <>
+      <StoryletCallFields storyletCall={node.storyletCall} onUpdateStoryletCall={onUpdateStoryletCall} />
+      <NextNodeSelector
+        nodeId={node.id}
+        nextNodeId={node.nextNodeId}
+        dialogue={dialogue}
+        onUpdate={onUpdate}
+        onFocusNode={onFocusNode}
+      />
+    </>
+  );
+}
 export function NodeEditor({
   node,
   dialogue,
@@ -51,6 +285,17 @@ export function NodeEditor({
   const initializedChoicesRef = useRef<Set<string>>(new Set());
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
   const editingDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleStoryletCallUpdate = (updates: Partial<NonNullable<DialogueNode['storyletCall']>>) => {
+    const nextStoryletCall = {
+      ...(node.storyletCall ?? {}),
+      ...updates,
+    };
+    const hasValues = Object.values(nextStoryletCall).some(
+      value => value !== undefined && value !== ''
+    );
+    onUpdate({ storyletCall: hasValues ? nextStoryletCall : undefined });
+  };
   
   // Validation function for condition expressions
   const validateCondition = useMemo(() => {
@@ -319,8 +564,8 @@ export function NodeEditor({
     if (node.type === NODE_TYPE.PLAYER) return 'PLAYER';
     if (node.type === NODE_TYPE.CONDITIONAL) return 'CONDITIONAL';
     if (node.type === NODE_TYPE.STORYLET) return 'STORYLET';
-    if (node.type === NODE_TYPE.STORYLET_POOL) return 'STORYLET POOL';
-    if (node.type === NODE_TYPE.RANDOMIZER) return 'RANDOMIZER';
+    if (node.type === NODE_TYPE.STORYLET_POOL) return 'STORYLET NODE GROUP (LEGACY)';
+    if (node.type === NODE_TYPE.RANDOMIZER) return 'STORYLET NODE GROUP';
     return 'UNKNOWN';
   };
 
@@ -329,8 +574,7 @@ export function NodeEditor({
   const handleAddRandomizerBranch = () => {
     const newBranch = {
       id: `branch_${Date.now()}`,
-      label: `Branch ${randomizerBranches.length + 1}`,
-      weight: 1,
+      label: `Entry ${randomizerBranches.length + 1}`,
     };
     onUpdate({ randomizerBranches: [...randomizerBranches, newBranch] });
   };
@@ -345,6 +589,656 @@ export function NodeEditor({
     const updatedBranches = randomizerBranches.filter((_, branchIdx) => branchIdx !== idx);
     onUpdate({ randomizerBranches: updatedBranches.length > 0 ? updatedBranches : undefined });
   };
+
+  const ConditionalNodeFields = () => (
+    <>
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-[10px] text-gray-500 uppercase">Conditional Blocks</label>
+        </div>
+        
+        {node.conditionalBlocks ? (
+          <div className="space-y-2">
+            {node.conditionalBlocks.map((block, idx) => {
+              const conditionValue = block.type !== 'else' ? (conditionInputs[block.id] || '') : '';
+              const debouncedValue = block.type !== 'else' ? (debouncedConditionInputs[block.id] || '') : '';
+              const valueToValidate = debouncedValue || conditionValue;
+              const validation = block.type !== 'else' ? validateCondition(valueToValidate) : { isValid: true, errors: [], warnings: [] };
+              const hasError = !validation.isValid;
+              const hasWarning = validation.warnings.length > 0;
+              const showValidation = conditionValue.trim().length > 0;
+              const isManuallyOpen = expandedConditions.has(block.id);
+              const shouldExpand = isManuallyOpen;
+              
+              const blockTypeStyles = {
+                if: {
+                  bg: 'bg-[#0a0a0a]',
+                  border: 'border-[#1a1a1a]',
+                  tagBg: 'bg-black',
+                  tagText: 'text-white',
+                  text: 'text-gray-100'
+                },
+                elseif: {
+                  bg: 'bg-[#0f0f0f]',
+                  border: 'border-[#1f1f1f]',
+                  tagBg: 'bg-black',
+                  tagText: 'text-white',
+                  text: 'text-gray-200'
+                },
+                else: {
+                  bg: 'bg-[#141414]',
+                  border: 'border-[#242424]',
+                  tagBg: 'bg-black',
+                  tagText: 'text-white',
+                  text: 'text-gray-200'
+                }
+              };
+              const styles = blockTypeStyles[block.type];
+              
+              return (
+                <div key={block.id} className={`rounded p-2 space-y-2 ${styles.bg} ${styles.border} border-2`}>
+                {/* Header with block type badge at top */}
+                <div className="flex items-center gap-2">
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded ${styles.tagBg} ${styles.tagText} font-semibold`}>
+                    {block.type === 'if' ? 'IF' : block.type === 'elseif' ? 'ELSE IF' : 'ELSE'}
+                  </span>
+                  {/* Compact Character Selector */}
+                  <div className="flex items-center gap-1.5 flex-1">
+                    <CharacterSelector
+                      characters={characters}
+                      selectedCharacterId={block.characterId}
+                      onSelect={(characterId) => {
+                        const newBlocks = [...node.conditionalBlocks!];
+                        const character = characterId ? characters[characterId] : undefined;
+                        newBlocks[idx] = { 
+                          ...block, 
+                          characterId,
+                          speaker: character ? character.name : block.speaker,
+                        };
+                        onUpdate({ conditionalBlocks: newBlocks });
+                      }}
+                      placeholder="Speaker..."
+                      compact={true}
+                    />
+                  </div>
+                  
+                  {/* Toggle expand/collapse */}
+                  {block.type !== 'else' && (
+                    <button
+                      onClick={() => {
+                        const newExpanded = new Set(expandedConditions);
+                        if (expandedConditions.has(block.id)) {
+                          newExpanded.delete(block.id);
+                        } else {
+                          newExpanded.add(block.id);
+                        }
+                        setExpandedConditions(newExpanded);
+                      }}
+                      className="text-gray-500 hover:text-gray-300 transition-colors"
+                    >
+                      <Maximize2 size={12} className={`transition-transform ${shouldExpand ? 'rotate-180' : ''}`} />
+                    </button>
+                  )}
+                  
+                  {/* Remove block */}
+                  <button
+                    onClick={() => {
+                      if (node.conditionalBlocks) {
+                        const newBlocks = node.conditionalBlocks.filter((_, i) => i !== idx);
+                        onUpdate({ conditionalBlocks: newBlocks.length > 0 ? newBlocks : undefined });
+                      }
+                    }}
+                    className="text-gray-500 hover:text-red-400"
+                    title="Remove block"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                
+                {/* Speaker input (optional) */}
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-df-control-bg border border-df-control-border flex items-center justify-center flex-shrink-0">
+                    <User size={14} className="text-df-text-secondary" />
+                  </div>
+                  <input
+                    type="text"
+                    value={block.speaker || ''}
+                    onChange={(e) => {
+                      const newBlocks = [...node.conditionalBlocks!];
+                      newBlocks[idx] = { ...block, speaker: e.target.value };
+                      onUpdate({ conditionalBlocks: newBlocks });
+                    }}
+                    className="flex-1 bg-[#0d0d14] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-300 outline-none"
+                    placeholder="Custom speaker name (optional)"
+                  />
+                </div>
+                
+                {/* Content input */}
+                <textarea
+                  value={block.content || ''}
+                  onChange={(e) => {
+                    const newBlocks = [...node.conditionalBlocks!];
+                    newBlocks[idx] = { ...block, content: e.target.value };
+                    onUpdate({ conditionalBlocks: newBlocks });
+                  }}
+                  className={`w-full bg-[#0d0d14] border rounded px-2 py-1 text-xs ${styles.text} outline-none min-h-[50px] resize-y`}
+                  style={{ borderColor: styles.border.replace('border-', '#') }}
+                  placeholder="Dialogue content..."
+                />
+                
+                {/* Condition section for IF/ELSEIF */}
+                {block.type !== 'else' && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[9px] text-gray-500 uppercase">Condition</label>
+                      {showValidation && (
+                        <button
+                          onClick={() => {
+                            const newDismissed = new Set(dismissedConditions);
+                            if (newDismissed.has(block.id)) {
+                              newDismissed.delete(block.id);
+                            } else {
+                              newDismissed.add(block.id);
+                            }
+                            setDismissedConditions(newDismissed);
+                          }}
+                          className="text-[9px] text-gray-500 hover:text-gray-400"
+                        >
+                          {dismissedConditions.has(block.id) ? 'Show' : 'Hide'} validation
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <ConditionAutocomplete
+                        value={conditionValue}
+                        onChange={(newValue) => {
+                          setConditionInputs(prev => ({ ...prev, [block.id]: newValue }));
+                          
+                          if (debounceTimersRef.current[block.id]) {
+                            clearTimeout(debounceTimersRef.current[block.id]);
+                          }
+                          
+                          debounceTimersRef.current[block.id] = setTimeout(() => {
+                            setDebouncedConditionInputs(prev => ({ ...prev, [block.id]: newValue }));
+                          }, 500);
+                        }}
+                        placeholder="e.g., $reputation > 10"
+                        className={`w-full bg-[#0d0d14] border rounded px-2 py-1 text-xs text-gray-300 font-mono outline-none transition-colors ${
+                          hasError ? 'border-red-500' : hasWarning ? 'border-yellow-500' : 'border-[#2a2a3e]'
+                        }`}
+                        flagSchema={flagSchema}
+                      />
+                      {showValidation && !dismissedConditions.has(block.id) && (
+                        <div className={`mt-1 text-[9px] ${hasError ? 'text-red-500' : hasWarning ? 'text-yellow-500' : 'text-green-500'}`}>
+                          {hasError ? validation.errors[0] : hasWarning ? validation.warnings[0] : 'Valid condition'}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={() => {
+                const newBlocks = [...node.conditionalBlocks!];
+                newBlocks.push({
+                  id: `block_${Date.now()}`,
+                  type: 'if',
+                  condition: [],
+                  content: '',
+                  speaker: undefined
+                });
+                onUpdate({ conditionalBlocks: newBlocks });
+              }}
+              className="text-xs px-2 py-1 bg-[#12121a] border border-[#2a2a3e] rounded text-gray-400 hover:text-gray-200"
+            >
+              + Add If
+            </button>
+            <button
+              onClick={() => {
+                const newBlocks = [...node.conditionalBlocks!];
+                newBlocks.push({
+                  id: `block_${Date.now()}`,
+                  type: 'elseif',
+                  condition: [],
+                  content: '',
+                  speaker: undefined
+                });
+                onUpdate({ conditionalBlocks: newBlocks });
+              }}
+              className="text-xs px-2 py-1 bg-[#12121a] border border-[#2a2a3e] rounded text-gray-400 hover:text-gray-200"
+            >
+              + Add Else If
+            </button>
+            {!node.conditionalBlocks.some(b => b.type === 'else') && (
+              <button
+                onClick={() => {
+                  const newBlocks = [...node.conditionalBlocks!];
+                  newBlocks.push({
+                    id: `block_${Date.now()}`,
+                    type: 'else',
+                    condition: undefined,
+                    content: '',
+                    speaker: undefined
+                  });
+                  onUpdate({ conditionalBlocks: newBlocks });
+                }}
+                className="text-xs px-2 py-1 bg-[#12121a] border border-[#2a2a3e] rounded text-gray-400 hover:text-gray-200"
+              >
+                + Add Else
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="text-xs text-gray-500 p-4 text-center border border-[#2a2a3e] rounded">
+          No conditional blocks. Add an "If" block to start.
+        </div>
+      )}
+    </div>
+  </>
+  );
+
+  const PlayerNodeFields = () => (
+    <div>
+      <div>
+        <label className="text-[10px] text-df-text-secondary uppercase">Character</label>
+        <CharacterSelector
+          characters={characters}
+          selectedCharacterId={node.characterId}
+          onSelect={(characterId) => {
+            const character = characterId ? characters[characterId] : undefined;
+            onUpdate({
+              characterId,
+              speaker: character ? character.name : node.speaker,
+            });
+          }}
+          placeholder="Select character..."
+          className="mb-2"
+        />
+        <div className="text-[9px] text-df-text-tertiary mt-1">
+          Or enter custom speaker name below
+        </div>
+      </div>
+      <div>
+        <label className="text-[10px] text-df-text-secondary uppercase">Speaker (Custom)</label>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-df-control-bg border border-df-control-border flex items-center justify-center flex-shrink-0">
+            <User size={16} className="text-df-text-secondary" />
+          </div>
+          <input
+            type="text"
+            value={node.speaker || ''}
+            onChange={(event) => onUpdate({ speaker: event.target.value })}
+            className="flex-1 bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-player-selected outline-none"
+            placeholder="Custom speaker name (optional)"
+          />
+        </div>
+      </div>
+      <div className="flex items-center justify-between mb-2 mt-4">
+        <label className="text-[10px] text-gray-500 uppercase">Choices</label>
+        <button onClick={onAddChoice} className="text-[10px] text-[#e94560] hover:text-[#ff6b6b]">
+          + Add
+        </button>
+      </div>
+      <div className="space-y-2">
+        {node.choices?.map((choice, idx) => {
+          const hasCondition = choice.conditions !== undefined;
+          const choiceKey = `choice-${choice.id}`;
+          const conditionValue = conditionInputs[choiceKey] || '';
+          const debouncedValue = debouncedConditionInputs[choiceKey] || '';
+          const validationResult = validateCondition(debouncedValue);
+          
+          const choiceColor = CHOICE_COLORS[idx % CHOICE_COLORS.length];
+          const darkenColor = (color: string): string => {
+            const hex = color.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            const darkR = Math.floor(r * 0.6);
+            const darkG = Math.floor(g * 0.6);
+            const darkB = Math.floor(b * 0.6);
+            return `rgb(${darkR}, ${darkG}, ${darkB})`;
+          };
+          const darkChoiceColor = darkenColor(choiceColor);
+          
+          return (
+            <div 
+              key={choice.id} 
+              className={`rounded p-2 space-y-2 ${
+                hasCondition 
+                  ? 'bg-blue-500/10 border-2 border-blue-500/50' 
+                  : 'bg-[#12121a] border border-[#2a2a3e]'
+            }`}
+              style={{
+                borderTopColor: hasCondition ? undefined : choiceColor
+              }}
+            >
+              <div 
+                className="flex items-center gap-2 pb-2 border-b"
+                style={{
+                  borderBottomColor: hasCondition ? '#2a2a3e' : choiceColor
+                }}
+              >
+                <label className="flex items-center cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={hasCondition}
+                      onChange={(event) => {
+                        if (event.target.checked) {
+                          onUpdateChoice(idx, { conditions: [] });
+                        } else {
+                          onUpdateChoice(idx, { conditions: undefined });
+                        }
+                      }}
+                      className="sr-only"
+                    />
+                    <div className={`w-7 h-3.5 rounded-full transition-all duration-200 ease-in-out ${
+                      hasCondition ? 'bg-blue-500' : 'bg-[#2a2a3e]'
+                    }`}>
+                      <div className={`w-2.5 h-2.5 rounded-full bg-white transition-all duration-200 ease-in-out mt-0.5 ${
+                        hasCondition ? 'translate-x-4' : 'translate-x-0.5'
+                      }`} />
+                    </div>
+                  </div>
+                </label>
+                {hasCondition ? (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/30 text-blue-400 border border-blue-500/50 font-medium">
+                    CONDITIONAL
+                  </span>
+                ) : (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#2a2a3e] text-gray-400 border border-[#2a2a3e] font-medium">
+                    CHOICE
+                  </span>
+                )}
+                {choice.nextNodeId && onFocusNode && (
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      if (choice.nextNodeId && onFocusNode) {
+                        onFocusNode(choice.nextNodeId);
+                      }
+                    }}
+                    className="transition-colors cursor-pointer flex-shrink-0"
+                    title={`Focus on node: ${choice.nextNodeId}`}
+                  >
+                    <EdgeIcon 
+                      size={16} 
+                      color={CHOICE_COLORS[idx % CHOICE_COLORS.length]} 
+                      className="transition-colors"
+                    />
+                  </button>
+                )}
+                <div className="relative flex-1">
+                  <select
+                    value={choice.nextNodeId || ''}
+                    onChange={(event) => onUpdateChoice(idx, { nextNodeId: event.target.value || undefined })}
+                    className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 outline-none"
+                    style={{
+                      borderColor: choice.nextNodeId ? darkChoiceColor : '#2a2a3e',
+                    }}
+                    onFocus={(event) => {
+                      if (choice.nextNodeId) {
+                        event.target.style.borderColor = darkChoiceColor;
+                      } else {
+                        event.target.style.borderColor = '#e94560';
+                      }
+                    }}
+                    onBlur={(event) => {
+                      if (choice.nextNodeId) {
+                        event.target.style.borderColor = darkChoiceColor;
+                      } else {
+                        event.target.style.borderColor = '#2a2a3e';
+                      }
+                    }}
+                  >
+                    <option value="">— Select target —</option>
+                    {Object.keys(dialogue.nodes).map(id => (
+                      <option key={id} value={id}>{id}</option>
+                    ))}
+                  </select>
+                  {choice.nextNodeId && (
+                    <div 
+                      className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                      title={`Connects to node: ${choice.nextNodeId}`}
+                      style={{ color: CHOICE_COLORS[idx % CHOICE_COLORS.length] }}
+                    >
+                      <GitBranch size={14} />
+                    </div>
+                  )}
+                </div>
+                <button 
+                  onClick={() => onRemoveChoice(idx)} 
+                  className="text-gray-600 hover:text-red-400 flex-shrink-0"
+                  title="Remove choice"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="pt-2">
+                <input
+                  type="text"
+                  value={choice.text}
+                  onChange={(event) => onUpdateChoice(idx, { text: event.target.value })}
+                  className={`w-full bg-[#0d0d14] border rounded px-3 py-2 text-sm outline-none transition-colors ${
+                    hasCondition ? 'text-gray-100' : 'text-gray-200'
+                  }`}
+                  style={{
+                    borderColor: choice.text ? darkChoiceColor : '#2a2a3e'
+                  }}
+                  placeholder="Dialogue text..."
+                />
+              </div>
+              
+              {hasCondition && (
+                <div className="bg-blue-500/5 border border-blue-500/30 rounded p-2 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <label className="text-[10px] text-blue-400 uppercase font-medium">Condition</label>
+                    <button
+                      onClick={() => onUpdateChoice(idx, { conditions: undefined })}
+                      className="text-[10px] text-gray-500 hover:text-red-400 ml-auto"
+                      title="Remove condition"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <ConditionAutocomplete
+                      value={conditionValue}
+                      onChange={(newValue) => {
+                        setConditionInputs(prev => ({ ...prev, [choiceKey]: newValue }));
+                        
+                        const parseCondition = (conditionStr: string): any[] => {
+                          const conditions: any[] = [];
+                          if (!conditionStr.trim()) return conditions;
+                          const parts = conditionStr.split(/\s+and\s+/i);
+                          parts.forEach(part => {
+                            part = part.trim();
+                            if (part.startsWith('not ')) {
+                              const flagName = part.substring(4).replace('$', '');
+                              conditions.push({ flag: flagName, operator: 'is_not_set' });
+                            } else if (part.match(/^\$(\w+)$/)) {
+                              const match = part.match(/^\$(\w+)$/);
+                              if (match) {
+                                conditions.push({ flag: match[1], operator: 'is_set' });
+                              }
+                            } else {
+                              const match = part.match(/^\$(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+)$/);
+                              if (match) {
+                                const [, flagName, op, valueStr] = match;
+                                let value: any = valueStr.trim();
+                                if (value.startsWith('"') && value.endsWith('"')) {
+                                  value = value.slice(1, -1);
+                                } else if (!isNaN(Number(value))) {
+                                  value = Number(value);
+                                }
+                                
+                                const operator = op === '==' ? 'equals' :
+                                                 op === '!=' ? 'not_equals' :
+                                                 op === '>=' ? 'greater_equal' :
+                                                 op === '<=' ? 'less_equal' :
+                                                 op === '>' ? 'greater_than' :
+                                                 op === '<' ? 'less_than' : 'equals';
+                                
+                                conditions.push({ flag: flagName, operator, value });
+                              }
+                            }
+                          });
+                          return conditions;
+                        };
+                        
+                        const newConditions = parseCondition(newValue);
+                        onUpdateChoice(idx, { 
+                          conditions: newConditions.length > 0 ? newConditions : [] 
+                        });
+                      }}
+                      placeholder='e.g., $reputation > 10 or $flag == "value"'
+                      className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 font-mono outline-none hover:border-blue-500/50 transition-all"
+                      style={{
+                        borderColor: conditionValue.trim().length > 0 && debouncedValue.trim().length > 0
+                          ? (validationResult.isValid ? 'rgba(59, 130, 246, 0.5)' : 
+                             validationResult.errors.length > 0 ? '#ef4444' : '#eab308')
+                          : '#2a2a3e'
+                      } as React.CSSProperties}
+                      flagSchema={flagSchema}
+                    />
+                  </div>
+                  {conditionValue.trim().length > 0 && debouncedValue.trim().length > 0 && validationResult.errors.length > 0 && (
+                    <p className="text-[10px] text-red-500 mt-1">{validationResult.errors[0]}</p>
+                  )}
+                  {validationResult.warnings.length > 0 && validationResult.errors.length === 0 && (
+                    <p className="text-[10px] text-yellow-500 mt-1">{validationResult.warnings[0]}</p>
+                  )}
+                  {validationResult.isValid && validationResult.errors.length === 0 && validationResult.warnings.length === 0 && conditionValue && (
+                    <p className="text-[10px] text-green-500 mt-1">Valid condition</p>
+                  )}
+                  {!conditionValue && (
+                    <p className="text-[10px] text-blue-400/80 mt-1">Only shows if condition is true</p>
+                  )}
+                </div>
+              )}
+              
+              <FlagSelector
+                value={choice.setFlags || []}
+                onChange={(flags) => onUpdateChoice(idx, { setFlags: flags.length > 0 ? flags : undefined })}
+                flagSchema={flagSchema}
+                placeholder="Set flags..."
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const StoryletNodeGroupBranches = () => (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label className="text-[10px] text-gray-500 uppercase">Storylet Node Group</label>
+        <button onClick={handleAddRandomizerBranch} className="text-[10px] text-[#e94560] hover:text-[#ff6b6b]">
+          + Add
+        </button>
+      </div>
+      {randomizerBranches.length === 0 ? (
+        <div className="text-xs text-gray-500 p-4 text-center border border-[#2a2a3e] rounded">
+          No group entries yet. Add one to define storylet options.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {randomizerBranches.map((branch, idx) => {
+            const branchColor = CHOICE_COLORS[idx % CHOICE_COLORS.length];
+            return (
+              <div
+                key={branch.id}
+                className="rounded p-2 space-y-2 bg-[#12121a] border border-[#2a2a3e]"
+                style={{ borderTopColor: branchColor }}
+              >
+                <div className="flex items-center gap-2 pb-2 border-b" style={{ borderBottomColor: branchColor }}>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-df-player-selected/20 text-df-player-selected border border-df-player-selected/40 font-medium">
+                    ENTRY {idx + 1}
+                  </span>
+                  <div className="flex-1 flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={branch.label || ''}
+                      onChange={(event) => handleUpdateRandomizerBranch(idx, { label: event.target.value || undefined })}
+                      className="flex-1 bg-[#0d0d14] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-300 outline-none"
+                      placeholder="Label"
+                    />
+                  </div>
+                  {branch.nextNodeId && onFocusNode && (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onFocusNode(branch.nextNodeId!);
+                      }}
+                      className="transition-colors cursor-pointer flex-shrink-0"
+                      title={`Focus on node: ${branch.nextNodeId}`}
+                    >
+                      <EdgeIcon size={16} color={branchColor} className="transition-colors" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleRemoveRandomizerBranch(idx)}
+                    className="text-gray-600 hover:text-red-400 flex-shrink-0"
+                    title="Remove entry"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="relative">
+                    <select
+                      value={branch.nextNodeId || ''}
+                      onChange={(event) => handleUpdateRandomizerBranch(idx, { nextNodeId: event.target.value || undefined })}
+                      className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 outline-none"
+                      style={{ borderColor: branch.nextNodeId ? branchColor : '#2a2a3e' }}
+                    >
+                      <option value="">— Select target node —</option>
+                      {Object.keys(dialogue.nodes).map(id => (
+                        <option key={id} value={id}>{id}</option>
+                      ))}
+                    </select>
+                    {branch.nextNodeId && (
+                      <div
+                        className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                        title={`Connects to node: ${branch.nextNodeId}`}
+                        style={{ color: branchColor }}
+                      >
+                        <GitBranch size={14} />
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={branch.storyletPoolId || ''}
+                    onChange={(event) => handleUpdateRandomizerBranch(idx, { storyletPoolId: event.target.value || undefined })}
+                    className="w-full bg-[#0d0d14] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-300 outline-none"
+                    placeholder="Storylet node group ID (optional)"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -396,1139 +1290,40 @@ export function NodeEditor({
         </div>
 
         {node.type === NODE_TYPE.NPC && (
-          <>
-            <div>
-              <label className="text-[10px] text-df-text-secondary uppercase">Character</label>
-              <CharacterSelector
-                characters={characters}
-                selectedCharacterId={node.characterId}
-                onSelect={(characterId) => {
-                  const character = characterId ? characters[characterId] : undefined;
-                  onUpdate({ 
-                    characterId,
-                    speaker: character ? character.name : node.speaker, // Keep speaker as fallback
-                  });
-                }}
-                placeholder="Select character..."
-                className="mb-2"
-              />
-              <div className="text-[9px] text-df-text-tertiary mt-1">
-                Or enter custom speaker name below
-              </div>
-            </div>
-            <div>
-              <label className="text-[10px] text-df-text-secondary uppercase">Speaker (Custom)</label>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-df-control-bg border border-df-control-border flex items-center justify-center flex-shrink-0">
-                  <User size={16} className="text-df-text-secondary" />
-                </div>
-                <input
-                  type="text"
-                  value={node.speaker || ''}
-                  onChange={(e) => onUpdate({ speaker: e.target.value })}
-                  className="flex-1 bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
-                  placeholder="Custom speaker name (optional)"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-[10px] text-gray-500 uppercase">Content</label>
-              <textarea
-                value={node.content}
-                onChange={(e) => onUpdate({ content: e.target.value })}
-                className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none min-h-[100px] resize-y"
-                placeholder="What the character says..."
-              />
-            </div>
-            <div>
-              <label className="text-[10px] text-gray-500 uppercase">Next Node</label>
-              <div className="flex items-center gap-2">
-                {node.nextNodeId && onFocusNode && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onFocusNode(node.nextNodeId!);
-                    }}
-                    className="transition-colors cursor-pointer flex-shrink-0 group"
-                    title={`Focus on node: ${node.nextNodeId}`}
-                  >
-                    <EdgeIcon size={16} color="#2a2a3e" className="group-hover:[&_circle]:fill-[#2a2a3e] group-hover:[&_line]:stroke-[#2a2a3e] transition-colors" />
-                  </button>
-                )}
-                <select
-                  value={node.nextNodeId || ''}
-                  onChange={(e) => onUpdate({ nextNodeId: e.target.value || undefined })}
-                  className="flex-1 bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-sm text-gray-200 outline-none"
-                >
-                  <option value="">— End —</option>
-                  {Object.keys(dialogue.nodes).filter(id => id !== node.id).map(id => (
-                    <option key={id} value={id}>{id}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </>
+          <NpcNodeFields
+            node={node}
+            dialogue={dialogue}
+            characters={characters}
+            onUpdate={onUpdate}
+            onFocusNode={onFocusNode}
+          />
         )}
 
-        {(node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL) && (
-          <>
-            {node.type === NODE_TYPE.STORYLET && (
-              <div>
-                <label className="text-[10px] text-gray-500 uppercase">Storylet ID</label>
-                <input
-                  type="text"
-                  value={node.storyletId || ''}
-                  onChange={(e) => onUpdate({ storyletId: e.target.value || undefined })}
-                  className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
-                  placeholder="storylet_id"
-                />
-              </div>
-            )}
-            <div>
-              <label className="text-[10px] text-gray-500 uppercase">Storylet Pool ID</label>
-              <input
-                type="text"
-                value={node.storyletPoolId || ''}
-                onChange={(e) => onUpdate({ storyletPoolId: e.target.value || undefined })}
-                className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
-                placeholder="pool_id"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] text-gray-500 uppercase">Next Node</label>
-              <div className="flex items-center gap-2">
-                {node.nextNodeId && onFocusNode && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onFocusNode(node.nextNodeId!);
-                    }}
-                    className="transition-colors cursor-pointer flex-shrink-0 group"
-                    title={`Focus on node: ${node.nextNodeId}`}
-                  >
-                    <EdgeIcon size={16} color="#2a2a3e" className="group-hover:[&_circle]:fill-[#2a2a3e] group-hover:[&_line]:stroke-[#2a2a3e] transition-colors" />
-                  </button>
-                )}
-                <select
-                  value={node.nextNodeId || ''}
-                  onChange={(e) => onUpdate({ nextNodeId: e.target.value || undefined })}
-                  className="flex-1 bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-sm text-gray-200 outline-none"
-                >
-                  <option value="">— End —</option>
-                  {Object.keys(dialogue.nodes).filter(id => id !== node.id).map(id => (
-                    <option key={id} value={id}>{id}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </>
+        {node.type === NODE_TYPE.STORYLET && (
+          <StoryletNodeFields
+            node={node}
+            dialogue={dialogue}
+            onUpdate={onUpdate}
+            onFocusNode={onFocusNode}
+            onUpdateStoryletCall={handleStoryletCallUpdate}
+          />
         )}
 
-        {node.type === NODE_TYPE.CONDITIONAL && (
-          <>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-[10px] text-gray-500 uppercase">Conditional Blocks</label>
-              </div>
-              
-              {node.conditionalBlocks ? (
-                <div className="space-y-2">
-                  {node.conditionalBlocks.map((block, idx) => {
-                    const conditionValue = block.type !== 'else' ? (conditionInputs[block.id] || '') : '';
-                    const debouncedValue = block.type !== 'else' ? (debouncedConditionInputs[block.id] || '') : '';
-                    // Use current value for immediate validation feedback, debounced value for final validation
-                    const valueToValidate = debouncedValue || conditionValue;
-                    const validation = block.type !== 'else' ? validateCondition(valueToValidate) : { isValid: true, errors: [], warnings: [] };
-                    const hasError = !validation.isValid;
-                    const hasWarning = validation.warnings.length > 0;
-                    const showValidation = conditionValue.trim().length > 0;
-                    const isManuallyOpen = expandedConditions.has(block.id);
-                    const shouldExpand = isManuallyOpen;
-                    
-                    // Determine block styling based on type
-                    const blockTypeStyles = {
-                      if: {
-                        bg: 'bg-[#0a0a0a]',
-                        border: 'border-[#1a1a1a]',
-                        tagBg: 'bg-black',
-                        tagText: 'text-white',
-                        text: 'text-gray-100'
-                      },
-                      elseif: {
-                        bg: 'bg-[#0f0f0f]',
-                        border: 'border-[#1f1f1f]',
-                        tagBg: 'bg-black',
-                        tagText: 'text-white',
-                        text: 'text-gray-200'
-                      },
-                      else: {
-                        bg: 'bg-[#141414]',
-                        border: 'border-[#242424]',
-                        tagBg: 'bg-black',
-                        tagText: 'text-white',
-                        text: 'text-gray-200'
-                      }
-                    };
-                    const styles = blockTypeStyles[block.type];
-                    
-                    return (
-                      <div key={block.id} className={`rounded p-2 space-y-2 ${styles.bg} ${styles.border} border-2`}>
-                      {/* Header with block type badge at top */}
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded ${styles.tagBg} ${styles.tagText} font-semibold`}>
-                          {block.type === 'if' ? 'IF' : block.type === 'elseif' ? 'ELSE IF' : 'ELSE'}
-                        </span>
-                        {/* Compact Character Selector */}
-                        <div className="flex items-center gap-1.5 flex-1">
-                          <CharacterSelector
-                            characters={characters}
-                            selectedCharacterId={block.characterId}
-                            onSelect={(characterId) => {
-                              const newBlocks = [...node.conditionalBlocks!];
-                              const character = characterId ? characters[characterId] : undefined;
-                              newBlocks[idx] = { 
-                                ...block, 
-                                characterId,
-                                speaker: character ? character.name : block.speaker, // Keep speaker as fallback
-                              };
-                              onUpdate({ conditionalBlocks: newBlocks });
-                            }}
-                            placeholder="Speaker..."
-                            compact={true}
-                            className="flex-1"
-                          />
-                          {/* Custom speaker input - fallback */}
-                          <input
-                            type="text"
-                            value={block.speaker || ''}
-                            onChange={(e) => {
-                              const newBlocks = [...node.conditionalBlocks!];
-                              newBlocks[idx] = { ...block, speaker: e.target.value || undefined };
-                              onUpdate({ conditionalBlocks: newBlocks });
-                            }}
-                            className={`flex-1 bg-df-elevated border border-df-control-border rounded px-1.5 py-0.5 text-[10px] text-df-text-primary focus:border-df-conditional-selected outline-none`}
-                            placeholder="Custom name"
-                          />
-                        </div>
-                      </div>
-                      
-                      {block.type !== 'else' && (() => {
-                          const parseCondition = (conditionStr: string): any[] => {
-                            const conditions: any[] = [];
-                            if (!conditionStr.trim()) return conditions;
-                            
-                            const parts = conditionStr.split(/\s+and\s+/i);
-                            parts.forEach(part => {
-                              part = part.trim();
-                              if (part.startsWith('not ')) {
-                                const varMatch = part.match(/not\s+\$(\w+)/);
-                                if (varMatch) {
-                                  conditions.push({ flag: varMatch[1], operator: CONDITION_OPERATOR.IS_NOT_SET });
-                                }
-                              } else if (part.includes('>=')) {
-                                const match = part.match(/\$(\w+)\s*>=\s*(.+)/);
-                                if (match) {
-                                  const value = match[2].trim().replace(/^["']|["']$/g, '');
-                                  conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.GREATER_EQUAL, value: isNaN(Number(value)) ? value : Number(value) });
-                                }
-                              } else if (part.includes('<=')) {
-                                const match = part.match(/\$(\w+)\s*<=\s*(.+)/);
-                                if (match) {
-                                  const value = match[2].trim().replace(/^["']|["']$/g, '');
-                                  conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.LESS_EQUAL, value: isNaN(Number(value)) ? value : Number(value) });
-                                }
-                              } else if (part.includes('!=')) {
-                                const match = part.match(/\$(\w+)\s*!=\s*(.+)/);
-                                if (match) {
-                                  const value = match[2].trim().replace(/^["']|["']$/g, '');
-                                  conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.NOT_EQUALS, value: isNaN(Number(value)) ? value : Number(value) });
-                                }
-                              } else if (part.includes('==')) {
-                                const match = part.match(/\$(\w+)\s*==\s*(.+)/);
-                                if (match) {
-                                  const value = match[2].trim().replace(/^["']|["']$/g, '');
-                                  conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.EQUALS, value: isNaN(Number(value)) ? value : Number(value) });
-                                }
-                              } else if (part.includes('>') && !part.includes('>=')) {
-                                const match = part.match(/\$(\w+)\s*>\s*(.+)/);
-                                if (match) {
-                                  const value = match[2].trim().replace(/^["']|["']$/g, '');
-                                  conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.GREATER_THAN, value: isNaN(Number(value)) ? value : Number(value) });
-                                }
-                              } else if (part.includes('<') && !part.includes('<=')) {
-                                const match = part.match(/\$(\w+)\s*<\s*(.+)/);
-                                if (match) {
-                                  const value = match[2].trim().replace(/^["']|["']$/g, '');
-                                  conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.LESS_THAN, value: isNaN(Number(value)) ? value : Number(value) });
-                                }
-                              } else {
-                                const varMatch = part.match(/\$(\w+)/);
-                                if (varMatch) {
-                                  conditions.push({ flag: varMatch[1], operator: CONDITION_OPERATOR.IS_SET });
-                                }
-                              }
-                            });
-                            return conditions;
-                          };
-                          
-                          return (
-                            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded p-2 space-y-1">
-                              <div className="flex items-center gap-2">
-                                <label className={`text-[10px] ${styles.text} uppercase font-medium`}>Condition</label>
-                              </div>
-                              <div className="relative">
-                                <input
-                                  type="text"
-                                  value={conditionValue}
-                                  onChange={(e) => {
-                                    setConditionInputs(prev => ({ ...prev, [block.id]: e.target.value }));
-                                    const newBlocks = [...node.conditionalBlocks!];
-                                    newBlocks[idx] = {
-                                      ...block,
-                                      condition: parseCondition(e.target.value)
-                                    };
-                                    onUpdate({ conditionalBlocks: newBlocks });
-                                  }}
-                                  className={`w-full bg-[#1a1a1a] border rounded px-2 py-1 pr-24 text-xs ${styles.text} font-mono outline-none transition-all`}
-                                  style={{
-                                    borderColor: showValidation 
-                                      ? (hasError ? '#ef4444' : 
-                                         hasWarning ? '#eab308' : 
-                                         validation.isValid ? '#22c55e' : '#2a2a2a')
-                                      : '#2a2a2a'
-                                  }}
-                                  placeholder='e.g., $flag == "value" or $stat &gt;= 100'
-                                />
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                  {showValidation && (
-                                    <>
-                                      {hasError ? (
-                                        <div className="group relative">
-                                          <AlertCircle className="w-4 h-4 text-red-500" />
-                                          <div className="absolute right-0 top-6 w-64 p-2 bg-[#1a1a1a] border border-red-500 rounded text-xs text-gray-300 z-50 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
-                                            <div className="font-semibold text-red-400 mb-1">Validation Errors:</div>
-                                            {validation.errors.map((error, i) => (
-                                              <div key={i}>• {error}</div>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      ) : hasWarning ? (
-                                        <div className="group relative">
-                                          <Info className="w-4 h-4 text-yellow-500" />
-                                          <div className="absolute right-0 top-6 w-64 p-2 bg-[#1a1a1a] border border-yellow-500 rounded text-xs text-gray-300 z-50 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
-                                            <div className="font-semibold text-yellow-400 mb-1">Warnings:</div>
-                                            {validation.warnings.map((warning, i) => (
-                                              <div key={i}>• {warning}</div>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <CheckCircle className="w-4 h-4 text-green-500" />
-                                      )}
-                                    </>
-                                  )}
-                                  <button
-                                    onClick={() => {
-                                      setExpandedConditions(prev => {
-                                        const next = new Set(prev);
-                                        next.add(block.id);
-                                        return next;
-                                      });
-                                    }}
-                                    className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
-                                    title="Expand editor"
-                                  >
-                                    <Maximize2 size={14} />
-                                  </button>
-                                </div>
-                              </div>
-                              {showValidation && validation.errors.length > 0 && (
-                                <p className="text-[10px] text-red-500 mt-1">{validation.errors[0]}</p>
-                              )}
-                              {showValidation && validation.warnings.length > 0 && validation.errors.length === 0 && (
-                                <p className="text-[10px] text-yellow-500 mt-1">{validation.warnings[0]}</p>
-                              )}
-                              {showValidation && validation.isValid && validation.errors.length === 0 && validation.warnings.length === 0 && (
-                                <p className="text-[10px] text-green-500 mt-1">Valid condition</p>
-                              )}
-                              {!conditionValue && (
-                                <p className="text-[10px] text-blue-400/80 mt-1">Type Yarn condition: $flag, $flag == value, $stat &gt;= 100, etc.</p>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      
-                      {shouldExpand && (
-                        <div 
-                          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 transition-opacity"
-                          style={{ animation: 'fadeIn 0.2s ease-in-out' }}
-                          onMouseDown={(e) => {
-                            if (e.target === e.currentTarget) {
-                              (e.currentTarget as HTMLElement).setAttribute('data-mousedown-backdrop', 'true');
-                            }
-                          }}
-                          onMouseUp={(e) => {
-                            if (e.target === e.currentTarget && 
-                                (e.currentTarget as HTMLElement).getAttribute('data-mousedown-backdrop') === 'true') {
-                              setExpandedConditions(prev => {
-                                const next = new Set(prev);
-                                next.delete(block.id);
-                                return next;
-                              });
-                            }
-                            (e.currentTarget as HTMLElement).removeAttribute('data-mousedown-backdrop');
-                          }}
-                        >
-                          <div 
-                            className="bg-[#0d0d14] border border-[#2a2a3e] rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col transition-all"
-                            style={{ animation: 'slideUp 0.2s ease-out' }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {/* Header */}
-                            <div className="p-3 border-b border-[#2a2a3e] flex items-center justify-between bg-gradient-to-r from-[#0d0d14] to-[#1a1a2e]">
-                              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                                <span className="text-blue-400">⚡</span>
-                                Condition Editor
-                              </h3>
-                              <button
-                                onClick={() => {
-                                  setExpandedConditions(prev => {
-                                    const next = new Set(prev);
-                                    next.delete(block.id);
-                                    return next;
-                                  });
-                                }}
-                                className="p-1 text-gray-400 hover:text-white transition-colors"
-                                title="Close (Esc)"
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-                            
-                            {/* Two-column layout */}
-                            <div className="flex flex-1 overflow-hidden">
-                              {/* Left sidebar - Tools */}
-                              <div className="w-44 bg-[#0a0a0f] border-r border-[#2a2a3e] p-3 overflow-y-auto flex flex-col gap-4">
-                                {/* Pro tip */}
-                                <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-lg p-2.5">
-                                  <div className="flex items-center gap-1.5 mb-1.5">
-                                    <span className="text-sm">💡</span>
-                                    <span className="text-[10px] font-semibold text-blue-400 uppercase tracking-wide">Pro Tip</span>
-                                  </div>
-                                  <p className="text-[10px] text-gray-400 leading-relaxed">
-                                    Type <code className="text-purple-400 bg-purple-500/20 px-1 rounded font-bold">$</code> to access variables & flags.
-                                  </p>
-                                </div>
-
-                                {/* Operators */}
-                                <div>
-                                  <label className="text-[9px] text-gray-500 uppercase mb-1.5 block font-semibold tracking-wider">Operators</label>
-                                  <div className="grid grid-cols-3 gap-1">
-                                    {['==', '!=', '>=', '<=', '>', '<'].map((op) => (
-                                      <button
-                                        key={op}
-                                        type="button"
-                                        onClick={() => {
-                                          const val = conditionValue;
-                                          const space = val.length > 0 && !val.endsWith(' ') ? ' ' : '';
-                                          setConditionInputs(prev => ({ ...prev, [block.id]: val + space + op + ' ' }));
-                                        }}
-                                        className="px-1.5 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded text-xs font-mono hover:bg-purple-500/40 transition-all"
-                                      >
-                                        {op}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                {/* Keywords */}
-                                <div>
-                                  <label className="text-[9px] text-gray-500 uppercase mb-1.5 block font-semibold tracking-wider">Keywords</label>
-                                  <div className="grid grid-cols-2 gap-1">
-                                    {['and', 'not'].map((kw) => (
-                                      <button
-                                        key={kw}
-                                        type="button"
-                                        onClick={() => {
-                                          const val = conditionValue;
-                                          const space = val.length > 0 && !val.endsWith(' ') ? ' ' : '';
-                                          setConditionInputs(prev => ({ ...prev, [block.id]: val + space + kw + ' ' }));
-                                        }}
-                                        className="px-1.5 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-xs font-mono hover:bg-blue-500/40 transition-all"
-                                      >
-                                        {kw}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                {/* Templates */}
-                                <div>
-                                  <label className="text-[9px] text-gray-500 uppercase mb-1.5 block font-semibold tracking-wider">Templates</label>
-                                  <div className="flex flex-col gap-1">
-                                    {[
-                                      { p: '$flag == true', l: 'Boolean' },
-                                      { p: '$stat >= 100', l: 'Compare' },
-                                      { p: '$a and $b', l: 'Multiple' },
-                                    ].map(({ p, l }) => (
-                                      <button
-                                        key={p}
-                                        type="button"
-                                        onClick={() => setConditionInputs(prev => ({ ...prev, [block.id]: p }))}
-                                        className="text-left px-2 py-1 bg-gray-500/10 text-gray-400 border border-gray-500/20 rounded text-[10px] font-mono hover:bg-gray-500/20 transition-all"
-                                      >
-                                        <div className="text-gray-300">{p}</div>
-                                        <div className="text-[8px] text-gray-600">{l}</div>
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Right panel - Editor */}
-                              <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3">
-                                <ConditionAutocomplete
-                                  value={conditionValue}
-                                  onChange={(newValue) => {
-                                    setConditionInputs(prev => ({ ...prev, [block.id]: newValue }));
-                                    const parseCondition = (conditionStr: string): any[] => {
-                                      const conditions: any[] = [];
-                                      if (!conditionStr.trim()) return conditions;
-                                      const parts = conditionStr.split(/\s+and\s+/i);
-                                      parts.forEach(part => {
-                                        part = part.trim();
-                                        if (part.startsWith('not ')) {
-                                          const varMatch = part.match(/not\s+\$(\w+)/);
-                                          if (varMatch) conditions.push({ flag: varMatch[1], operator: CONDITION_OPERATOR.IS_NOT_SET });
-                                        } else if (part.includes('>=')) {
-                                          const match = part.match(/\$(\w+)\s*>=\s*(.+)/);
-                                          if (match) {
-                                            const value = match[2].trim().replace(/^["']|["']$/g, '');
-                                            conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.GREATER_EQUAL, value: isNaN(Number(value)) ? value : Number(value) });
-                                          }
-                                        } else if (part.includes('<=')) {
-                                          const match = part.match(/\$(\w+)\s*<=\s*(.+)/);
-                                          if (match) {
-                                            const value = match[2].trim().replace(/^["']|["']$/g, '');
-                                            conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.LESS_EQUAL, value: isNaN(Number(value)) ? value : Number(value) });
-                                          }
-                                        } else if (part.includes('!=')) {
-                                          const match = part.match(/\$(\w+)\s*!=\s*(.+)/);
-                                          if (match) {
-                                            const value = match[2].trim().replace(/^["']|["']$/g, '');
-                                            conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.NOT_EQUALS, value: isNaN(Number(value)) ? value : Number(value) });
-                                          }
-                                        } else if (part.includes('==')) {
-                                          const match = part.match(/\$(\w+)\s*==\s*(.+)/);
-                                          if (match) {
-                                            const value = match[2].trim().replace(/^["']|["']$/g, '');
-                                            conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.EQUALS, value: isNaN(Number(value)) ? value : Number(value) });
-                                          }
-                                        } else if (part.includes('>') && !part.includes('>=')) {
-                                          const match = part.match(/\$(\w+)\s*>\s*(.+)/);
-                                          if (match) {
-                                            const value = match[2].trim().replace(/^["']|["']$/g, '');
-                                            conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.GREATER_THAN, value: isNaN(Number(value)) ? value : Number(value) });
-                                          }
-                                        } else if (part.includes('<') && !part.includes('<=')) {
-                                          const match = part.match(/\$(\w+)\s*<\s*(.+)/);
-                                          if (match) {
-                                            const value = match[2].trim().replace(/^["']|["']$/g, '');
-                                            conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.LESS_THAN, value: isNaN(Number(value)) ? value : Number(value) });
-                                          }
-                                        } else {
-                                          const varMatch = part.match(/\$(\w+)/);
-                                          if (varMatch) conditions.push({ flag: varMatch[1], operator: CONDITION_OPERATOR.IS_SET });
-                                        }
-                                      });
-                                      return conditions;
-                                    };
-                                    const newBlocks = [...node.conditionalBlocks!];
-                                    newBlocks[idx] = { ...block, condition: parseCondition(newValue) };
-                                    onUpdate({ conditionalBlocks: newBlocks });
-                                  }}
-                                  flagSchema={flagSchema}
-                                  textarea={true}
-                                  placeholder='e.g., $flag == "value" or $stat >= 100'
-                                  className="w-full bg-[#12121a] border border-[#2a2a3e] rounded px-3 py-2 text-sm text-gray-200 font-mono outline-none focus:border-blue-500 min-h-[180px] resize-y"
-                                />
-                                {showValidation && (
-                                  <div className={`p-2 rounded text-xs ${
-                                    hasError ? 'bg-red-500/10 border border-red-500/30 text-red-400' :
-                                    hasWarning ? 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-400' :
-                                    'bg-green-500/10 border border-green-500/30 text-green-400'
-                                  }`}>
-                                    {hasError && (
-                                      <div>
-                                        <strong>Errors:</strong>
-                                        <ul className="list-disc list-inside mt-1 ml-2">
-                                          {validation.errors.map((error: string, i: number) => (
-                                            <li key={i}>{error}</li>
-                                          ))}
-                                        </ul>
-                                      </div>
-                                    )}
-                                    {hasWarning && (
-                                      <div className={hasError ? 'mt-2' : ''}>
-                                        <strong>Warnings:</strong>
-                                        <ul className="list-disc list-inside mt-1 ml-2">
-                                          {validation.warnings.map((warning: string, i: number) => (
-                                            <li key={i}>{warning}</li>
-                                          ))}
-                                        </ul>
-                                      </div>
-                                    )}
-                                    {!hasError && !hasWarning && (
-                                      <div>✓ Valid condition expression</div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div>
-                        <label className={`text-[10px] ${styles.text} uppercase mb-1 block`}>Content</label>
-                        <textarea
-                          value={block.content}
-                          onChange={(e) => {
-                            const newBlocks = [...node.conditionalBlocks!];
-                            newBlocks[idx] = { ...block, content: e.target.value };
-                            onUpdate({ conditionalBlocks: newBlocks });
-                          }}
-                          className={`w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded px-2 py-1 text-sm ${styles.text} outline-none min-h-[80px] resize-y`}
-                          placeholder="Dialogue content..."
-                        />
-                      </div>
-                      <div>
-                        <label className={`text-[10px] ${styles.text} uppercase`}>Next Node (optional)</label>
-                        <div className="flex items-center gap-2">
-                          {block.nextNodeId && onFocusNode && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onFocusNode(block.nextNodeId!);
-                              }}
-                              className="transition-colors cursor-pointer flex-shrink-0 group"
-                              title={`Focus on node: ${block.nextNodeId}`}
-                            >
-                              <EdgeIcon 
-                                size={16} 
-                                color={block.nextNodeId ? '#3b82f6' : '#2a2a3e'} 
-                                className="group-hover:[&_circle]:fill-[#3b82f6] group-hover:[&_line]:stroke-[#3b82f6] transition-colors" 
-                              />
-                            </button>
-                          )}
-                          <div className="relative flex-1">
-                            <select
-                              value={block.nextNodeId || ''}
-                              onChange={(e) => {
-                                const newBlocks = [...node.conditionalBlocks!];
-                                newBlocks[idx] = { ...block, nextNodeId: e.target.value || undefined };
-                                onUpdate({ conditionalBlocks: newBlocks });
-                              }}
-                              className={`w-full bg-[#1a1a1a] border rounded px-2 py-1 pr-8 text-xs ${styles.text} outline-none`}
-                              style={{
-                                borderColor: block.nextNodeId ? '#3b82f6' : '#2a2a3e',
-                              }}
-                            >
-                              <option value="">— Continue —</option>
-                              {Object.keys(dialogue.nodes).filter(id => id !== node.id).map(id => (
-                                <option key={id} value={id}>{id}</option>
-                              ))}
-                            </select>
-                            {block.nextNodeId && (
-                              <div 
-                                className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
-                                title={`Connects to node: ${block.nextNodeId}`}
-                                style={{ color: '#3b82f6' }}
-                              >
-                                <GitBranch size={14} />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    );
-                  })}
-                  <div className="flex gap-2">
-                    {node.conditionalBlocks[node.conditionalBlocks.length - 1].type !== 'else' && (
-                      <button
-                        onClick={() => {
-                          const newBlocks = [...node.conditionalBlocks!];
-                          newBlocks.push({
-                            id: `block_${Date.now()}`,
-                            type: newBlocks.some(b => b.type === 'if') ? 'elseif' : 'if',
-                            condition: [],
-                            content: '',
-                            speaker: undefined
-                          });
-                          onUpdate({ conditionalBlocks: newBlocks });
-                        }}
-                        className="text-xs px-2 py-1 bg-[#12121a] border border-[#2a2a3e] rounded text-gray-400 hover:text-gray-200"
-                      >
-                        + Add {node.conditionalBlocks.some(b => b.type === 'if') ? 'Else If' : 'If'}
-                      </button>
-                    )}
-                    {!node.conditionalBlocks.some(b => b.type === 'else') && (
-                      <button
-                        onClick={() => {
-                          const newBlocks = [...node.conditionalBlocks!];
-                          newBlocks.push({
-                            id: `block_${Date.now()}`,
-                            type: 'else',
-                            condition: undefined,
-                            content: '',
-                            speaker: undefined
-                          });
-                          onUpdate({ conditionalBlocks: newBlocks });
-                        }}
-                        className="text-xs px-2 py-1 bg-[#12121a] border border-[#2a2a3e] rounded text-gray-400 hover:text-gray-200"
-                      >
-                        + Add Else
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-xs text-gray-500 p-4 text-center border border-[#2a2a3e] rounded">
-                  No conditional blocks. Add an "If" block to start.
-                </div>
-              )}
-            </div>
-          </>
+        {node.type === NODE_TYPE.STORYLET_POOL && (
+          <StoryletNodeGroupFields
+            node={node}
+            dialogue={dialogue}
+            onUpdate={onUpdate}
+            onFocusNode={onFocusNode}
+            onUpdateStoryletCall={handleStoryletCallUpdate}
+          />
         )}
 
-        {node.type === NODE_TYPE.PLAYER && (
-          <div>
-            <div>
-              <label className="text-[10px] text-df-text-secondary uppercase">Character</label>
-              <CharacterSelector
-                characters={characters}
-                selectedCharacterId={node.characterId}
-                onSelect={(characterId) => {
-                  const character = characterId ? characters[characterId] : undefined;
-                  onUpdate({ 
-                    characterId,
-                    speaker: character ? character.name : node.speaker, // Keep speaker as fallback
-                  });
-                }}
-                placeholder="Select character..."
-                className="mb-2"
-              />
-              <div className="text-[9px] text-df-text-tertiary mt-1">
-                Or enter custom speaker name below
-              </div>
-            </div>
-            <div>
-              <label className="text-[10px] text-df-text-secondary uppercase">Speaker (Custom)</label>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-df-control-bg border border-df-control-border flex items-center justify-center flex-shrink-0">
-                  <User size={16} className="text-df-text-secondary" />
-                </div>
-                <input
-                  type="text"
-                  value={node.speaker || ''}
-                  onChange={(e) => onUpdate({ speaker: e.target.value })}
-                  className="flex-1 bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-player-selected outline-none"
-                  placeholder="Custom speaker name (optional)"
-                />
-              </div>
-            </div>
-            <div className="flex items-center justify-between mb-2 mt-4">
-              <label className="text-[10px] text-gray-500 uppercase">Choices</label>
-              <button onClick={onAddChoice} className="text-[10px] text-[#e94560] hover:text-[#ff6b6b]">
-                + Add
-              </button>
-            </div>
-            <div className="space-y-2">
-              {node.choices?.map((choice, idx) => {
-                const hasCondition = choice.conditions !== undefined;
-                const choiceKey = `choice-${choice.id}`;
-                const conditionValue = conditionInputs[choiceKey] || '';
-                const debouncedValue = debouncedConditionInputs[choiceKey] || '';
-                // Use debounced value for validation
-                const validationResult = validateCondition(debouncedValue);
-                
-                const choiceColor = CHOICE_COLORS[idx % CHOICE_COLORS.length];
-                // Darken the choice color for inputs (reduce brightness by ~40%)
-                const darkenColor = (color: string): string => {
-                  // Convert hex to RGB
-                  const hex = color.replace('#', '');
-                  const r = parseInt(hex.substr(0, 2), 16);
-                  const g = parseInt(hex.substr(2, 2), 16);
-                  const b = parseInt(hex.substr(4, 2), 16);
-                  // Darken by 40%
-                  const darkR = Math.floor(r * 0.6);
-                  const darkG = Math.floor(g * 0.6);
-                  const darkB = Math.floor(b * 0.6);
-                  return `rgb(${darkR}, ${darkG}, ${darkB})`;
-                };
-                const darkChoiceColor = darkenColor(choiceColor);
-                
-                return (
-                  <div 
-                    key={choice.id} 
-                    className={`rounded p-2 space-y-2 ${
-                      hasCondition 
-                        ? 'bg-blue-500/10 border-2 border-blue-500/50' 
-                        : 'bg-[#12121a] border border-[#2a2a3e]'
-                    }`}
-                    style={{
-                      borderTopColor: hasCondition ? undefined : choiceColor
-                    }}
-                  >
-                    {/* Header with toggle and badge */}
-                    <div 
-                      className="flex items-center gap-2 pb-2 border-b"
-                      style={{
-                        borderBottomColor: hasCondition ? '#2a2a3e' : choiceColor
-                      }}
-                    >
-                      {/* Toggle switch for conditional */}
-                      <label className="flex items-center cursor-pointer">
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={hasCondition}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                // Initialize with empty array to show condition input
-                                onUpdateChoice(idx, { conditions: [] });
-                              } else {
-                                // Remove condition
-                                onUpdateChoice(idx, { conditions: undefined });
-                              }
-                            }}
-                            className="sr-only"
-                          />
-                          <div className={`w-7 h-3.5 rounded-full transition-all duration-200 ease-in-out ${
-                            hasCondition ? 'bg-blue-500' : 'bg-[#2a2a3e]'
-                          }`}>
-                            <div className={`w-2.5 h-2.5 rounded-full bg-white transition-all duration-200 ease-in-out mt-0.5 ${
-                              hasCondition ? 'translate-x-4' : 'translate-x-0.5'
-                            }`} />
-                          </div>
-                        </div>
-                      </label>
-                      {hasCondition ? (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/30 text-blue-400 border border-blue-500/50 font-medium">
-                          CONDITIONAL
-                        </span>
-                      ) : (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#2a2a3e] text-gray-400 border border-[#2a2a3e] font-medium">
-                          CHOICE
-                        </span>
-                      )}
-                      {choice.nextNodeId && onFocusNode && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (choice.nextNodeId && onFocusNode) {
-                              onFocusNode(choice.nextNodeId);
-                            }
-                          }}
-                          className="transition-colors cursor-pointer flex-shrink-0"
-                          title={`Focus on node: ${choice.nextNodeId}`}
-                        >
-                          <EdgeIcon 
-                            size={16} 
-                            color={CHOICE_COLORS[idx % CHOICE_COLORS.length]} 
-                            className="transition-colors"
-                          />
-                        </button>
-                      )}
-                      <div className="relative flex-1">
-                        <select
-                          value={choice.nextNodeId || ''}
-                          onChange={(e) => onUpdateChoice(idx, { nextNodeId: e.target.value || undefined })}
-                          className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 outline-none"
-                          style={{
-                            borderColor: choice.nextNodeId ? darkChoiceColor : '#2a2a3e',
-                          }}
-                          onFocus={(e) => {
-                            if (choice.nextNodeId) {
-                              e.target.style.borderColor = darkChoiceColor;
-                            } else {
-                              e.target.style.borderColor = '#e94560';
-                            }
-                          }}
-                          onBlur={(e) => {
-                            if (choice.nextNodeId) {
-                              e.target.style.borderColor = darkChoiceColor;
-                            } else {
-                              e.target.style.borderColor = '#2a2a3e';
-                            }
-                          }}
-                        >
-                          <option value="">— Select target —</option>
-                          {Object.keys(dialogue.nodes).map(id => (
-                            <option key={id} value={id}>{id}</option>
-                          ))}
-                        </select>
-                        {choice.nextNodeId && (
-                          <div 
-                            className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
-                            title={`Connects to node: ${choice.nextNodeId}`}
-                            style={{ color: CHOICE_COLORS[idx % CHOICE_COLORS.length] }}
-                          >
-                            <GitBranch size={14} />
-                          </div>
-                        )}
-                      </div>
-                      <button 
-                        onClick={() => onRemoveChoice(idx)} 
-                        className="text-gray-600 hover:text-red-400 flex-shrink-0"
-                        title="Remove choice"
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
-                      </button>
-                    </div>
-                    
-                    {/* Dialogue text input - prominent */}
-                    <div className="pt-2">
-                      <input
-                        type="text"
-                        value={choice.text}
-                        onChange={(e) => onUpdateChoice(idx, { text: e.target.value })}
-                        className={`w-full bg-[#0d0d14] border rounded px-3 py-2 text-sm outline-none transition-colors ${
-                          hasCondition ? 'text-gray-100' : 'text-gray-200'
-                        }`}
-                        style={{
-                          borderColor: choice.text ? darkChoiceColor : '#2a2a3e'
-                        }}
-                        placeholder="Dialogue text..."
-                      />
-                    </div>
-                    
-                    {/* Condition section - only show if has condition or when adding */}
-                    {hasCondition && (
-                      <div className="bg-blue-500/5 border border-blue-500/30 rounded p-2 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <label className="text-[10px] text-blue-400 uppercase font-medium">Condition</label>
-                          <button
-                            onClick={() => onUpdateChoice(idx, { conditions: undefined })}
-                            className="text-[10px] text-gray-500 hover:text-red-400 ml-auto"
-                            title="Remove condition"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                        <div className="relative">
-                          <ConditionAutocomplete
-                            value={conditionValue}
-                            onChange={(newValue) => {
-                              setConditionInputs(prev => ({ ...prev, [choiceKey]: newValue }));
-                              
-                              // Parse and update condition immediately
-                              const parseCondition = (conditionStr: string): any[] => {
-                                const conditions: any[] = [];
-                                if (!conditionStr.trim()) return conditions;
-                                const parts = conditionStr.split(/\s+and\s+/i);
-                                parts.forEach(part => {
-                                  part = part.trim();
-                                  if (part.startsWith('not ')) {
-                                    const flagName = part.substring(4).replace('$', '');
-                                    conditions.push({ flag: flagName, operator: 'is_not_set' });
-                                  } else if (part.match(/^\$(\w+)$/)) {
-                                    const match = part.match(/^\$(\w+)$/);
-                                    if (match) {
-                                      conditions.push({ flag: match[1], operator: 'is_set' });
-                                    }
-                                  } else {
-                                    const match = part.match(/^\$(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+)$/);
-                                    if (match) {
-                                      const [, flagName, op, valueStr] = match;
-                                      let value: any = valueStr.trim();
-                                      // Remove quotes if present
-                                      if (value.startsWith('"') && value.endsWith('"')) {
-                                        value = value.slice(1, -1);
-                                      } else if (!isNaN(Number(value))) {
-                                        value = Number(value);
-                                      }
-                                      
-                                      const operator = op === '==' ? 'equals' :
-                                                       op === '!=' ? 'not_equals' :
-                                                       op === '>=' ? 'greater_equal' :
-                                                       op === '<=' ? 'less_equal' :
-                                                       op === '>' ? 'greater_than' :
-                                                       op === '<' ? 'less_than' : 'equals';
-                                      
-                                      conditions.push({ flag: flagName, operator, value });
-                                    }
-                                  }
-                                });
-                                return conditions;
-                              };
-                              
-                              const newConditions = parseCondition(newValue);
-                              onUpdateChoice(idx, { 
-                                conditions: newConditions.length > 0 ? newConditions : [] 
-                              });
-                            }}
-                            placeholder="e.g., $reputation &gt; 10 or $flag == &quot;value&quot;"
-                            className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 font-mono outline-none hover:border-blue-500/50 transition-all"
-                            style={{
-                              borderColor: conditionValue.trim().length > 0 && debouncedValue.trim().length > 0
-                                ? (validationResult.isValid ? 'rgba(59, 130, 246, 0.5)' : 
-                                   validationResult.errors.length > 0 ? '#ef4444' : '#eab308')
-                                : '#2a2a3e'
-                            } as React.CSSProperties}
-                            flagSchema={flagSchema}
-                          />
-                        </div>
-                        {conditionValue.trim().length > 0 && debouncedValue.trim().length > 0 && validationResult.errors.length > 0 && (
-                          <p className="text-[10px] text-red-500 mt-1">{validationResult.errors[0]}</p>
-                        )}
-                        {validationResult.warnings.length > 0 && validationResult.errors.length === 0 && (
-                          <p className="text-[10px] text-yellow-500 mt-1">{validationResult.warnings[0]}</p>
-                        )}
-                        {validationResult.isValid && validationResult.errors.length === 0 && validationResult.warnings.length === 0 && conditionValue && (
-                          <p className="text-[10px] text-green-500 mt-1">Valid condition</p>
-                        )}
-                        {!conditionValue && (
-                          <p className="text-[10px] text-blue-400/80 mt-1">Only shows if condition is true</p>
-                        )}
-                      </div>
-                    )}
-                    
-                    <FlagSelector
-                      value={choice.setFlags || []}
-                      onChange={(flags) => onUpdateChoice(idx, { setFlags: flags.length > 0 ? flags : undefined })}
-                      flagSchema={flagSchema}
-                      placeholder="Set flags..."
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {node.type === NODE_TYPE.CONDITIONAL && <ConditionalNodeFields />}
 
-        {node.type === NODE_TYPE.RANDOMIZER && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-[10px] text-gray-500 uppercase">Randomizer Branches</label>
-              <button onClick={handleAddRandomizerBranch} className="text-[10px] text-[#e94560] hover:text-[#ff6b6b]">
-                + Add
-              </button>
-            </div>
-            {randomizerBranches.length === 0 ? (
-              <div className="text-xs text-gray-500 p-4 text-center border border-[#2a2a3e] rounded">
-                No randomizer branches yet. Add one to define outcomes.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {randomizerBranches.map((branch, idx) => {
-                  const branchColor = CHOICE_COLORS[idx % CHOICE_COLORS.length];
-                  return (
-                    <div
-                      key={branch.id}
-                      className="rounded p-2 space-y-2 bg-[#12121a] border border-[#2a2a3e]"
-                      style={{ borderTopColor: branchColor }}
-                    >
-                      <div className="flex items-center gap-2 pb-2 border-b" style={{ borderBottomColor: branchColor }}>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-df-player-selected/20 text-df-player-selected border border-df-player-selected/40 font-medium">
-                          BRANCH {idx + 1}
-                        </span>
-                        <div className="flex-1 flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={branch.label || ''}
-                            onChange={(e) => handleUpdateRandomizerBranch(idx, { label: e.target.value || undefined })}
-                            className="flex-1 bg-[#0d0d14] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-300 outline-none"
-                            placeholder="Label"
-                          />
-                          <input
-                            type="number"
-                            value={branch.weight ?? ''}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              handleUpdateRandomizerBranch(idx, { weight: value === '' ? undefined : Number(value) });
-                            }}
-                            className="w-20 bg-[#0d0d14] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-300 outline-none"
-                            placeholder="Weight"
-                            min={0}
-                          />
-                        </div>
-                        {branch.nextNodeId && onFocusNode && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              onFocusNode(branch.nextNodeId!);
-                            }}
-                            className="transition-colors cursor-pointer flex-shrink-0"
-                            title={`Focus on node: ${branch.nextNodeId}`}
-                          >
-                            <EdgeIcon size={16} color={branchColor} className="transition-colors" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleRemoveRandomizerBranch(idx)}
-                          className="text-gray-600 hover:text-red-400 flex-shrink-0"
-                          title="Remove branch"
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          </svg>
-                        </button>
-                      </div>
+        {node.type === NODE_TYPE.PLAYER && <PlayerNodeFields />}
 
-                      <div className="space-y-2">
-                        <div className="relative">
-                          <select
-                            value={branch.nextNodeId || ''}
-                            onChange={(e) => handleUpdateRandomizerBranch(idx, { nextNodeId: e.target.value || undefined })}
-                            className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 outline-none"
-                            style={{ borderColor: branch.nextNodeId ? branchColor : '#2a2a3e' }}
-                          >
-                            <option value="">— Select target node —</option>
-                            {Object.keys(dialogue.nodes).map(id => (
-                              <option key={id} value={id}>{id}</option>
-                            ))}
-                          </select>
-                          {branch.nextNodeId && (
-                            <div
-                              className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
-                              title={`Connects to node: ${branch.nextNodeId}`}
-                              style={{ color: branchColor }}
-                            >
-                              <GitBranch size={14} />
-                            </div>
-                          )}
-                        </div>
-                        <input
-                          type="text"
-                          value={branch.storyletPoolId || ''}
-                          onChange={(e) => handleUpdateRandomizerBranch(idx, { storyletPoolId: e.target.value || undefined })}
-                          className="w-full bg-[#0d0d14] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-300 outline-none"
-                          placeholder="Storylet pool ID (optional)"
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
+        {node.type === NODE_TYPE.RANDOMIZER && <StoryletNodeGroupBranches />}
 
         <div>
           <label className="text-[10px] text-gray-500 uppercase">Set Flags (on enter)</label>

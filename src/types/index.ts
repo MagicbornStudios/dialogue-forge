@@ -25,6 +25,14 @@ export interface Choice {
   setFlags?: string[];
 }
 
+export interface StoryletCall {
+  templateId?: string;
+  entryPolicy?: string;
+  entryNodeId?: string;
+  returnPolicy?: string;
+  returnNodeId?: string;
+}
+
 export interface DialogueNode {
   id: string;
   type: NodeType;
@@ -39,6 +47,7 @@ export interface DialogueNode {
   storyletPoolId?: string; // For storylet nodes
   storyletId?: string; // For storylet nodes targeting a specific storylet
   storyletPool?: StoryletPool; // Inline pool data for storylet pool nodes
+  storyletCall?: StoryletCall;
   x: number;
   y: number;
 }

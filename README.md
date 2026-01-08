@@ -2,23 +2,39 @@
 
 A visual node-based dialogue editor with Yarn Spinner support for game development.
 
+## Project Vision
+
+Dialogue Forge is being built as a **toolkit for narrative teams**: a visual
+editor for branching dialogue plus a narrative layer (storylets, chapters, acts)
+and a runtime player so you can test the dialogue exactly as players will see
+it. The repo ships both the **library** (`@magicborn/dialogue-forge`) and a
+**Next.js demo app** that showcases the editor, Yarn integration, and runtime
+playback.
+
 ## 🚀 Quick Start
 
-### Run the Demo
+### Run the Demo (from source)
+
+```bash
+npm install
+npm run dev
+```
+
+This starts the demo at `http://localhost:3000`.
+
+### Run the Demo (from npm)
 
 ```bash
 npx @magicborn/dialogue-forge
 ```
 
-This will download the package and start an interactive demo server at `http://localhost:3000`.
+This downloads the package and starts an interactive demo server at `http://localhost:3000`.
 
 ### Install as Library
 
 ```bash
 npm install @magicborn/dialogue-forge
 ```
-
-## Quick Start
 
 ### 1. Define Your Flags
 
@@ -65,9 +81,9 @@ const dialogue = importFromYarn(yarnContent, 'Merchant Dialogue');
 ### 3. Edit Dialogue
 
 ```tsx
-import { DialogueEditor, exportToYarn } from '@magicborn/dialogue-forge';
+import { DialogueEditorV2, exportToYarn } from '@magicborn/dialogue-forge';
 
-<DialogueEditor
+<DialogueEditorV2
   dialogue={dialogue}
   onChange={(updated) => {
     const yarn = exportToYarn(updated);
@@ -80,7 +96,7 @@ import { DialogueEditor, exportToYarn } from '@magicborn/dialogue-forge';
 ### 4. Run Dialogue with Game State
 
 ```tsx
-import { DialogueSimulator } from '@magicborn/dialogue-forge';
+import { GamePlayer } from '@magicborn/dialogue-forge';
 
 // Get current game flags
 const gameFlags = {
@@ -89,9 +105,9 @@ const gameFlags = {
   stat_gold: 1000
 };
 
-<DialogueSimulator
+<GamePlayer
   dialogue={dialogue}
-  initialFlags={gameFlags}
+  gameStateFlags={gameFlags}
   onComplete={(result) => {
     // Update game state with new flags
     gameState.flags = {
@@ -105,6 +121,7 @@ const gameFlags = {
 ## Features
 
 - **Visual Node Editor** - Drag nodes, connect edges, right-click menus
+- **Narrative Workspace** - Organize dialogue into story threads, acts, chapters, and storylets
 - **Yarn Spinner Import/Export** - Work with `.yarn` files
 - **Flag System** - Reference game flags with autocomplete dropdown
 - **Simulation Mode** - Test dialogues with current game state
@@ -135,8 +152,10 @@ See [DATA_STRUCTURES.md](./DATA_STRUCTURES.md) for complete type documentation a
 
 ### Components
 
-- `DialogueEditor` - Visual editor for creating/editing dialogues
-- `DialogueSimulator` - Run dialogues with game state, returns updated flags
+- `DialogueEditorV2` - Visual editor for creating/editing dialogues
+- `NarrativeWorkspace` - Narrative + dialogue editor workspace (storylets/chapters/pages)
+- `GamePlayer` - Runtime player for dialogue + narrative traversal
+- `ScenePlayer` / `DialogueSimulator` - Legacy dialogue runner
 - `GuidePanel` - Built-in documentation panel
 - `FlagSelector` - Flag autocomplete component
 
@@ -243,8 +262,8 @@ const merchantIntro: DialogueTree = {
 
 ```typescript
 import {
-  DialogueEditor,
-  DialogueSimulator,
+  DialogueEditorV2,
+  GamePlayer,
   importFromYarn,
   exportToYarn,
   FlagSchema,
@@ -271,7 +290,7 @@ const gameFlags: GameFlagState = {
 };
 
 // Edit dialogue
-<DialogueEditor
+<DialogueEditorV2
   dialogue={dialogue}
   onChange={(updated) => {
     const yarn = exportToYarn(updated);
@@ -282,9 +301,9 @@ const gameFlags: GameFlagState = {
 />
 
 // OR run dialogue
-<DialogueSimulator
+<GamePlayer
   dialogue={dialogue}
-  initialFlags={gameFlags}
+  gameStateFlags={gameFlags}
   onComplete={(result) => {
     // Update game with new flags
     gameState.flags = result.updatedFlags;

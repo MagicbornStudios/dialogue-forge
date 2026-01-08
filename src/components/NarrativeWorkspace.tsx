@@ -1,45 +1,27 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  BookOpen,
-  CircleDot,
-  Download,
-  FileText,
-  Flag,
-  HelpCircle,
-  Info,
-  LayoutPanelTop,
-  ListTree,
-  Play,
-  Plus,
-  Search,
-  X,
-} from 'lucide-react';
-import { DialogueEditorV2 } from './DialogueEditorV2';
-import { NarrativeGraphView } from './NarrativeGraphView';
-import { PlayView } from './PlayView';
-import { FlagManager } from './FlagManager';
+import React, { useCallback, useMemo, useState } from 'react';
 import { GuidePanel } from './GuidePanel';
-import { YarnView } from './YarnView';
-import type { DialogueTree, ViewMode } from '../types';
+import type { DialogueTree } from '../types';
 import type { BaseGameState } from '../types/game-state';
 import type { Character } from '../types/characters';
 import type { FlagSchema } from '../types/flags';
-import {
-  NARRATIVE_ELEMENT,
-  STORYLET_SELECTION_MODE,
-  type NarrativeAct,
-  type NarrativeChapter,
-  type NarrativePage,
-  type StoryThread,
-  type StoryletPool,
-  type StoryletPoolMember,
-  type StoryletTemplate,
-} from '../types/narrative';
-import { NODE_TYPE, VIEW_MODE, FLAG_TYPE } from '../types/constants';
-import { exportToYarn } from '../lib/yarn-converter';
-import { createNarrativeThreadClient } from '../utils/narrative-client';
-import { createUniqueId, moveItem } from '../utils/narrative-editor-utils';
+import { NARRATIVE_ELEMENT } from '../types/narrative';
+import type { StoryThread } from '../types/narrative';
 import type { NarrativeSelection } from './NarrativeEditor';
+import { getInitialSelection } from './NarrativeWorkspace/utils/narrative-workspace-utils';
+import { useNarrativeWorkspaceState } from './NarrativeWorkspace/hooks/useNarrativeWorkspaceState';
+import { useNarrativeSelection } from './NarrativeWorkspace/hooks/useNarrativeSelection';
+import { useStoryletManagement } from './NarrativeWorkspace/hooks/useStoryletManagement';
+import { useNarrativeActions } from './NarrativeWorkspace/hooks/useNarrativeActions';
+import { NarrativeWorkspaceToolbar } from './NarrativeWorkspace/components/NarrativeWorkspaceToolbar';
+import { NarrativeGraphSection } from './NarrativeWorkspace/components/NarrativeGraphSection';
+import { DialogueGraphSection } from './NarrativeWorkspace/components/DialogueGraphSection';
+import { StoryletsSidebar } from './NarrativeWorkspace/components/StoryletsSidebar';
+import { NarrativeContextMenu } from './NarrativeWorkspace/components/NarrativeContextMenu';
+import { StoryletContextMenu } from './NarrativeWorkspace/components/StoryletContextMenu';
+import { PlayModal } from './NarrativeWorkspace/components/PlayModal';
+import { FlagManagerModal } from './NarrativeWorkspace/components/FlagManagerModal';
+import { StoryletEditorModal } from './NarrativeWorkspace/components/StoryletEditorModal';
+import { PoolEditorModal } from './NarrativeWorkspace/components/PoolEditorModal';
 
 interface NarrativeWorkspaceProps {
   initialThread: StoryThread;
@@ -51,75 +33,6 @@ interface NarrativeWorkspaceProps {
   toolbarActions?: React.ReactNode;
 }
 
-const getInitialSelection = (thread: StoryThread): NarrativeSelection => ({
-  actId: thread.acts[0]?.id,
-  chapterId: thread.acts[0]?.chapters[0]?.id,
-  pageId: thread.acts[0]?.chapters[0]?.pages[0]?.id,
-  storyletKey: undefined,
-});
-
-const collectDialogueSubgraph = (dialogue: DialogueTree, startNodeId: string) => {
-  const visited = new Set<string>();
-  const queue = [startNodeId];
-  while (queue.length > 0) {
-    const nodeId = queue.shift();
-    if (!nodeId || visited.has(nodeId)) continue;
-    const node = dialogue.nodes[nodeId];
-    if (!node) continue;
-    visited.add(nodeId);
-
-    const nextIds: Array<string | undefined> = [];
-    if (node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL) {
-      nextIds.push(node.nextNodeId);
-    }
-    if (node.type === NODE_TYPE.PLAYER) {
-      node.choices?.forEach(choice => nextIds.push(choice.nextNodeId));
-    }
-    if (node.type === NODE_TYPE.CONDITIONAL) {
-      node.conditionalBlocks?.forEach(block => nextIds.push(block.nextNodeId));
-    }
-    if (node.type === NODE_TYPE.RANDOMIZER) {
-      node.randomizerBranches?.forEach(branch => nextIds.push(branch.nextNodeId));
-    }
-
-    nextIds.filter(Boolean).forEach(nextId => {
-      if (nextId && !visited.has(nextId)) {
-        queue.push(nextId);
-      }
-    });
-  }
-  return visited;
-};
-
-const buildScopedDialogue = (
-  dialogue: DialogueTree,
-  page: NarrativePage | undefined,
-  storyletDialogueId: string | null,
-  scope: 'page' | 'storylet'
-): DialogueTree => {
-  if (scope === 'storylet') {
-    if (!storyletDialogueId) return dialogue;
-    if (storyletDialogueId !== dialogue.id) {
-      return {
-        ...dialogue,
-        nodes: {},
-        startNodeId: '',
-      };
-    }
-    return dialogue;
-  }
-
-  if (!page) return dialogue;
-  if (page.dialogueId && page.dialogueId !== dialogue.id) {
-    return {
-      ...dialogue,
-      nodes: {},
-      startNodeId: '',
-    };
-  }
-  return dialogue;
-};
-
 export function NarrativeWorkspace({
   initialThread,
   initialDialogue,
@@ -129,1320 +42,304 @@ export function NarrativeWorkspace({
   className = '',
   toolbarActions,
 }: NarrativeWorkspaceProps) {
-  const [thread, setThread] = useState<StoryThread>(initialThread);
-  const [dialogueTree, setDialogueTree] = useState<DialogueTree>(initialDialogue);
-  const [activeFlagSchema, setActiveFlagSchema] = useState<FlagSchema | undefined>(flagSchema);
-  const [activeGameState, setActiveGameState] = useState<BaseGameState>(() => gameState ?? { flags: {} });
   const [selection, setSelection] = useState<NarrativeSelection>(() => getInitialSelection(initialThread));
-  const [showPlayModal, setShowPlayModal] = useState(false);
-  const [showFlagManager, setShowFlagManager] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
-  const [narrativeViewMode, setNarrativeViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);
-  const [dialogueViewMode, setDialogueViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);
-  const [showNarrativeMiniMap, setShowNarrativeMiniMap] = useState(true);
-  const [showDialogueMiniMap, setShowDialogueMiniMap] = useState(true);
-  const [dialogueScope, setDialogueScope] = useState<'page' | 'storylet'>('page');
-  const [storyletFocusId, setStoryletFocusId] = useState<string | null>(null);
-  const [storyletTab, setStoryletTab] = useState<'storylets' | 'pools'>('storylets');
-  const [storyletSearch, setStoryletSearch] = useState('');
-  const [poolSearch, setPoolSearch] = useState('');
-  const [activePoolId, setActivePoolId] = useState<string | undefined>(undefined);
-  const [editingStoryletId, setEditingStoryletId] = useState<string | null>(null);
-  const [editingPoolId, setEditingPoolId] = useState<string | null>(null);
-  const [storyletContextMenu, setStoryletContextMenu] = useState<{
-    x: number;
-    y: number;
-    entry: { poolId: string; member: StoryletPoolMember; template: StoryletTemplate };
-  } | null>(null);
   const [narrativeContextMenu, setNarrativeContextMenu] = useState<{ x: number; y: number } | null>(null);
-  const [gameStateDraft, setGameStateDraft] = useState(() => JSON.stringify(gameState ?? { flags: {} }, null, 2));
-  const [gameStateError, setGameStateError] = useState<string | null>(null);
+  const [activePoolId, setActivePoolId] = useState<string | undefined>(undefined);
 
-  const selectedAct = useMemo(
-    () => thread.acts.find(act => act.id === selection.actId) ?? thread.acts[0],
-    [thread.acts, selection.actId]
-  );
-  const selectedChapter = useMemo(
-    () => selectedAct?.chapters.find(chapter => chapter.id === selection.chapterId)
-      ?? selectedAct?.chapters[0],
-    [selectedAct, selection.chapterId]
-  );
-  const selectedPage = useMemo(
-    () => selectedChapter?.pages.find(page => page.id === selection.pageId)
-      ?? selectedChapter?.pages[0],
-    [selectedChapter, selection.pageId]
-  );
+  const workspaceState = useNarrativeWorkspaceState({
+    initialThread,
+    initialDialogue,
+    flagSchema,
+    gameState,
+  });
 
-  const scopedDialogue = useMemo(
-    () => buildScopedDialogue(dialogueTree, selectedPage, storyletFocusId, dialogueScope),
-    [dialogueTree, dialogueScope, selectedPage, storyletFocusId]
-  );
+  const {
+    selectedAct,
+    selectedChapter,
+    selectedPage,
+    scopedDialogue,
+  } = useNarrativeSelection({
+    thread: workspaceState.thread,
+    dialogueTree: workspaceState.dialogueTree,
+    selection,
+    dialogueScope: workspaceState.dialogueScope,
+    storyletFocusId: workspaceState.storyletFocusId,
+  });
 
-  const storyletEntries = useMemo(() => {
-    const pools = selectedChapter?.storyletPools ?? [];
-    const templates = selectedChapter?.storyletTemplates ?? [];
-    return pools.flatMap(pool =>
-      pool.members.map(member => ({
-        poolId: pool.id,
-        member,
-        template: templates.find(item => item.id === member.templateId)
-          ?? {
-            id: member.templateId,
-            dialogueId: '',
-            type: NARRATIVE_ELEMENT.STORYLET,
-          },
-      }))
-    );
-  }, [selectedChapter]);
+  const storyletManagement = useStoryletManagement({
+    selectedChapter,
+    selection,
+    activePoolId,
+    setActivePoolId,
+  });
 
-  const selectedStoryletEntry = useMemo(() => {
-    if (!selection.storyletKey) return storyletEntries[0];
-    return storyletEntries.find(
-      entry => `${entry.poolId}:${entry.template.id}` === selection.storyletKey
-    );
-  }, [selection.storyletKey, storyletEntries]);
+  const narrativeActions = useNarrativeActions({
+    thread: workspaceState.thread,
+    setThread: workspaceState.setThread,
+    dialogueTree: workspaceState.dialogueTree,
+    selectedAct,
+    selectedChapter,
+    selectedPage,
+    activePool: storyletManagement.activePool,
+    setSelection,
+    setDialogueScope: workspaceState.setDialogueScope,
+    setStoryletFocusId: workspaceState.setStoryletFocusId,
+    setActivePoolId,
+    setEditingStoryletId: storyletManagement.setEditingStoryletId,
+  });
 
-  const selectedPool = selectedStoryletEntry
-    ? (selectedChapter?.storyletPools ?? []).find(pool => pool.id === selectedStoryletEntry.poolId)
-    : undefined;
-  const activePool = (selectedChapter?.storyletPools ?? []).find(pool => pool.id === activePoolId)
-    ?? selectedPool
-    ?? selectedChapter?.storyletPools?.[0];
-
-  useEffect(() => {
-    if (!selectedChapter) return;
-    const pools = selectedChapter.storyletPools ?? [];
-    if (!activePoolId && pools[0]) {
-      setActivePoolId(pools[0].id);
-    }
-  }, [activePoolId, selectedChapter]);
-
-  useEffect(() => {
-    setActiveFlagSchema(flagSchema);
-  }, [flagSchema]);
-
-  useEffect(() => {
-    setActiveGameState(gameState ?? { flags: {} });
-  }, [gameState]);
-
-  useEffect(() => {
-    setGameStateDraft(JSON.stringify(activeGameState, null, 2));
-  }, [activeGameState]);
-
-  const resolvedCharacters = activeGameState.characters ?? characters ?? {};
+  const resolvedCharacters = workspaceState.activeGameState.characters ?? characters ?? {};
   const counts = useMemo(() => {
-    const actCount = thread.acts.length;
-    const chapterCount = thread.acts.reduce((sum, act) => sum + act.chapters.length, 0);
-    const pageCount = thread.acts.reduce(
+    const actCount = workspaceState.thread.acts.length;
+    const chapterCount = workspaceState.thread.acts.reduce((sum, act) => sum + act.chapters.length, 0);
+    const pageCount = workspaceState.thread.acts.reduce(
       (sum, act) => sum + act.chapters.reduce((acc, chapter) => acc + chapter.pages.length, 0),
       0
     );
     const characterCount = Object.keys(resolvedCharacters).length;
     return { actCount, chapterCount, pageCount, characterCount };
-  }, [resolvedCharacters, thread.acts]);
-
-  const filteredStoryletEntries = useMemo(() => {
-    const query = storyletSearch.trim().toLowerCase();
-    if (!query) return storyletEntries;
-    return storyletEntries.filter(entry => {
-      const title = entry.template.title ?? entry.template.id;
-      return title.toLowerCase().includes(query) || entry.template.id.toLowerCase().includes(query);
-    });
-  }, [storyletEntries, storyletSearch]);
-
-  const filteredPools = useMemo(() => {
-    const pools = selectedChapter?.storyletPools ?? [];
-    const query = poolSearch.trim().toLowerCase();
-    if (!query) return pools;
-    return pools.filter(pool => {
-      const title = pool.title ?? pool.id;
-      return title.toLowerCase().includes(query) || pool.id.toLowerCase().includes(query);
-    });
-  }, [selectedChapter, poolSearch]);
+  }, [resolvedCharacters, workspaceState.thread.acts]);
 
   const handleDialogueChange = useCallback((nextScopedDialogue: DialogueTree) => {
-    setDialogueTree(nextScopedDialogue);
-  }, []);
+    workspaceState.setDialogueTree(nextScopedDialogue);
+  }, [workspaceState]);
 
-  const handleExportYarn = useCallback((dialogue: DialogueTree) => {
-    const yarn = exportToYarn(dialogue);
-    const blob = new Blob([yarn], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${dialogue.title.replace(/\s+/g, '_')}.yarn`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, []);
-
-  const updateThread = useCallback((nextThread: StoryThread) => {
-    setThread({
-      ...nextThread,
-      type: nextThread.type ?? NARRATIVE_ELEMENT.THREAD,
-    });
-  }, []);
-
-  const updateChapter = useCallback((
-    actId: string,
-    chapterId: string,
-    updates: Partial<StoryThread['acts'][number]['chapters'][number]>
-  ) => {
-    updateThread(createNarrativeThreadClient(thread).updateChapter(actId, chapterId, updates));
-  }, [thread, updateThread]);
-
-  const updateStoryletMember = useCallback((
-    actId: string,
-    chapterId: string,
-    poolId: string,
-    templateId: string,
-    updates: Partial<StoryletPoolMember>
-  ) => {
-    updateThread(createNarrativeThreadClient(thread).updateStoryletMember(actId, chapterId, poolId, templateId, updates));
-  }, [thread, updateThread]);
-
-  const updateStoryletTemplate = useCallback((
-    actId: string,
-    chapterId: string,
-    templateId: string,
-    updates: Partial<StoryletTemplate>
-  ) => {
-    updateThread(createNarrativeThreadClient(thread).updateStoryletTemplate(actId, chapterId, templateId, updates));
-  }, [thread, updateThread]);
-
-  const updateStoryletPool = useCallback((
-    actId: string,
-    chapterId: string,
-    poolId: string,
-    updates: Partial<StoryletPool>
-  ) => {
-    updateThread(createNarrativeThreadClient(thread).updateStoryletPool(actId, chapterId, poolId, updates));
-  }, [thread, updateThread]);
-
-  const handleAddStoryletPool = () => {
-    if (!selectedAct || !selectedChapter) return;
-    const existingPools = selectedChapter.storyletPools ?? [];
-    const nextId = createUniqueId(
-      existingPools.map(pool => pool.id),
-      'pool'
-    );
-    const nextPool: StoryletPool = {
-      id: nextId,
-      title: 'Storylet Pool',
-      summary: '',
-      selectionMode: STORYLET_SELECTION_MODE.WEIGHTED,
-      members: [],
-    };
-
-    updateChapter(selectedAct.id, selectedChapter.id, {
-      storyletPools: [...existingPools, nextPool],
-    });
-  };
-
-  const handleAddStorylet = () => {
-    if (!selectedAct || !selectedChapter) return;
-    const pools = selectedChapter.storyletPools ?? [];
-    let targetPoolId = activePool?.id ?? pools[0]?.id;
-
-    if (!targetPoolId) {
-      const nextPoolId = createUniqueId([], 'pool');
-      targetPoolId = nextPoolId;
-      updateChapter(selectedAct.id, selectedChapter.id, {
-        storyletPools: [
-          {
-            id: nextPoolId,
-            title: 'Storylet Pool',
-            summary: '',
-            selectionMode: STORYLET_SELECTION_MODE.WEIGHTED,
-            members: [],
-          },
-        ],
-      });
-    }
-
-    const templates = selectedChapter.storyletTemplates ?? [];
-    const currentStoryletIds = templates.map(template => template.id);
-    const nextId = createUniqueId(currentStoryletIds, 'storylet');
-    const nextStorylet: StoryletTemplate = {
-      id: nextId,
-      title: 'New Storylet',
-      summary: '',
-      dialogueId: selectedPage?.dialogueId ?? '',
-      type: NARRATIVE_ELEMENT.STORYLET,
-    };
-    const nextMember: StoryletPoolMember = {
-      templateId: nextId,
-      weight: 1,
-    };
-
-    const updatedPools = (selectedChapter.storyletPools ?? []).map(pool =>
-      pool.id === targetPoolId
-        ? { ...pool, members: [...pool.members, nextMember] }
-        : pool
-    );
-
-    updateChapter(selectedAct.id, selectedChapter.id, {
-      storyletTemplates: [...templates, nextStorylet],
-      storyletPools: updatedPools,
-    });
-    setSelection(prev => ({
-      ...prev,
-      storyletKey: `${targetPoolId}:${nextStorylet.id}`,
-    }));
-    setActivePoolId(targetPoolId);
-    setEditingStoryletId(nextStorylet.id);
-  };
-
-  const handleDeleteStorylet = () => {
-    if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
-    const { poolId, template } = selectedStoryletEntry;
-    const updatedPools = (selectedChapter.storyletPools ?? []).map(pool => {
-      if (pool.id !== poolId) return pool;
-      return {
-        ...pool,
-        members: pool.members.filter(member => member.templateId !== template.id),
-      };
-    });
-    const remainingTemplateIds = new Set(
-      updatedPools.flatMap(pool => pool.members.map(member => member.templateId))
-    );
-    updateChapter(selectedAct.id, selectedChapter.id, {
-      storyletTemplates: (selectedChapter.storyletTemplates ?? []).filter(item =>
-        remainingTemplateIds.has(item.id)
-      ),
-      storyletPools: updatedPools,
-    });
-  };
-
-  const handleMoveStorylet = (direction: 'up' | 'down') => {
-    if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
-    const { poolId, template } = selectedStoryletEntry;
-    const pool = (selectedChapter.storyletPools ?? []).find(item => item.id === poolId);
-    if (!pool) return;
-    const index = pool.members.findIndex(item => item.templateId === template.id);
-    const nextIndex = direction === 'up' ? index - 1 : index + 1;
-    if (nextIndex < 0 || nextIndex >= pool.members.length) return;
-
-    updateChapter(selectedAct.id, selectedChapter.id, {
-      storyletPools: (selectedChapter.storyletPools ?? []).map(item =>
-        item.id === poolId
-          ? { ...item, members: moveItem(item.members, index, nextIndex) }
-          : item
-      ),
-    });
-  };
-
-  const handleStoryletTemplateUpdate = (
-    entry: { poolId: string; template: StoryletTemplate },
-    updates: Partial<StoryletTemplate>
-  ) => {
-    if (!selectedAct || !selectedChapter) return;
-    const nextId = updates.id ?? entry.template.id;
-    updateStoryletTemplate(selectedAct.id, selectedChapter.id, entry.template.id, updates);
-    if (updates.id && nextId !== entry.template.id) {
+  const handleNarrativeElementSelect = useCallback((elementType: any, elementId: string) => {
+    if (elementType === NARRATIVE_ELEMENT.ACT) {
+      const act = workspaceState.thread.acts.find(item => item.id === elementId);
       setSelection(prev => ({
         ...prev,
-        storyletKey: `${entry.poolId}:${nextId}`,
+        actId: elementId,
+        chapterId: act?.chapters[0]?.id,
+        pageId: act?.chapters[0]?.pages[0]?.id,
       }));
-      if (editingStoryletId === entry.template.id) {
-        setEditingStoryletId(nextId);
-      }
+      workspaceState.setDialogueScope('page');
+      workspaceState.setStoryletFocusId(null);
     }
-  };
-
-  const handleStoryletMemberUpdate = (
-    entry: { poolId: string; template: StoryletTemplate },
-    updates: Partial<StoryletPoolMember>
-  ) => {
-    if (!selectedAct || !selectedChapter) return;
-    updateStoryletMember(selectedAct.id, selectedChapter.id, entry.poolId, entry.template.id, updates);
-  };
-
-  const handleStoryletPoolUpdate = (poolId: string, updates: Partial<StoryletPool>) => {
-    if (!selectedAct || !selectedChapter) return;
-    updateStoryletPool(selectedAct.id, selectedChapter.id, poolId, updates);
-    if (updates.id && updates.id !== poolId) {
-      if (activePoolId === poolId) {
-        setActivePoolId(updates.id);
-      }
-      if (editingPoolId === poolId) {
-        setEditingPoolId(updates.id);
-      }
+    if (elementType === NARRATIVE_ELEMENT.CHAPTER) {
+      const actForChapter = workspaceState.thread.acts.find(act =>
+        act.chapters.some(item => item.id === elementId)
+      );
+      const chapter = actForChapter?.chapters.find(item => item.id === elementId);
+      setSelection(prev => ({
+        ...prev,
+        actId: actForChapter?.id ?? prev.actId,
+        chapterId: elementId,
+        pageId: chapter?.pages[0]?.id,
+      }));
+      workspaceState.setDialogueScope('page');
+      workspaceState.setStoryletFocusId(null);
     }
-  };
+    if (elementType === NARRATIVE_ELEMENT.PAGE) {
+      const actForPage = workspaceState.thread.acts.find(act =>
+        act.chapters.some(chapter => chapter.pages.some(page => page.id === elementId))
+      );
+      const chapterForPage = actForPage?.chapters.find(chapter =>
+        chapter.pages.some(page => page.id === elementId)
+      );
+      setSelection(prev => ({
+        ...prev,
+        actId: actForPage?.id ?? prev.actId,
+        chapterId: chapterForPage?.id ?? prev.chapterId,
+        pageId: elementId,
+      }));
+      workspaceState.setDialogueScope('page');
+      workspaceState.setStoryletFocusId(null);
+    }
+  }, [workspaceState]);
 
-  const handleStoryletPoolChange = (nextPoolId: string) => {
-    if (!selectedAct || !selectedChapter || !selectedStoryletEntry) return;
+  const handleStoryletSelect = useCallback((entry: any) => {
+    setSelection(prev => ({ ...prev, storyletKey: `${entry.poolId}:${entry.template.id}` }));
+    setActivePoolId(entry.poolId);
+    workspaceState.setDialogueScope('page');
+    workspaceState.setStoryletFocusId(null);
+  }, [workspaceState]);
 
-    const { poolId, member, template } = selectedStoryletEntry;
-    if (poolId === nextPoolId) return;
+  const handleStoryletEdit = useCallback((entry: any) => {
+    storyletManagement.setEditingStoryletId(entry.template.id);
+    setActivePoolId(entry.poolId);
+  }, [storyletManagement]);
 
-    const updatedPools = (selectedChapter.storyletPools ?? []).map(pool => {
-      if (pool.id === poolId) {
-        return {
-          ...pool,
-          members: pool.members.filter(item => item.templateId !== template.id),
-        };
-      }
-      if (pool.id === nextPoolId) {
-        return {
-          ...pool,
-          members: [...pool.members, member],
-        };
-      }
-      return pool;
+  const handleStoryletContextMenuOpen = useCallback((event: React.MouseEvent, entry: any) => {
+    event.preventDefault();
+    storyletManagement.setStoryletContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      entry,
     });
-
-    updateChapter(selectedAct.id, selectedChapter.id, {
-      storyletPools: updatedPools,
-    });
-    setSelection(prev => ({
-      ...prev,
-      storyletKey: `${nextPoolId}:${template.id}`,
-    }));
-    setActivePoolId(nextPoolId);
-  };
-
-  const resolveStoryletTemplate = useCallback((templateId: string) => {
-    return selectedChapter?.storyletTemplates?.find(template => template.id === templateId);
-  }, [selectedChapter]);
+  }, [storyletManagement]);
 
   const handleOpenStoryletTemplate = useCallback((templateId: string) => {
-    const template = resolveStoryletTemplate(templateId);
-    if (!template) return;
-    setStoryletFocusId(template.dialogueId);
-    setDialogueScope('storylet');
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(
-        new CustomEvent('storyletTemplate.openRequested', {
-          detail: { templateId, dialogueId: template.dialogueId },
-        })
-      );
-    }
-  }, [resolveStoryletTemplate]);
-
-  const handleAddAct = () => {
-    const nextId = createUniqueId(
-      thread.acts.map(act => act.id),
-      'act'
-    );
-    const nextAct: NarrativeAct = {
-      id: nextId,
-      title: `Act ${thread.acts.length + 1}`,
-      summary: '',
-      chapters: [],
-      type: NARRATIVE_ELEMENT.ACT,
-    };
-    updateThread({
-      ...thread,
-      acts: [...thread.acts, nextAct],
-    });
-    setSelection(prev => ({
-      ...prev,
-      actId: nextAct.id,
-      chapterId: nextAct.chapters[0]?.id,
-      pageId: nextAct.chapters[0]?.pages[0]?.id,
-    }));
-    setDialogueScope('page');
-    setStoryletFocusId(null);
-  };
-
-  const handleAddChapter = () => {
-    if (!selectedAct) return;
-    const nextId = createUniqueId(
-      selectedAct.chapters.map(chapter => chapter.id),
-      'chapter'
-    );
-    const nextChapter: NarrativeChapter = {
-      id: nextId,
-      title: `Chapter ${selectedAct.chapters.length + 1}`,
-      summary: '',
-      pages: [],
-      storyletTemplates: [],
-      storyletPools: [],
-      type: NARRATIVE_ELEMENT.CHAPTER,
-    };
-    updateThread({
-      ...thread,
-      acts: thread.acts.map(act =>
-        act.id === selectedAct.id
-          ? { ...act, chapters: [...act.chapters, nextChapter] }
-          : act
-      ),
-    });
-    setSelection(prev => ({
-      ...prev,
-      chapterId: nextChapter.id,
-      pageId: nextChapter.pages[0]?.id,
-    }));
-    setDialogueScope('page');
-    setStoryletFocusId(null);
-  };
-
-  const handleAddPage = () => {
-    if (!selectedAct || !selectedChapter) return;
-    const nextId = createUniqueId(
-      selectedChapter.pages.map(page => page.id),
-      'page'
-    );
-    const nextPage: NarrativePage = {
-      id: nextId,
-      title: `Page ${selectedChapter.pages.length + 1}`,
-      summary: '',
-      dialogueId: dialogueTree.id,
-      type: NARRATIVE_ELEMENT.PAGE,
-    };
-    updateThread({
-      ...thread,
-      acts: thread.acts.map(act =>
-        act.id === selectedAct.id
-          ? {
-              ...act,
-              chapters: act.chapters.map(chapter =>
-                chapter.id === selectedChapter.id
-                  ? { ...chapter, pages: [...chapter.pages, nextPage] }
-                  : chapter
-              ),
-            }
-          : act
-      ),
-    });
-    setSelection(prev => ({
-      ...prev,
-      pageId: nextPage.id,
-    }));
-    setDialogueScope('page');
-    setStoryletFocusId(null);
-  };
+    narrativeActions.handleOpenStoryletTemplate(templateId);
+  }, [narrativeActions]);
 
   const playTitle = selectedPage?.title ?? 'Play Page';
   const playSubtitle = selectedPage?.summary ?? 'Preview the dialogue for this page.';
-  const editingStoryletEntry = storyletEntries.find(entry => entry.template.id === editingStoryletId) ?? null;
-  const editingPool = (selectedChapter?.storyletPools ?? []).find(pool => pool.id === editingPoolId) ?? null;
 
   return (
     <div
       className={`flex h-full w-full flex-col ${className}`}
       onMouseDown={() => {
         setNarrativeContextMenu(null);
-        setStoryletContextMenu(null);
+        storyletManagement.setStoryletContextMenu(null);
       }}
     >
-      <div className="flex items-center justify-between border-b border-df-sidebar-border bg-df-base/80 px-3 py-2">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-2 text-df-text-secondary hover:text-df-text-primary"
-            onClick={() => setShowPlayModal(true)}
-            title="Play selected page"
-          >
-            <Play size={16} />
-          </button>
-          <button
-            type="button"
-            className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-2 text-df-text-secondary hover:text-df-text-primary"
-            onClick={() => {
-              if (activeFlagSchema) {
-                setShowFlagManager(true);
-              }
-            }}
-            title="Game state"
-          >
-            <Flag size={16} />
-          </button>
-          <button
-            type="button"
-            className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-2 text-df-text-secondary hover:text-df-text-primary"
-            onClick={() => setShowGuide(true)}
-            title="Open guide"
-          >
-            <HelpCircle size={16} />
-          </button>
-        </div>
-        <div className="text-[11px] text-df-text-tertiary">
-          {counts.actCount} acts · {counts.chapterCount} chapters · {counts.pageCount} pages · {counts.characterCount} characters
-        </div>
-        <div className="flex items-center gap-2">{toolbarActions}</div>
-      </div>
+      <NarrativeWorkspaceToolbar
+        onPlayClick={() => workspaceState.setShowPlayModal(true)}
+        onFlagClick={() => {
+          if (workspaceState.activeFlagSchema) {
+            workspaceState.setShowFlagManager(true);
+          }
+        }}
+        onGuideClick={() => workspaceState.setShowGuide(true)}
+        counts={counts}
+        toolbarActions={toolbarActions}
+      />
 
       <div className="flex min-h-0 flex-1 gap-2 p-2">
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-df-node-border bg-df-editor-bg px-2 py-1.5">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
-              <CircleDot size={12} />
-              Narrative Graph
-              <span title="Shows act/chapter/page hierarchy.">
-                <Info size={12} />
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1 text-[11px] text-df-text-tertiary">
-                <span className="inline-flex items-center gap-1">
-                  <CircleDot size={12} />
-                  Act
-                </span>
-                <select
-                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-primary"
-                  value={selectedAct?.id ?? ''}
-                  onChange={event => {
-                    const actId = event.target.value;
-                    const act = thread.acts.find(item => item.id === actId);
-                    setSelection(prev => ({
-                      ...prev,
-                      actId,
-                      chapterId: act?.chapters[0]?.id,
-                      pageId: act?.chapters[0]?.pages[0]?.id,
-                    }));
-                    setDialogueScope('page');
-                    setStoryletFocusId(null);
-                  }}
-                  title="Select act"
-                >
-                  {thread.acts.map(act => (
-                    <option key={act.id} value={act.id}>
-                      {act.title ?? act.id}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          <NarrativeGraphSection
+            thread={workspaceState.thread}
+            dialogueTree={workspaceState.dialogueTree}
+            narrativeViewMode={workspaceState.narrativeViewMode}
+            showNarrativeMiniMap={workspaceState.showNarrativeMiniMap}
+            onViewModeChange={workspaceState.setNarrativeViewMode}
+            onToggleMiniMap={() => workspaceState.setShowNarrativeMiniMap(prev => !prev)}
+            onPaneContextMenu={event => {
+              event.preventDefault();
+              setNarrativeContextMenu({
+                x: event.clientX,
+                y: event.clientY,
+              });
+            }}
+            onPaneClick={() => setNarrativeContextMenu(null)}
+            onSelectElement={handleNarrativeElementSelect}
+          />
 
-              <div className="flex items-center gap-1 text-[11px] text-df-text-tertiary">
-                <span className="inline-flex items-center gap-1">
-                  <BookOpen size={12} />
-                  Chapter
-                </span>
-                <select
-                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-primary"
-                  value={selectedChapter?.id ?? ''}
-                  onChange={event => {
-                    const chapterId = event.target.value;
-                    const chapter = selectedAct?.chapters.find(item => item.id === chapterId);
-                    setSelection(prev => ({
-                      ...prev,
-                      chapterId,
-                      pageId: chapter?.pages[0]?.id,
-                    }));
-                    setDialogueScope('page');
-                    setStoryletFocusId(null);
-                  }}
-                  title="Select chapter"
-                >
-                  {(selectedAct?.chapters ?? []).map(chapter => (
-                    <option key={chapter.id} value={chapter.id}>
-                      {chapter.title ?? chapter.id}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-center gap-1 text-[11px] text-df-text-tertiary">
-                <span className="inline-flex items-center gap-1">
-                  <LayoutPanelTop size={12} />
-                  Page
-                </span>
-                <select
-                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-primary"
-                  value={selectedPage?.id ?? ''}
-                  onChange={event => {
-                    setSelection(prev => ({ ...prev, pageId: event.target.value }));
-                    setDialogueScope('page');
-                    setStoryletFocusId(null);
-                  }}
-                  title="Select page"
-                >
-                  {(selectedChapter?.pages ?? []).map(page => (
-                    <option key={page.id} value={page.id}>
-                      {page.title ?? page.id}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-center rounded-md border border-df-control-border bg-df-control-bg p-0.5" role="tablist">
-                <button
-                  type="button"
-                  className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
-                    narrativeViewMode === VIEW_MODE.GRAPH ? 'bg-df-control-active text-df-text-primary' : 'text-df-text-secondary'
-                  }`}
-                  onClick={() => setNarrativeViewMode(VIEW_MODE.GRAPH)}
-                  title="Graph view"
-                  role="tab"
-                >
-                  <ListTree size={12} />
-                  Graph
-                </button>
-                <button
-                  type="button"
-                  className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
-                    narrativeViewMode === VIEW_MODE.YARN ? 'bg-df-control-active text-df-text-primary' : 'text-df-text-secondary'
-                  }`}
-                  onClick={() => setNarrativeViewMode(VIEW_MODE.YARN)}
-                  title="Yarn view"
-                  role="tab"
-                >
-                  <FileText size={12} />
-                  Yarn
-                </button>
-              </div>
-              <button
-                type="button"
-                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => handleExportYarn(dialogueTree)}
-                title="Export yarn"
-              >
-                <Download size={12} />
-                Export
-              </button>
-            </div>
-          </div>
-          <div className="h-[220px] min-h-[200px] rounded-lg border border-df-node-border bg-df-editor-bg p-1">
-            {narrativeViewMode === VIEW_MODE.GRAPH ? (
-              <NarrativeGraphView
-                thread={thread}
-                className="h-full"
-                showMiniMap={showNarrativeMiniMap}
-                onToggleMiniMap={() => setShowNarrativeMiniMap(prev => !prev)}
-                onPaneContextMenu={event => {
-                  event.preventDefault();
-                  setNarrativeContextMenu({
-                    x: event.clientX,
-                    y: event.clientY,
-                  });
-                }}
-                onPaneClick={() => setNarrativeContextMenu(null)}
-                onSelectElement={(elementType, elementId) => {
-                  if (elementType === NARRATIVE_ELEMENT.ACT) {
-                    const act = thread.acts.find(item => item.id === elementId);
-                    setSelection(prev => ({
-                      ...prev,
-                      actId: elementId,
-                      chapterId: act?.chapters[0]?.id,
-                      pageId: act?.chapters[0]?.pages[0]?.id,
-                    }));
-                    setDialogueScope('page');
-                    setStoryletFocusId(null);
-                  }
-                  if (elementType === NARRATIVE_ELEMENT.CHAPTER) {
-                    const actForChapter = thread.acts.find(act =>
-                      act.chapters.some(item => item.id === elementId)
-                    );
-                    const chapter = actForChapter?.chapters.find(item => item.id === elementId);
-                    setSelection(prev => ({
-                      ...prev,
-                      actId: actForChapter?.id ?? prev.actId,
-                      chapterId: elementId,
-                      pageId: chapter?.pages[0]?.id,
-                    }));
-                    setDialogueScope('page');
-                    setStoryletFocusId(null);
-                  }
-                  if (elementType === NARRATIVE_ELEMENT.PAGE) {
-                    const actForPage = thread.acts.find(act =>
-                      act.chapters.some(chapter => chapter.pages.some(page => page.id === elementId))
-                    );
-                    const chapterForPage = actForPage?.chapters.find(chapter =>
-                      chapter.pages.some(page => page.id === elementId)
-                    );
-                    setSelection(prev => ({
-                      ...prev,
-                      actId: actForPage?.id ?? prev.actId,
-                      chapterId: chapterForPage?.id ?? prev.chapterId,
-                      pageId: elementId,
-                    }));
-                    setDialogueScope('page');
-                    setStoryletFocusId(null);
-                  }
-                }}
-              />
-            ) : (
-              <YarnView dialogue={dialogueTree} onExport={() => handleExportYarn(dialogueTree)} />
-            )}
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-df-node-border bg-df-editor-bg px-2 py-1.5">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
-              <LayoutPanelTop size={12} />
-              Dialogue Graph
-              <span
-                title={selectedPage?.title ? `Editing page: ${selectedPage.title}` : 'Editing page scope.'}
-              >
-                <Info size={12} />
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-[11px] text-df-text-tertiary">
-              <span className="inline-flex items-center gap-1 rounded-full border border-df-control-border bg-df-control-bg px-2 py-1">
-                {dialogueScope === 'storylet' ? 'Storylet' : 'Page'} · {dialogueScope === 'storylet'
-                  ? (selectedStoryletEntry?.template.title ?? 'Storylet')
-                  : (selectedPage?.title ?? 'Page')}
-              </span>
-              <div className="flex items-center rounded-md border border-df-control-border bg-df-control-bg p-0.5" role="tablist">
-                <button
-                  type="button"
-                  className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
-                    dialogueViewMode === VIEW_MODE.GRAPH ? 'bg-df-control-active text-df-text-primary' : 'text-df-text-secondary'
-                  }`}
-                  onClick={() => setDialogueViewMode(VIEW_MODE.GRAPH)}
-                  title="Graph view"
-                  role="tab"
-                >
-                  <ListTree size={12} />
-                  Graph
-                </button>
-                <button
-                  type="button"
-                  className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
-                    dialogueViewMode === VIEW_MODE.YARN ? 'bg-df-control-active text-df-text-primary' : 'text-df-text-secondary'
-                  }`}
-                  onClick={() => setDialogueViewMode(VIEW_MODE.YARN)}
-                  title="Yarn view"
-                  role="tab"
-                >
-                  <FileText size={12} />
-                  Yarn
-                </button>
-              </div>
-              <button
-                type="button"
-                className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => handleExportYarn(scopedDialogue)}
-                title="Export yarn"
-              >
-                <Download size={12} />
-                Export
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 min-h-0 rounded-lg border border-df-node-border bg-df-editor-bg p-1">
-            {dialogueViewMode === VIEW_MODE.GRAPH ? (
-              <DialogueEditorV2
-                dialogue={scopedDialogue}
-                onChange={handleDialogueChange}
-                flagSchema={activeFlagSchema}
-                characters={resolvedCharacters}
-                viewMode={VIEW_MODE.GRAPH}
-                className="h-full"
-                showMiniMap={showDialogueMiniMap}
-                onToggleMiniMap={() => setShowDialogueMiniMap(prev => !prev)}
-              />
-            ) : (
-              <YarnView dialogue={scopedDialogue} onExport={() => handleExportYarn(scopedDialogue)} />
-            )}
-          </div>
+          <DialogueGraphSection
+            dialogue={workspaceState.dialogueTree}
+            scopedDialogue={scopedDialogue}
+            selectedPage={selectedPage}
+            selectedStoryletEntry={storyletManagement.selectedStoryletEntry}
+            dialogueScope={workspaceState.dialogueScope}
+            dialogueViewMode={workspaceState.dialogueViewMode}
+            showDialogueMiniMap={workspaceState.showDialogueMiniMap}
+            flagSchema={workspaceState.activeFlagSchema}
+            characters={resolvedCharacters}
+            onDialogueChange={handleDialogueChange}
+            onViewModeChange={workspaceState.setDialogueViewMode}
+            onToggleMiniMap={() => workspaceState.setShowDialogueMiniMap(prev => !prev)}
+          />
         </div>
 
-        <div className="flex w-[320px] min-w-[280px] flex-col gap-2">
-          <div className="flex items-center justify-between rounded-lg border border-df-node-border bg-df-editor-bg px-2 py-1.5">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
-              <BookOpen size={12} />
-              Storylets
-              <span title="Manage storylets and pools for the selected chapter.">
-                <Info size={12} />
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-xs">
-              <button
-                type="button"
-                className={`rounded-md px-2 py-1 ${storyletTab === 'storylets' ? 'bg-df-control-active text-df-text-primary' : 'text-df-text-secondary'}`}
-                onClick={() => setStoryletTab('storylets')}
-                title="Storylets tab"
-              >
-                Storylets
-              </button>
-              <button
-                type="button"
-                className={`rounded-md px-2 py-1 ${storyletTab === 'pools' ? 'bg-df-control-active text-df-text-primary' : 'text-df-text-secondary'}`}
-                onClick={() => setStoryletTab('pools')}
-                title="Pools tab"
-              >
-                Pools
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 min-h-0 rounded-lg border border-df-node-border bg-df-editor-bg p-2">
-            {storyletTab === 'storylets' ? (
-              <div className="flex h-full flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <Search size={14} className="absolute left-2 top-2.5 text-df-text-tertiary" />
-                    <input
-                      value={storyletSearch}
-                      onChange={event => setStoryletSearch(event.target.value)}
-                      placeholder="Search storylets..."
-                      className="w-full rounded-md border border-df-control-border bg-df-control-bg py-2 pl-7 pr-2 text-xs text-df-text-primary"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-2 text-df-text-secondary hover:text-df-text-primary"
-                    onClick={handleAddStorylet}
-                    title="Add storylet"
-                  >
-                    <Plus size={14} />
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto space-y-2">
-                  {filteredStoryletEntries.map(entry => {
-                    const isSelected = selection.storyletKey === `${entry.poolId}:${entry.template.id}`;
-                    return (
-                      <button
-                        key={entry.template.id}
-                        type="button"
-                        onClick={() => {
-                          setSelection(prev => ({ ...prev, storyletKey: `${entry.poolId}:${entry.template.id}` }));
-                          setActivePoolId(entry.poolId);
-                          setDialogueScope('page');
-                          setStoryletFocusId(null);
-                        }}
-                        onContextMenu={event => {
-                          event.preventDefault();
-                          setStoryletContextMenu({
-                            x: event.clientX,
-                            y: event.clientY,
-                            entry,
-                          });
-                        }}
-                        className={`w-full rounded-lg border px-3 py-2 text-left text-xs ${
-                          isSelected ? 'border-df-node-selected bg-df-control-active/30 text-df-text-primary' : 'border-df-node-border text-df-text-secondary hover:border-df-node-selected'
-                        }`}
-                        title="Select storylet"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="font-semibold">{entry.template.title ?? entry.template.id}</div>
-                          <button
-                            type="button"
-                            className="text-df-text-tertiary hover:text-df-text-primary"
-                            onClick={event => {
-                              event.stopPropagation();
-                              setEditingStoryletId(entry.template.id);
-                              setActivePoolId(entry.poolId);
-                            }}
-                            title="Edit storylet"
-                          >
-                            <Info size={14} />
-                          </button>
-                        </div>
-                        <div className="text-[10px] text-df-text-tertiary">{entry.template.id}</div>
-                      </button>
-                    );
-                  })}
-                  {filteredStoryletEntries.length === 0 && (
-                    <div className="rounded-lg border border-df-node-border bg-df-control-bg p-3 text-xs text-df-text-tertiary">
-                      No storylets found.
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="flex h-full flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <Search size={14} className="absolute left-2 top-2.5 text-df-text-tertiary" />
-                    <input
-                      value={poolSearch}
-                      onChange={event => setPoolSearch(event.target.value)}
-                      placeholder="Search pools..."
-                      className="w-full rounded-md border border-df-control-border bg-df-control-bg py-2 pl-7 pr-2 text-xs text-df-text-primary"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-2 text-df-text-secondary hover:text-df-text-primary"
-                    onClick={handleAddStoryletPool}
-                    title="Add pool"
-                  >
-                    <Plus size={14} />
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto space-y-2">
-                  {filteredPools.map(pool => {
-                    const isSelected = activePool?.id === pool.id;
-                    return (
-                      <button
-                        key={pool.id}
-                        type="button"
-                        onClick={() => setActivePoolId(pool.id)}
-                        className={`w-full rounded-lg border px-3 py-2 text-left text-xs ${
-                          isSelected ? 'border-df-node-selected bg-df-control-active/30 text-df-text-primary' : 'border-df-node-border text-df-text-secondary hover:border-df-node-selected'
-                        }`}
-                        title="Select pool"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="font-semibold">{pool.title ?? pool.id}</div>
-                          <button
-                            type="button"
-                            className="text-df-text-tertiary hover:text-df-text-primary"
-                            onClick={event => {
-                              event.stopPropagation();
-                              setEditingPoolId(pool.id);
-                            }}
-                            title="Edit pool"
-                          >
-                            <Info size={14} />
-                          </button>
-                        </div>
-                        <div className="text-[10px] text-df-text-tertiary">{pool.members.length} storylets</div>
-                      </button>
-                    );
-                  })}
-                  {filteredPools.length === 0 && (
-                    <div className="rounded-lg border border-df-node-border bg-df-control-bg p-3 text-xs text-df-text-tertiary">
-                      No pools found.
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <StoryletsSidebar
+          storyletTab={storyletManagement.storyletTab}
+          storyletSearch={storyletManagement.storyletSearch}
+          poolSearch={storyletManagement.poolSearch}
+          filteredStoryletEntries={storyletManagement.filteredStoryletEntries}
+          filteredPools={storyletManagement.filteredPools}
+          selection={selection}
+          activePool={storyletManagement.activePool}
+          onTabChange={storyletManagement.setStoryletTab}
+          onStoryletSearchChange={storyletManagement.setStoryletSearch}
+          onPoolSearchChange={storyletManagement.setPoolSearch}
+          onAddStorylet={narrativeActions.handleAddStorylet}
+          onAddPool={narrativeActions.handleAddStoryletPool}
+          onStoryletSelect={handleStoryletSelect}
+          onStoryletEdit={handleStoryletEdit}
+          onStoryletContextMenu={handleStoryletContextMenuOpen}
+          onPoolSelect={setActivePoolId}
+          onPoolEdit={storyletManagement.setEditingPoolId}
+        />
       </div>
 
       {narrativeContextMenu && (
-        <div
-          className="fixed z-50 rounded-lg border border-df-node-border bg-df-editor-bg shadow-xl text-xs text-df-text-secondary"
-          style={{ top: narrativeContextMenu.y, left: narrativeContextMenu.x }}
-          onMouseDown={event => event.stopPropagation()}
-        >
-          <button
-            type="button"
-            className="block w-full px-3 py-2 text-left hover:bg-df-control-hover"
-            onClick={() => {
-              handleAddAct();
-              setNarrativeContextMenu(null);
-            }}
-          >
-            Add Act
-          </button>
-          <button
-            type="button"
-            className="block w-full px-3 py-2 text-left hover:bg-df-control-hover disabled:opacity-50"
-            disabled={!selectedAct}
-            onClick={() => {
-              handleAddChapter();
-              setNarrativeContextMenu(null);
-            }}
-          >
-            Add Chapter
-          </button>
-          <button
-            type="button"
-            className="block w-full px-3 py-2 text-left hover:bg-df-control-hover disabled:opacity-50"
-            disabled={!selectedChapter}
-            onClick={() => {
-              handleAddPage();
-              setNarrativeContextMenu(null);
-            }}
-          >
-            Add Page
-          </button>
-        </div>
+        <NarrativeContextMenu
+          x={narrativeContextMenu.x}
+          y={narrativeContextMenu.y}
+          onAddAct={narrativeActions.handleAddAct}
+          onAddChapter={narrativeActions.handleAddChapter}
+          onAddPage={narrativeActions.handleAddPage}
+          canAddChapter={!!selectedAct}
+          canAddPage={!!selectedChapter}
+          onClose={() => setNarrativeContextMenu(null)}
+        />
       )}
 
-      {storyletContextMenu && (
-        <div
-          className="fixed z-50 rounded-lg border border-df-node-border bg-df-editor-bg shadow-xl text-xs text-df-text-secondary"
-          style={{ top: storyletContextMenu.y, left: storyletContextMenu.x }}
-          onMouseDown={event => event.stopPropagation()}
-        >
-          <button
-            type="button"
-            className="block w-full px-3 py-2 text-left hover:bg-df-control-hover"
-            onClick={() => {
-              setSelection(prev => ({
-                ...prev,
-                storyletKey: `${storyletContextMenu.entry.poolId}:${storyletContextMenu.entry.template.id}`,
-              }));
-              handleOpenStoryletTemplate(storyletContextMenu.entry.template.id);
-              setStoryletContextMenu(null);
-            }}
-          >
-            Load Dialogue Graph
-          </button>
-          <button
-            type="button"
-            className="block w-full px-3 py-2 text-left hover:bg-df-control-hover"
-            onClick={() => {
-              setEditingStoryletId(storyletContextMenu.entry.template.id);
-              setStoryletContextMenu(null);
-            }}
-          >
-            Edit Metadata
-          </button>
-        </div>
+      {storyletManagement.storyletContextMenu && (
+        <StoryletContextMenu
+          x={storyletManagement.storyletContextMenu.x}
+          y={storyletManagement.storyletContextMenu.y}
+          entry={storyletManagement.storyletContextMenu.entry}
+          onLoadDialogue={() => {
+            setSelection(prev => ({
+              ...prev,
+              storyletKey: `${storyletManagement.storyletContextMenu!.entry.poolId}:${storyletManagement.storyletContextMenu!.entry.template.id}`,
+            }));
+            handleOpenStoryletTemplate(storyletManagement.storyletContextMenu!.entry.template.id);
+            storyletManagement.setStoryletContextMenu(null);
+          }}
+          onEditMetadata={() => {
+            storyletManagement.setEditingStoryletId(storyletManagement.storyletContextMenu!.entry.template.id);
+            storyletManagement.setStoryletContextMenu(null);
+          }}
+          onClose={() => storyletManagement.setStoryletContextMenu(null)}
+        />
       )}
 
-      {showPlayModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
-          <div className="relative flex h-full max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-df-editor-border bg-df-editor-bg">
-            <div className="flex items-center justify-between border-b border-df-node-border px-4 py-3">
-              <div>
-                <div className="text-xs uppercase tracking-wide text-df-text-tertiary">Play</div>
-                <div className="text-sm font-semibold text-df-text-primary">{playTitle}</div>
-                <div className="text-xs text-df-text-secondary">{playSubtitle}</div>
-              </div>
-              <button
-                type="button"
-                className="rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => setShowPlayModal(false)}
-                title="Close play view"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="flex-1 min-h-0">
-              <PlayView
-                dialogue={scopedDialogue}
-                startNodeId={scopedDialogue.startNodeId}
-                flagSchema={activeFlagSchema}
-                gameStateFlags={activeGameState?.flags}
-                narrativeThread={thread}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      {showFlagManager && activeFlagSchema && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
-          <div className="relative flex h-full max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-df-editor-border bg-df-editor-bg">
-            <div className="flex items-center justify-between border-b border-df-node-border px-4 py-3">
-              <div className="text-sm font-semibold text-df-text-primary">Game State</div>
-              <button
-                type="button"
-                className="rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => setShowFlagManager(false)}
-                title="Close flag manager"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_320px]">
-              <div className="min-h-0">
-                <FlagManager
-                  flagSchema={activeFlagSchema}
-                  dialogue={dialogueTree}
-                  onUpdate={setActiveFlagSchema}
-                  onClose={() => setShowFlagManager(false)}
-                />
-              </div>
-              <div className="border-l border-df-node-border bg-df-base/60 p-4 space-y-4 text-xs text-df-text-secondary">
-                <div>
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
-                    <CircleDot size={12} />
-                    Game State JSON
-                  </div>
-                  <textarea
-                    value={gameStateDraft}
-                    onChange={event => setGameStateDraft(event.target.value)}
-                    className="mt-2 h-32 w-full rounded-md border border-df-control-border bg-df-control-bg px-3 py-2 text-[11px] text-df-text-primary"
-                  />
-                  {gameStateError && (
-                    <div className="mt-2 text-[11px] text-df-error">{gameStateError}</div>
-                  )}
-                  <div className="mt-2 flex items-center gap-2">
-                    <button
-                      type="button"
-                      className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
-                      onClick={() => {
-                        try {
-                          const nextState = JSON.parse(gameStateDraft) as BaseGameState;
-                          if (!nextState.flags) {
-                            setGameStateError('Game state must include a flags object.');
-                            return;
-                          }
-                          setActiveGameState(nextState);
-                          setGameStateError(null);
-                        } catch {
-                          setGameStateError('Invalid JSON. Fix errors before saving.');
-                        }
-                      }}
-                    >
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary hover:text-df-text-primary"
-                      onClick={() => {
-                        setGameStateDraft(JSON.stringify(activeGameState, null, 2));
-                        setGameStateError(null);
-                      }}
-                    >
-                      Reset
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
-                    <BookOpen size={12} />
-                    Characters
-                  </div>
-                  <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
-                    {Object.values(resolvedCharacters).length > 0 ? (
-                      Object.values(resolvedCharacters).map(character => (
-                        <div
-                          key={character.id}
-                          className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-2 text-[11px]"
-                        >
-                          <div className="text-df-text-primary font-semibold">{character.name}</div>
-                          <div className="text-df-text-tertiary">{character.id}</div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-2 text-[11px] text-df-text-tertiary">
-                        No characters loaded.
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
-                    <Flag size={12} />
-                    Flag Catalog
-                  </div>
-                  <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
-                    {activeFlagSchema?.flags.length ? (
-                      Object.values(FLAG_TYPE).map(flagType => {
-                        const flags = activeFlagSchema.flags.filter(flag => flag.type === flagType);
-                        if (flags.length === 0) return null;
-                        return (
-                          <div key={flagType} className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-2">
-                            <div className="text-[11px] font-semibold text-df-text-primary">{flagType}</div>
-                            <ul className="mt-1 space-y-1 text-[11px] text-df-text-tertiary">
-                              {flags.map(flag => (
-                                <li key={flag.id}>{flag.id}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-2 text-[11px] text-df-text-tertiary">
-                        No flag schema loaded.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <PlayModal
+        isOpen={workspaceState.showPlayModal}
+        onClose={() => workspaceState.setShowPlayModal(false)}
+        dialogue={scopedDialogue}
+        flagSchema={workspaceState.activeFlagSchema}
+        gameStateFlags={workspaceState.activeGameState?.flags}
+        narrativeThread={workspaceState.thread}
+        title={playTitle}
+        subtitle={playSubtitle}
+      />
+
+      {workspaceState.showFlagManager && workspaceState.activeFlagSchema && (
+        <FlagManagerModal
+          isOpen={workspaceState.showFlagManager}
+          onClose={() => workspaceState.setShowFlagManager(false)}
+          flagSchema={workspaceState.activeFlagSchema}
+          dialogue={workspaceState.dialogueTree}
+          activeGameState={workspaceState.activeGameState}
+          resolvedCharacters={resolvedCharacters}
+          onUpdateFlagSchema={workspaceState.setActiveFlagSchema}
+          onUpdateGameState={workspaceState.setActiveGameState}
+        />
       )}
 
-      <GuidePanel isOpen={showGuide} onClose={() => setShowGuide(false)} />
+      <GuidePanel isOpen={workspaceState.showGuide} onClose={() => workspaceState.setShowGuide(false)} />
 
-      {editingStoryletEntry && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
-          <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-df-editor-border bg-df-editor-bg">
-            <div className="flex items-center justify-between border-b border-df-node-border px-4 py-3">
-              <div className="text-sm font-semibold text-df-text-primary">Storylet Details</div>
-              <button
-                type="button"
-                className="rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => setEditingStoryletId(null)}
-                title="Close storylet editor"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="space-y-3 p-4 text-xs text-df-text-secondary">
-              <label className="flex flex-col gap-1">
-                <span>Title</span>
-                <input
-                  value={editingStoryletEntry.template.title ?? ''}
-                  onChange={event =>
-                    handleStoryletTemplateUpdate(editingStoryletEntry, { title: event.target.value })
-                  }
-                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span>Summary</span>
-                <textarea
-                  value={editingStoryletEntry.template.summary ?? ''}
-                  onChange={event =>
-                    handleStoryletTemplateUpdate(editingStoryletEntry, { summary: event.target.value })
-                  }
-                  className="min-h-[80px] rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span>Dialogue ID</span>
-                <input
-                  value={editingStoryletEntry.template.dialogueId}
-                  onChange={event =>
-                    handleStoryletTemplateUpdate(editingStoryletEntry, { dialogueId: event.target.value })
-                  }
-                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span>Weight</span>
-                <input
-                  type="number"
-                  value={editingStoryletEntry.member.weight ?? 1}
-                  onChange={event =>
-                    handleStoryletMemberUpdate(editingStoryletEntry, { weight: Number(event.target.value) })
-                  }
-                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
-                />
-              </label>
-            </div>
-          </div>
-        </div>
+      {storyletManagement.editingStoryletEntry && (
+        <StoryletEditorModal
+          isOpen={!!storyletManagement.editingStoryletEntry}
+          entry={storyletManagement.editingStoryletEntry}
+          onClose={() => storyletManagement.setEditingStoryletId(null)}
+          onUpdateTemplate={narrativeActions.handleStoryletTemplateUpdate}
+          onUpdateMember={narrativeActions.handleStoryletMemberUpdate}
+        />
       )}
 
-      {editingPool && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
-          <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-df-editor-border bg-df-editor-bg">
-            <div className="flex items-center justify-between border-b border-df-node-border px-4 py-3">
-              <div className="text-sm font-semibold text-df-text-primary">Pool Details</div>
-              <button
-                type="button"
-                className="rounded-md border border-df-control-border bg-df-control-bg p-1 text-df-text-secondary hover:text-df-text-primary"
-                onClick={() => setEditingPoolId(null)}
-                title="Close pool editor"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="space-y-3 p-4 text-xs text-df-text-secondary">
-              <label className="flex flex-col gap-1">
-                <span>Title</span>
-                <input
-                  value={editingPool.title ?? ''}
-                  onChange={event =>
-                    handleStoryletPoolUpdate(editingPool.id, { title: event.target.value })
-                  }
-                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span>Summary</span>
-                <textarea
-                  value={editingPool.summary ?? ''}
-                  onChange={event =>
-                    handleStoryletPoolUpdate(editingPool.id, { summary: event.target.value })
-                  }
-                  className="min-h-[80px] rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span>Selection Mode</span>
-                <select
-                  value={editingPool.selectionMode ?? STORYLET_SELECTION_MODE.WEIGHTED}
-                  onChange={event =>
-                    handleStoryletPoolUpdate(editingPool.id, {
-                      selectionMode: event.target.value as StoryletPool['selectionMode'],
-                    })
-                  }
-                  className="rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-df-text-primary"
-                >
-                  {Object.values(STORYLET_SELECTION_MODE).map(mode => (
-                    <option key={mode} value={mode}>
-                      {mode}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          </div>
-        </div>
+      {storyletManagement.editingPool && (
+        <PoolEditorModal
+          isOpen={!!storyletManagement.editingPool}
+          pool={storyletManagement.editingPool}
+          onClose={() => storyletManagement.setEditingPoolId(null)}
+          onUpdate={(poolId, updates) => {
+            narrativeActions.handleStoryletPoolUpdate(poolId, updates);
+            if (updates.id && updates.id !== poolId) {
+              if (activePoolId === poolId) {
+                setActivePoolId(updates.id);
+              }
+              if (storyletManagement.editingPoolId === poolId) {
+                storyletManagement.setEditingPoolId(updates.id);
+              }
+            }
+          }}
+        />
       )}
     </div>
   );

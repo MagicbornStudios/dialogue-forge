@@ -81,11 +81,60 @@
   --color-df-sidebar-border: var(--color-df-sidebar-border);
   --color-df-editor-bg: var(--color-df-editor-bg);
   --color-df-editor-border: var(--color-df-editor-border);
+
+  /* shadcn/ui color tokens (Tailwind v4) */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 
 :root {
-  --background: #0a0a0f;
-  --foreground: #e4e4e7;
+  /* Base shadcn/ui CSS variables (mapped to DF theme) */
+  --background: var(--color-df-base);
+  --foreground: var(--color-df-text-primary);
+
+  --card: var(--color-df-surface);
+  --card-foreground: var(--color-df-text-primary);
+
+  --popover: var(--color-df-elevated);
+  --popover-foreground: var(--color-df-text-primary);
+
+  --primary: var(--color-df-node-selected);
+  --primary-foreground: var(--color-df-text-primary);
+
+  --secondary: var(--color-df-control-bg);
+  --secondary-foreground: var(--color-df-text-primary);
+
+  --muted: var(--color-df-control-bg);
+  --muted-foreground: var(--color-df-text-tertiary);
+
+  --accent: var(--color-df-control-hover);
+  --accent-foreground: var(--color-df-text-primary);
+
+  --destructive: var(--color-df-error);
+  --destructive-foreground: var(--color-df-text-primary);
+
+  --border: var(--color-df-control-border);
+  --input: var(--color-df-control-border);
+  --ring: var(--color-df-node-selected);
+
+  --radius: 0.6rem;
 }
 
 body {

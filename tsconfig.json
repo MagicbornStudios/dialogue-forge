@@ -27,6 +27,15 @@
       ],
       "@magicborn/dialogue-forge/*": [
         "./*"
+      ],
+      "@payload-config": [
+        "./app/payload.config.ts"
+      ],
+      "@payloadcms/ui": [
+        "./node_modules/@payloadcms/ui"
+      ],
+      "@payloadcms/ui/*": [
+        "./node_modules/@payloadcms/ui/*"
       ]
     },
     "plugins": [

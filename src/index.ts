@@ -2,6 +2,8 @@ export { DialogueEditorV2 } from './components/DialogueEditorV2';
 export { NarrativeEditor } from './components/NarrativeEditor';
 export { NarrativeGraphView } from './components/NarrativeGraphView';
 export { NarrativeWorkspace } from './components/NarrativeWorkspace';
+// Export DialogueForge as the main component (alias for NarrativeWorkspace)
+export { NarrativeWorkspace as DialogueForge } from './components/NarrativeWorkspace';
 // Legacy scene player (use GamePlayer for new experiences)
 export { ScenePlayer } from './components/ScenePlayer';
 export type { ScenePlayerProps } from './components/ScenePlayer';

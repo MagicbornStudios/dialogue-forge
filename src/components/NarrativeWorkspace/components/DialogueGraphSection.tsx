@@ -9,13 +9,17 @@ import { VIEW_MODE } from '../../../types/constants';
 import { exportDialogueToYarn } from '../utils/narrative-workspace-utils';
 import { GraphViewModeTabs } from '@/src/components/forge/GraphViewModeTabs';
 import { Button } from '@/src/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
+import type { DialoguePanelTab } from '@/src/components/forge/store/forge-ui-store';
 
 interface DialogueGraphSectionProps {
   dialogue: DialogueTree;
   scopedDialogue: DialogueTree;
   selectedPage: any;
   selectedStoryletEntry: any;
-  dialogueScope: 'page' | 'storylet';
+  activeTab: DialoguePanelTab;
+  onTabChange: (tab: DialoguePanelTab) => void;
+  storyletTabEnabled: boolean;
   dialogueViewMode: ViewMode;
   showDialogueMiniMap: boolean;
   flagSchema?: FlagSchema;
@@ -30,7 +34,9 @@ export function DialogueGraphSection({
   scopedDialogue,
   selectedPage,
   selectedStoryletEntry,
-  dialogueScope,
+  activeTab,
+  onTabChange,
+  storyletTabEnabled,
   dialogueViewMode,
   showDialogueMiniMap,
   flagSchema,
@@ -52,8 +58,16 @@ export function DialogueGraphSection({
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-[11px] text-df-text-tertiary">
+          <Tabs value={activeTab} onValueChange={value => onTabChange(value as DialoguePanelTab)}>
+            <TabsList>
+              <TabsTrigger value="page">Page</TabsTrigger>
+              <TabsTrigger value="storyletTemplate" disabled={!storyletTabEnabled}>
+                Storylet
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
           <span className="inline-flex items-center gap-1 rounded-full border border-df-control-border bg-df-control-bg px-2 py-1">
-            {dialogueScope === 'storylet' ? 'Storylet' : 'Page'} · {dialogueScope === 'storylet'
+            {activeTab === 'storyletTemplate' ? 'Storylet' : 'Page'} · {activeTab === 'storyletTemplate'
               ? (selectedStoryletEntry?.template.title ?? 'Storylet')
               : (selectedPage?.title ?? 'Page')}
           </span>

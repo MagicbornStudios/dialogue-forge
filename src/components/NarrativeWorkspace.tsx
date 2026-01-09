@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { GuidePanel } from './GuidePanel';
 import type { DialogueTree } from '../types';
 import type { BaseGameState } from '../types/game-state';
@@ -22,6 +22,13 @@ import { PlayModal } from './NarrativeWorkspace/components/PlayModal';
 import { FlagManagerModal } from './NarrativeWorkspace/components/FlagManagerModal';
 import { StoryletEditorModal } from './NarrativeWorkspace/components/StoryletEditorModal';
 import { PoolEditorModal } from './NarrativeWorkspace/components/PoolEditorModal';
+import {
+  ForgeUIStoreProvider,
+  createForgeUIStore,
+  useForgeUIStore,
+} from '@/src/components/forge/store/forge-ui-store';
+import type { DialogueForgeEvent } from '@/src/components/forge/events/events';
+import { createEvent } from '@/src/components/forge/events/events';
 
 interface NarrativeWorkspaceProps {
   initialThread: StoryThread;
@@ -31,6 +38,8 @@ interface NarrativeWorkspaceProps {
   gameState?: BaseGameState;
   className?: string;
   toolbarActions?: React.ReactNode;
+  onEvent?: (event: DialogueForgeEvent) => void;
+  resolveDialogue?: (dialogueId: string) => Promise<DialogueTree>;
 }
 
 export function NarrativeWorkspace({
@@ -41,10 +50,60 @@ export function NarrativeWorkspace({
   gameState,
   className = '',
   toolbarActions,
+  onEvent,
+  resolveDialogue,
 }: NarrativeWorkspaceProps) {
-  const [selection, setSelection] = useState<NarrativeSelection>(() => getInitialSelection(initialThread));
-  const [narrativeContextMenu, setNarrativeContextMenu] = useState<{ x: number; y: number } | null>(null);
-  const [activePoolId, setActivePoolId] = useState<string | undefined>(undefined);
+  const storeRef = useRef<ReturnType<typeof createForgeUIStore> | null>(null);
+  if (!storeRef.current) {
+    storeRef.current = createForgeUIStore(getInitialSelection(initialThread));
+  }
+
+  return (
+    <ForgeUIStoreProvider store={storeRef.current}>
+      <NarrativeWorkspaceInner
+        initialThread={initialThread}
+        initialDialogue={initialDialogue}
+        flagSchema={flagSchema}
+        characters={characters}
+        gameState={gameState}
+        className={className}
+        toolbarActions={toolbarActions}
+        onEvent={onEvent}
+      />
+    </ForgeUIStoreProvider>
+  );
+}
+
+function NarrativeWorkspaceInner({
+  initialThread,
+  initialDialogue,
+  flagSchema,
+  characters,
+  gameState,
+  className = '',
+  toolbarActions,
+  onEvent,
+  resolveDialogue,
+}: NarrativeWorkspaceProps) {
+  const selection = useForgeUIStore(state => state.narrativeGraph.selection);
+  const setSelection = useForgeUIStore(state => state.actions.setNarrativeSelection);
+  const narrativeContextMenu = useForgeUIStore(state => state.narrativeGraph.contextMenu);
+  const setNarrativeContextMenu = useForgeUIStore(state => state.actions.setNarrativeContextMenu);
+  const activePoolId = useForgeUIStore(state => state.storylets.activePoolId);
+  const setActivePoolId = useForgeUIStore(state => state.actions.setActivePoolId);
+  const activeDialogueTab = useForgeUIStore(state => state.dialogueGraph.activeTab);
+  const setActiveDialogueTab = useForgeUIStore(state => state.actions.setDialogueTab);
+  const pageDialogueId = useForgeUIStore(state => state.dialogueGraph.pageDialogueId);
+  const setPageDialogueId = useForgeUIStore(state => state.actions.setPageDialogueId);
+  const storyletDialogueId = useForgeUIStore(state => state.dialogueGraph.storyletDialogueId);
+  const setStoryletDialogueId = useForgeUIStore(state => state.actions.setStoryletDialogueId);
+
+  const dispatch = useCallback(
+    (event: DialogueForgeEvent) => {
+      onEvent?.(event);
+    },
+    [onEvent]
+  );
 
   const workspaceState = useNarrativeWorkspaceState({
     initialThread,
@@ -57,7 +116,6 @@ export function NarrativeWorkspace({
     selectedAct,
     selectedChapter,
     selectedPage,
-    scopedDialogue,
   } = useNarrativeSelection({
     thread: workspaceState.thread,
     dialogueTree: workspaceState.dialogueTree,
@@ -66,11 +124,28 @@ export function NarrativeWorkspace({
     storyletFocusId: workspaceState.storyletFocusId,
   });
 
+  const dialogueCacheRef = useRef<Map<string, DialogueTree>>(new Map([[initialDialogue.id, initialDialogue]]));
+  const [, forceRerender] = React.useState(0);
+
+  const getCachedDialogue = useCallback((dialogueId: string | null): DialogueTree | null => {
+    if (!dialogueId) return null;
+    return dialogueCacheRef.current.get(dialogueId) ?? null;
+  }, []);
+
+  const ensureDialogue = useCallback(async (dialogueId: string, reason: 'page' | 'storyletTemplate') => {
+    if (dialogueCacheRef.current.has(dialogueId)) return;
+    if (!resolveDialogue) return;
+    dispatch(createEvent('dialogue.openRequested', { dialogueId, reason }));
+    const tree = await resolveDialogue(dialogueId);
+    dialogueCacheRef.current.set(dialogueId, tree);
+    forceRerender(v => v + 1);
+  }, [dispatch, resolveDialogue]);
+
   const storyletManagement = useStoryletManagement({
     selectedChapter,
     selection,
-    activePoolId,
-    setActivePoolId,
+    activePoolId: activePoolId ?? undefined,
+    setActivePoolId: next => setActivePoolId(next ?? null),
   });
 
   const narrativeActions = useNarrativeActions({
@@ -100,9 +175,21 @@ export function NarrativeWorkspace({
     return { actCount, chapterCount, pageCount, characterCount };
   }, [resolvedCharacters, workspaceState.thread.acts]);
 
-  const handleDialogueChange = useCallback((nextScopedDialogue: DialogueTree) => {
-    workspaceState.setDialogueTree(nextScopedDialogue);
-  }, [workspaceState]);
+  const activeEditingDialogueId =
+    activeDialogueTab === 'storyletTemplate'
+      ? (storyletDialogueId ?? null)
+      : (pageDialogueId ?? null);
+  const activeEditingDialogue = getCachedDialogue(activeEditingDialogueId);
+
+  const pageDialogueIdEffective = pageDialogueId ?? selectedPage?.dialogueId ?? null;
+  const pageDialogue = getCachedDialogue(pageDialogueIdEffective);
+
+  const handleDialogueChange = useCallback((nextDialogue: DialogueTree) => {
+    if (!activeEditingDialogueId) return;
+    dialogueCacheRef.current.set(activeEditingDialogueId, nextDialogue);
+    forceRerender(v => v + 1);
+    dispatch(createEvent('dialogue.changed', { dialogueId: activeEditingDialogueId, dialogue: nextDialogue, reason: 'edit' }));
+  }, [activeEditingDialogueId, dispatch]);
 
   const handleNarrativeElementSelect = useCallback((elementType: any, elementId: string) => {
     if (elementType === NARRATIVE_ELEMENT.ACT) {
@@ -115,6 +202,7 @@ export function NarrativeWorkspace({
       }));
       workspaceState.setDialogueScope('page');
       workspaceState.setStoryletFocusId(null);
+      dispatch(createEvent('narrative.select', { elementType: 'act', elementId }));
     }
     if (elementType === NARRATIVE_ELEMENT.CHAPTER) {
       const actForChapter = workspaceState.thread.acts.find(act =>
@@ -129,6 +217,7 @@ export function NarrativeWorkspace({
       }));
       workspaceState.setDialogueScope('page');
       workspaceState.setStoryletFocusId(null);
+      dispatch(createEvent('narrative.select', { elementType: 'chapter', elementId }));
     }
     if (elementType === NARRATIVE_ELEMENT.PAGE) {
       const actForPage = workspaceState.thread.acts.find(act =>
@@ -145,15 +234,16 @@ export function NarrativeWorkspace({
       }));
       workspaceState.setDialogueScope('page');
       workspaceState.setStoryletFocusId(null);
+      dispatch(createEvent('narrative.select', { elementType: 'page', elementId }));
     }
-  }, [workspaceState]);
+  }, [dispatch, setSelection, workspaceState]);
 
   const handleStoryletSelect = useCallback((entry: any) => {
     setSelection(prev => ({ ...prev, storyletKey: `${entry.poolId}:${entry.template.id}` }));
     setActivePoolId(entry.poolId);
     workspaceState.setDialogueScope('page');
     workspaceState.setStoryletFocusId(null);
-  }, [workspaceState]);
+  }, [setActivePoolId, setSelection, workspaceState]);
 
   const handleStoryletEdit = useCallback((entry: any) => {
     storyletManagement.setEditingStoryletId(entry.template.id);
@@ -170,8 +260,20 @@ export function NarrativeWorkspace({
   }, [storyletManagement]);
 
   const handleOpenStoryletTemplate = useCallback((templateId: string) => {
-    narrativeActions.handleOpenStoryletTemplate(templateId);
-  }, [narrativeActions]);
+    const template = selectedChapter?.storyletTemplates?.find(item => item.id === templateId);
+    if (!template?.dialogueId) return;
+    setStoryletDialogueId(template.dialogueId);
+    setActiveDialogueTab('storyletTemplate');
+    dispatch(createEvent('storyletTemplate.openRequested', { templateId, dialogueId: template.dialogueId }));
+    ensureDialogue(template.dialogueId, 'storyletTemplate');
+  }, [dispatch, ensureDialogue, selectedChapter?.storyletTemplates, setActiveDialogueTab, setStoryletDialogueId]);
+
+  useEffect(() => {
+    if (!selectedPage?.dialogueId) return;
+    setPageDialogueId(selectedPage.dialogueId);
+    setActiveDialogueTab('page');
+    ensureDialogue(selectedPage.dialogueId, 'page');
+  }, [ensureDialogue, selectedPage?.dialogueId, setActiveDialogueTab, setPageDialogueId]);
 
   const playTitle = selectedPage?.title ?? 'Play Page';
   const playSubtitle = selectedPage?.summary ?? 'Preview the dialogue for this page.';
@@ -217,11 +319,16 @@ export function NarrativeWorkspace({
           />
 
           <DialogueGraphSection
-            dialogue={workspaceState.dialogueTree}
-            scopedDialogue={scopedDialogue}
+            dialogue={activeEditingDialogue ?? workspaceState.dialogueTree}
+            scopedDialogue={activeEditingDialogue ?? workspaceState.dialogueTree}
             selectedPage={selectedPage}
             selectedStoryletEntry={storyletManagement.selectedStoryletEntry}
-            dialogueScope={workspaceState.dialogueScope}
+            activeTab={activeDialogueTab}
+            onTabChange={tab => {
+              setActiveDialogueTab(tab);
+              dispatch(createEvent('ui.tabChanged', { scope: 'dialoguePanel', tab }));
+            }}
+            storyletTabEnabled={!!storyletDialogueId}
             dialogueViewMode={workspaceState.dialogueViewMode}
             showDialogueMiniMap={workspaceState.showDialogueMiniMap}
             flagSchema={workspaceState.activeFlagSchema}
@@ -247,8 +354,12 @@ export function NarrativeWorkspace({
           onAddPool={narrativeActions.handleAddStoryletPool}
           onStoryletSelect={handleStoryletSelect}
           onStoryletEdit={handleStoryletEdit}
+          onStoryletOpenDialogue={entry => {
+            handleStoryletSelect(entry);
+            handleOpenStoryletTemplate(entry.template.id);
+          }}
           onStoryletContextMenu={handleStoryletContextMenuOpen}
-          onPoolSelect={setActivePoolId}
+          onPoolSelect={poolId => setActivePoolId(poolId ?? null)}
           onPoolEdit={storyletManagement.setEditingPoolId}
         />
       </div>
@@ -290,7 +401,7 @@ export function NarrativeWorkspace({
       <PlayModal
         isOpen={workspaceState.showPlayModal}
         onClose={() => workspaceState.setShowPlayModal(false)}
-        dialogue={scopedDialogue}
+        dialogue={pageDialogue ?? workspaceState.dialogueTree}
         flagSchema={workspaceState.activeFlagSchema}
         gameStateFlags={workspaceState.activeGameState?.flags}
         narrativeThread={workspaceState.thread}
@@ -303,7 +414,7 @@ export function NarrativeWorkspace({
           isOpen={workspaceState.showFlagManager}
           onClose={() => workspaceState.setShowFlagManager(false)}
           flagSchema={workspaceState.activeFlagSchema}
-          dialogue={workspaceState.dialogueTree}
+          dialogue={pageDialogue ?? workspaceState.dialogueTree}
           activeGameState={workspaceState.activeGameState}
           resolvedCharacters={resolvedCharacters}
           onUpdateFlagSchema={workspaceState.setActiveFlagSchema}
@@ -344,3 +455,6 @@ export function NarrativeWorkspace({
     </div>
   );
 }
+
+// Export as DialogueForge for public API
+export { NarrativeWorkspace as DialogueForge };

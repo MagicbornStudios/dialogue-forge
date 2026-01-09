@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import 'reactflow/dist/style.css';
 import 'react-tooltip/dist/react-tooltip.css';
 import '@/styles/globals.css';
@@ -8,14 +9,22 @@ export const metadata: Metadata = {
   description: 'Interactive demo of Dialogue Forge - a visual node-based dialogue editor with Yarn Spinner support',
 };
 
-// Tell Next.js this layout is static (no dynamic params/searchParams)
-export const dynamic = 'force-static';
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const isPayloadRoute = headersList.get('x-is-payload-route') === 'true';
+  
+  // Payload routes handle their own HTML structure via RootLayout
+  // Skip HTML wrapper for Payload admin and API routes
+  if (isPayloadRoute) {
+    // For Payload routes, just pass through children (Payload's RootLayout will handle HTML)
+    return <>{children}</>;
+  }
+  
+  // For regular routes, render HTML structure
   return (
     <html lang="en">
       <body>

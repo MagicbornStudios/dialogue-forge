@@ -1,6 +1,7 @@
 import React from 'react';
-import { BookOpen, Info, Search, Plus } from 'lucide-react';
+import { BookOpen, Info, Search, Plus, ExternalLink } from 'lucide-react';
 import type { NarrativeSelection } from '../../NarrativeEditor';
+import { Button } from '@/src/components/ui/button';
 
 interface StoryletEntry {
   poolId: string;
@@ -23,6 +24,7 @@ interface StoryletsSidebarProps {
   onAddPool: () => void;
   onStoryletSelect: (entry: StoryletEntry) => void;
   onStoryletEdit: (entry: StoryletEntry) => void;
+  onStoryletOpenDialogue: (entry: StoryletEntry) => void;
   onStoryletContextMenu: (event: React.MouseEvent, entry: StoryletEntry) => void;
   onPoolSelect: (poolId: string) => void;
   onPoolEdit: (poolId: string) => void;
@@ -43,6 +45,7 @@ export function StoryletsSidebar({
   onAddPool,
   onStoryletSelect,
   onStoryletEdit,
+  onStoryletOpenDialogue,
   onStoryletContextMenu,
   onPoolSelect,
   onPoolEdit,
@@ -114,17 +117,32 @@ export function StoryletsSidebar({
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="font-semibold">{entry.template.title ?? entry.template.id}</div>
-                      <button
-                        type="button"
-                        className="text-df-text-tertiary hover:text-df-text-primary"
-                        onClick={event => {
-                          event.stopPropagation();
-                          onStoryletEdit(entry);
-                        }}
-                        title="Edit storylet"
-                      >
-                        <Info size={14} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={event => {
+                            event.stopPropagation();
+                            onStoryletOpenDialogue(entry);
+                          }}
+                          title="Open storylet dialogue"
+                        >
+                          <ExternalLink size={14} />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={event => {
+                            event.stopPropagation();
+                            onStoryletEdit(entry);
+                          }}
+                          title="Edit storylet metadata"
+                        >
+                          <Info size={14} />
+                        </Button>
+                      </div>
                     </div>
                     <div className="text-[10px] text-df-text-tertiary">{entry.template.id}</div>
                   </button>

@@ -1,6 +1,6 @@
 'use client';
 
-import { NarrativeWorkspace } from '@magicborn/dialogue-forge/src/components/NarrativeWorkspace';
+import { NarrativeWorkspace as DialogueForge } from '@magicborn/dialogue-forge/src/components/NarrativeWorkspace';
 import { FlagSchema, exampleFlagSchema } from '@magicborn/dialogue-forge/src/types/flags';
 import type { DialogueTree, StoryThread } from '@magicborn/dialogue-forge/src/types';
 import { NARRATIVE_ELEMENT, STORYLET_SELECTION_MODE } from '@magicborn/dialogue-forge/src/types/narrative';
@@ -213,6 +213,14 @@ const demoDialogues: Record<string, DialogueTree> = {
   },
 };
 
+async function resolveDemoDialogue(dialogueId: string): Promise<DialogueTree> {
+  const dialogue = demoDialogues[dialogueId];
+  if (!dialogue) {
+    throw new Error(`Demo resolver: unknown dialogueId \"${dialogueId}\"`);
+  }
+  return dialogue;
+}
+
 // Enhanced flag schema with reputation for demo examples
 const demoFlagSchema: FlagSchema = {
   ...exampleFlagSchema,
@@ -308,11 +316,12 @@ export default function DialogueForgeDemo() {
   return (
     <div className="w-full h-screen flex flex-col">
       <div className="flex-1 w-full min-h-0">
-        <NarrativeWorkspace
+        <DialogueForge
           initialDialogue={initialDialogue}
           initialThread={demoNarrativeThread}
           flagSchema={demoFlagSchema}
           characters={characters}
+          resolveDialogue={resolveDemoDialogue}
           className="h-full"
           toolbarActions={<ThemeSwitcher />}
         />

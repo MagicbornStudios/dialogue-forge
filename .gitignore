@@ -63,6 +63,9 @@ coverage/
 # Generated Types / Artifacts
 # =========================
 next-env.d.ts
+app/payload-types.ts
+app/schema.graphql
+app/data/
 
 # =========================
 # Demo / Example Apps

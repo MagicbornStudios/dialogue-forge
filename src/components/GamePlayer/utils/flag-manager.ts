@@ -1,6 +1,6 @@
-import { GameFlagState } from '../types/game-state';
-import { FlagSchema, FlagDefinition } from '../types/flags';
-import { FLAG_TYPE, FLAG_VALUE_TYPE } from '../types/constants';
+import { GameFlagState } from '../../../types/game-state';
+import { FlagSchema, FlagDefinition } from '../../../types/flags';
+import { FLAG_TYPE, FLAG_VALUE_TYPE } from '../../../types/constants';
 
 /**
  * Initialize game flags from schema with default values

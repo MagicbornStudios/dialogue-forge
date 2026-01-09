@@ -74,7 +74,6 @@ The narrative toolset is layered on top of the dialogue editor:
 
 There are two playback experiences:
 
-- **Legacy**: `ScenePlayer` (aliased as `DialogueSimulator` in exports).
 - **Current**: `GamePlayer` uses `useDialogueRunner` and
   `useNarrativeTraversal` to drive a more robust narrative-play experience.
 
@@ -121,8 +120,6 @@ The README documents a `DialogueEditor` component, but the public export is
 `DialogueEditorV2`. This can confuse users trying to follow the Quick Start and
 copy/paste sample code.
 
-**Recommendation:** Standardize documentation around `DialogueEditorV2` and
-explicitly mention legacy aliases (`DialogueSimulator` → `ScenePlayer`).
 
 ### 4.2 CLI demo runner vs repository layout
 

@@ -6,7 +6,6 @@ import type { Character } from '../types/characters';
 import type { FlagSchema } from '../types/flags';
 import { NARRATIVE_ELEMENT } from '../types/narrative';
 import type { StoryThread } from '../types/narrative';
-import type { NarrativeSelection } from './NarrativeEditor';
 import { getInitialSelection } from './NarrativeWorkspace/utils/narrative-workspace-utils';
 import { useNarrativeWorkspaceState } from './NarrativeWorkspace/hooks/useNarrativeWorkspaceState';
 import { useNarrativeSelection } from './NarrativeWorkspace/hooks/useNarrativeSelection';
@@ -159,7 +158,7 @@ function NarrativeWorkspaceInner({
     setSelection,
     setDialogueScope: workspaceState.setDialogueScope,
     setStoryletFocusId: workspaceState.setStoryletFocusId,
-    setActivePoolId,
+    setActivePoolId: (next: string | null | undefined) => setActivePoolId(next ?? null),
     setEditingStoryletId: storyletManagement.setEditingStoryletId,
   });
 
@@ -192,46 +191,46 @@ function NarrativeWorkspaceInner({
   }, [activeEditingDialogueId, dispatch]);
 
   const handleNarrativeElementSelect = useCallback((elementType: any, elementId: string) => {
-    if (elementType === NARRATIVE_ELEMENT.ACT) {
+                  if (elementType === NARRATIVE_ELEMENT.ACT) {
       const act = workspaceState.thread.acts.find(item => item.id === elementId);
-      setSelection(prev => ({
-        ...prev,
-        actId: elementId,
-        chapterId: act?.chapters[0]?.id,
-        pageId: act?.chapters[0]?.pages[0]?.id,
-      }));
+                    setSelection(prev => ({
+                      ...prev,
+                      actId: elementId,
+                      chapterId: act?.chapters[0]?.id,
+                      pageId: act?.chapters[0]?.pages[0]?.id,
+                    }));
       workspaceState.setDialogueScope('page');
       workspaceState.setStoryletFocusId(null);
       dispatch(createEvent('narrative.select', { elementType: 'act', elementId }));
-    }
-    if (elementType === NARRATIVE_ELEMENT.CHAPTER) {
+                  }
+                  if (elementType === NARRATIVE_ELEMENT.CHAPTER) {
       const actForChapter = workspaceState.thread.acts.find(act =>
-        act.chapters.some(item => item.id === elementId)
-      );
-      const chapter = actForChapter?.chapters.find(item => item.id === elementId);
-      setSelection(prev => ({
-        ...prev,
-        actId: actForChapter?.id ?? prev.actId,
-        chapterId: elementId,
-        pageId: chapter?.pages[0]?.id,
-      }));
+                      act.chapters.some(item => item.id === elementId)
+                    );
+                    const chapter = actForChapter?.chapters.find(item => item.id === elementId);
+                    setSelection(prev => ({
+                      ...prev,
+                      actId: actForChapter?.id ?? prev.actId,
+                      chapterId: elementId,
+                      pageId: chapter?.pages[0]?.id,
+                    }));
       workspaceState.setDialogueScope('page');
       workspaceState.setStoryletFocusId(null);
       dispatch(createEvent('narrative.select', { elementType: 'chapter', elementId }));
-    }
-    if (elementType === NARRATIVE_ELEMENT.PAGE) {
+                  }
+                  if (elementType === NARRATIVE_ELEMENT.PAGE) {
       const actForPage = workspaceState.thread.acts.find(act =>
-        act.chapters.some(chapter => chapter.pages.some(page => page.id === elementId))
-      );
-      const chapterForPage = actForPage?.chapters.find(chapter =>
-        chapter.pages.some(page => page.id === elementId)
-      );
-      setSelection(prev => ({
-        ...prev,
-        actId: actForPage?.id ?? prev.actId,
-        chapterId: chapterForPage?.id ?? prev.chapterId,
-        pageId: elementId,
-      }));
+                      act.chapters.some(chapter => chapter.pages.some(page => page.id === elementId))
+                    );
+                    const chapterForPage = actForPage?.chapters.find(chapter =>
+                      chapter.pages.some(page => page.id === elementId)
+                    );
+                    setSelection(prev => ({
+                      ...prev,
+                      actId: actForPage?.id ?? prev.actId,
+                      chapterId: chapterForPage?.id ?? prev.chapterId,
+                      pageId: elementId,
+                    }));
       workspaceState.setDialogueScope('page');
       workspaceState.setStoryletFocusId(null);
       dispatch(createEvent('narrative.select', { elementType: 'page', elementId }));
@@ -239,8 +238,8 @@ function NarrativeWorkspaceInner({
   }, [dispatch, setSelection, workspaceState]);
 
   const handleStoryletSelect = useCallback((entry: any) => {
-    setSelection(prev => ({ ...prev, storyletKey: `${entry.poolId}:${entry.template.id}` }));
-    setActivePoolId(entry.poolId);
+                          setSelection(prev => ({ ...prev, storyletKey: `${entry.poolId}:${entry.template.id}` }));
+                          setActivePoolId(entry.poolId);
     workspaceState.setDialogueScope('page');
     workspaceState.setStoryletFocusId(null);
   }, [setActivePoolId, setSelection, workspaceState]);
@@ -251,12 +250,12 @@ function NarrativeWorkspaceInner({
   }, [storyletManagement]);
 
   const handleStoryletContextMenuOpen = useCallback((event: React.MouseEvent, entry: any) => {
-    event.preventDefault();
+                          event.preventDefault();
     storyletManagement.setStoryletContextMenu({
-      x: event.clientX,
-      y: event.clientY,
-      entry,
-    });
+                            x: event.clientX,
+                            y: event.clientY,
+                            entry,
+                          });
   }, [storyletManagement]);
 
   const handleOpenStoryletTemplate = useCallback((templateId: string) => {
@@ -337,7 +336,7 @@ function NarrativeWorkspaceInner({
             onViewModeChange={workspaceState.setDialogueViewMode}
             onToggleMiniMap={() => workspaceState.setShowDialogueMiniMap(prev => !prev)}
           />
-        </div>
+      </div>
 
         <StoryletsSidebar
           storyletTab={storyletManagement.storyletTab}
@@ -362,7 +361,7 @@ function NarrativeWorkspaceInner({
           onPoolSelect={poolId => setActivePoolId(poolId ?? null)}
           onPoolEdit={storyletManagement.setEditingPoolId}
         />
-      </div>
+        </div>
 
       {narrativeContextMenu && (
         <NarrativeContextMenu
@@ -383,8 +382,8 @@ function NarrativeWorkspaceInner({
           y={storyletManagement.storyletContextMenu.y}
           entry={storyletManagement.storyletContextMenu.entry}
           onLoadDialogue={() => {
-            setSelection(prev => ({
-              ...prev,
+              setSelection(prev => ({
+                ...prev,
               storyletKey: `${storyletManagement.storyletContextMenu!.entry.poolId}:${storyletManagement.storyletContextMenu!.entry.template.id}`,
             }));
             handleOpenStoryletTemplate(storyletManagement.storyletContextMenu!.entry.template.id);

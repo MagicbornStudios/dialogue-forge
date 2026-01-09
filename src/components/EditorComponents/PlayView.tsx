@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { DialogueTree, type NarrativeThread } from '../types';
-import { FLAG_TYPE } from '../types/constants';
-import { FlagSchema, FlagType } from '../types/flags';
-import { DialogueResult, FlagState, GameFlagState } from '../types/game-state';
-import { initializeFlags } from '../lib/flag-manager';
-import { GamePlayer } from './GamePlayer';
+import { DialogueTree, type NarrativeThread } from '../../types';
+import { FLAG_TYPE } from '../../types/constants';
+import { FlagSchema, FlagType } from '../../types/flags';
+import { DialogueResult, FlagState, GameFlagState } from '../../types/game-state';
+import { initializeFlags } from '../GamePlayer/utils/flag-manager';
+import { GamePlayer } from '../GamePlayer';
 
 interface PlayViewProps {
   dialogue: DialogueTree;

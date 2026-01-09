@@ -6,7 +6,7 @@ import { createStore } from "zustand/vanilla"
 import { useStore } from "zustand"
 import type { ViewMode } from "@/src/types"
 import { VIEW_MODE } from "@/src/types/constants"
-import type { NarrativeSelection } from "@/src/components/NarrativeEditor"
+import type { NarrativeSelection } from "@/src/types/narrative"
 
 export type DialoguePanelTab = "page" | "storyletTemplate"
 

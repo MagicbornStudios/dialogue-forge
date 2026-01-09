@@ -1,7 +1,9 @@
 import { NodeType } from './constants';
 import type { Condition, ConditionalBlock } from './conditionals';
-import type { RandomizerBranch, StoryletPool } from './narrative';
+import type { StoryletPool } from './narrative';
 export type { ViewMode } from './constants';
+export { DIALOGUE_FORGE_EVENT_TYPE, DIALOGUE_PANEL_TAB, DIALOGUE_OPEN_REASON } from './constants';
+export type { DialogueForgeEventType, DialoguePanelTab, DialogueOpenReason } from './constants';
 export type { Condition, ConditionalBlock } from './conditionals';
 export type {
   NarrativeAct,
@@ -9,7 +11,6 @@ export type {
   NarrativeElement,
   NarrativePage,
   NarrativeThread,
-  RandomizerBranch,
   StoryThread,
   StoryletPoolMember,
   StoryletTemplate,
@@ -43,7 +44,6 @@ export interface DialogueNode {
   nextNodeId?: string;
   setFlags?: string[];
   conditionalBlocks?: ConditionalBlock[]; // For conditional nodes (if/elseif/else/endif)
-  randomizerBranches?: RandomizerBranch[]; // For randomizer nodes
   storyletPoolId?: string; // For storylet nodes
   storyletId?: string; // For storylet nodes targeting a specific storylet
   storyletPool?: StoryletPool; // Inline pool data for storylet pool nodes

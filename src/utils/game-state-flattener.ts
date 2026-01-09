@@ -176,7 +176,7 @@ export function validateGameState(gameState: any): asserts gameState is Record<s
 
 /**
  * Extracts flags from gameState, flattening if necessary
- * This is the main entry point for ScenePlayer
+ * This is the main entry point for GamePlayer
  */
 export function extractFlagsFromGameState(
   gameState: any,

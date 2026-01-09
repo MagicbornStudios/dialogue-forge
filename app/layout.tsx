@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import 'reactflow/dist/style.css';
 import 'react-tooltip/dist/react-tooltip.css';
 import '@/styles/globals.css';
+import { QueryClientProvider } from './lib/forge/query-provider';
 
 export const metadata: Metadata = {
   title: 'Dialogue Forge - Visual Dialogue Editor',
@@ -28,7 +29,9 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <QueryClientProvider>
+          {children}
+        </QueryClientProvider>
       </body>
     </html>
   );

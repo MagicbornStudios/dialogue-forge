@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { NarrativeSelection } from '../../NarrativeEditor';
+import type { NarrativeSelection } from '../../../types/narrative';
 import type { StoryThread } from '../../../types/narrative';
 import { buildScopedDialogue } from '../utils/narrative-workspace-utils';
 import type { DialogueTree } from '../../../types';

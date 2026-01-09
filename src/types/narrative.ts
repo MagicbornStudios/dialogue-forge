@@ -52,6 +52,13 @@ export interface StoryThread {
   type?: typeof NARRATIVE_ELEMENT.THREAD;
 }
 
+export interface NarrativeSelection {
+  actId?: string;
+  chapterId?: string;
+  pageId?: string;
+  storyletKey?: string;
+}
+
 export type NarrativeThread = StoryThread;
 
 export interface StoryletTemplate {

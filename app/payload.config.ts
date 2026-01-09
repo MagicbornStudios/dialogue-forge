@@ -8,6 +8,20 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { sqliteAdapter } from '@payloadcms/db-sqlite'
 import type { Payload } from 'payload'
 import { seedAdmin } from './payload-seed'
+import {
+  Projects,
+  Media,
+  Characters,
+  Dialogues,
+  Threads,
+  Acts,
+  Chapters,
+  Pages,
+  StoryletTemplates,
+  StoryletPools,
+  FlagSchemas,
+  GameStates,
+} from './payload-collections'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -79,6 +93,18 @@ export default buildConfig({
         },
       ],
     },
+    Projects,
+    Media,
+    Characters,
+    Dialogues,
+    Threads,
+    Acts,
+    Chapters,
+    Pages,
+    StoryletTemplates,
+    StoryletPools,
+    FlagSchemas,
+    GameStates,
   ],
 
   // ============================
@@ -91,6 +117,7 @@ export default buildConfig({
   // ============================
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),
+    autoGenerate: true,
   },
 
   // ============================

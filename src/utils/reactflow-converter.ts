@@ -179,29 +179,6 @@ export function convertDialogueTreeToReactFlow(
       });
     }
 
-    if (node.type === NODE_TYPE.RANDOMIZER && node.randomizerBranches) {
-      node.randomizerBranches.forEach((branch, idx) => {
-        if (branch.nextNodeId) {
-          const color = CHOICE_COLORS[idx % CHOICE_COLORS.length];
-          edges.push({
-            id: `${node.id}-branch-${idx}`,
-            source: node.id,
-            target: branch.nextNodeId,
-            sourceHandle: `randomizer-branch-${idx}`,
-            type: 'choice',
-            data: {
-              branchIndex: idx,
-              branchId: branch.id,
-            },
-            style: {
-              stroke: color,
-              strokeWidth: 2,
-              opacity: 0.7,
-            },
-          } as Edge);
-        }
-      });
-    }
   });
 
   return { nodes, edges };
@@ -240,14 +217,6 @@ export function updateDialogueTreeFromReactFlow(
         ...node,
         conditionalBlocks: node.conditionalBlocks ? node.conditionalBlocks.map(block => ({
           ...block,
-          nextNodeId: undefined,
-        })) : [],
-      };
-    } else if (node.type === NODE_TYPE.RANDOMIZER) {
-      updatedNodes[node.id] = {
-        ...node,
-        randomizerBranches: node.randomizerBranches ? node.randomizerBranches.map(branch => ({
-          ...branch,
           nextNodeId: undefined,
         })) : [],
       };
@@ -314,32 +283,6 @@ export function updateDialogueTreeFromReactFlow(
         updatedNodes[edge.source] = {
           ...sourceNode,
           conditionalBlocks: updatedBlocks,
-        };
-      }
-    } else if (edge.sourceHandle?.startsWith('branch-') && sourceNode.type === NODE_TYPE.RANDOMIZER) {
-      const branchIdx = parseInt(edge.sourceHandle.replace('branch-', ''));
-      if (sourceNode.randomizerBranches && sourceNode.randomizerBranches[branchIdx]) {
-        const updatedBranches = [...sourceNode.randomizerBranches];
-        updatedBranches[branchIdx] = {
-          ...updatedBranches[branchIdx],
-          nextNodeId: edge.target,
-        };
-        updatedNodes[edge.source] = {
-          ...sourceNode,
-          randomizerBranches: updatedBranches,
-        };
-      }
-    } else if (edge.sourceHandle?.startsWith('randomizer-branch-') && sourceNode.type === NODE_TYPE.RANDOMIZER) {
-      const branchIdx = parseInt(edge.sourceHandle.replace('randomizer-branch-', ''));
-      if (sourceNode.randomizerBranches && sourceNode.randomizerBranches[branchIdx]) {
-        const updatedBranches = [...sourceNode.randomizerBranches];
-        updatedBranches[branchIdx] = {
-          ...updatedBranches[branchIdx],
-          nextNodeId: edge.target,
-        };
-        updatedNodes[edge.source] = {
-          ...sourceNode,
-          randomizerBranches: updatedBranches,
         };
       }
     }

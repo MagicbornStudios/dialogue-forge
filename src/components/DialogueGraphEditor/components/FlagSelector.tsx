@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FlagSchema, FlagDefinition } from '../types/flags';
+import { FlagSchema, FlagDefinition } from '../../../types/flags';
 import { Info, X, BookOpen, Trophy, Package, TrendingUp, Crown, Globe, MessageSquare } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';

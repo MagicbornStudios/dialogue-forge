@@ -1,7 +1,7 @@
 import React from 'react';
 import { LayoutPanelTop, Download, Info } from 'lucide-react';
-import { DialogueEditorV2 } from '../../DialogueEditorV2';
-import { YarnView } from '../../YarnView';
+import { DialogueGraphEditor } from '../../DialogueGraphEditor';
+import { YarnView } from '../../EditorComponents/YarnView';
 import type { DialogueTree, ViewMode } from '../../../types';
 import type { FlagSchema } from '../../../types/flags';
 import type { Character } from '../../../types/characters';
@@ -87,7 +87,7 @@ export function DialogueGraphSection({
       </div>
       <div className="flex-1 min-h-0 rounded-lg border border-df-node-border bg-df-editor-bg p-1">
         {dialogueViewMode === VIEW_MODE.GRAPH ? (
-          <DialogueEditorV2
+          <DialogueGraphEditor
             dialogue={scopedDialogue}
             onChange={onDialogueChange}
             flagSchema={flagSchema}

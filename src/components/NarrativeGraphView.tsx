@@ -19,7 +19,7 @@ import {
 } from '../utils/narrative-converter';
 import { NPCEdgeV2 } from './NPCEdgeV2';
 
-interface NarrativeGraphViewProps {
+interface NarrativeGraphEditorProps {
   thread: StoryThread;
   className?: string;
   showMiniMap?: boolean;
@@ -116,7 +116,7 @@ const edgeTypes = {
   default: NPCEdgeV2,
 };
 
-export function NarrativeGraphView({
+export function NarrativeGraphEditor({
   thread,
   className = '',
   showMiniMap = true,

@@ -155,7 +155,6 @@ See [DATA_STRUCTURES.md](./DATA_STRUCTURES.md) for complete type documentation a
 - `DialogueEditorV2` - Visual editor for creating/editing dialogues
 - `NarrativeWorkspace` - Narrative + dialogue editor workspace (storylets/chapters/pages)
 - `GamePlayer` - Runtime player for dialogue + narrative traversal
-- `ScenePlayer` / `DialogueSimulator` - Legacy dialogue runner
 - `GuidePanel` - Built-in documentation panel
 - `FlagSelector` - Flag autocomplete component
 
@@ -200,14 +199,14 @@ export function DialogueEditorDemo() {
 
 ### Authoring dialogue data programmatically
 
-You can build dialogue content without the editor and still take advantage of the types and constants that power the scene player. This makes it easy to script nonlinear stories, export them, or feed them directly into `ScenePlayer`.
+You can build dialogue content without the editor and still take advantage of the types and constants that power the scene player. This makes it easy to script nonlinear stories, export them, or feed them directly into `Gameplayer`.
 
 ```ts
 import {
   NODE_TYPE,
   type DialogueTree,
   type DialogueNode,
-  ScenePlayer,
+  GamePlayer
 } from '@magicborn/dialogue-forge';
 
 const nodes: Record<string, DialogueNode> = {
@@ -254,8 +253,6 @@ const merchantIntro: DialogueTree = {
   nodes,
 };
 
-// Render or test the dialogue without the editor
-// <ScenePlayer dialogue={merchantIntro} gameState={yourGameState} onComplete={...} />
 ```
 
 ## Complete Example

@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { DialogueNode, DialogueTree, Choice, ConditionalBlock } from '../types';
-import { FlagSchema } from '../types/flags';
-import { Character } from '../types/characters';
-import { FlagSelector } from './FlagSelector';
-import { CharacterSelector } from './CharacterSelector';
-import { CONDITION_OPERATOR, NODE_TYPE } from '../types/constants';
+import { DialogueNode, DialogueTree, Choice, ConditionalBlock } from '../../types';
+import { FlagSchema } from '../../types/flags';
+import { Character } from '../../types/characters';
+import { FlagSelector } from './DialogueGraphEditor/components/FlagSelector';
+import { CharacterSelector } from '../CharacterSelector';
+import { CONDITION_OPERATOR, NODE_TYPE } from '../../types/constants';
 import { AlertCircle, CheckCircle, Info, GitBranch, X, User, Maximize2 } from 'lucide-react';
-import { CHOICE_COLORS } from '../utils/reactflow-converter';
-import { EdgeIcon } from './EdgeIcon';
-import { ConditionAutocomplete } from './ConditionAutocomplete';
+import { CHOICE_COLORS } from '../../utils/reactflow-converter';
+import { EdgeIcon } from '../EdgeIcon';
+import { ConditionAutocomplete } from '../ConditionAutocomplete';
 
 interface NodeEditorProps {
   node: DialogueNode;
@@ -540,7 +540,7 @@ export function NodeEditor({
     if (node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL) {
       return 'border-df-npc-border';
     }
-    if (node.type === NODE_TYPE.PLAYER || node.type === NODE_TYPE.RANDOMIZER) {
+    if (node.type === NODE_TYPE.PLAYER) {
       return 'border-df-player-border';
     }
     if (node.type === NODE_TYPE.CONDITIONAL) return 'border-df-conditional-border';
@@ -552,7 +552,7 @@ export function NodeEditor({
     if (node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL) {
       return 'bg-df-npc-selected/20 text-df-npc-selected';
     }
-    if (node.type === NODE_TYPE.PLAYER || node.type === NODE_TYPE.RANDOMIZER) {
+    if (node.type === NODE_TYPE.PLAYER) {
       return 'bg-df-player-selected/20 text-df-player-selected';
     }
     if (node.type === NODE_TYPE.CONDITIONAL) return 'bg-df-conditional-border/20 text-df-conditional-border';
@@ -565,30 +565,9 @@ export function NodeEditor({
     if (node.type === NODE_TYPE.CONDITIONAL) return 'CONDITIONAL';
     if (node.type === NODE_TYPE.STORYLET) return 'STORYLET';
     if (node.type === NODE_TYPE.STORYLET_POOL) return 'STORYLET NODE GROUP (LEGACY)';
-    if (node.type === NODE_TYPE.RANDOMIZER) return 'STORYLET NODE GROUP';
     return 'UNKNOWN';
   };
 
-  const randomizerBranches = node.randomizerBranches || [];
-
-  const handleAddRandomizerBranch = () => {
-    const newBranch = {
-      id: `branch_${Date.now()}`,
-      label: `Entry ${randomizerBranches.length + 1}`,
-    };
-    onUpdate({ randomizerBranches: [...randomizerBranches, newBranch] });
-  };
-
-  const handleUpdateRandomizerBranch = (idx: number, updates: Partial<typeof randomizerBranches[number]>) => {
-    const updatedBranches = [...randomizerBranches];
-    updatedBranches[idx] = { ...updatedBranches[idx], ...updates };
-    onUpdate({ randomizerBranches: updatedBranches });
-  };
-
-  const handleRemoveRandomizerBranch = (idx: number) => {
-    const updatedBranches = randomizerBranches.filter((_, branchIdx) => branchIdx !== idx);
-    onUpdate({ randomizerBranches: updatedBranches.length > 0 ? updatedBranches : undefined });
-  };
 
   const ConditionalNodeFields = () => (
     <>
@@ -1140,105 +1119,6 @@ export function NodeEditor({
     </div>
   );
 
-  const StoryletNodeGroupBranches = () => (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <label className="text-[10px] text-gray-500 uppercase">Storylet Node Group</label>
-        <button onClick={handleAddRandomizerBranch} className="text-[10px] text-[#e94560] hover:text-[#ff6b6b]">
-          + Add
-        </button>
-      </div>
-      {randomizerBranches.length === 0 ? (
-        <div className="text-xs text-gray-500 p-4 text-center border border-[#2a2a3e] rounded">
-          No group entries yet. Add one to define storylet options.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {randomizerBranches.map((branch, idx) => {
-            const branchColor = CHOICE_COLORS[idx % CHOICE_COLORS.length];
-            return (
-              <div
-                key={branch.id}
-                className="rounded p-2 space-y-2 bg-[#12121a] border border-[#2a2a3e]"
-                style={{ borderTopColor: branchColor }}
-              >
-                <div className="flex items-center gap-2 pb-2 border-b" style={{ borderBottomColor: branchColor }}>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-df-player-selected/20 text-df-player-selected border border-df-player-selected/40 font-medium">
-                    ENTRY {idx + 1}
-                  </span>
-                  <div className="flex-1 flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={branch.label || ''}
-                      onChange={(event) => handleUpdateRandomizerBranch(idx, { label: event.target.value || undefined })}
-                      className="flex-1 bg-[#0d0d14] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-300 outline-none"
-                      placeholder="Label"
-                    />
-                  </div>
-                  {branch.nextNodeId && onFocusNode && (
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onFocusNode(branch.nextNodeId!);
-                      }}
-                      className="transition-colors cursor-pointer flex-shrink-0"
-                      title={`Focus on node: ${branch.nextNodeId}`}
-                    >
-                      <EdgeIcon size={16} color={branchColor} className="transition-colors" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleRemoveRandomizerBranch(idx)}
-                    className="text-gray-600 hover:text-red-400 flex-shrink-0"
-                    title="Remove entry"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="relative">
-                    <select
-                      value={branch.nextNodeId || ''}
-                      onChange={(event) => handleUpdateRandomizerBranch(idx, { nextNodeId: event.target.value || undefined })}
-                      className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 outline-none"
-                      style={{ borderColor: branch.nextNodeId ? branchColor : '#2a2a3e' }}
-                    >
-                      <option value="">— Select target node —</option>
-                      {Object.keys(dialogue.nodes).map(id => (
-                        <option key={id} value={id}>{id}</option>
-                      ))}
-                    </select>
-                    {branch.nextNodeId && (
-                      <div
-                        className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
-                        title={`Connects to node: ${branch.nextNodeId}`}
-                        style={{ color: branchColor }}
-                      >
-                        <GitBranch size={14} />
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    value={branch.storyletPoolId || ''}
-                    onChange={(event) => handleUpdateRandomizerBranch(idx, { storyletPoolId: event.target.value || undefined })}
-                    className="w-full bg-[#0d0d14] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-300 outline-none"
-                    placeholder="Storylet node group ID (optional)"
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <>
@@ -1323,7 +1203,6 @@ export function NodeEditor({
 
         {node.type === NODE_TYPE.PLAYER && <PlayerNodeFields />}
 
-        {node.type === NODE_TYPE.RANDOMIZER && <StoryletNodeGroupBranches />}
 
         <div>
           <label className="text-[10px] text-gray-500 uppercase">Set Flags (on enter)</label>

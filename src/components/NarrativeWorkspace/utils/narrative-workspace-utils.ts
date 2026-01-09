@@ -1,7 +1,7 @@
 import { exportToYarn } from '../../../lib/yarn-converter';
 import type { DialogueTree } from '../../../types';
 import type { NarrativePage } from '../../../types/narrative';
-import type { NarrativeSelection } from '../../NarrativeEditor';
+import type { NarrativeSelection } from '../../../types/narrative';
 import type { StoryThread } from '../../../types/narrative';
 
 export function getInitialSelection(thread: StoryThread): NarrativeSelection {

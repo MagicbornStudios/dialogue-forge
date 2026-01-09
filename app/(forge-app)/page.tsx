@@ -7,6 +7,7 @@ import { NARRATIVE_ELEMENT, STORYLET_SELECTION_MODE } from '@magicborn/dialogue-
 import { CONDITION_OPERATOR, FLAG_TYPE, NODE_TYPE } from '@magicborn/dialogue-forge/src/types/constants';
 import { getExampleCharacters } from '@magicborn/dialogue-forge/src/examples';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { useForgeEventHandlersWithDefaults } from '@/app/lib/forge-event-handlers';
 
 // Tell Next.js this page is static (no dynamic params/searchParams)
 export const dynamic = 'force-static';
@@ -313,6 +314,37 @@ export default function DialogueForgeDemo() {
   const characters = getExampleCharacters();
   const initialDialogue = demoDialogues['mysterious-stranger'];
 
+  // Set up event handlers with PayloadCMS integration
+  const onEvent = useForgeEventHandlersWithDefaults({
+    dialogueOptions: {
+      changed: {
+        debounceMs: 500,
+        onSaved: (dialogue) => {
+          console.log('Dialogue saved:', dialogue.id);
+        },
+        onError: (error) => {
+          console.error('Failed to save dialogue:', error);
+        },
+      },
+      openRequested: {
+        onError: (error) => {
+          console.error('Failed to open dialogue:', error);
+        },
+      },
+    },
+    storyletOptions: {
+      openRequested: {
+        onError: (error) => {
+          console.error('Failed to open storylet template:', error);
+        },
+      },
+    },
+    // Keep demo resolver for now, but handlers will also work
+    overrides: {
+      // You can override specific handlers here if needed
+    },
+  });
+
   return (
     <div className="w-full h-screen flex flex-col">
       <div className="flex-1 w-full min-h-0">
@@ -322,6 +354,7 @@ export default function DialogueForgeDemo() {
           flagSchema={demoFlagSchema}
           characters={characters}
           resolveDialogue={resolveDemoDialogue}
+          onEvent={onEvent}
           className="h-full"
           toolbarActions={<ThemeSwitcher />}
         />

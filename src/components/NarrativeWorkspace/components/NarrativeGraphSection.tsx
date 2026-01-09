@@ -1,7 +1,7 @@
 import React from 'react';
 import { CircleDot, Download, Info } from 'lucide-react';
-import { NarrativeGraphView } from '../../NarrativeGraphView';
-import { YarnView } from '../../YarnView';
+import { NarrativeGraphEditor } from '../../NarrativeGraphEditor';
+import { YarnView } from '../../EditorComponents/YarnView';
 import type { StoryThread } from '../../../types/narrative';
 import type { DialogueTree, ViewMode } from '../../../types';
 import { VIEW_MODE } from '../../../types/constants';
@@ -61,7 +61,7 @@ export function NarrativeGraphSection({
       </div>
       <div className="h-[220px] min-h-[200px] rounded-lg border border-df-node-border bg-df-editor-bg p-1">
         {narrativeViewMode === VIEW_MODE.GRAPH ? (
-          <NarrativeGraphView
+          <NarrativeGraphEditor
             thread={thread}
             className="h-full"
             showMiniMap={showNarrativeMiniMap}

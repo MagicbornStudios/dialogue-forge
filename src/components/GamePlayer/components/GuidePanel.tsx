@@ -74,7 +74,7 @@ export function GuidePanel({ isOpen, onClose }: GuidePanelProps) {
               <strong>Dialogue Forge automatically flattens your game state into Yarn Spinner-compatible variables.</strong>
             </p>
             <p className="text-gray-400 text-xs mb-2">
-              Pass any JSON game state structure to ScenePlayer. Nested objects (player, characters, flags) are automatically flattened into flat variables that Yarn Spinner can use.
+              Pass any JSON game state structure to Gameplayer. Nested objects (player, characters, flags) are automatically flattened into flat variables that Yarn Spinner can use.
             </p>
             <p className="text-gray-400 text-xs">
               In Yarn Spinner, these become <code className="bg-[#0d0d14] px-1 rounded">$variable</code> commands like <code className="bg-[#0d0d14] px-1 rounded">&lt;&lt;set $player_hp = 100&gt;&gt;</code>.
@@ -141,7 +141,7 @@ const gameState: GameState = {
 
           <h3 className="text-lg font-semibold mt-6 mb-2 text-white">Automatic Flattening</h3>
           <p className="text-gray-400 mb-3">
-            When you pass gameState to ScenePlayer, it's automatically flattened into Yarn-compatible variables:
+            When you pass gameState to GamePlayer, it's automatically flattened into Yarn-compatible variables:
           </p>
           
           <div className="bg-[#12121a] p-4 rounded border border-[#2a2a3e]">
@@ -218,14 +218,14 @@ const flagSchema: FlagSchema = {
 };
 
 // Use in editor for autocomplete
-<DialogueEditorV2
+<DialogueGraphEditor
   dialogue={dialogue}
   flagSchema={flagSchema}  // Helps with autocomplete
   onChange={...}
 />
 
 // Game state is used in player
-<ScenePlayer
+<GamePlayer
   dialogue={dialogue}
   gameState={gameState}  // Full game state (automatically flattened)
   onComplete={...}
@@ -348,9 +348,9 @@ const [gameState, setGameState] = useState<GameState>({
 });`} language="typescript" />
 
           <h3 className="text-lg font-semibold mt-6 mb-2 text-white">5. Edit Dialogue</h3>
-          <CodeBlock code={`import { DialogueEditorV2, exportToYarn } from '@magicborn/dialogue-forge';
+          <CodeBlock code={`import { DialogueGraphEditor, exportToYarn } from '@magicborn/dialogue-forge';
 
-<DialogueEditorV2
+<DialogueGraphEditor
   dialogue={dialogue}
   onChange={(updated) => {
     // Save edited dialogue
@@ -402,9 +402,9 @@ const gameState: GameState = {
 };`} language="typescript" />
 
           <h3 className="text-lg font-semibold mt-6 mb-2 text-white">7. Run Dialogue (Scene Player)</h3>
-          <CodeBlock code={`import { ScenePlayer } from '@magicborn/dialogue-forge';
+          <CodeBlock code={`import { GamePlayer } from '@magicborn/dialogue-forge';
 
-<ScenePlayer
+<GamePlayer
   dialogue={dialogue}
   gameState={gameState} // Pass full game state
   onComplete={(result) => {
@@ -449,8 +449,8 @@ const gameState: GameState = {
 
           <h3 className="text-lg font-semibold mt-6 mb-2 text-white">Complete Example</h3>
           <CodeBlock code={`import {
-  DialogueEditorV2,
-  ScenePlayer,
+  DialogueGraphEditor,
+  GamePlayer,
   importFromYarn,
   exportToYarn,
   FlagSchema
@@ -494,7 +494,7 @@ const [gameState, setGameState] = useState<GameState>({
 const dialogue = importFromYarn(yarnFile, 'Merchant');
 
 // 4. Edit dialogue with event hooks
-<DialogueEditorV2
+<DialogueGraphEditor
   dialogue={dialogue}
   onChange={(updated) => {
     const yarn = exportToYarn(updated);
@@ -524,7 +524,7 @@ const dialogue = importFromYarn(yarnFile, 'Merchant');
 />
 
 // 5. Run dialogue with event hooks
-<ScenePlayer
+<GamePlayer
   dialogue={dialogue}
   gameState={gameState}
   onComplete={(result) => {
@@ -1046,7 +1046,7 @@ interface Character {
           <h3 className="text-lg font-semibold mt-6 mb-2 text-white">Using Characters</h3>
           <ol className="list-decimal list-inside space-y-2 text-sm ml-2 text-gray-300">
             <li><strong>Define characters</strong> in your game state with <code className="bg-[#0d0d14] px-1 rounded">id</code>, <code className="bg-[#0d0d14] px-1 rounded">name</code>, and optionally <code className="bg-[#0d0d14] px-1 rounded">avatar</code></li>
-            <li><strong>Pass characters</strong> to <code className="bg-[#0d0d14] px-1 rounded">DialogueEditorV2</code> via the <code className="bg-[#0d0d14] px-1 rounded">characters</code> prop</li>
+            <li><strong>Pass characters</strong> to <code className="bg-[#0d0d14] px-1 rounded">DialogueGraphEditor</code> via the <code className="bg-[#0d0d14] px-1 rounded">characters</code> prop</li>
             <li><strong>Select a character</strong> in the Node Editor using the character dropdown (searchable combobox)</li>
             <li><strong>View on graph</strong> - The character's avatar and name appear on the node</li>
           </ol>
@@ -1071,8 +1071,8 @@ const gameState = {
   }
 };
 
-// Pass to DialogueEditorV2
-<DialogueEditorV2
+// Pass to DialogueGraphEditor
+<DialogueGraphEditor
   dialogue={dialogueTree}
   characters={gameState.characters}
   flagSchema={flagSchema}

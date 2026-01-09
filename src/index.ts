@@ -1,22 +1,18 @@
-export { DialogueEditorV2 } from './components/DialogueEditorV2';
-export { NarrativeEditor } from './components/NarrativeEditor';
-export { NarrativeGraphView } from './components/NarrativeGraphView';
+export { DialogueGraphEditor } from './components/DialogueGraphEditor';
+export { NarrativeGraphEditor } from './components/NarrativeGraphEditor';
 export { NarrativeWorkspace } from './components/NarrativeWorkspace';
 // Export DialogueForge as the main component (alias for NarrativeWorkspace)
 export { NarrativeWorkspace as DialogueForge } from './components/NarrativeWorkspace';
 // Legacy scene player (use GamePlayer for new experiences)
-export { ScenePlayer } from './components/ScenePlayer';
-export type { ScenePlayerProps } from './components/ScenePlayer';
 // Legacy export for backward compatibility
-export { ScenePlayer as DialogueSimulator } from './components/ScenePlayer';
 export { GamePlayer } from './components/GamePlayer';
 export { useDialogueRunner } from './hooks/useDialogueRunner';
 export { useNarrativeTraversal } from './hooks/useNarrativeTraversal';
 export { GuidePanel } from './components/GuidePanel';
-export { FlagSelector } from './components/FlagSelector';
+export { FlagSelector } from './components/DialogueGraphEditor/components/FlagSelector';
 export { FlagManager } from './components/FlagManager';
 export { CharacterSelector } from './components/CharacterSelector';
-export { ZoomControls } from './components/ZoomControls';
+export { ZoomControls } from './components/EditorComponents/ZoomControls';
 export { ExampleLoader } from './components/ExampleLoader';
 
 // Export styles
@@ -45,7 +41,7 @@ export {
 
 // Export utilities
 export { exportToYarn, importFromYarn } from './lib/yarn-converter';
-export { initializeFlags, mergeFlagUpdates, validateFlags, getFlagValue } from './lib/flag-manager';
+export { initializeFlags, mergeFlagUpdates, validateFlags, getFlagValue } from './components/GamePlayer/utils/flag-manager';
 export * from './utils/node-helpers';
 export * from './utils/feature-flags';
 export * from './utils/narrative-helpers';

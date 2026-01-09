@@ -81,3 +81,36 @@ export const QUEST_STATE = {
 
 export type QuestState = typeof QUEST_STATE[keyof typeof QUEST_STATE];
 
+
+/**
+ * Dialogue Forge event types
+ */
+export const DIALOGUE_FORGE_EVENT_TYPE = {
+  UI_TAB_CHANGED: 'ui.tabChanged',
+  NARRATIVE_SELECT: 'narrative.select',
+  DIALOGUE_OPEN_REQUESTED: 'dialogue.openRequested',
+  DIALOGUE_CHANGED: 'dialogue.changed',
+  STORYLET_TEMPLATE_OPEN_REQUESTED: 'storyletTemplate.openRequested',
+} as const;
+
+export type DialogueForgeEventType = typeof DIALOGUE_FORGE_EVENT_TYPE[keyof typeof DIALOGUE_FORGE_EVENT_TYPE];
+
+/**
+ * Dialogue panel tab types
+ */
+export const DIALOGUE_PANEL_TAB = {
+  PAGE: 'page',
+  STORYLET_TEMPLATE: 'storyletTemplate',
+} as const;
+
+export type DialoguePanelTab = typeof DIALOGUE_PANEL_TAB[keyof typeof DIALOGUE_PANEL_TAB];
+
+/**
+ * Dialogue open reason types
+ */
+export const DIALOGUE_OPEN_REASON = {
+  PAGE: 'page',
+  STORYLET_TEMPLATE: 'storyletTemplate',
+} as const;
+
+export type DialogueOpenReason = typeof DIALOGUE_OPEN_REASON[keyof typeof DIALOGUE_OPEN_REASON];

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { NARRATIVE_ELEMENT } from '../../../types/narrative';
-import type { NarrativeChapter, StoryletPool, StoryletPoolMember, StoryletTemplate } from '../../../types/narrative';
-import type { NarrativeSelection } from '../../NarrativeEditor';
+import type { NarrativeChapter, StoryletPoolMember, StoryletTemplate } from '../../../types/narrative';
+import type { NarrativeSelection } from '../../../types/narrative';
 
 interface StoryletEntry {
   poolId: string;

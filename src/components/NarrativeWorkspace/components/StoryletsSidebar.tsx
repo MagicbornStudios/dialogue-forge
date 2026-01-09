@@ -1,6 +1,6 @@
 import React from 'react';
 import { BookOpen, Info, Search, Plus, ExternalLink } from 'lucide-react';
-import type { NarrativeSelection } from '../../NarrativeEditor';
+import type { NarrativeSelection } from '../../../types/narrative';
 import { Button } from '@/src/components/ui/button';
 
 interface StoryletEntry {

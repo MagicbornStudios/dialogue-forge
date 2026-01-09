@@ -1,6 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { PlayView } from '../../PlayView';
+import { PlayView } from '../../EditorComponents/PlayView';
 import type { DialogueTree } from '../../../types';
 import type { BaseGameState } from '../../../types/game-state';
 import type { FlagSchema } from '../../../types/flags';

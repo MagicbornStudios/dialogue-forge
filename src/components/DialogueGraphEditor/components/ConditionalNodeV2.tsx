@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { DialogueNode, Condition, ConditionalBlock } from '../types';
+import { DialogueNode, Condition, ConditionalBlock } from '../../../types';
 import { GitBranch, Play, Flag, Hash, Code } from 'lucide-react';
-import { FlagSchema } from '../types/flags';
-import { Character } from '../types/characters';
-import { LayoutDirection } from '../utils/layout';
+import { FlagSchema } from '../../../types/flags';
+import { Character } from '../../../types/characters';
+import { LayoutDirection } from '../../../utils/layout';
 
 interface ConditionalNodeData {
   node: DialogueNode;

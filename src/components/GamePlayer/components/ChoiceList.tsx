@@ -1,5 +1,5 @@
 import React from 'react';
-import { DialogueStep } from '../../hooks/useDialogueRunner';
+import { DialogueStep } from '../../GamePlayer/hooks/useDialogueRunner';
 
 interface ChoiceListProps {
   currentStep: DialogueStep | null;

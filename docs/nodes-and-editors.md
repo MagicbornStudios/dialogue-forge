@@ -29,7 +29,6 @@ This document describes the node types, editor structure, and recommended patter
 - **Purpose:** A node group that selects the most salient storylet entry, aligned with Yarn’s node-group behavior (not weighted random).
 - **Core fields:** `randomizerBranches[]` with `label`, `nextNodeId`, and optional `storyletPoolId` as a group ID.
 - **Editor:** `StoryletNodeGroupBranches` in `src/components/NodeEditor.tsx`.
-- **Node UI:** `RandomizerDialogueNodeV2` in `src/components/RandomizerDialogueNodeV2.tsx`.
 - **Recommendation:** Avoid weights or seeds; rely on saliency strategies for ordering.
 
 ### Storylet Pool Nodes (Legacy)

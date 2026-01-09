@@ -1,17 +1,17 @@
 import React, { useState, useRef } from 'react';
-import { DialogueNode, DialogueTree, Choice } from '../../types';
-import { FlagSchema } from '../../types/flags';
-import { Character } from '../../types/characters';
-import { FlagSelector } from '../DialogueGraphEditor/components/FlagSelector';
-import { NODE_TYPE } from '../../types/constants';
-import { useConditionInputs } from './NodeEditor/hooks/useConditionInputs';
-import { getNodeTypeBorderColor, getNodeTypeBadge, getNodeTypeLabel } from './NodeEditor/utils/nodeTypeHelpers';
-import { NpcNodeFields } from '../DialogueGraphEditor/components/NPCNode/NPCNodeFields';
-import { StoryletNodeFields } from '../DialogueGraphEditor/components/StoryletNode/StoryletNodeFields';
-import { StoryletPoolNodeFields } from '../DialogueGraphEditor/components/StoryletPoolNode/StoryletPoolNodeFields';
-import { ConditionalNodeFields } from '../DialogueGraphEditor/components/ConditionalNode/ConditionalNodeFields';
-import { PlayerNodeFields } from '../DialogueGraphEditor/components/PlayerNode/PlayerNodeFields';
-import { ConditionEditorModal } from './NodeEditor/components/ConditionEditorModal';
+import { DialogueNode, DialogueTree, Choice } from '../../../types';
+import { FlagSchema } from '../../../types/flags';
+import { Character } from '../../../types/characters';
+import { FlagSelector } from '../../DialogueGraphEditor/components/FlagSelector';
+import { NODE_TYPE } from '../../../types/constants';
+import { useConditionInputs } from './hooks/useConditionInputs';
+import { getNodeTypeBorderColor, getNodeTypeBadge, getNodeTypeLabel } from './utils/nodeTypeHelpers';
+import { NpcNodeFields } from '../../DialogueGraphEditor/components/NPCNode/NPCNodeFields';
+import { StoryletNodeFields } from '../../DialogueGraphEditor/components/StoryletNode/StoryletNodeFields';
+import { StoryletPoolNodeFields } from '../../DialogueGraphEditor/components/StoryletPoolNode/StoryletPoolNodeFields';
+import { ConditionalNodeFields } from '../../DialogueGraphEditor/components/ConditionalNode/ConditionalNodeFields';
+import { PlayerNodeFields } from '../../DialogueGraphEditor/components/PlayerNode/PlayerNodeFields';
+import { ConditionEditorModal } from './components/ConditionEditorModal';
 
 interface NodeEditorProps {
   node: DialogueNode;

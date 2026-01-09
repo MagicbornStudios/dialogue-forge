@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Character } from '../types/characters';
+import { Character } from '../../../types/characters';
 import { Search, X, User } from 'lucide-react';
 
 interface CharacterSelectorProps {

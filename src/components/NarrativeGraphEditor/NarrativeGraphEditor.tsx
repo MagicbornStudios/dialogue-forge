@@ -3,15 +3,17 @@ import ReactFlow, {
   Background,
   BackgroundVariant,
   Controls,
-  MiniMap,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 import { NARRATIVE_ELEMENT, type NarrativeElement, type StoryThread } from '../../types/narrative';
 import { convertNarrativeToReactFlow } from '../../utils/narrative-converter';
-import { NPCEdgeV2 } from '../DialogueGraphEditor/components/NPCEdgeV2';
+import { NPCEdgeV2 } from '../DialogueGraphEditor/components/NPCNode/NPCEdgeV2';
 import { NarrativeElementNode } from './components/NarrativeElementNode';
-import { MiniMapToggle } from './components/MiniMapToggle';
+import { GraphMiniMap } from '../EditorComponents/GraphMiniMap';
+import { GraphLeftToolbar } from '../EditorComponents/GraphLeftToolbar';
+import { GraphLayoutControls } from '../EditorComponents/GraphLayoutControls';
+import { useReactFlowBehaviors } from '../EditorComponents/hooks/useReactFlowBehaviors';
 
 interface NarrativeGraphEditorProps {
   thread: StoryThread;
@@ -45,9 +47,14 @@ export function NarrativeGraphEditor({
   onPaneClick,
 }: NarrativeGraphEditorProps) {
   const { nodes, edges } = useMemo(() => convertNarrativeToReactFlow(thread), [thread]);
+  const { reactFlowWrapperRef } = useReactFlowBehaviors();
+  const [layoutDirection, setLayoutDirection] = React.useState<'TB' | 'LR'>('TB');
+  const [autoOrganize, setAutoOrganize] = React.useState(false);
+  const [showPathHighlight, setShowPathHighlight] = React.useState(false);
+  const [showBackEdges, setShowBackEdges] = React.useState(false);
 
   return (
-    <div className={`h-full w-full rounded-xl border border-[#1a1a2e] bg-[#0b0b14] ${className}`}>
+    <div className={`h-full w-full rounded-xl border border-[#1a1a2e] bg-[#0b0b14] ${className}`} ref={reactFlowWrapperRef}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -67,21 +74,25 @@ export function NarrativeGraphEditor({
         onPaneClick={() => onPaneClick?.()}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+        <GraphMiniMap showMiniMap={showMiniMap} />
         {onToggleMiniMap && (
-          <MiniMapToggle showMiniMap={showMiniMap} onToggle={onToggleMiniMap} />
-        )}
-        {showMiniMap && (
-          <MiniMap
-            nodeColor={node => {
-              if (node.type === NARRATIVE_ELEMENT.ACT) return 'var(--color-df-player-border)';
-              if (node.type === NARRATIVE_ELEMENT.CHAPTER) return 'var(--color-df-conditional-border)';
-              if (node.type === NARRATIVE_ELEMENT.PAGE) return 'var(--color-df-node-border)';
-              return 'var(--color-df-npc-border)';
-            }}
-            maskColor="rgba(11, 11, 20, 0.8)"
-            className="border border-df-node-border"
+          <GraphLeftToolbar
+            layoutStrategy="dagre"
+            showMiniMap={showMiniMap}
+            onToggleMiniMap={onToggleMiniMap}
           />
         )}
+        <GraphLayoutControls
+          autoOrganize={autoOrganize}
+          onToggleAutoOrganize={() => setAutoOrganize(!autoOrganize)}
+          layoutDirection={layoutDirection}
+          onLayoutDirectionChange={setLayoutDirection}
+          onApplyLayout={() => {}}
+          showPathHighlight={showPathHighlight}
+          onTogglePathHighlight={() => setShowPathHighlight(!showPathHighlight)}
+          showBackEdges={showBackEdges}
+          onToggleBackEdges={() => setShowBackEdges(!showBackEdges)}
+        />
         <Controls className="bg-[#0f0f1a] border border-[#1f1f2e]" />
       </ReactFlow>
     </div>

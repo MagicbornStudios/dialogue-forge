@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { StoryThread } from '../types/narrative';
-import { buildLinearSequence, type NarrativeSequenceStep } from '../utils/narrative-helpers';
+import type { StoryThread } from '../../../types/narrative';
+import { buildLinearSequence, type NarrativeSequenceStep } from '../../../utils/narrative-helpers';
 
 export interface NarrativeLocation {
   actIndex: number;

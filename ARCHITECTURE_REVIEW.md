@@ -55,7 +55,6 @@ The editor is powered by **React Flow** and custom node/edge components:
 
 - `DialogueEditorV2` renders and edits `DialogueTree` content.
 - `NPCNodeV2`, `PlayerNodeV2`, `ConditionalNodeV2`, `StoryletDialogueNodeV2`,
-  and `RandomizerDialogueNodeV2` render node-specific UI.
 - `ChoiceEdgeV2` and `NPCEdgeV2` render custom edges.
 - `reactflow-converter.ts` bridges the editor between React Flow data and
   the `DialogueTree` structure.

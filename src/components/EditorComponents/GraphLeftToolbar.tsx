@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { Panel } from 'reactflow';
 import { Grid3x3, Map as MapIcon, Settings, BookOpen } from 'lucide-react';
 import { listLayouts } from '../../utils/layout';
-import { ExampleLoaderButton } from '../ExampleLoaderButton';
-import { ENABLE_DEBUG_TOOLS } from '../../utils/feature-flags';
 
 interface GraphLeftToolbarProps {
   layoutStrategy: string;
@@ -111,13 +109,6 @@ export function GraphLeftToolbar({
           >
             <BookOpen size={14} />
           </button>
-        )}
-
-        {ENABLE_DEBUG_TOOLS && onLoadExampleDialogue && onLoadExampleFlags && (
-          <ExampleLoaderButton
-            onLoadDialogue={onLoadExampleDialogue}
-            onLoadFlags={onLoadExampleFlags}
-          />
         )}
       </div>
     </Panel>

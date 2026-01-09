@@ -4,12 +4,10 @@
  * Graph-based editor for dialogue trees using React Flow.
  */
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import ReactFlow, { 
   ReactFlowProvider,
   Background,
-  Controls,
-  MiniMap,
   Node,
   Edge,
   NodeChange,
@@ -19,44 +17,60 @@ import ReactFlow, {
   applyNodeChanges,
   applyEdgeChanges,
   useReactFlow,
-  Panel,
   ConnectionLineType,
   BackgroundVariant,
 } from 'reactflow';
-import { Edit3, Plus, Trash2, Play, Layout, ArrowDown, ArrowRight, Magnet, Sparkles, Undo2, Flag, Home, Target, BookOpen, Settings, Grid3x3, Map as MapIcon } from 'lucide-react';
-import { ExampleLoaderButton } from './ExampleLoaderButton';
-import { ENABLE_DEBUG_TOOLS } from '../utils/feature-flags';
 import 'reactflow/dist/style.css';
 
-import { DialogueEditorProps, DialogueTree, DialogueNode, Choice, ConditionalBlock, ViewMode } from '../types';
-import type { GameFlagState } from '../types/game-state';
-import { exportToYarn, importFromYarn } from '../lib/yarn-converter';
-import { convertDialogueTreeToReactFlow, updateDialogueTreeFromReactFlow, CHOICE_COLORS } from '../utils/reactflow-converter';
-import { createTreeHierarchy, findPath, getAncestors, getNodeDepth } from '../utils/tree-navigation';
-import { createNode, deleteNodeFromTree, addChoiceToNode, removeChoiceFromNode, updateChoiceInNode } from '../utils/node-helpers';
-import { applyLayout, listLayouts, resolveNodeCollisions, LayoutDirection, type LayoutStrategy } from '../utils/layout';
-import { NodeEditor } from './NodeEditor';
+import { DialogueEditorProps, DialogueTree, DialogueNode, Choice, ConditionalBlock, ViewMode } from '../../types';
+import type { GameFlagState } from '../../types/game-state';
+import { exportToYarn, importFromYarn } from '../../lib/yarn-converter';
+import { convertDialogueTreeToReactFlow, updateDialogueTreeFromReactFlow, CHOICE_COLORS } from '../../utils/reactflow-converter';
+import { usePathHighlighting } from './hooks/usePathHighlighting';
+import { createNode, deleteNodeFromTree, addChoiceToNode, removeChoiceFromNode, updateChoiceInNode } from '../../utils/node-helpers';
+import { applyLayout, listLayouts, resolveNodeCollisions, LayoutDirection, type LayoutStrategy } from '../../utils/layout';
+import { NodeEditor } from '../EditorComponents/NodeEditor';
 import { YarnView } from '../EditorComponents/YarnView';
-import { PlayView } from './PlayView';
-import { NPCNodeV2 } from './NPCNodeV2';
-import { PlayerNodeV2 } from './PlayerNodeV2';
-import { ConditionalNodeV2 } from './ConditionalNodeV2';
-import { StoryletDialogueNodeV2 } from './StoryletDialogueNodeV2';
-import { StoryletNodeGroupDialogueNodeV2 } from './StoryletNodeGroupDialogueNodeV2';
-import { ChoiceEdgeV2 } from './ChoiceEdgeV2';
-import { NPCEdgeV2 } from './NPCEdgeV2';
-import { FlagSchema } from '../types/flags';
-import { Character } from '../types/characters';
-import { NODE_WIDTH } from '../utils/constants';
-import { NODE_TYPE, VIEW_MODE, type NodeType } from '../types/constants';
+import { PlayView } from '../EditorComponents/PlayView';
+import { GraphLeftToolbar } from '../EditorComponents/GraphLeftToolbar';
+import { GraphLayoutControls } from '../EditorComponents/GraphLayoutControls';
+import { GraphMiniMap } from '../EditorComponents/GraphMiniMap';
+import { DailogueGraphEditorPaneContextMenu } from './components/DailogueGraphEditorPaneContextMenu';
+import { PlayerEdgeDropMenu } from './components/PlayerNode/PlayerEdgeDropMenu';
+import { NPCEdgeDropMenu } from './components/NPCNode/NPCEdgeDropMenu';
+import { ConditionalEdgeDropMenu } from './components/ConditionalNode/ConditionalEdgeDropMenu';
+import { StoryletEdgeDropMenu } from './components/StoryletNode/StoryletEdgeDropMenu';
+import { StoryletPoolEdgeDropMenu } from './components/StoryletPoolNode/StoryletPoolEdgeDropMenu';
+import { PlayerEdgeContextMenu } from './components/PlayerNode/PlayerEdgeContextMenu';
+import { NPCEdgeContextMenu } from './components/NPCNode/NPCEdgeContextMenu';
+import { ConditionalEdgeContextMenu } from './components/ConditionalNode/ConditionalEdgeContextMenu';
+import { StoryletEdgeContextMenu } from './components/StoryletNode/StoryletEdgeContextMenu';
+import { StoryletPoolEdgeContextMenu } from './components/StoryletPoolNode/StoryletPoolEdgeContextMenu';
+import { useReactFlowBehaviors } from '../EditorComponents/hooks/useReactFlowBehaviors';
+import { NPCNodeV2 } from './components/NPCNode/NPCNodeV2';
+import { PlayerNodeV2 } from './components/PlayerNode/PlayerNodeV2';
+import { PlayerNodeContextMenu } from './components/PlayerNode/PlayerNodeContextMenu';
+import { NPCNodeContextMenu } from './components/NPCNode/NPCNodeContextMenu';
+import { ConditionalNodeContextMenu } from './components/ConditionalNode/ConditionalNodeContextMenu';
+import { StoryletNodeContextMenu } from './components/StoryletNode/StoryletNodeContextMenu';
+import { StoryletPoolNodeContextMenu } from './components/StoryletPoolNode/StoryletPoolNodeContextMenu';
+import { ConditionalNodeV2 } from './components/ConditionalNode/ConditionalNodeV2';
+import { StoryletNode } from './components/StoryletNode/StoryletNode';
+import { StoryletPoolNode } from './components/StoryletPoolNode/StoryletPoolNode';
+import { ChoiceEdgeV2 } from './components/PlayerNode/ChoiceEdgeV2';
+import { NPCEdgeV2 } from './components/NPCNode/NPCEdgeV2';
+import { FlagSchema } from '../../types/flags';
+import { Character } from '../../types/characters';
+import { NODE_WIDTH } from '../../utils/constants';
+import { NODE_TYPE, VIEW_MODE, type NodeType } from '../../types/constants';
 
 // Define node and edge types outside component for stability
 const nodeTypes = {
   [NODE_TYPE.NPC]: NPCNodeV2,
   [NODE_TYPE.PLAYER]: PlayerNodeV2,
   [NODE_TYPE.CONDITIONAL]: ConditionalNodeV2,
-  [NODE_TYPE.STORYLET]: StoryletDialogueNodeV2,
-  [NODE_TYPE.STORYLET_POOL]: StoryletNodeGroupDialogueNodeV2,
+  [NODE_TYPE.STORYLET]: StoryletNode,
+  [NODE_TYPE.STORYLET_POOL]: StoryletPoolNode,
 };
 
 const LINEAR_NODE_TYPES = new Set<NodeType>([
@@ -138,8 +152,6 @@ function DialogueGraphEditorInternal({
   const directUpdateRef = useRef<string | null>(null);
   const [showPathHighlight, setShowPathHighlight] = useState<boolean>(true); // Toggle path highlighting
   const [showBackEdges, setShowBackEdges] = useState<boolean>(true); // Toggle back-edge styling
-  const [showLayoutMenu, setShowLayoutMenu] = useState<boolean>(false);
-  const lastWheelClickRef = useRef<number>(0);
 
   // Memoize nodeTypes and edgeTypes to prevent React Flow warnings
   const memoizedNodeTypes = useMemo(() => nodeTypes, []);
@@ -161,59 +173,8 @@ function DialogueGraphEditorInternal({
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
 
-  // Find all edges that lead to the selected node using d3-hierarchy
-  // This avoids including back-edges and only shows the actual forward path
-  const { edgesToSelectedNode, nodeDepths } = useMemo(() => {
-    if (!selectedNodeId || !dialogue || !dialogue.startNodeId) {
-      return { edgesToSelectedNode: new Set<string>(), nodeDepths: new Map<string, number>() };
-    }
-    
-    const hierarchy = createTreeHierarchy(dialogue);
-    if (!hierarchy) {
-      return { edgesToSelectedNode: new Set<string>(), nodeDepths: new Map<string, number>() };
-    }
-    
-    // Get path from start to selected node using d3-hierarchy
-    const path = findPath(hierarchy, dialogue.startNodeId, selectedNodeId);
-    if (!path) {
-      return { edgesToSelectedNode: new Set<string>(), nodeDepths: new Map<string, number>() };
-    }
-    
-    // Build edge set and depth map from path
-    const edgesOnPath = new Set<string>();
-    const nodeDepthMap = new Map<string, number>();
-    
-    for (let i = 0; i < path.length; i++) {
-      const nodeId = path[i];
-      nodeDepthMap.set(nodeId, i);
-      
-      if (i < path.length - 1) {
-        const currentNode = dialogue.nodes[nodeId];
-        const nextNodeId = path[i + 1];
-        
-        if (!currentNode) continue;
-        
-        // Find which connection type leads to next node
-        if (currentNode.nextNodeId === nextNodeId) {
-          edgesOnPath.add(`${nodeId}-next`);
-        } else if (currentNode.choices) {
-          currentNode.choices.forEach((choice: Choice, idx: number) => {
-            if (choice.nextNodeId === nextNodeId) {
-              edgesOnPath.add(`${nodeId}-choice-${idx}`);
-            }
-          });
-        } else if (currentNode.conditionalBlocks) {
-          currentNode.conditionalBlocks.forEach((block: ConditionalBlock, idx: number) => {
-            if (block.nextNodeId === nextNodeId) {
-              edgesOnPath.add(`${nodeId}-block-${idx}`);
-            }
-          });
-        }
-      }
-    }
-    
-    return { edgesToSelectedNode: edgesOnPath, nodeDepths: nodeDepthMap };
-  }, [selectedNodeId, dialogue]);
+  // Use path highlighting hook
+  const { edgesToSelectedNode, nodeDepths } = usePathHighlighting(selectedNodeId, dialogue);
 
   // Update nodes/edges when dialogue changes externally
   // Skip conversion if we just made a direct React Flow update (for simple text changes)
@@ -633,59 +594,8 @@ function DialogueGraphEditorInternal({
     onNodeDoubleClickHook?.(node.id);
   }, [reactFlowInstance, onNodeDoubleClickHook]);
 
-  // Handle pane double-click - fit view to all nodes (like default zoom)
-  // We'll handle this via useEffect since React Flow doesn't have onPaneDoubleClick
-  const reactFlowWrapperRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    const handleDoubleClick = (event: MouseEvent) => {
-      // Check if clicking on the pane (not on a node or edge)
-      const target = event.target as HTMLElement;
-      if (target.closest('.react-flow__node') || target.closest('.react-flow__edge')) {
-        return; // Don't handle if clicking on node/edge
-      }
-      
-      if (reactFlowInstance) {
-        reactFlowInstance.fitView({ padding: 0.2, duration: 500 });
-      }
-    };
-
-    const container = reactFlowWrapperRef.current;
-    if (container) {
-      container.addEventListener('dblclick', handleDoubleClick);
-      return () => {
-        container.removeEventListener('dblclick', handleDoubleClick);
-      };
-    }
-  }, [reactFlowInstance]);
-
-  // Track mouse wheel clicks for double-click detection
-  useEffect(() => {
-    const handleMouseDown = (event: Event) => {
-      const mouseEvent = event as MouseEvent;
-      if (mouseEvent.button === 1) { // Middle mouse button (wheel)
-        const now = Date.now();
-        if (now - lastWheelClickRef.current < 300) {
-          // Double-click detected - fit view
-          mouseEvent.preventDefault();
-          if (reactFlowInstance) {
-            reactFlowInstance.fitView({ padding: 0.2, duration: 500 });
-          }
-          lastWheelClickRef.current = 0;
-        } else {
-          lastWheelClickRef.current = now;
-        }
-      }
-    };
-
-    const container = document.querySelector('.react-flow');
-    if (container) {
-      container.addEventListener('mousedown', handleMouseDown);
-      return () => {
-        container.removeEventListener('mousedown', handleMouseDown);
-      };
-    }
-  }, [reactFlowInstance]);
+  // Use shared React Flow behaviors
+  const { reactFlowWrapperRef } = useReactFlowBehaviors();
 
   // Handle pane context menu (right-click on empty space)
   const onPaneContextMenu = useCallback((event: React.MouseEvent) => {
@@ -1055,7 +965,6 @@ function DialogueGraphEditorInternal({
                 setContextMenu(null);
                 setNodeContextMenu(null);
                 setSelectedNodeId(null);
-                setShowLayoutMenu(false);
               }}
               fitView
               className="bg-df-canvas-bg"
@@ -1087,494 +996,351 @@ function DialogueGraphEditorInternal({
             >
               <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#1a1a2e" />
               
-              {/* Enhanced MiniMap with title */}
-              {showMiniMap && (
-                <Panel position="bottom-right" className="!p-0 !m-2">
-                  <div className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg overflow-hidden shadow-xl">
-                    <div className="px-3 py-1.5 border-b border-df-sidebar-border flex items-center justify-between bg-df-elevated">
-                      <span className="text-[10px] font-medium text-df-text-secondary uppercase tracking-wider">Overview</span>
-                      <div className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-df-npc-selected" title="NPC / Storylet" />
-                        <span className="w-2 h-2 rounded-full bg-df-player-selected" title="Player" />
-                        <span className="w-2 h-2 rounded-full bg-df-conditional-border" title="Conditional" />
-                      </div>
-                    </div>
-                    <MiniMap 
-                      style={{ 
-                        width: 180, 
-                        height: 120,
-                        backgroundColor: '#08080c',
-                      }}
-                      maskColor="rgba(0, 0, 0, 0.7)"
-                      nodeColor={(node) => {
-                        if (node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL) return '#e94560';
-                        if (node.type === NODE_TYPE.PLAYER) return '#8b5cf6';
-                        if (node.type === NODE_TYPE.CONDITIONAL) return '#3b82f6';
-                        return '#4a4a6a';
-                      }}
-                      nodeStrokeWidth={2}
-                      pannable
-                      zoomable
-                    />
-                  </div>
-                </Panel>
-              )}
+              <GraphMiniMap showMiniMap={showMiniMap || false} />
               
-              {/* Left Toolbar - Layout, Flags, Guide */}
-              <Panel position="top-left" className="!bg-transparent !border-0 !p-0 !m-2">
-                <div className="flex flex-col gap-1.5 bg-df-sidebar-bg border border-df-sidebar-border rounded-lg p-1.5 shadow-lg">
-                  {/* Layout Strategy Dropdown */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowLayoutMenu(!showLayoutMenu)}
-                      className={`p-1.5 rounded transition-colors ${
-                        showLayoutMenu
-                          ? 'bg-df-npc-selected/20 text-df-npc-selected border border-df-npc-selected'
-                          : 'bg-df-elevated border border-df-control-border text-df-text-secondary hover:text-df-text-primary hover:border-df-control-hover'
-                      }`}
-                      title={`Layout: ${listLayouts().find(l => l.id === layoutStrategy)?.name || layoutStrategy}`}
-                    >
-                      <Grid3x3 size={14} />
-                    </button>
-                    {showLayoutMenu && (
-                      <div className="absolute left-full ml-2 top-0 z-50 bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-xl p-1 min-w-[200px]">
-                        <div className="text-[10px] text-df-text-secondary uppercase tracking-wider px-2 py-1 border-b border-df-sidebar-border">Layout Algorithm</div>
-                        {listLayouts().map(layout => (
-                          <button
-                            key={layout.id}
-                            onClick={() => {
-                              if (onLayoutStrategyChange) {
-                                onLayoutStrategyChange(layout.id);
-                                setShowLayoutMenu(false);
-                                // Trigger layout update with new strategy
-                                setTimeout(() => handleAutoLayout(), 0);
-                              }
-                            }}
-                            className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${
-                              layoutStrategy === layout.id
-                                ? 'bg-df-npc-selected/20 text-df-npc-selected'
-                                : 'text-df-text-primary hover:bg-df-elevated'
-                            }`}
-                          >
-                            <div className="font-medium">{layout.name} {layout.isDefault && '(default)'}</div>
-                            <div className="text-[10px] text-df-text-secondary mt-0.5">{layout.description}</div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {onToggleMiniMap && (
-                    <button
-                      onClick={onToggleMiniMap}
-                      className={`p-1.5 rounded transition-colors ${
-                        showMiniMap
-                          ? 'bg-df-npc-selected/20 text-df-npc-selected border border-df-npc-selected'
-                          : 'bg-df-elevated border border-df-control-border text-df-text-secondary hover:text-df-text-primary hover:border-df-control-hover'
-                      }`}
-                      title={showMiniMap ? 'Hide minimap' : 'Show minimap'}
-                    >
-                      <MapIcon size={14} />
-                    </button>
-                  )}
-                  
-                  {/* Flag Manager */}
-                  {onOpenFlagManager && (
-                    <button
-                      onClick={onOpenFlagManager}
-                      className="p-1.5 bg-df-elevated border border-df-control-border rounded text-df-text-secondary hover:text-df-text-primary hover:border-df-control-hover transition-colors"
-                      title="Manage Flags"
-                    >
-                      <Settings size={14} />
-                    </button>
-                  )}
-                  
-                  {/* Guide */}
-                  {onOpenGuide && (
-                    <button
-                      onClick={onOpenGuide}
-                      className="p-1.5 bg-df-elevated border border-df-control-border rounded text-df-text-secondary hover:text-df-text-primary hover:border-df-control-hover transition-colors"
-                      title="Guide & Documentation"
-                    >
-                      <BookOpen size={14} />
-                    </button>
-                  )}
-
-                  {/* Example Loader (Debug Tool) */}
-                  {ENABLE_DEBUG_TOOLS && onLoadExampleDialogue && onLoadExampleFlags && (
-                    <ExampleLoaderButton
-                      onLoadDialogue={onLoadExampleDialogue}
-                      onLoadFlags={onLoadExampleFlags}
-                    />
-                  )}
-                </div>
-              </Panel>
+              <GraphLeftToolbar
+                layoutStrategy={layoutStrategy}
+                onLayoutStrategyChange={onLayoutStrategyChange}
+                onApplyLayout={handleAutoLayout}
+                showMiniMap={showMiniMap}
+                onToggleMiniMap={onToggleMiniMap}
+                onOpenFlagManager={onOpenFlagManager}
+                onOpenGuide={onOpenGuide}
+                onLoadExampleDialogue={onLoadExampleDialogue}
+                onLoadExampleFlags={onLoadExampleFlags}
+              />
               
-              {/* Layout Controls */}
-              <Panel position="top-right" className="!bg-transparent !border-0 !p-0 !m-2">
-                <div className="flex items-center gap-1.5 bg-df-sidebar-bg border border-df-sidebar-border rounded-lg p-1.5 shadow-lg">
-                  {/* Auto-organize toggle */}
-                  <button
-                    onClick={() => {
-                      const newAutoOrganize = !autoOrganize;
-                      setAutoOrganize(newAutoOrganize);
-                      // If turning on, immediately apply layout
-                      if (newAutoOrganize) {
-                        handleAutoLayout();
-                      }
-                    }}
-                    className={`p-1.5 rounded transition-colors ${
-                      autoOrganize 
-                        ? 'bg-df-success/20 text-df-success border border-df-success' 
-                        : 'bg-df-elevated text-df-text-secondary hover:text-df-text-primary border border-df-control-border'
-                    }`}
-                    title={autoOrganize ? `Auto Layout ON - Nodes auto-arrange` : "Auto Layout OFF - Free placement"}
-                  >
-                    <Magnet size={14} />
-                  </button>
-                  
-                  <div className="w-px h-5 bg-df-control-border" />
-                  
-                  {/* Layout direction buttons */}
-                  <div className="flex border border-df-control-border rounded overflow-hidden">
-                    <button
-                      onClick={() => handleAutoLayout('TB')}
-                      className={`p-1.5 transition-colors ${
-                        layoutDirection === 'TB' 
-                          ? 'bg-df-npc-selected/20 text-df-npc-selected' 
-                          : 'bg-df-elevated text-df-text-secondary hover:text-df-text-primary'
-                      } border-r border-df-control-border`}
-                      title="Vertical Layout (Top to Bottom)"
-                    >
-                      <ArrowDown size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleAutoLayout('LR')}
-                      className={`p-1.5 transition-colors ${
-                        layoutDirection === 'LR' 
-                          ? 'bg-df-player-selected/20 text-df-player-selected' 
-                          : 'bg-df-elevated text-df-text-secondary hover:text-df-text-primary'
-                      }`}
-                      title="Horizontal Layout (Left to Right)"
-                    >
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                  
-                  <button
-                    onClick={() => handleAutoLayout()}
-                    className="p-1.5 bg-df-elevated border border-df-control-border rounded text-df-text-secondary hover:text-df-text-primary hover:border-df-control-hover transition-colors"
-                      title="Re-apply Layout"
-                    >
-                      <Layout size={14} />
-                    </button>
-                  
-                  <div className="w-px h-5 bg-df-control-border" />
-                  
-                  {/* Path highlighting toggle */}
-                  <button
-                    onClick={() => setShowPathHighlight(!showPathHighlight)}
-                    className={`p-1.5 rounded transition-colors ${
-                      showPathHighlight 
-                        ? 'bg-df-info/20 text-df-info border border-df-info' 
-                        : 'bg-df-elevated text-df-text-secondary hover:text-df-text-primary border border-df-control-border'
-                    }`}
-                    title={showPathHighlight ? "Path Highlight ON" : "Path Highlight OFF"}
-                  >
-                    <Sparkles size={14} />
-                  </button>
-                  
-                  {/* Back-edge visualization toggle */}
-                  <button
-                    onClick={() => setShowBackEdges(!showBackEdges)}
-                    className={`p-1.5 rounded transition-colors ${
-                      showBackEdges 
-                        ? 'bg-df-warning/20 text-df-warning border border-df-warning' 
-                        : 'bg-df-elevated text-df-text-secondary hover:text-df-text-primary border border-df-control-border'
-                    }`}
-                    title={showBackEdges ? "Loop Edges Styled" : "Loop Edges Normal"}
-                  >
-                    <Undo2 size={14} />
-                  </button>
-                  
-                  <div className="w-px h-5 bg-df-control-border" />
-                  
-                  {/* Quick select start node */}
-                  <button
-                    onClick={() => {
-                      if (dialogue?.startNodeId) {
-                        setSelectedNodeId(dialogue.startNodeId);
-                        // Center on start node
-                        const startNode = nodes.find(n => n.id === dialogue.startNodeId);
-                        if (startNode && reactFlowInstance) {
-                          reactFlowInstance.setCenter(
-                            startNode.position.x + 110, 
-                            startNode.position.y + 60, 
-                            { zoom: 1, duration: 500 }
-                          );
-                        }
-                      }
-                    }}
-                    className="p-1.5 bg-df-start/20 text-df-start border border-df-start rounded transition-colors hover:bg-df-start/30"
-                    title="Go to Start Node"
-                  >
-                    <Home size={14} />
-                  </button>
-                  
-                  {/* Quick select an end node */}
-                  <button
-                    onClick={() => {
-                      const endNodes = Array.from(endNodeIds);
-                      if (endNodes.length > 0) {
-                        // Cycle through end nodes or select first one
-                        const currentIdx = selectedNodeId ? endNodes.indexOf(selectedNodeId) : -1;
-                        const nextIdx = (currentIdx + 1) % endNodes.length;
-                        const nextEndNodeId = endNodes[nextIdx];
-                        setSelectedNodeId(nextEndNodeId);
-                        // Center on end node
-                        const endNode = nodes.find(n => n.id === nextEndNodeId);
-                        if (endNode && reactFlowInstance) {
-                          reactFlowInstance.setCenter(
-                            endNode.position.x + 110, 
-                            endNode.position.y + 60, 
-                            { zoom: 1, duration: 500 }
-                          );
-                        }
-                      }
-                    }}
-                    className="p-1.5 bg-df-end/20 text-df-end border border-df-end rounded transition-colors hover:bg-df-end/30"
-                    title={`Go to End Node (${endNodeIds.size} total)`}
-                  >
-                    <Flag size={14} />
-                  </button>
-                </div>
-              </Panel>
+              <GraphLayoutControls
+                autoOrganize={autoOrganize}
+                onToggleAutoOrganize={() => {
+                  const newAutoOrganize = !autoOrganize;
+                  setAutoOrganize(newAutoOrganize);
+                  if (newAutoOrganize) {
+                    handleAutoLayout();
+                  }
+                }}
+                layoutDirection={layoutDirection}
+                onLayoutDirectionChange={(dir) => {
+                  setLayoutDirection(dir);
+                  handleAutoLayout(dir);
+                }}
+                onApplyLayout={handleAutoLayout}
+                showPathHighlight={showPathHighlight}
+                onTogglePathHighlight={() => setShowPathHighlight(!showPathHighlight)}
+                showBackEdges={showBackEdges}
+                onToggleBackEdges={() => setShowBackEdges(!showBackEdges)}
+                onGoToStart={() => {
+                  if (dialogue?.startNodeId) {
+                    setSelectedNodeId(dialogue.startNodeId);
+                    const startNode = nodes.find(n => n.id === dialogue.startNodeId);
+                    if (startNode && reactFlowInstance) {
+                      reactFlowInstance.setCenter(
+                        startNode.position.x + 110,
+                        startNode.position.y + 60,
+                        { zoom: 1, duration: 500 }
+                      );
+                    }
+                  }
+                }}
+                onGoToEnd={() => {
+                  const endNodes = Array.from(endNodeIds);
+                  if (endNodes.length > 0) {
+                    const currentIdx = selectedNodeId ? endNodes.indexOf(selectedNodeId) : -1;
+                    const nextIdx = (currentIdx + 1) % endNodes.length;
+                    const nextEndNodeId = endNodes[nextIdx];
+                    setSelectedNodeId(nextEndNodeId);
+                    const endNode = nodes.find(n => n.id === nextEndNodeId);
+                    if (endNode && reactFlowInstance) {
+                      reactFlowInstance.setCenter(
+                        endNode.position.x + 110,
+                        endNode.position.y + 60,
+                        { zoom: 1, duration: 500 }
+                      );
+                    }
+                  }
+                }}
+                endNodeCount={endNodeIds.size}
+              />
               
-              {/* Pane Context Menu */}
               {contextMenu && (
-                <div 
-                  className="fixed z-50"
-                  style={{ left: contextMenu.x, top: contextMenu.y }}
-                >
-                  <div className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-lg p-1 min-w-[150px]">
-                    <button
-                      onClick={() => {
-                        handleAddNode(NODE_TYPE.NPC, contextMenu.graphX, contextMenu.graphY);
-                      }}
-                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
-                    >
-                      Add NPC Node
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleAddNode(NODE_TYPE.PLAYER, contextMenu.graphX, contextMenu.graphY);
-                      }}
-                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
-                    >
-                      Add Player Node
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleAddNode(NODE_TYPE.CONDITIONAL, contextMenu.graphX, contextMenu.graphY);
-                      }}
-                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
-                    >
-                      Add Conditional Node
-                    </button>
-                    <button
-                      onClick={() => setContextMenu(null)}
-                      className="w-full text-left px-3 py-2 text-sm text-df-text-secondary hover:bg-df-elevated rounded"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+                <DailogueGraphEditorPaneContextMenu
+                  x={contextMenu.x}
+                  y={contextMenu.y}
+                  graphX={contextMenu.graphX}
+                  graphY={contextMenu.graphY}
+                  onAddNode={(type, x, y) => handleAddNode(type, x, y)}
+                  onClose={() => setContextMenu(null)}
+                />
               )}
 
-              {/* Edge Drop Menu */}
-              {edgeDropMenu && (
-                <div 
-                  className="fixed z-50"
-                  style={{ left: edgeDropMenu.x, top: edgeDropMenu.y }}
-                >
-                  <div className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-lg p-1 min-w-[150px]">
-                    <div className="px-3 py-1 text-[10px] text-df-text-secondary uppercase border-b border-df-sidebar-border">
-                      Create Node
-                    </div>
-                    <button
-                      onClick={() => {
-                        handleAddNode(NODE_TYPE.NPC, edgeDropMenu.graphX, edgeDropMenu.graphY, {
-                          fromNodeId: edgeDropMenu.fromNodeId,
-                          fromChoiceIdx: edgeDropMenu.fromChoiceIdx,
-                          fromBlockIdx: edgeDropMenu.fromBlockIdx,
-                          sourceHandle: edgeDropMenu.sourceHandle,
-                        });
-                      }}
-                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
-                    >
-                      Add NPC Node
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleAddNode(NODE_TYPE.PLAYER, edgeDropMenu.graphX, edgeDropMenu.graphY, {
-                          fromNodeId: edgeDropMenu.fromNodeId,
-                          fromChoiceIdx: edgeDropMenu.fromChoiceIdx,
-                          fromBlockIdx: edgeDropMenu.fromBlockIdx,
-                          sourceHandle: edgeDropMenu.sourceHandle,
-                        });
-                      }}
-                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
-                    >
-                      Add Player Node
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleAddNode(NODE_TYPE.CONDITIONAL, edgeDropMenu.graphX, edgeDropMenu.graphY, {
-                          fromNodeId: edgeDropMenu.fromNodeId,
-                          fromChoiceIdx: edgeDropMenu.fromChoiceIdx,
-                          fromBlockIdx: edgeDropMenu.fromBlockIdx,
-                          sourceHandle: edgeDropMenu.sourceHandle,
-                        });
-                      }}
-                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
-                    >
-                      Add Conditional Node
-                    </button>
-                    <button
-                      onClick={() => {
+              {edgeDropMenu && (() => {
+                const sourceNode = dialogue.nodes[edgeDropMenu.fromNodeId];
+                if (!sourceNode) return null;
+                
+                if (sourceNode.type === NODE_TYPE.PLAYER) {
+                  return (
+                    <PlayerEdgeDropMenu
+                      x={edgeDropMenu.x}
+                      y={edgeDropMenu.y}
+                      graphX={edgeDropMenu.graphX}
+                      graphY={edgeDropMenu.graphY}
+                      fromNodeId={edgeDropMenu.fromNodeId}
+                      fromChoiceIdx={edgeDropMenu.fromChoiceIdx}
+                      sourceHandle={edgeDropMenu.sourceHandle}
+                      onAddNode={(type, x, y, autoConnect) => handleAddNode(type, x, y, autoConnect)}
+                      onClose={() => {
                         setEdgeDropMenu(null);
                         connectingRef.current = null;
                       }}
-                      className="w-full text-left px-3 py-2 text-sm text-df-text-secondary hover:bg-df-elevated rounded"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
+                    />
+                  );
+                }
+                
+                if (sourceNode.type === NODE_TYPE.NPC) {
+                  return (
+                    <NPCEdgeDropMenu
+                      x={edgeDropMenu.x}
+                      y={edgeDropMenu.y}
+                      graphX={edgeDropMenu.graphX}
+                      graphY={edgeDropMenu.graphY}
+                      fromNodeId={edgeDropMenu.fromNodeId}
+                      sourceHandle={edgeDropMenu.sourceHandle}
+                      onAddNode={(type, x, y, autoConnect) => handleAddNode(type, x, y, autoConnect)}
+                      onClose={() => {
+                        setEdgeDropMenu(null);
+                        connectingRef.current = null;
+                      }}
+                    />
+                  );
+                }
+                
+                if (sourceNode.type === NODE_TYPE.STORYLET) {
+                  return (
+                    <StoryletEdgeDropMenu
+                      x={edgeDropMenu.x}
+                      y={edgeDropMenu.y}
+                      graphX={edgeDropMenu.graphX}
+                      graphY={edgeDropMenu.graphY}
+                      fromNodeId={edgeDropMenu.fromNodeId}
+                      sourceHandle={edgeDropMenu.sourceHandle}
+                      onAddNode={(type, x, y, autoConnect) => handleAddNode(type, x, y, autoConnect)}
+                      onClose={() => {
+                        setEdgeDropMenu(null);
+                        connectingRef.current = null;
+                      }}
+                    />
+                  );
+                }
+                
+                if (sourceNode.type === NODE_TYPE.STORYLET_POOL) {
+                  return (
+                    <StoryletPoolEdgeDropMenu
+                      x={edgeDropMenu.x}
+                      y={edgeDropMenu.y}
+                      graphX={edgeDropMenu.graphX}
+                      graphY={edgeDropMenu.graphY}
+                      fromNodeId={edgeDropMenu.fromNodeId}
+                      sourceHandle={edgeDropMenu.sourceHandle}
+                      onAddNode={(type, x, y, autoConnect) => handleAddNode(type, x, y, autoConnect)}
+                      onClose={() => {
+                        setEdgeDropMenu(null);
+                        connectingRef.current = null;
+                      }}
+                    />
+                  );
+                }
+                
+                if (sourceNode.type === NODE_TYPE.CONDITIONAL) {
+                  return (
+                    <ConditionalEdgeDropMenu
+                      x={edgeDropMenu.x}
+                      y={edgeDropMenu.y}
+                      graphX={edgeDropMenu.graphX}
+                      graphY={edgeDropMenu.graphY}
+                      fromNodeId={edgeDropMenu.fromNodeId}
+                      fromBlockIdx={edgeDropMenu.fromBlockIdx}
+                      sourceHandle={edgeDropMenu.sourceHandle}
+                      onAddNode={(type, x, y, autoConnect) => handleAddNode(type, x, y, autoConnect)}
+                      onClose={() => {
+                        setEdgeDropMenu(null);
+                        connectingRef.current = null;
+                      }}
+                    />
+                  );
+                }
+                
+                return null;
+              })()}
 
-              {/* Edge Context Menu */}
-              {edgeContextMenu && (
-                <div 
-                  className="fixed z-50"
-                  style={{ left: edgeContextMenu.x, top: edgeContextMenu.y }}
-                >
-                  <div className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-lg p-1 min-w-[180px]">
-                    <div className="px-3 py-1 text-[10px] text-df-text-secondary uppercase border-b border-df-sidebar-border">
-                      Insert Node
-                    </div>
-                    <button
-                      onClick={() => {
-                        handleInsertNode(NODE_TYPE.NPC, edgeContextMenu.edgeId, edgeContextMenu.graphX, edgeContextMenu.graphY);
-                      }}
-                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
-                    >
-                      Insert NPC Node
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleInsertNode(NODE_TYPE.PLAYER, edgeContextMenu.edgeId, edgeContextMenu.graphX, edgeContextMenu.graphY);
-                      }}
-                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
-                    >
-                      Insert Player Node
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleInsertNode(NODE_TYPE.CONDITIONAL, edgeContextMenu.edgeId, edgeContextMenu.graphX, edgeContextMenu.graphY);
-                      }}
-                      className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
-                    >
-                      Insert Conditional Node
-                    </button>
-                    <button
-                      onClick={() => setEdgeContextMenu(null)}
-                      className="w-full text-left px-3 py-2 text-sm text-df-text-secondary hover:bg-df-elevated rounded"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
+              {edgeContextMenu && (() => {
+                const edge = edges.find(e => e.id === edgeContextMenu.edgeId);
+                if (!edge) return null;
+                const sourceNode = dialogue.nodes[edge.source];
+                if (!sourceNode) return null;
+                
+                if (sourceNode.type === NODE_TYPE.PLAYER) {
+                  return (
+                    <PlayerEdgeContextMenu
+                      x={edgeContextMenu.x}
+                      y={edgeContextMenu.y}
+                      edgeId={edgeContextMenu.edgeId}
+                      graphX={edgeContextMenu.graphX}
+                      graphY={edgeContextMenu.graphY}
+                      onInsertNode={(type, edgeId, x, y) => handleInsertNode(type, edgeId, x, y)}
+                      onClose={() => setEdgeContextMenu(null)}
+                    />
+                  );
+                }
+                
+                if (sourceNode.type === NODE_TYPE.NPC) {
+                  return (
+                    <NPCEdgeContextMenu
+                      x={edgeContextMenu.x}
+                      y={edgeContextMenu.y}
+                      edgeId={edgeContextMenu.edgeId}
+                      graphX={edgeContextMenu.graphX}
+                      graphY={edgeContextMenu.graphY}
+                      onInsertNode={(type, edgeId, x, y) => handleInsertNode(type, edgeId, x, y)}
+                      onClose={() => setEdgeContextMenu(null)}
+                    />
+                  );
+                }
+                
+                if (sourceNode.type === NODE_TYPE.STORYLET) {
+                  return (
+                    <StoryletEdgeContextMenu
+                      x={edgeContextMenu.x}
+                      y={edgeContextMenu.y}
+                      edgeId={edgeContextMenu.edgeId}
+                      graphX={edgeContextMenu.graphX}
+                      graphY={edgeContextMenu.graphY}
+                      onInsertNode={(type, edgeId, x, y) => handleInsertNode(type, edgeId, x, y)}
+                      onClose={() => setEdgeContextMenu(null)}
+                    />
+                  );
+                }
+                
+                if (sourceNode.type === NODE_TYPE.STORYLET_POOL) {
+                  return (
+                    <StoryletPoolEdgeContextMenu
+                      x={edgeContextMenu.x}
+                      y={edgeContextMenu.y}
+                      edgeId={edgeContextMenu.edgeId}
+                      graphX={edgeContextMenu.graphX}
+                      graphY={edgeContextMenu.graphY}
+                      onInsertNode={(type, edgeId, x, y) => handleInsertNode(type, edgeId, x, y)}
+                      onClose={() => setEdgeContextMenu(null)}
+                    />
+                  );
+                }
+                
+                if (sourceNode.type === NODE_TYPE.CONDITIONAL) {
+                  return (
+                    <ConditionalEdgeContextMenu
+                      x={edgeContextMenu.x}
+                      y={edgeContextMenu.y}
+                      edgeId={edgeContextMenu.edgeId}
+                      graphX={edgeContextMenu.graphX}
+                      graphY={edgeContextMenu.graphY}
+                      onInsertNode={(type, edgeId, x, y) => handleInsertNode(type, edgeId, x, y)}
+                      onClose={() => setEdgeContextMenu(null)}
+                    />
+                  );
+                }
+                
+                return null;
+              })()}
 
-              {/* Node Context Menu */}
-              {nodeContextMenu && (
-                <div 
-                  className="fixed z-50"
-                  style={{ left: nodeContextMenu.x, top: nodeContextMenu.y }}
-                >
-                  <div className="bg-df-elevated border border-df-player-border rounded-lg shadow-xl py-1 min-w-[180px]">
-                    {(() => {
-                      const node = dialogue.nodes[nodeContextMenu.nodeId];
-                      if (!node) return null;
-                      
-                      return (
-                        <>
-                          <div className="px-3 py-1 text-[10px] text-df-text-secondary uppercase border-b border-df-control-border">
-                            {node.id}
-                          </div>
-                          <button
-                            onClick={() => {
-                              setSelectedNodeId(nodeContextMenu.nodeId);
-                              setNodeContextMenu(null);
-                            }}
-                            className="w-full px-4 py-2 text-sm text-left text-df-text-primary hover:bg-df-control-hover flex items-center gap-2"
-                          >
-                            <Edit3 size={14} className="text-df-npc-selected" /> Edit Node
-                          </button>
-                          {node.type === NODE_TYPE.PLAYER && (
-                            <button
-                              onClick={() => {
-                                handleAddChoice(nodeContextMenu.nodeId);
-                                setNodeContextMenu(null);
-                              }}
-                              className="w-full px-4 py-2 text-sm text-left text-df-text-primary hover:bg-df-control-hover flex items-center gap-2"
-                            >
-                              <Plus size={14} className="text-df-player-selected" /> Add Choice
-                            </button>
-                          )}
-                          {node.type === NODE_TYPE.NPC && !node.conditionalBlocks && (
-                            <button
-                              onClick={() => {
-                                handleUpdateNode(nodeContextMenu.nodeId, {
-                                  conditionalBlocks: [{ 
-                                    id: `block_${Date.now()}`, 
-                                    type: 'if', 
-                                    condition: [], 
-                                    content: node.content,
-                                    speaker: node.speaker 
-                                  }] 
-                                });
-                                setSelectedNodeId(nodeContextMenu.nodeId);
-                                setNodeContextMenu(null);
-                              }}
-                              className="w-full px-4 py-2 text-sm text-left text-df-text-primary hover:bg-df-control-hover flex items-center gap-2"
-                            >
-                              <Plus size={14} className="text-df-conditional-border" /> Add Conditionals
-                            </button>
-                          )}
-                          {node.id !== dialogue.startNodeId && (
-                            <button
-                              onClick={() => {
-                                handleDeleteNode(nodeContextMenu.nodeId);
-                                setNodeContextMenu(null);
-                              }}
-                              className="w-full px-4 py-2 text-sm text-left text-df-error hover:bg-df-control-hover flex items-center gap-2"
-                            >
-                              <Trash2 size={14} /> Delete
-                            </button>
-                          )}
-                        </>
-                      );
-                    })()}
-                    <button
-                      onClick={() => setNodeContextMenu(null)}
-                      className="w-full px-4 py-1.5 text-xs text-df-text-secondary hover:text-df-text-primary border-t border-df-control-border mt-1"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
+              {nodeContextMenu && (() => {
+                const node = dialogue.nodes[nodeContextMenu.nodeId];
+                if (!node) return null;
+                
+                if (node.type === NODE_TYPE.PLAYER) {
+                  return (
+                    <PlayerNodeContextMenu
+                      x={nodeContextMenu.x}
+                      y={nodeContextMenu.y}
+                      nodeId={nodeContextMenu.nodeId}
+                      isStartNode={node.id === dialogue.startNodeId}
+                      onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
+                      onAddChoice={() => handleAddChoice(nodeContextMenu.nodeId)}
+                      onDelete={node.id !== dialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
+                      onClose={() => setNodeContextMenu(null)}
+                    />
+                  );
+                }
+                
+                if (node.type === NODE_TYPE.NPC) {
+                  return (
+                    <NPCNodeContextMenu
+                      x={nodeContextMenu.x}
+                      y={nodeContextMenu.y}
+                      nodeId={nodeContextMenu.nodeId}
+                      isStartNode={node.id === dialogue.startNodeId}
+                      hasConditionals={!!node.conditionalBlocks}
+                      onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
+                      onAddConditionals={!node.conditionalBlocks ? () => {
+                        handleUpdateNode(nodeContextMenu.nodeId, {
+                          conditionalBlocks: [{
+                            id: `block_${Date.now()}`,
+                            type: 'if',
+                            condition: [],
+                            content: node.content,
+                            speaker: node.speaker
+                          }]
+                        });
+                        setSelectedNodeId(nodeContextMenu.nodeId);
+                      } : undefined}
+                      onDelete={node.id !== dialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
+                      onClose={() => setNodeContextMenu(null)}
+                    />
+                  );
+                }
+                
+                if (node.type === NODE_TYPE.CONDITIONAL) {
+                  return (
+                    <ConditionalNodeContextMenu
+                      x={nodeContextMenu.x}
+                      y={nodeContextMenu.y}
+                      nodeId={nodeContextMenu.nodeId}
+                      isStartNode={node.id === dialogue.startNodeId}
+                      onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
+                      onDelete={node.id !== dialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
+                      onClose={() => setNodeContextMenu(null)}
+                    />
+                  );
+                }
+                
+                if (node.type === NODE_TYPE.STORYLET) {
+                  return (
+                    <StoryletNodeContextMenu
+                      x={nodeContextMenu.x}
+                      y={nodeContextMenu.y}
+                      nodeId={nodeContextMenu.nodeId}
+                      isStartNode={node.id === dialogue.startNodeId}
+                      onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
+                      onDelete={node.id !== dialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
+                      onClose={() => setNodeContextMenu(null)}
+                    />
+                  );
+                }
+                
+                if (node.type === NODE_TYPE.STORYLET_POOL) {
+                  return (
+                    <StoryletPoolNodeContextMenu
+                      x={nodeContextMenu.x}
+                      y={nodeContextMenu.y}
+                      nodeId={nodeContextMenu.nodeId}
+                      isStartNode={node.id === dialogue.startNodeId}
+                      onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
+                      onDelete={node.id !== dialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
+                      onClose={() => setNodeContextMenu(null)}
+                    />
+                  );
+                }
+                
+                return null;
+              })()}
             </ReactFlow>
           </div>
 

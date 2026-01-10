@@ -172,32 +172,38 @@ function DialogueGraphEditorInternal({
 
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
+  
+  // Ensure we have a dialogue object (even if empty) for the editor to work
+  const effectiveDialogue = dialogue || {
+    id: 'temp-dialogue',
+    title: 'New Dialogue',
+    startNodeId: '',
+    nodes: {},
+  };
 
   // Use path highlighting hook
-  const { edgesToSelectedNode, nodeDepths } = usePathHighlighting(selectedNodeId, dialogue);
+  const { edgesToSelectedNode, nodeDepths } = usePathHighlighting(selectedNodeId, effectiveDialogue);
 
   // Update nodes/edges when dialogue changes externally
   // Skip conversion if we just made a direct React Flow update (for simple text changes)
   React.useEffect(() => {
-    if (dialogue) {
-      // If we just updated a node directly in React Flow, skip full conversion
-      // The direct update already handled the visual change
-      if (directUpdateRef.current) {
-        directUpdateRef.current = null; // Clear the flag
-        return; // Skip conversion - React Flow is already updated
-      }
-      
-      const { nodes: newNodes, edges: newEdges } = convertDialogueTreeToReactFlow(dialogue, layoutDirection);
-      setNodes(newNodes);
-      setEdges(newEdges);
+    // If we just updated a node directly in React Flow, skip full conversion
+    // The direct update already handled the visual change
+    if (directUpdateRef.current) {
+      directUpdateRef.current = null; // Clear the flag
+      return; // Skip conversion - React Flow is already updated
     }
-  }, [dialogue, layoutDirection]);
+    
+    const { nodes: newNodes, edges: newEdges } = convertDialogueTreeToReactFlow(effectiveDialogue, layoutDirection);
+    setNodes(newNodes);
+    setEdges(newEdges);
+  }, [effectiveDialogue, layoutDirection]);
 
   // Calculate end nodes (nodes with no outgoing connections)
   const endNodeIds = useMemo(() => {
-    if (!dialogue) return new Set<string>();
+    if (!effectiveDialogue || !effectiveDialogue.nodes) return new Set<string>();
     const ends = new Set<string>();
-    Object.values(dialogue.nodes).forEach(node => {
+    Object.values(effectiveDialogue.nodes).forEach(node => {
       const hasNextNode = !!node.nextNodeId;
       const hasChoiceConnections = node.choices?.some(c => c.nextNodeId) || false;
       const hasBlockConnections = node.conditionalBlocks?.some(b => b.nextNodeId) || false;
@@ -206,12 +212,12 @@ function DialogueGraphEditorInternal({
       }
     });
     return ends;
-  }, [dialogue]);
+  }, [effectiveDialogue]);
 
   // Add flagSchema, characters, dim state, and layout direction to node data
   const nodesWithFlags = useMemo(() => {
     const hasSelection = selectedNodeId !== null && showPathHighlight;
-    const startNodeId = dialogue?.startNodeId;
+    const startNodeId = effectiveDialogue?.startNodeId;
     
     return nodes.map(node => {
       const isInPath = showPathHighlight && nodeDepths.has(node.id);
@@ -235,20 +241,21 @@ function DialogueGraphEditorInternal({
         },
       };
     });
-  }, [nodes, flagSchema, characters, nodeDepths, selectedNodeId, layoutDirection, showPathHighlight, dialogue, endNodeIds]);
+  }, [nodes, flagSchema, characters, nodeDepths, selectedNodeId, layoutDirection, showPathHighlight, effectiveDialogue, endNodeIds]);
 
-  if (!dialogue) {
-    return (
-      <div className={`dialogue-graph-editor-empty ${className}`}>
-        <p>No dialogue loaded. Please provide a dialogue tree.</p>
-      </div>
-    );
-  }
+  // Allow rendering even with null dialogue - handleAddNode will create a new one
+  // if (!dialogue) {
+  //   return (
+  //     <div className={`dialogue-graph-editor-empty ${className}`}>
+  //       <p>No dialogue loaded. Please provide a dialogue tree.</p>
+  //     </div>
+  //   );
+  // }
 
   // Get selected node - use useMemo to ensure it updates when dialogue changes
   const selectedNode = useMemo(() => {
-    if (!selectedNodeId || !dialogue) return null;
-    const node = dialogue.nodes[selectedNodeId];
+    if (!selectedNodeId || !effectiveDialogue) return null;
+    const node = effectiveDialogue.nodes[selectedNodeId];
     if (!node) return null;
     // Return a fresh copy to ensure React detects changes
     return {
@@ -260,15 +267,16 @@ function DialogueGraphEditorInternal({
         condition: b.condition ? [...b.condition] : undefined,
       })) : undefined,
     };
-  }, [selectedNodeId, dialogue]);
+  }, [selectedNodeId, effectiveDialogue]);
 
   // Handle node deletion (multi-delete support)
   const onNodesDelete = useCallback((deleted: Node[]) => {
-    let updatedNodes = { ...dialogue.nodes };
+    if (!effectiveDialogue || !effectiveDialogue.nodes) return;
+    let updatedNodes = { ...effectiveDialogue.nodes };
     let shouldClearSelection = false;
     
     deleted.forEach(node => {
-      const dialogueNode = dialogue.nodes[node.id];
+      const dialogueNode = effectiveDialogue.nodes[node.id];
       delete updatedNodes[node.id];
       if (selectedNodeId === node.id) {
         shouldClearSelection = true;
@@ -277,7 +285,7 @@ function DialogueGraphEditorInternal({
       onNodeDelete?.(node.id);
     });
     
-    let newDialogue = { ...dialogue, nodes: updatedNodes };
+    let newDialogue = { ...effectiveDialogue, nodes: updatedNodes };
     
     // Auto-organize if enabled
     if (autoOrganize) {
@@ -294,7 +302,7 @@ function DialogueGraphEditorInternal({
     if (shouldClearSelection) {
       setSelectedNodeId(null);
     }
-  }, [dialogue, onChange, selectedNodeId, autoOrganize, layoutDirection, reactFlowInstance]);
+  }, [effectiveDialogue, onChange, selectedNodeId, autoOrganize, layoutDirection, reactFlowInstance]);
 
   // Handle node changes (drag, delete, etc.)
   const onNodesChange = useCallback((changes: NodeChange[]) => {
@@ -302,8 +310,8 @@ function DialogueGraphEditorInternal({
     
     // Handle deletions (backup in case onNodesDelete doesn't fire)
     const deletions = changes.filter(c => c.type === 'remove');
-    if (deletions.length > 0) {
-      let updatedNodes = { ...dialogue.nodes };
+    if (deletions.length > 0 && effectiveDialogue) {
+      let updatedNodes = { ...effectiveDialogue.nodes };
       let shouldClearSelection = false;
       
       deletions.forEach(change => {
@@ -315,7 +323,7 @@ function DialogueGraphEditorInternal({
         }
       });
       
-      onChange({ ...dialogue, nodes: updatedNodes });
+      onChange({ ...effectiveDialogue, nodes: updatedNodes });
       if (shouldClearSelection) {
         setSelectedNodeId(null);
       }
@@ -324,25 +332,25 @@ function DialogueGraphEditorInternal({
     // Sync position changes back to DialogueTree
     changes.forEach(change => {
       if (change.type === 'position' && change.position) {
-        const node = dialogue.nodes[change.id];
+        const node = effectiveDialogue.nodes[change.id];
         if (node && (node.x !== change.position.x || node.y !== change.position.y)) {
           // Create a new node object to avoid mutating the original
           const updatedNode = {
-            ...dialogue.nodes[change.id],
+            ...effectiveDialogue.nodes[change.id],
             x: change.position.x,
             y: change.position.y,
           };
           onChange({
-            ...dialogue,
+            ...effectiveDialogue,
             nodes: {
-              ...dialogue.nodes,
+              ...effectiveDialogue.nodes,
               [change.id]: updatedNode,
             },
           });
         }
       }
     });
-  }, [dialogue, onChange, selectedNodeId]);
+  }, [effectiveDialogue, onChange, selectedNodeId]);
 
   // Handle edge changes (delete, etc.)
   const onEdgesChange = useCallback((changes: EdgeChange[]) => {
@@ -355,14 +363,14 @@ function DialogueGraphEditorInternal({
         const currentEdges = edges;
         const edge = currentEdges.find(e => e.id === change.id);
         if (edge) {
-          const sourceNode = dialogue.nodes[edge.source];
+          const sourceNode = effectiveDialogue.nodes[edge.source];
           if (sourceNode) {
             if (edge.sourceHandle === 'next' && isLinearNodeType(sourceNode.type)) {
               // Remove NPC next connection
               onChange({
-                ...dialogue,
+                ...effectiveDialogue,
                 nodes: {
-                  ...dialogue.nodes,
+                  ...effectiveDialogue.nodes,
                   [edge.source]: {
                     ...sourceNode,
                     nextNodeId: undefined,
@@ -375,9 +383,9 @@ function DialogueGraphEditorInternal({
               if (sourceNode.choices && sourceNode.choices[choiceIdx]) {
                 const updated = updateChoiceInNode(sourceNode, choiceIdx, { nextNodeId: '' });
                 onChange({
-                  ...dialogue,
+                  ...effectiveDialogue,
                   nodes: {
-                    ...dialogue.nodes,
+                    ...effectiveDialogue.nodes,
                     [edge.source]: updated,
                   },
                 });
@@ -392,9 +400,9 @@ function DialogueGraphEditorInternal({
                   nextNodeId: undefined,
                 };
                 onChange({
-                  ...dialogue,
+                  ...effectiveDialogue,
                   nodes: {
-                    ...dialogue.nodes,
+                    ...effectiveDialogue.nodes,
                     [edge.source]: {
                       ...sourceNode,
                       conditionalBlocks: updatedBlocks,
@@ -407,7 +415,7 @@ function DialogueGraphEditorInternal({
         }
       }
     });
-  }, [dialogue, onChange, edges]);
+  }, [effectiveDialogue, onChange, edges]);
 
   // Handle edge deletion (when Delete key is pressed on selected edges)
   const onEdgesDelete = useCallback((deletedEdges: Edge[]) => {
@@ -415,14 +423,14 @@ function DialogueGraphEditorInternal({
       // Call onDisconnect hook
       onDisconnect?.(edge.id, edge.source, edge.target);
       
-      const sourceNode = dialogue.nodes[edge.source];
+      const sourceNode = effectiveDialogue.nodes[edge.source];
       if (sourceNode) {
         if (edge.sourceHandle === 'next' && isLinearNodeType(sourceNode.type)) {
           // Remove NPC next connection
           onChange({
-            ...dialogue,
+            ...effectiveDialogue,
             nodes: {
-              ...dialogue.nodes,
+              ...effectiveDialogue.nodes,
               [edge.source]: {
                 ...sourceNode,
                 nextNodeId: undefined,
@@ -435,9 +443,9 @@ function DialogueGraphEditorInternal({
           if (sourceNode.choices && sourceNode.choices[choiceIdx]) {
             const updated = updateChoiceInNode(sourceNode, choiceIdx, { nextNodeId: '' });
             onChange({
-              ...dialogue,
+              ...effectiveDialogue,
               nodes: {
-                ...dialogue.nodes,
+                ...effectiveDialogue.nodes,
                 [edge.source]: updated,
               },
             });
@@ -452,9 +460,9 @@ function DialogueGraphEditorInternal({
               nextNodeId: undefined,
             };
             onChange({
-              ...dialogue,
+              ...effectiveDialogue,
               nodes: {
-                ...dialogue.nodes,
+                ...effectiveDialogue.nodes,
                 [edge.source]: {
                   ...sourceNode,
                   conditionalBlocks: updatedBlocks,
@@ -465,12 +473,12 @@ function DialogueGraphEditorInternal({
         }
       }
     });
-  }, [dialogue, onChange]);
+  }, [effectiveDialogue, onChange]);
 
   // Handle connection start (track what we're connecting from)
   const onConnectStart = useCallback((_event: React.MouseEvent | React.TouchEvent, { nodeId, handleId }: { nodeId: string | null; handleId: string | null }) => {
-    if (!nodeId) return;
-    const sourceNode = dialogue.nodes[nodeId];
+    if (!nodeId || !effectiveDialogue) return;
+    const sourceNode = effectiveDialogue.nodes[nodeId];
     if (!sourceNode) return;
     
     if (handleId === 'next' && isLinearNodeType(sourceNode.type)) {
@@ -482,7 +490,7 @@ function DialogueGraphEditorInternal({
       const blockIdx = parseInt(handleId.replace('block-', ''));
       connectingRef.current = { fromNodeId: nodeId, fromBlockIdx: blockIdx, sourceHandle: handleId };
     }
-  }, [dialogue]);
+  }, [effectiveDialogue]);
 
   // Handle connection end (check if dropped on empty space)
   const onConnectEnd = useCallback((event: MouseEvent | TouchEvent) => {
@@ -513,7 +521,7 @@ function DialogueGraphEditorInternal({
 
   // Handle new connections
   const onConnect = useCallback((connection: Connection) => {
-    if (!connection.source || !connection.target) return;
+    if (!connection.source || !connection.target || !dialogue) return;
     
     const newEdge = addEdge(connection, edges);
     setEdges(newEdge);
@@ -523,7 +531,7 @@ function DialogueGraphEditorInternal({
     onConnectHook?.(connection.source, connection.target, connection.sourceHandle || undefined);
     
     // Update DialogueTree
-    const sourceNode = dialogue.nodes[connection.source];
+    const sourceNode = effectiveDialogue.nodes[connection.source];
     if (!sourceNode) return;
     
     if (connection.sourceHandle === 'next' && isLinearNodeType(sourceNode.type)) {
@@ -573,7 +581,7 @@ function DialogueGraphEditorInternal({
       }
     }
     connectingRef.current = null;
-  }, [dialogue, onChange, edges]);
+  }, [effectiveDialogue, onChange, edges]);
 
   // Handle node selection
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
@@ -653,13 +661,15 @@ function DialogueGraphEditorInternal({
 
   // Insert node between two connected nodes
   const handleInsertNode = useCallback((type: NodeType, edgeId: string, x: number, y: number) => {
+    if (!effectiveDialogue) return;
+    
     // Find the edge
     const edge = edges.find(e => e.id === edgeId);
     if (!edge) return;
     
     // Get the source and target nodes
-    const sourceNode = dialogue.nodes[edge.source];
-    const targetNode = dialogue.nodes[edge.target];
+    const sourceNode = effectiveDialogue.nodes[edge.source];
+    const targetNode = effectiveDialogue.nodes[edge.target];
     if (!sourceNode || !targetNode) return;
     
     // Create new node
@@ -667,7 +677,7 @@ function DialogueGraphEditorInternal({
     const newNode = createNode(type, newId, x, y);
     
     // Update dialogue tree: break old connection, add new node, connect source->new->target
-    const updatedNodes = { ...dialogue.nodes, [newId]: newNode };
+    const updatedNodes = { ...effectiveDialogue.nodes, [newId]: newNode };
     
     // Break the old connection and reconnect through new node
     if (edge.sourceHandle === 'next' && isLinearNodeType(sourceNode.type)) {
@@ -719,12 +729,12 @@ function DialogueGraphEditorInternal({
     }
     
     onChange({
-      ...dialogue,
+      ...effectiveDialogue,
       nodes: updatedNodes,
     });
     
     setEdgeContextMenu(null);
-  }, [dialogue, onChange, edges]);
+  }, [effectiveDialogue, onChange, edges]);
 
   // Add node from context menu or edge drop
   const handleAddNode = useCallback((type: NodeType, x: number, y: number, autoConnect?: { fromNodeId: string; fromChoiceIdx?: number; fromBlockIdx?: number; sourceHandle?: string }) => {
@@ -734,15 +744,31 @@ function DialogueGraphEditorInternal({
     // Call onNodeAdd hook
     onNodeAdd?.(newNode);
     
+    // If dialogue is null/undefined, create a new dialogue tree
+    if (!effectiveDialogue || !effectiveDialogue.nodes) {
+      const newDialogue: DialogueTree = {
+        id: dialogue?.id || `dialogue_${Date.now()}`,
+        title: dialogue?.title || 'New Dialogue',
+        startNodeId: dialogue?.startNodeId || newId,
+        nodes: { ...(dialogue?.nodes || {}), [newId]: newNode }
+      };
+      onChange(newDialogue);
+      setSelectedNodeId(newId);
+      setContextMenu(null);
+      setEdgeDropMenu(null);
+      connectingRef.current = null;
+      return;
+    }
+    
     // Build the complete new dialogue state in one go
     let newDialogue = {
-      ...dialogue,
-      nodes: { ...dialogue.nodes, [newId]: newNode }
+      ...effectiveDialogue,
+      nodes: { ...effectiveDialogue.nodes, [newId]: newNode }
     };
     
     // If auto-connecting, include that connection
     if (autoConnect) {
-      const sourceNode = dialogue.nodes[autoConnect.fromNodeId];
+      const sourceNode = effectiveDialogue.nodes[autoConnect.fromNodeId];
       if (sourceNode) {
         if (autoConnect.sourceHandle === 'next' && isLinearNodeType(sourceNode.type)) {
           newDialogue.nodes[autoConnect.fromNodeId] = { ...sourceNode, nextNodeId: newId };
@@ -780,11 +806,12 @@ function DialogueGraphEditorInternal({
         }
       }, 50);
     }
-  }, [dialogue, onChange, autoOrganize, layoutDirection, reactFlowInstance]);
+  }, [effectiveDialogue, onChange, autoOrganize, layoutDirection, reactFlowInstance, onNodeAdd]);
 
   // Handle node updates
   const handleUpdateNode = useCallback((nodeId: string, updates: Partial<DialogueNode>) => {
-    const updatedNode = { ...dialogue.nodes[nodeId], ...updates };
+    if (!effectiveDialogue || !effectiveDialogue.nodes[nodeId]) return;
+    const updatedNode = { ...effectiveDialogue.nodes[nodeId], ...updates };
     
     // Check if this is a "simple" update (just text/content changes, not structural)
     // Simple updates: speaker, content, characterId (non-structural properties)
@@ -821,36 +848,40 @@ function DialogueGraphEditorInternal({
     // Always update the dialogue tree (source of truth) - but this triggers full conversion
     // The useEffect will handle the full conversion, but React Flow is already updated above
     onChange({
-      ...dialogue,
+      ...effectiveDialogue,
       nodes: {
-        ...dialogue.nodes,
+        ...effectiveDialogue.nodes,
         [nodeId]: updatedNode
       }
     });
     
     // Call onNodeUpdate hook
     onNodeUpdate?.(nodeId, updates);
-  }, [dialogue, onChange, onNodeUpdate, reactFlowInstance]);
+  }, [effectiveDialogue, onChange, onNodeUpdate, reactFlowInstance]);
 
   // Handle choice updates
   const handleAddChoice = useCallback((nodeId: string) => {
-    const updated = addChoiceToNode(dialogue.nodes[nodeId]);
+    if (!effectiveDialogue || !effectiveDialogue.nodes[nodeId]) return;
+    const updated = addChoiceToNode(effectiveDialogue.nodes[nodeId]);
     handleUpdateNode(nodeId, updated);
-  }, [dialogue, handleUpdateNode]);
+  }, [effectiveDialogue, handleUpdateNode]);
 
   const handleUpdateChoice = useCallback((nodeId: string, choiceIdx: number, updates: Partial<Choice>) => {
-    const updated = updateChoiceInNode(dialogue.nodes[nodeId], choiceIdx, updates);
+    if (!effectiveDialogue || !effectiveDialogue.nodes[nodeId]) return;
+    const updated = updateChoiceInNode(effectiveDialogue.nodes[nodeId], choiceIdx, updates);
     handleUpdateNode(nodeId, updated);
-  }, [dialogue, handleUpdateNode]);
+  }, [effectiveDialogue, handleUpdateNode]);
 
   const handleRemoveChoice = useCallback((nodeId: string, choiceIdx: number) => {
-    const updated = removeChoiceFromNode(dialogue.nodes[nodeId], choiceIdx);
+    if (!effectiveDialogue || !effectiveDialogue.nodes[nodeId]) return;
+    const updated = removeChoiceFromNode(effectiveDialogue.nodes[nodeId], choiceIdx);
     handleUpdateNode(nodeId, updated);
-  }, [dialogue, handleUpdateNode]);
+  }, [effectiveDialogue, handleUpdateNode]);
 
   const handleDeleteNode = useCallback((nodeId: string) => {
     try {
-      let newDialogue = deleteNodeFromTree(dialogue, nodeId);
+      if (!effectiveDialogue) return;
+      let newDialogue = deleteNodeFromTree(effectiveDialogue, nodeId);
       
       // Auto-organize if enabled
       if (autoOrganize) {
@@ -868,13 +899,14 @@ function DialogueGraphEditorInternal({
     } catch (e: any) {
       alert(e.message);
     }
-  }, [dialogue, onChange, autoOrganize, layoutDirection, reactFlowInstance]);
+  }, [effectiveDialogue, onChange, autoOrganize, layoutDirection, reactFlowInstance]);
 
   // Handle node drag stop - resolve collisions in freeform mode
   const onNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
     // In freeform mode, resolve collisions after drag
     if (!autoOrganize) {
-      const collisionResolved = resolveNodeCollisions(dialogue, {
+      if (!effectiveDialogue) return;
+      const collisionResolved = resolveNodeCollisions(effectiveDialogue, {
         maxIterations: 50,
         overlapThreshold: 0.3,
         margin: 20,
@@ -882,7 +914,7 @@ function DialogueGraphEditorInternal({
       
       // Only update if positions actually changed
       const hasChanges = Object.keys(collisionResolved.nodes).some(id => {
-        const orig = dialogue.nodes[id];
+        const orig = effectiveDialogue.nodes[id];
         const resolved = collisionResolved.nodes[id];
         return orig && resolved && (orig.x !== resolved.x || orig.y !== resolved.y);
       });
@@ -891,7 +923,7 @@ function DialogueGraphEditorInternal({
         onChange(collisionResolved);
       }
     }
-  }, [dialogue, onChange, autoOrganize]);
+  }, [effectiveDialogue, onChange, autoOrganize]);
 
   // Handle auto-layout with direction (strategy comes from prop)
   const handleAutoLayout = useCallback((direction?: LayoutDirection) => {
@@ -899,7 +931,8 @@ function DialogueGraphEditorInternal({
     if (direction) {
       setLayoutDirection(direction);
     }
-    const result = applyLayout(dialogue, layoutStrategy, { direction: dir });
+    if (!effectiveDialogue) return;
+    const result = applyLayout(effectiveDialogue, layoutStrategy, { direction: dir });
     onChange(result.dialogue);
     
     // Fit view after a short delay to allow React Flow to update
@@ -908,7 +941,7 @@ function DialogueGraphEditorInternal({
         reactFlowInstance.fitView({ padding: 0.2, duration: 500 });
       }
     }, 100);
-  }, [dialogue, onChange, reactFlowInstance, layoutDirection, layoutStrategy]);
+  }, [effectiveDialogue, onChange, reactFlowInstance, layoutDirection, layoutStrategy]);
 
   return (
     <div className={`dialogue-graph-editor ${className} w-full h-full flex flex-col`}>
@@ -1030,9 +1063,9 @@ function DialogueGraphEditorInternal({
                 showBackEdges={showBackEdges}
                 onToggleBackEdges={() => setShowBackEdges(!showBackEdges)}
                 onGoToStart={() => {
-                  if (dialogue?.startNodeId) {
-                    setSelectedNodeId(dialogue.startNodeId);
-                    const startNode = nodes.find(n => n.id === dialogue.startNodeId);
+                  if (effectiveDialogue?.startNodeId) {
+                    setSelectedNodeId(effectiveDialogue.startNodeId);
+                    const startNode = nodes.find(n => n.id === effectiveDialogue.startNodeId);
                     if (startNode && reactFlowInstance) {
                       reactFlowInstance.setCenter(
                         startNode.position.x + 110,
@@ -1074,7 +1107,7 @@ function DialogueGraphEditorInternal({
               )}
 
               {edgeDropMenu && (() => {
-                const sourceNode = dialogue.nodes[edgeDropMenu.fromNodeId];
+                const sourceNode = effectiveDialogue.nodes[edgeDropMenu.fromNodeId];
                 if (!sourceNode) return null;
                 
                 if (sourceNode.type === NODE_TYPE.PLAYER) {
@@ -1175,7 +1208,7 @@ function DialogueGraphEditorInternal({
               {edgeContextMenu && (() => {
                 const edge = edges.find(e => e.id === edgeContextMenu.edgeId);
                 if (!edge) return null;
-                const sourceNode = dialogue.nodes[edge.source];
+                const sourceNode = effectiveDialogue.nodes[edge.source];
                 if (!sourceNode) return null;
                 
                 if (sourceNode.type === NODE_TYPE.PLAYER) {
@@ -1252,7 +1285,7 @@ function DialogueGraphEditorInternal({
               })()}
 
               {nodeContextMenu && (() => {
-                const node = dialogue.nodes[nodeContextMenu.nodeId];
+                const node = effectiveDialogue.nodes[nodeContextMenu.nodeId];
                 if (!node) return null;
                 
                 if (node.type === NODE_TYPE.PLAYER) {
@@ -1261,10 +1294,10 @@ function DialogueGraphEditorInternal({
                       x={nodeContextMenu.x}
                       y={nodeContextMenu.y}
                       nodeId={nodeContextMenu.nodeId}
-                      isStartNode={node.id === dialogue.startNodeId}
+                      isStartNode={node.id === effectiveDialogue.startNodeId}
                       onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
                       onAddChoice={() => handleAddChoice(nodeContextMenu.nodeId)}
-                      onDelete={node.id !== dialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
+                      onDelete={node.id !== effectiveDialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
                       onClose={() => setNodeContextMenu(null)}
                     />
                   );
@@ -1276,7 +1309,7 @@ function DialogueGraphEditorInternal({
                       x={nodeContextMenu.x}
                       y={nodeContextMenu.y}
                       nodeId={nodeContextMenu.nodeId}
-                      isStartNode={node.id === dialogue.startNodeId}
+                      isStartNode={node.id === effectiveDialogue.startNodeId}
                       hasConditionals={!!node.conditionalBlocks}
                       onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
                       onAddConditionals={!node.conditionalBlocks ? () => {
@@ -1291,7 +1324,7 @@ function DialogueGraphEditorInternal({
                         });
                         setSelectedNodeId(nodeContextMenu.nodeId);
                       } : undefined}
-                      onDelete={node.id !== dialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
+                      onDelete={node.id !== effectiveDialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
                       onClose={() => setNodeContextMenu(null)}
                     />
                   );
@@ -1303,9 +1336,9 @@ function DialogueGraphEditorInternal({
                       x={nodeContextMenu.x}
                       y={nodeContextMenu.y}
                       nodeId={nodeContextMenu.nodeId}
-                      isStartNode={node.id === dialogue.startNodeId}
+                      isStartNode={node.id === effectiveDialogue.startNodeId}
                       onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
-                      onDelete={node.id !== dialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
+                      onDelete={node.id !== effectiveDialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
                       onClose={() => setNodeContextMenu(null)}
                     />
                   );
@@ -1317,9 +1350,9 @@ function DialogueGraphEditorInternal({
                       x={nodeContextMenu.x}
                       y={nodeContextMenu.y}
                       nodeId={nodeContextMenu.nodeId}
-                      isStartNode={node.id === dialogue.startNodeId}
+                      isStartNode={node.id === effectiveDialogue.startNodeId}
                       onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
-                      onDelete={node.id !== dialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
+                      onDelete={node.id !== effectiveDialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
                       onClose={() => setNodeContextMenu(null)}
                     />
                   );
@@ -1331,9 +1364,9 @@ function DialogueGraphEditorInternal({
                       x={nodeContextMenu.x}
                       y={nodeContextMenu.y}
                       nodeId={nodeContextMenu.nodeId}
-                      isStartNode={node.id === dialogue.startNodeId}
+                      isStartNode={node.id === effectiveDialogue.startNodeId}
                       onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
-                      onDelete={node.id !== dialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
+                      onDelete={node.id !== effectiveDialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
                       onClose={() => setNodeContextMenu(null)}
                     />
                   );
@@ -1348,7 +1381,7 @@ function DialogueGraphEditorInternal({
           {selectedNode && (
             <NodeEditor
               node={selectedNode}
-              dialogue={dialogue}
+              dialogue={effectiveDialogue}
               characters={characters}
               onUpdate={(updates) => handleUpdateNode(selectedNode.id, updates)}
               onFocusNode={(nodeId) => {
@@ -1393,9 +1426,9 @@ function DialogueGraphEditorInternal({
 
       {viewMode === VIEW_MODE.YARN && (
         <YarnView
-          dialogue={dialogue}
+          dialogue={effectiveDialogue}
           onExport={() => {
-            const yarn = exportToYarn(dialogue);
+            const yarn = exportToYarn(effectiveDialogue);
             if (onExportYarn) {
               onExportYarn(yarn);
             } else {
@@ -1404,14 +1437,14 @@ function DialogueGraphEditorInternal({
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
               a.href = url;
-              a.download = `${dialogue.title.replace(/\s+/g, '_')}.yarn`;
+              a.download = `${effectiveDialogue.title.replace(/\s+/g, '_')}.yarn`;
               a.click();
               URL.revokeObjectURL(url);
             }
           }}
           onImport={(yarn) => {
             try {
-              const importedDialogue = importFromYarn(yarn, dialogue.title);
+              const importedDialogue = importFromYarn(yarn, effectiveDialogue.title);
               onChange(importedDialogue);
             } catch (err) {
               console.error('Failed to import Yarn:', err);
@@ -1424,7 +1457,7 @@ function DialogueGraphEditorInternal({
 
       {viewMode === VIEW_MODE.PLAY && (
         <PlayView
-          dialogue={dialogue}
+          dialogue={effectiveDialogue}
           flagSchema={flagSchema}
           gameStateFlags={gameStateFlags}
         />

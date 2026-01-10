@@ -94,7 +94,6 @@ function NarrativeGraphEditorInternal({
           showBackEdges={showBackEdges}
           onToggleBackEdges={() => setShowBackEdges(!showBackEdges)}
         />
-        <Controls className="bg-[#0f0f1a] border border-[#1f1f2e]" />
       </ReactFlow>
     </div>
   );

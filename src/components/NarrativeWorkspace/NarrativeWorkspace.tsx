@@ -188,11 +188,20 @@ function NarrativeWorkspaceInner({
   const pageDialogue = getCachedDialogue(pageDialogueIdEffective);
 
   const handleDialogueChange = useCallback((nextDialogue: DialogueTree) => {
-    if (!activeEditingDialogueId) return;
-    dialogueCacheRef.current.set(activeEditingDialogueId, nextDialogue);
-    forceRerender(v => v + 1);
-    dispatch(createEvent('dialogue.changed', { dialogueId: activeEditingDialogueId, dialogue: nextDialogue, reason: 'edit' }));
-  }, [activeEditingDialogueId, dispatch]);
+    // If there's an active editing dialogue ID, update the cache
+    if (activeEditingDialogueId) {
+      dialogueCacheRef.current.set(activeEditingDialogueId, nextDialogue);
+      forceRerender(v => v + 1);
+      dispatch(createEvent('dialogue.changed', { dialogueId: activeEditingDialogueId, dialogue: nextDialogue, reason: 'edit' }));
+    } else {
+      // If there's no active editing dialogue ID, update the workspace state directly
+      // This handles the case when creating nodes in an empty dialogue
+      workspaceState.setDialogueTree(nextDialogue);
+      // Also dispatch the event so it can be handled by event handlers
+      const dialogueId = nextDialogue.id || 'new-dialogue';
+      dispatch(createEvent('dialogue.changed', { dialogueId, dialogue: nextDialogue, reason: 'edit' }));
+    }
+  }, [activeEditingDialogueId, dispatch, workspaceState]);
 
   const handleNarrativeElementSelect = useCallback((elementType: any, elementId: string) => {
                   if (elementType === NARRATIVE_ELEMENT.ACT) {

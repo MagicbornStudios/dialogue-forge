@@ -18,6 +18,7 @@ interface NarrativeGraphSectionProps {
   onPaneContextMenu: (event: React.MouseEvent) => void;
   onPaneClick: () => void;
   onSelectElement: (elementType: any, elementId: string) => void;
+  onThreadChange?: (thread: StoryThread) => void;
 }
 
 export function NarrativeGraphSection({
@@ -30,6 +31,7 @@ export function NarrativeGraphSection({
   onPaneContextMenu,
   onPaneClick,
   onSelectElement,
+  onThreadChange,
 }: NarrativeGraphSectionProps) {
 
 
@@ -48,12 +50,14 @@ export function NarrativeGraphSection({
         {narrativeViewMode === VIEW_MODE.GRAPH ? (
           <NarrativeGraphEditor
             thread={thread}
+            onChange={onThreadChange}
             className="h-full"
             showMiniMap={showNarrativeMiniMap}
             onToggleMiniMap={onToggleMiniMap}
             onPaneContextMenu={onPaneContextMenu}
             onPaneClick={onPaneClick}
             onSelectElement={onSelectElement}
+            dialogueTreeId={dialogueTree.id}
           />
         ) : (
           <YarnView dialogue={dialogueTree} onExport={() => exportDialogueToYarn(dialogueTree)} />

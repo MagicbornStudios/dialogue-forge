@@ -15,7 +15,6 @@ import { NarrativeWorkspaceToolbar } from './components/NarrativeWorkspaceToolba
 import { NarrativeGraphSection } from './components/NarrativeGraphSection';
 import { DialogueGraphSection } from './components/DialogueGraphSection';
 import { StoryletsSidebar } from './components/StoryletsSidebar';
-import { NarrativeContextMenu } from './components/NarrativeContextMenu';
 import { StoryletContextMenu } from './components/StoryletContextMenu';
 import { PlayModal } from './components/PlayModal';
 import { FlagManagerModal } from './components/FlagManagerModal';
@@ -86,8 +85,7 @@ function NarrativeWorkspaceInner({
 }: NarrativeWorkspaceProps) {
   const selection = useForgeUIStore(state => state.narrativeGraph.selection);
   const setSelection = useForgeUIStore(state => state.actions.setNarrativeSelection);
-  const narrativeContextMenu = useForgeUIStore(state => state.narrativeGraph.contextMenu);
-  const setNarrativeContextMenu = useForgeUIStore(state => state.actions.setNarrativeContextMenu);
+  // Context menu is now handled internally by NarrativeGraphEditor
   const activePoolId = useForgeUIStore(state => state.storylets.activePoolId);
   const setActivePoolId = useForgeUIStore(state => state.actions.setActivePoolId);
   const activeDialogueTab = useForgeUIStore(state => state.dialogueGraph.activeTab);
@@ -294,7 +292,7 @@ function NarrativeWorkspaceInner({
     <div
       className={`flex h-full w-full flex-col ${className}`}
       onMouseDown={() => {
-        setNarrativeContextMenu(null);
+        // Context menu is handled internally by NarrativeGraphEditor
         storyletManagement.setStoryletContextMenu(null);
       }}
     >
@@ -320,14 +318,14 @@ function NarrativeWorkspaceInner({
             onViewModeChange={workspaceState.setNarrativeViewMode}
             onToggleMiniMap={() => workspaceState.setShowNarrativeMiniMap(prev => !prev)}
             onPaneContextMenu={event => {
+              // Context menu is handled internally by NarrativeGraphEditor
               event.preventDefault();
-              setNarrativeContextMenu({
-                x: event.clientX,
-                y: event.clientY,
-              });
             }}
-            onPaneClick={() => setNarrativeContextMenu(null)}
+            onPaneClick={() => {
+              // Context menu is handled internally by NarrativeGraphEditor
+            }}
             onSelectElement={handleNarrativeElementSelect}
+            onThreadChange={workspaceState.setThread}
           />
 
           <DialogueGraphSection
@@ -376,18 +374,7 @@ function NarrativeWorkspaceInner({
         />
         </div>
 
-      {narrativeContextMenu && (
-        <NarrativeContextMenu
-          x={narrativeContextMenu.x}
-          y={narrativeContextMenu.y}
-          onAddAct={narrativeActions.handleAddAct}
-          onAddChapter={narrativeActions.handleAddChapter}
-          onAddPage={narrativeActions.handleAddPage}
-          canAddChapter={!!selectedAct}
-          canAddPage={!!selectedChapter}
-          onClose={() => setNarrativeContextMenu(null)}
-        />
-      )}
+      {/* Context menu is now handled internally by NarrativeGraphEditor */}
 
       {storyletManagement.storyletContextMenu && (
         <StoryletContextMenu

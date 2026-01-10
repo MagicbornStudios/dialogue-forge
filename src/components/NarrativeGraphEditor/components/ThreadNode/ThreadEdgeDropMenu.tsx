@@ -11,10 +11,10 @@ const elementTypeLabels: Record<NarrativeElement, string> = {
   [NARRATIVE_ELEMENT.STORYLET]: 'Storylet',
 };
 
-// Pages can connect to other Pages
-const availableElementTypes: NarrativeElement[] = [NARRATIVE_ELEMENT.PAGE];
+// Thread can connect to Acts
+const availableElementTypes: NarrativeElement[] = [NARRATIVE_ELEMENT.ACT];
 
-interface PageEdgeDropMenuProps {
+interface ThreadEdgeDropMenuProps {
   x: number;
   y: number;
   graphX: number;
@@ -31,7 +31,7 @@ interface PageEdgeDropMenuProps {
   onClose: () => void;
 }
 
-export function PageEdgeDropMenu({
+export function ThreadEdgeDropMenu({
   x,
   y,
   graphX,
@@ -39,7 +39,7 @@ export function PageEdgeDropMenu({
   fromNodeId,
   onAddElement,
   onClose,
-}: PageEdgeDropMenuProps) {
+}: ThreadEdgeDropMenuProps) {
   return (
     <ContextMenuBase x={x} y={y} title="Create Element">
       {availableElementTypes.map(type => (

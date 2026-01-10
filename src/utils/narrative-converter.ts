@@ -14,6 +14,8 @@ import {
 export interface NarrativeFlowNodeData {
   element: StoryThread | NarrativeAct | NarrativeChapter | NarrativePage;
   elementType: NarrativeElement;
+  isDimmed?: boolean;
+  isInPath?: boolean;
 }
 
 export type NarrativeFlowNode = Node<NarrativeFlowNodeData>;
@@ -345,8 +347,17 @@ export function convertReactFlowToNarrative(
       };
     });
 
+  // Always ensure we have a thread node - if not found, create one from the first node or use defaults
+  const threadData = threadNode 
+    ? coerceThread(threadNode)
+    : {
+        id: nodes[0]?.id || 'empty-thread',
+        title: nodes[0]?.data?.element?.title || 'Empty Thread',
+        type: NARRATIVE_ELEMENT.THREAD,
+      };
+
   return {
-    ...coerceThread(threadNode),
+    ...threadData,
     acts,
   };
 }

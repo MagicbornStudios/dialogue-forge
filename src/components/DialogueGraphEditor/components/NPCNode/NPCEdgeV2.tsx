@@ -53,16 +53,11 @@ export function NPCEdgeV2({
   // Add glow effect when hovered (only if not dimmed)
   const filter = hovered && !isDimmed ? 'drop-shadow(0 0 4px var(--color-df-edge-default-hover))' : undefined;
 
-  // Create a brighter version of the color for the pulse
-  const brightenColor = (hex: string, percent: number = 40): string => {
-    const num = parseInt(hex.replace('#', ''), 16);
-    const r = Math.min(255, ((num >> 16) & 0xff) + percent);
-    const g = Math.min(255, ((num >> 8) & 0xff) + percent);
-    const b = Math.min(255, (num & 0xff) + percent);
-    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-  };
-
-  const pulseColor = brightenColor(strokeColor, 50);
+  // For pulse animation, use a CSS variable that's brighter
+  // Don't try to brighten CSS variables - just use a predefined bright color
+  const pulseColor = isBackEdge 
+    ? 'var(--color-df-edge-loop)' 
+    : (isSelected ? 'var(--color-df-edge-default-hover)' : 'var(--color-df-edge-default)');
   const shouldAnimate = data?.isInPathToSelected ?? false;
 
   return (

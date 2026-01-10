@@ -30,12 +30,21 @@ const __dirname = path.dirname(__filename)
 // Use absolute path from project root to avoid issues with spaces in Windows paths
 const projectRoot = path.resolve(__dirname, '..')
 const dataDir = path.resolve(projectRoot, 'app', 'data')
+const migrationsDir = path.resolve(dataDir, 'migrations')
 
 if (!existsSync(dataDir)) {
   try {
     mkdirSync(dataDir, { recursive: true })
   } catch (error) {
     console.error('Failed to create data directory:', error)
+  }
+}
+
+if (!existsSync(migrationsDir)) {
+  try {
+    mkdirSync(migrationsDir, { recursive: true })
+  } catch (error) {
+    console.error('Failed to create migrations directory:', error)
   }
 }
 
@@ -59,6 +68,7 @@ export default buildConfig({
     client: {
       url: `file:${dbPath}`,
     },
+    migrationDir: migrationsDir,
   }),
 
   // ============================

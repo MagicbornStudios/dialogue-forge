@@ -1,7 +1,7 @@
 import React from 'react';
 import { DialogueNode, DialogueTree } from '../../../../types';
 import { Character } from '../../../../types/characters';
-import { CharacterSelector } from '../../../CharacterSelector';
+import { CharacterSelector } from '../CharacterSelector';
 import { User } from 'lucide-react';
 import { NextNodeSelector } from '../../../EditorComponents/NodeEditor/components/NextNodeSelector';
 

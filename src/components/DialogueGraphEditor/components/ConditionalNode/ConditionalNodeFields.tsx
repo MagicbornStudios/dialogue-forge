@@ -2,10 +2,10 @@ import React from 'react';
 import { DialogueNode, DialogueTree } from '../../../../types';
 import { FlagSchema } from '../../../../types/flags';
 import { Character } from '../../../../types/characters';
-import { CharacterSelector } from '../../CharacterSelector';
-import { ConditionAutocomplete } from '../../ConditionAutocomplete';
+import { CharacterSelector } from '../CharacterSelector';
+import { ConditionAutocomplete } from '../ConditionAutocomplete';
 import { X, User, Maximize2 } from 'lucide-react';
-import { validateCondition, parseCondition } from '../../../../utils/condition-utils';
+import { validateCondition, parseCondition } from '../../../../components/EditorComponents/utils/condition-utils';
 
 interface ConditionalNodeFieldsProps {
   node: DialogueNode;

@@ -11,11 +11,11 @@
 
 import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { DialogueNode } from '../types';
-import { Character } from '../types/characters';
+import { DialogueNode } from '../../../../types';
+import { Character } from '../../../../types/characters';
 import { MessageSquare, Play, Flag, Hash } from 'lucide-react';
-import { FlagSchema } from '../types/flags';
-import { LayoutDirection } from '../utils/layout';
+import { FlagSchema } from '../../../../types/flags';
+import { LayoutDirection } from '../../../../utils/layout';
 
 // ============================================================================
 // Types

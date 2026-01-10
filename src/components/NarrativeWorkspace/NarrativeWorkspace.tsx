@@ -1,26 +1,26 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { GuidePanel } from './GuidePanel';
-import type { DialogueTree } from '../types';
-import type { BaseGameState } from '../types/game-state';
-import type { Character } from '../types/characters';
-import type { FlagSchema } from '../types/flags';
-import { NARRATIVE_ELEMENT } from '../types/narrative';
-import type { StoryThread } from '../types/narrative';
-import { getInitialSelection } from './NarrativeWorkspace/utils/narrative-workspace-utils';
-import { useNarrativeWorkspaceState } from './NarrativeWorkspace/hooks/useNarrativeWorkspaceState';
-import { useNarrativeSelection } from './NarrativeWorkspace/hooks/useNarrativeSelection';
-import { useStoryletManagement } from './NarrativeWorkspace/hooks/useStoryletManagement';
-import { useNarrativeActions } from './NarrativeWorkspace/hooks/useNarrativeActions';
-import { NarrativeWorkspaceToolbar } from './NarrativeWorkspace/components/NarrativeWorkspaceToolbar';
-import { NarrativeGraphSection } from './NarrativeWorkspace/components/NarrativeGraphSection';
-import { DialogueGraphSection } from './NarrativeWorkspace/components/DialogueGraphSection';
-import { StoryletsSidebar } from './NarrativeWorkspace/components/StoryletsSidebar';
-import { NarrativeContextMenu } from './NarrativeWorkspace/components/NarrativeContextMenu';
-import { StoryletContextMenu } from './NarrativeWorkspace/components/StoryletContextMenu';
-import { PlayModal } from './NarrativeWorkspace/components/PlayModal';
-import { FlagManagerModal } from './NarrativeWorkspace/components/FlagManagerModal';
-import { StoryletEditorModal } from './NarrativeWorkspace/components/StoryletEditorModal';
-import { PoolEditorModal } from './NarrativeWorkspace/components/PoolEditorModal';
+import { GuidePanel } from '../GamePlayer/components/GuidePanel';
+import type { DialogueTree } from '../../types';
+import type { BaseGameState } from '../../types/game-state';
+import type { Character } from '../../types/characters';
+import type { FlagSchema } from '../../types/flags';
+import { NARRATIVE_ELEMENT } from '../../types/narrative';
+import type { StoryThread } from '../../types/narrative';
+import { getInitialSelection } from './utils/narrative-workspace-utils';
+import { useNarrativeWorkspaceState } from './hooks/useNarrativeWorkspaceState';
+import { useNarrativeSelection } from './hooks/useNarrativeSelection';
+import { useStoryletManagement } from './hooks/useStoryletManagement';
+import { useNarrativeActions } from './hooks/useNarrativeActions';
+import { NarrativeWorkspaceToolbar } from './components/NarrativeWorkspaceToolbar';
+import { NarrativeGraphSection } from './components/NarrativeGraphSection';
+import { DialogueGraphSection } from './components/DialogueGraphSection';
+import { StoryletsSidebar } from './components/StoryletsSidebar';
+import { NarrativeContextMenu } from './components/NarrativeContextMenu';
+import { StoryletContextMenu } from './components/StoryletContextMenu';
+import { PlayModal } from './components/PlayModal';
+import { FlagManagerModal } from './components/FlagManagerModal';
+import { StoryletEditorModal } from './components/StoryletEditorModal';
+import { PoolEditorModal } from './components/PoolEditorModal';
 import {
   ForgeUIStoreProvider,
   createForgeUIStore,
@@ -30,8 +30,8 @@ import type { DialogueForgeEvent } from '@/src/components/forge/events/events';
 import { createEvent } from '@/src/components/forge/events/events';
 
 interface NarrativeWorkspaceProps {
-  initialThread: StoryThread;
-  initialDialogue: DialogueTree;
+  initialThread?: StoryThread;
+  initialDialogue?: DialogueTree;
   flagSchema?: FlagSchema;
   characters?: Record<string, Character>;
   gameState?: BaseGameState;
@@ -123,7 +123,11 @@ function NarrativeWorkspaceInner({
     storyletFocusId: workspaceState.storyletFocusId,
   });
 
-  const dialogueCacheRef = useRef<Map<string, DialogueTree>>(new Map([[initialDialogue.id, initialDialogue]]));
+  const dialogueCacheRef = useRef<Map<string, DialogueTree>>(
+    initialDialogue 
+      ? new Map([[initialDialogue.id, initialDialogue]])
+      : new Map()
+  );
   const [, forceRerender] = React.useState(0);
 
   const getCachedDialogue = useCallback((dialogueId: string | null): DialogueTree | null => {

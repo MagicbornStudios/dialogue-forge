@@ -1,5 +1,5 @@
 import React from 'react';
-import { DialogueStep } from '../../hooks/useDialogueRunner';
+import { DialogueStep } from '../hooks/useDialogueRunner';
 import { ChoiceList } from './ChoiceList';
 
 interface StoryletSidebarProps {

@@ -759,6 +759,23 @@ export function useProjects() {
   })
 }
 
+/**
+ * Create a new project
+ */
+export function useCreateProject(): UseMutationResult<ProjectDocument, Error, Partial<ProjectDocument>> {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async (data: Partial<ProjectDocument>) => {
+      const client = getPayloadClient()
+      return client.create<ProjectDocument>(PAYLOAD_COLLECTIONS.PROJECTS, data)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.lists() })
+    },
+  })
+}
+
 // ============================
 // Composite Query Hooks
 // ============================

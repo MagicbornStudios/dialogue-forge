@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { FlagSchema, FlagDefinition } from '../types/flags';
+import { FlagSchema, FlagDefinition } from '../../../types/flags';
 import { BookOpen, Trophy, Package, TrendingUp, Crown, Globe, MessageSquare } from 'lucide-react';
 
 interface ConditionAutocompleteProps {

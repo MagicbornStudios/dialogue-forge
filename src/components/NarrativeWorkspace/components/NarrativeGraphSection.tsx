@@ -1,6 +1,6 @@
 import React from 'react';
 import { CircleDot } from 'lucide-react';
-import { NarrativeGraphEditor } from '../../NarrativeGraphEditor';
+import { NarrativeGraphEditor } from '../../NarrativeGraphEditor/NarrativeGraphEditor';
 import { YarnView } from '../../EditorComponents/YarnView';
 import { GraphToolbar } from '../../EditorComponents/GraphToolbar';
 import type { StoryThread } from '../../../types/narrative';

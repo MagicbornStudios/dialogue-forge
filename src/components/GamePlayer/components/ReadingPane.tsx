@@ -1,5 +1,5 @@
 import React from 'react';
-import { DialogueHistoryEntry, DialogueStep } from '../../hooks/useDialogueRunner';
+import { DialogueHistoryEntry, DialogueStep } from '../hooks/useDialogueRunner';
 import { DialogueBox } from './DialogueBox';
 
 interface ReadingPaneProps {

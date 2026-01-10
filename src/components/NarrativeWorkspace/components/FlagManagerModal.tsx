@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, CircleDot, BookOpen, Flag } from 'lucide-react';
-import { FlagManager } from '../../FlagManager';
+import { FlagManager } from '../../GamePlayer/components/FlagManager';
 import type { DialogueTree } from '../../../types';
 import type { BaseGameState } from '../../../types/game-state';
 import type { Character } from '../../../types/characters';

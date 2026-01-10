@@ -3,7 +3,7 @@ import { Choice, ConditionalBlock, DialogueNode, DialogueTree } from '../../../t
 import { DialogueResult, FlagState } from '../../../types/game-state';
 import { FlagSchema } from '../../../types/flags';
 import { FLAG_TYPE, NODE_TYPE, type NodeType } from '../../../types/constants';
-import { mergeFlagUpdates } from '../../../components/GamePlayer/utils/flag-manager';
+import { mergeFlagUpdates } from '../utils/flag-manager';
 import { evaluateConditions } from '../../../lib/yarn-runner/condition-evaluator';
 
 export interface DialogueHistoryEntry {

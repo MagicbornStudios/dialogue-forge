@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { DialogueNode, Choice } from '../../../../types';
 import { FlagSchema } from '../../../../types/flags';
 import { X, AlertCircle, Info, CheckCircle } from 'lucide-react';
-import { validateCondition, parseCondition } from '../../../utils/condition-utils';
+import { validateCondition, parseCondition } from '../../utils/condition-utils';
 
 interface ConditionEditorModalProps {
   editingCondition: {

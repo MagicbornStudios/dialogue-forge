@@ -4,7 +4,7 @@ import { FLAG_TYPE } from '../../types/constants';
 import { FlagSchema, FlagType } from '../../types/flags';
 import { DialogueResult, FlagState, GameFlagState } from '../../types/game-state';
 import { initializeFlags } from '../GamePlayer/utils/flag-manager';
-import { GamePlayer } from '../GamePlayer';
+import { GamePlayer } from '../GamePlayer/components';
 
 interface PlayViewProps {
   dialogue: DialogueTree;

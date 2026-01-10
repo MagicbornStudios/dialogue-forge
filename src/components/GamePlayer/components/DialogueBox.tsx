@@ -1,6 +1,6 @@
 import React from 'react';
-import { DialogueHistoryEntry, DialogueStep } from '../../hooks/useDialogueRunner';
-import { NODE_TYPE } from '../../types/constants';
+import { DialogueHistoryEntry, DialogueStep } from '../hooks/useDialogueRunner';
+import { NODE_TYPE } from '../../../types/constants';
 
 interface DialogueBoxProps {
   history: DialogueHistoryEntry[];

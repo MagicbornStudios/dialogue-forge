@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { DialogueNode, ConditionalBlock, Choice } from '../../../../types';
-import { conditionToString } from '../../../utils/condition-utils';
+import { conditionToString } from '../../utils/condition-utils';
 
 interface UseConditionInputsResult {
   conditionInputs: Record<string, string>;

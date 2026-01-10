@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { FlagSchema, FlagDefinition, FlagType } from '../types/flags';
-import { DialogueTree } from '../types';
+import { FlagSchema, FlagDefinition, FlagType } from '../../../types/flags';
+import { DialogueTree } from '../../../types';
 
 interface FlagManagerProps {
   flagSchema: FlagSchema;

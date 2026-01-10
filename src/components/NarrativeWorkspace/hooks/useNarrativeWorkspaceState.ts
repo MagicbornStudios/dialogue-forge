@@ -6,11 +6,24 @@ import type { StoryThread } from '../../../types/narrative';
 import { VIEW_MODE } from '../../../types/constants';
 
 interface UseNarrativeWorkspaceStateProps {
-  initialThread: StoryThread;
-  initialDialogue: DialogueTree;
+  initialThread: StoryThread | undefined;
+  initialDialogue: DialogueTree | undefined;
   flagSchema?: FlagSchema;
   gameState?: BaseGameState;
 }
+
+const createEmptyThread = (): StoryThread => ({
+  id: 'empty-thread',
+  title: 'Empty Thread',
+  acts: [],
+});
+
+const createEmptyDialogue = (): DialogueTree => ({
+  id: 'empty-dialogue',
+  title: 'Empty Dialogue',
+  startNodeId: '',
+  nodes: {},
+});
 
 export function useNarrativeWorkspaceState({
   initialThread,
@@ -18,8 +31,8 @@ export function useNarrativeWorkspaceState({
   flagSchema,
   gameState,
 }: UseNarrativeWorkspaceStateProps) {
-  const [thread, setThread] = useState<StoryThread>(initialThread);
-  const [dialogueTree, setDialogueTree] = useState<DialogueTree>(initialDialogue);
+  const [thread, setThread] = useState<StoryThread>(initialThread || createEmptyThread());
+  const [dialogueTree, setDialogueTree] = useState<DialogueTree>(initialDialogue || createEmptyDialogue());
   const [activeFlagSchema, setActiveFlagSchema] = useState<FlagSchema | undefined>(flagSchema);
   const [activeGameState, setActiveGameState] = useState<BaseGameState>(() => gameState ?? { flags: {} });
   const [showPlayModal, setShowPlayModal] = useState(false);

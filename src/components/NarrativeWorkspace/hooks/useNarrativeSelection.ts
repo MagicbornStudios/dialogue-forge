@@ -6,8 +6,8 @@ import type { DialogueTree } from '../../../types';
 import type { NarrativePage } from '../../../types/narrative';
 
 interface UseNarrativeSelectionProps {
-  thread: StoryThread;
-  dialogueTree: DialogueTree;
+  thread: StoryThread | undefined;
+  dialogueTree: DialogueTree | undefined;
   selection: NarrativeSelection;
   dialogueScope: 'page' | 'storylet';
   storyletFocusId: string | null;
@@ -21,24 +21,43 @@ export function useNarrativeSelection({
   storyletFocusId,
 }: UseNarrativeSelectionProps) {
   const selectedAct = useMemo(
-    () => thread.acts.find(act => act.id === selection.actId) ?? thread.acts[0],
-    [thread.acts, selection.actId]
+    () => {
+      if (!thread || !thread.acts || thread.acts.length === 0) return undefined;
+      return thread.acts.find(act => act.id === selection.actId) ?? thread.acts[0];
+    },
+    [thread, selection.actId]
   );
 
   const selectedChapter = useMemo(
-    () => selectedAct?.chapters.find(chapter => chapter.id === selection.chapterId)
-      ?? selectedAct?.chapters[0],
+    () => {
+      if (!selectedAct || !selectedAct.chapters || selectedAct.chapters.length === 0) return undefined;
+      return selectedAct.chapters.find(chapter => chapter.id === selection.chapterId)
+        ?? selectedAct.chapters[0];
+    },
     [selectedAct, selection.chapterId]
   );
 
   const selectedPage = useMemo(
-    () => selectedChapter?.pages.find(page => page.id === selection.pageId)
-      ?? selectedChapter?.pages[0],
+    () => {
+      if (!selectedChapter || !selectedChapter.pages || selectedChapter.pages.length === 0) return undefined;
+      return selectedChapter.pages.find(page => page.id === selection.pageId)
+        ?? selectedChapter.pages[0];
+    },
     [selectedChapter, selection.pageId]
   );
 
   const scopedDialogue = useMemo(
-    () => buildScopedDialogue(dialogueTree, selectedPage, storyletFocusId, dialogueScope),
+    () => {
+      if (!dialogueTree) {
+        return {
+          id: '',
+          title: '',
+          startNodeId: '',
+          nodes: {},
+        } as DialogueTree;
+      }
+      return buildScopedDialogue(dialogueTree, selectedPage, storyletFocusId, dialogueScope);
+    },
     [dialogueTree, dialogueScope, selectedPage, storyletFocusId]
   );
 

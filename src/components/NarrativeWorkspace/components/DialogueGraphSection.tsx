@@ -1,6 +1,6 @@
 import React from 'react';
 import { LayoutPanelTop, Download, Info } from 'lucide-react';
-import { DialogueGraphEditor } from '../../DialogueGraphEditor';
+import { DialogueGraphEditor } from '../../DialogueGraphEditor/DialogueGraphEditor';
 import { YarnView } from '../../EditorComponents/YarnView';
 import type { DialogueTree, ViewMode } from '../../../types';
 import type { FlagSchema } from '../../../types/flags';

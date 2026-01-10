@@ -4,7 +4,7 @@ import {
   type NarrativeChapter,
   type NarrativePage,
   type StoryThread,
-} from '../types/narrative';
+} from '../../../types/narrative';
 
 /**
  * Finds the insertion position for a new act based on Y position

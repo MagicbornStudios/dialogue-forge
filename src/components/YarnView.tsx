@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { DialogueTree } from '../../types';
-import { exportToYarn, importF../../lib/yarn-converterb/yarn-converter';
+import { DialogueTree } from '../types';
+import { exportToYarn, importFromYarn } from '../lib/yarn-converter';
 
 interface YarnViewProps {
   dialogue: DialogueTree;

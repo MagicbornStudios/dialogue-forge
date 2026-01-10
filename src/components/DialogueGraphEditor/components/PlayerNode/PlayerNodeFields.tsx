@@ -2,13 +2,13 @@ import React from 'react';
 import { DialogueNode, DialogueTree, Choice } from '../../../../types';
 import { FlagSchema } from '../../../../types/flags';
 import { Character } from '../../../../types/characters';
-import { CharacterSelector } from '../../../CharacterSelector';
-import { ConditionAutocomplete } from '../../../ConditionAutocomplete';
-import { FlagSelector } from '../../../DialogueGraphEditor/components/FlagSelector';
-import { EdgeIcon } from '../../../EdgeIcon';
+import { CharacterSelector } from '../CharacterSelector';
+import { ConditionAutocomplete } from '../ConditionAutocomplete';
+import { FlagSelector } from '../FlagSelector';
+import { EdgeIcon } from '../EdgeIcon';
 import { User, GitBranch } from 'lucide-react';
 import { CHOICE_COLORS } from '../../../../utils/reactflow-converter';
-import { validateCondition, parseCondition } from '../../../../utils/condition-utils';
+import { validateCondition, parseCondition } from '../../../../components/EditorComponents/utils/condition-utils';
 
 interface PlayerNodeFieldsProps {
   node: DialogueNode;

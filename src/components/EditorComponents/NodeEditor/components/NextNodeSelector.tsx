@@ -1,6 +1,6 @@
 import React from 'react';
 import { DialogueTree } from '../../../../types';
-import { EdgeIcon } from '../../../EdgeIcon';
+import { EdgeIcon } from '../../../DialogueGraphEditor/components/EdgeIcon';
 
 interface NextNodeSelectorProps {
   nodeId: string;

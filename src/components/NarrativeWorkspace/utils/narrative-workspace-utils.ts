@@ -4,11 +4,19 @@ import type { NarrativePage } from '../../../types/narrative';
 import type { NarrativeSelection } from '../../../types/narrative';
 import type { StoryThread } from '../../../types/narrative';
 
-export function getInitialSelection(thread: StoryThread): NarrativeSelection {
+export function getInitialSelection(thread: StoryThread | undefined): NarrativeSelection {
+  if (!thread || !thread.acts || thread.acts.length === 0) {
+    return {
+      actId: undefined,
+      chapterId: undefined,
+      pageId: undefined,
+      storyletKey: undefined,
+    };
+  }
   return {
     actId: thread.acts[0]?.id,
-    chapterId: thread.acts[0]?.chapters[0]?.id,
-    pageId: thread.acts[0]?.chapters[0]?.pages[0]?.id,
+    chapterId: thread.acts[0]?.chapters?.[0]?.id,
+    pageId: thread.acts[0]?.chapters?.[0]?.pages?.[0]?.id,
     storyletKey: undefined,
   };
 }

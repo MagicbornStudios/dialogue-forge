@@ -3,7 +3,8 @@
 import { NARRATIVE_ELEMENT, STORYLET_SELECTION_MODE } from "@magicborn/dialogue-forge/src/types/narrative"
 import type { DialogueTree, StoryThread, NarrativeAct, NarrativeChapter, NarrativePage, StoryletTemplate, StoryletPool } from "@magicborn/dialogue-forge/src/types"
 import type { FlagSchema } from "@magicborn/dialogue-forge/src/types/flags"
-import type { Character, BaseGameState } from "@magicborn/dialogue-forge/src/types"
+import type { Character } from "@magicborn/dialogue-forge/src/types/characters"
+import type { BaseGameState } from "@magicborn/dialogue-forge/src/types/game-state"
 import type {
   ThreadDocument,
   ActDocument,
@@ -239,7 +240,7 @@ export function prepareGameStateData(
   })
   
   return {
-    flags: state.flags || {},
+    flags: (state.flags as Record<string, boolean | number | string>) || {},
     characters, // Characters populated from project
   }
 }

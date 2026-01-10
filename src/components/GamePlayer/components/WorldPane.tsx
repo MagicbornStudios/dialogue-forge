@@ -1,5 +1,5 @@
 import React from 'react';
-import { NarrativeProgress } from '../../hooks/useNarrativeTraversal';
+import { NarrativeProgress } from '../hooks/useNarrativeTraversal';
 
 interface WorldPaneProps {
   progress: NarrativeProgress;

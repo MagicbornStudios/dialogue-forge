@@ -5,7 +5,7 @@ export const FlagSchemas: CollectionConfig = {
   slug: PAYLOAD_COLLECTIONS.FLAG_SCHEMAS,
   trash: true,
   admin: {
-    useAsTitle: 'schemaId',
+    useAsTitle: 'id',
   },
   access: {
     read: () => true,
@@ -34,19 +34,11 @@ export const FlagSchemas: CollectionConfig = {
   hooks: {
     beforeValidate: [
       async ({ data, req }) => {
-        if (data?.schemaId && data?.project) {
-          const existing = await req.payload.find({
-            collection: PAYLOAD_COLLECTIONS.FLAG_SCHEMAS,
-            where: {
-              and: [
-                { schemaId: { equals: data.schemaId } },
-                { project: { equals: data.project } },
-              ],
-            },
-            limit: 1,
-          })
-          if (existing.docs.length > 0 && existing.docs[0].id !== data.id) {
-            throw new Error(`Flag schema ID "${data.schemaId}" already exists in this project`)
+        // Validate that schema JSON is properly structured
+        if (data?.schema && typeof data.schema === 'object' && data.schema !== null) {
+          const schema = data.schema as { flags?: unknown[] }
+          if (!Array.isArray(schema.flags)) {
+            throw new Error('Flag schema must have a "flags" array')
           }
         }
       },

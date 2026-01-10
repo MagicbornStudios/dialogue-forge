@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import ReactFlow, {
+  ReactFlowProvider,
   Background,
   BackgroundVariant,
   Controls,
@@ -37,7 +38,7 @@ const edgeTypes = {
   default: NPCEdgeV2,
 };
 
-export function NarrativeGraphEditor({
+function NarrativeGraphEditorInternal({
   thread,
   className = '',
   showMiniMap = true,
@@ -96,5 +97,13 @@ export function NarrativeGraphEditor({
         <Controls className="bg-[#0f0f1a] border border-[#1f1f2e]" />
       </ReactFlow>
     </div>
+  );
+}
+
+export function NarrativeGraphEditor(props: NarrativeGraphEditorProps) {
+  return (
+    <ReactFlowProvider>
+      <NarrativeGraphEditorInternal {...props} />
+    </ReactFlowProvider>
   );
 }

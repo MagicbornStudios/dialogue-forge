@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { DialogueTree, type NarrativeThread } from '../../types';
-import { FlagSchema } from '../../types/flags';
-import { DialogueResult, FlagState } from '../../types/game-state';
+import { DialogueTree, type NarrativeThread } from '../../../types';
+import { FlagSchema } from '../../../types/flags';
+import { DialogueResult, FlagState } from '../../../types/game-state';
 import { ReadingPane } from './ReadingPane';
 import { StoryletSidebar } from './StoryletSidebar';
 import { VNStage } from './VNStage';
 import { ProgressOverlay } from './ProgressOverlay';
-import { useDialogueRunner } from '../../hooks/useDialogueRunner';
-import { useNarrativeTraversal } from '../../hooks/useNarrativeTraversal';
-import { NARRATIVE_ELEMENT } from '../../types/narrative';
+import { useDialogueRunner } from '../hooks/useDialogueRunner';
+import { useNarrativeTraversal } from '../hooks/useNarrativeTraversal';
+import { NARRATIVE_ELEMENT } from '../../../types/narrative';
 
 export interface GamePlayerProps {
   dialogue: DialogueTree;

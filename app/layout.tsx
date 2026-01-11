@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import 'reactflow/dist/style.css';
 import 'react-tooltip/dist/react-tooltip.css';
 import '@/styles/globals.css';
-import { QueryClientProvider } from './lib/forge/query-provider';
+import { QueryClientProvider } from './lib/providers/query-provider';
 
 export const metadata: Metadata = {
   title: 'Dialogue Forge - Visual Dialogue Editor',

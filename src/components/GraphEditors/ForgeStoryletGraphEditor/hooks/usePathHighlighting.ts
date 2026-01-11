@@ -4,19 +4,19 @@ import { createTreeHierarchy, findPath } from '../../../../utils/tree-navigation
 
 export function usePathHighlighting(
   selectedNodeId: string | null,
-  dialogue: ForgeGraph | null
+  graph: ForgeGraph | null
 ) {
   const { edgesToSelectedNode, nodeDepths } = useMemo(() => {
-    if (!selectedNodeId || !dialogue || !dialogue.startNodeId) {
+    if (!selectedNodeId || !graph || !graph.startNodeId) {
       return { edgesToSelectedNode: new Set<string>(), nodeDepths: new Map<string, number>() };
     }
     
-    const hierarchy = createTreeHierarchy(dialogue);
+    const hierarchy = createTreeHierarchy(graph);
     if (!hierarchy) {
       return { edgesToSelectedNode: new Set<string>(), nodeDepths: new Map<string, number>() };
     }
     
-    const path = findPath(hierarchy, dialogue.startNodeId, selectedNodeId);
+    const path = findPath(hierarchy, graph.startNodeId, selectedNodeId);
     if (!path) {
       return { edgesToSelectedNode: new Set<string>(), nodeDepths: new Map<string, number>() };
     }
@@ -29,7 +29,7 @@ export function usePathHighlighting(
       nodeDepthMap.set(nodeId, i);
       
       if (i < path.length - 1) {
-        const currentNode = dialogue.nodes[nodeId];
+        const currentNode = graph.nodes[nodeId];
         const nextNodeId = path[i + 1];
         
         if (!currentNode) continue;
@@ -53,7 +53,7 @@ export function usePathHighlighting(
     }
     
     return { edgesToSelectedNode: edgesOnPath, nodeDepths: nodeDepthMap };
-  }, [selectedNodeId, dialogue]);
+  }, [selectedNodeId, graph]);
 
   return { edgesToSelectedNode, nodeDepths };
 }

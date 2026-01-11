@@ -1,8 +1,8 @@
 import React from 'react';
 import { CircleDot } from 'lucide-react';
-import { NarrativeGraphEditor } from '../../NarrativeGraphEditor/NarrativeGraphEditor';
-import { YarnView } from '../../EditorComponents/YarnView';
-import { GraphToolbar } from '../../EditorComponents/GraphToolbar';
+import { NarrativeGraphEditor } from '../../GraphEditors/NarrativeGraphEditor/NarrativeGraphEditor';
+import { YarnView } from '../../GraphEditors/shared/YarnView';
+import { GraphToolbar } from '../../GraphEditors/shared/GraphToolbar';
 import type { StoryThread } from '../../../types/narrative';
 import type { DialogueTree, ViewMode } from '../../../types';
 import { VIEW_MODE } from '../../../types/constants';

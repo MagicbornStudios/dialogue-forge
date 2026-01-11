@@ -13,11 +13,13 @@ const fs = require('fs');
 
 // Get the directory where this package is installed
 const packageDir = path.resolve(__dirname, '..');
-const demoDir = path.join(packageDir, 'demo');
+// Demo app is at the root level, not in a demo/ subdirectory
+const demoDir = packageDir;
 
-// Check if demo directory exists
-if (!fs.existsSync(demoDir)) {
-  console.error('❌ Demo directory not found. Make sure the package is properly installed.');
+// Check if package.json exists (indicates this is a valid Next.js app)
+const packageJsonPath = path.join(demoDir, 'package.json');
+if (!fs.existsSync(packageJsonPath)) {
+  console.error('❌ Package.json not found. Make sure the package is properly installed.');
   process.exit(1);
 }
 
@@ -28,11 +30,15 @@ const nodeModulesPath = path.join(demoDir, 'node_modules');
 // For published packages, use npm package references
 // For local dev, use file references (already set in package.json)
 if (isPublished) {
-  // Update demo package.json to use published packages
+  // Update package.json to use published packages
   const demoPackageJson = path.join(demoDir, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(demoPackageJson, 'utf8'));
-  pkg.dependencies['@magicborn/dialogue-forge'] = '*';
-  pkg.dependencies['@magicborn/server-template'] = '*';
+  if (pkg.dependencies['@magicborn/dialogue-forge']) {
+    pkg.dependencies['@magicborn/dialogue-forge'] = '*';
+  }
+  if (pkg.dependencies['@magicborn/server-template']) {
+    pkg.dependencies['@magicborn/server-template'] = '*';
+  }
   fs.writeFileSync(demoPackageJson, JSON.stringify(pkg, null, 2));
 }
 

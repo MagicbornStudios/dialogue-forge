@@ -53,7 +53,7 @@ These libraries define the functional backbone and should stay UI-agnostic.
 
 The editor is powered by **React Flow** and custom node/edge components:
 
-- `DialogueEditorV2` renders and edits `DialogueTree` content.
+- `DialogueGraphEditor` renders and edits `DialogueTree` content.
 - `NPCNodeV2`, `PlayerNodeV2`, `ConditionalNodeV2`, `StoryletDialogueNodeV2`,
 - `ChoiceEdgeV2` and `NPCEdgeV2` render custom edges.
 - `reactflow-converter.ts` bridges the editor between React Flow data and
@@ -64,7 +64,7 @@ The editor is powered by **React Flow** and custom node/edge components:
 The narrative toolset is layered on top of the dialogue editor:
 
 - `NarrativeWorkspace` manages the overall story structure and embeds
-  `DialogueEditorV2`.
+  `DialogueGraphEditor`.
 - `NarrativeGraphView` renders narrative thread/act/chapter/page structures.
 - Narrative utilities in `src/utils/narrative-*` convert between narrative
   structures and graph data for visualization.
@@ -92,7 +92,7 @@ This is the primary “in-repo” way to interact with the editor.
 
 ### 3.1 Editor ↔ DialogueTree
 
-`DialogueEditorV2` uses `reactflow-converter.ts` to:
+`DialogueGraphEditor` uses `reactflow-converter.ts` to:
 
 1. Convert a `DialogueTree` into React Flow nodes/edges.
 2. Render/edit in the UI.
@@ -115,23 +115,15 @@ of this sequence to give a “page/act/chapter” framing.
 
 ### 4.1 README vs actual exports
 
-The README documents a `DialogueEditor` component, but the public export is
-`DialogueEditorV2`. This can confuse users trying to follow the Quick Start and
-copy/paste sample code.
+The README previously documented a `DialogueEditorV2` component, but the actual public export is
+`DialogueGraphEditor`. This documentation has been updated to match the implementation.
 
 
 ### 4.2 CLI demo runner vs repository layout
 
-`bin/dialogue-forge.js` expects a `/demo` directory to exist so it can run
-`npm run dev` inside it. The current repo structure uses the root Next.js app
-(`app/`) instead of `demo/`. The `files` list in `package.json` also does not
-package a `demo/` directory.
+`bin/dialogue-forge.js` was previously expecting a `/demo` directory to exist but the actual repo structure uses the root Next.js app (`app/`) instead of `demo/`. This has been fixed in the CLI script to work with the actual structure.
 
-**Impact:** `npx @magicborn/dialogue-forge` may fail in the published package or
-in this repo unless a `demo` folder is added.
-
-**Recommendation:** Align the CLI with the repo layout (run the root Next app),
-or reintroduce and publish a `demo/` directory.
+**Status:** ✅ **RESOLVED** - CLI script now correctly runs from the root directory.
 
 ### 4.3 Build scripts do not clearly separate library vs demo
 

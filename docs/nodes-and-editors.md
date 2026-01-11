@@ -71,7 +71,7 @@ When adding new node types or editors:
    - Extend `DialogueNode` in `src/types/index.ts` with any new fields.
 2. **Node UI component**
    - Create a dedicated component in `src/components/` (one node type per file).
-   - Register it in `src/components/DialogueEditorV2.tsx`.
+    - Register it in `src/components/DialogueGraphEditor.tsx`.
 3. **Node editor section**
    - Add a dedicated editor subcomponent in `src/components/NodeEditor.tsx`.
    - Keep shared field UI in small helpers (e.g., `NextNodeSelector`, `StoryletCallFields`).

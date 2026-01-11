@@ -4,7 +4,7 @@
  */
 
 /**
- * View modes for DialogueEditorV2
+ * View modes for DialogueGraphEditor
  */
 export const VIEW_MODE = {
   GRAPH: 'graph',
@@ -24,6 +24,7 @@ export const NODE_TYPE = {
   STORYLET: 'storylet',
   STORYLET_POOL: 'storylet_pool',
   RANDOMIZER: 'randomizer',
+  DETOUR: 'detour',
 } as const;
 
 export type NodeType = typeof NODE_TYPE[keyof typeof NODE_TYPE];
@@ -114,3 +115,31 @@ export const DIALOGUE_OPEN_REASON = {
 } as const;
 
 export type DialogueOpenReason = typeof DIALOGUE_OPEN_REASON[keyof typeof DIALOGUE_OPEN_REASON];
+
+/**
+ * Yarn Spinner operator constants for generating Yarn syntax
+ */
+export const YARN_OPERATOR = {
+  EQUALS: '==',
+  NOT_EQUALS: '!=',
+  GREATER_THAN: '>',
+  LESS_THAN: '<',
+  GREATER_EQUAL: '>=',
+  LESS_EQUAL: '<=',
+  NOT: 'not',
+  AND: 'and',
+} as const;
+
+export type YarnOperator = typeof YARN_OPERATOR[keyof typeof YARN_OPERATOR];
+
+/**
+ * Yarn block type constants for Yarn syntax generation
+ */
+export const YARN_BLOCK_TYPE = {
+  IF: 'if',
+  ELSEIF: 'elseif',
+  ELSE: 'else',
+  ENDIF: 'endif',
+} as const;
+
+export type YarnBlockType = typeof YARN_BLOCK_TYPE[keyof typeof YARN_BLOCK_TYPE];

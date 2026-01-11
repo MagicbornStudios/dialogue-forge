@@ -29,6 +29,18 @@ export const Threads: CollectionConfig = {
       name: 'summary',
       type: 'textarea',
     },
+    {
+      name: 'startActId',
+      type: 'text',
+    },
+    {
+      name: 'startChapterId',
+      type: 'text',
+    },
+    {
+      name: 'startPageId',
+      type: 'text',
+    },
   ],
   versions: {
     drafts: true,

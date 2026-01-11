@@ -1,4 +1,5 @@
 import { DialogueTree, DialogueNode } from '../types';
+import { NODE_TYPE, CONDITION_OPERATOR, YARN_OPERATOR, YARN_BLOCK_TYPE } from '../types/constants';
 
 /**
  * Convert DialogueTree to Yarn Spinner format
@@ -18,34 +19,34 @@ export function exportToYarn(tree: DialogueTree): string {
     yarn += `title: ${node.id}\n`;
     yarn += `---\n`;
     
-    if (node.type === 'npc') {
+    if (node.type === NODE_TYPE.NPC) {
       // Export conditional blocks if present
       if (node.conditionalBlocks && node.conditionalBlocks.length > 0) {
         node.conditionalBlocks.forEach(block => {
-          if (block.type === 'if' || block.type === 'elseif') {
+if (block.type === YARN_BLOCK_TYPE.IF || block.type === YARN_BLOCK_TYPE.ELSEIF) {
             // Build condition string
             const conditions = block.condition?.map(cond => {
               const varName = `$${cond.flag}`;
-              if (cond.operator === 'is_set') {
+              if (cond.operator === CONDITION_OPERATOR.IS_SET) {
                 return varName;
-              } else if (cond.operator === 'is_not_set') {
-                return `not ${varName}`;
+} else if (cond.operator === CONDITION_OPERATOR.IS_NOT_SET) {
+                return `${YARN_OPERATOR.NOT} ${varName}`;
               } else if (cond.value !== undefined) {
-                const op = cond.operator === 'equals' ? '==' :
-                          cond.operator === 'not_equals' ? '!=' :
-                          cond.operator === 'greater_than' ? '>' :
-                          cond.operator === 'less_than' ? '<' :
-                          cond.operator === 'greater_equal' ? '>=' :
-                          cond.operator === 'less_equal' ? '<=' : '==';
+const op = cond.operator === CONDITION_OPERATOR.EQUALS ? YARN_OPERATOR.EQUALS :
+                          cond.operator === CONDITION_OPERATOR.NOT_EQUALS ? YARN_OPERATOR.NOT_EQUALS :
+                          cond.operator === CONDITION_OPERATOR.GREATER_THAN ? YARN_OPERATOR.GREATER_THAN :
+                          cond.operator === CONDITION_OPERATOR.LESS_THAN ? YARN_OPERATOR.LESS_THAN :
+                          cond.operator === CONDITION_OPERATOR.GREATER_EQUAL ? YARN_OPERATOR.GREATER_EQUAL :
+                          cond.operator === CONDITION_OPERATOR.LESS_EQUAL ? YARN_OPERATOR.LESS_EQUAL : YARN_OPERATOR.EQUALS;
                 const value = typeof cond.value === 'string' ? `"${cond.value}"` : cond.value;
                 return `${varName} ${op} ${value}`;
               }
               return '';
-            }).filter(c => c).join(' and ') || '';
+}).filter(c => c).join(` ${YARN_OPERATOR.AND} `) || '';
             
             yarn += `<<${block.type} ${conditions}>>\n`;
-          } else if (block.type === 'else') {
-            yarn += `<<else>>\n`;
+} else if (block.type === YARN_BLOCK_TYPE.ELSE) {
+            yarn += `<<${YARN_BLOCK_TYPE.ELSE}>>\n`;
           }
           
           // Export block content (remove set commands from content, they'll be exported separately)
@@ -108,33 +109,33 @@ export function exportToYarn(tree: DialogueTree): string {
       if (node.nextNodeId) {
         yarn += `<<jump ${node.nextNodeId}>>\n`;
       }
-    } else if (node.type === 'conditional' && node.conditionalBlocks) {
+    } else if (node.type === NODE_TYPE.CONDITIONAL && node.conditionalBlocks) {
       // Export conditional node blocks
       node.conditionalBlocks.forEach(block => {
-        if (block.type === 'if' || block.type === 'elseif') {
-          // Build condition string
+        if (block.type === YARN_BLOCK_TYPE.IF || block.type === YARN_BLOCK_TYPE.ELSEIF) {
+// Build condition string
           const conditions = block.condition?.map(cond => {
             const varName = `$${cond.flag}`;
-            if (cond.operator === 'is_set') {
+            if (cond.operator === CONDITION_OPERATOR.IS_SET) {
               return varName;
-            } else if (cond.operator === 'is_not_set') {
-              return `not ${varName}`;
-            } else if (cond.value !== undefined) {
-              const op = cond.operator === 'equals' ? '==' :
-                        cond.operator === 'not_equals' ? '!=' :
-                        cond.operator === 'greater_than' ? '>' :
-                        cond.operator === 'less_than' ? '<' :
-                        cond.operator === 'greater_equal' ? '>=' :
-                        cond.operator === 'less_equal' ? '<=' : '==';
+            } else if (cond.operator === CONDITION_OPERATOR.IS_NOT_SET) {
+              return `${YARN_OPERATOR.NOT} ${varName}`;
+} else if (cond.value !== undefined) {
+              const op = cond.operator === CONDITION_OPERATOR.EQUALS ? YARN_OPERATOR.EQUALS :
+                        cond.operator === CONDITION_OPERATOR.NOT_EQUALS ? YARN_OPERATOR.NOT_EQUALS :
+                        cond.operator === CONDITION_OPERATOR.GREATER_THAN ? YARN_OPERATOR.GREATER_THAN :
+                        cond.operator === CONDITION_OPERATOR.LESS_THAN ? YARN_OPERATOR.LESS_THAN :
+                        cond.operator === CONDITION_OPERATOR.GREATER_EQUAL ? YARN_OPERATOR.GREATER_EQUAL :
+                        cond.operator === CONDITION_OPERATOR.LESS_EQUAL ? YARN_OPERATOR.LESS_EQUAL : YARN_OPERATOR.EQUALS;
               const value = typeof cond.value === 'string' ? `"${cond.value}"` : cond.value;
               return `${varName} ${op} ${value}`;
             }
             return '';
-          }).filter(c => c).join(' and ') || '';
+          }).filter(c => c).join(` ${YARN_OPERATOR.AND} `) || '';
           
           yarn += `<<${block.type} ${conditions}>>\n`;
-        } else if (block.type === 'else') {
-          yarn += `<<else>>\n`;
+} else if (block.type === YARN_BLOCK_TYPE.ELSE) {
+          yarn += `<<${YARN_BLOCK_TYPE.ELSE}>>\n`;
         }
         
         // Export block content (remove set commands from content)
@@ -180,33 +181,33 @@ export function exportToYarn(tree: DialogueTree): string {
       }
       
       // Conditional nodes don't have a main nextNodeId (each block has its own)
-    } else if (node.type === 'player' && node.choices) {
+    } else if (node.type === NODE_TYPE.PLAYER && node.choices) {
       node.choices.forEach(choice => {
         // Export conditions as Yarn if statements (wrap the choice)
         if (choice.conditions && choice.conditions.length > 0) {
           // Combine multiple conditions with AND logic
           const conditions = choice.conditions.map(cond => {
             const varName = `$${cond.flag}`;
-            if (cond.operator === 'is_set') {
+            if (cond.operator === CONDITION_OPERATOR.IS_SET) {
               return varName;
-            } else if (cond.operator === 'is_not_set') {
-              return `not ${varName}`;
+} else if (cond.operator === CONDITION_OPERATOR.IS_NOT_SET) {
+              return `${YARN_OPERATOR.NOT} ${varName}`;
             } else if (cond.value !== undefined) {
-              // Comparison operators
-              const op = cond.operator === 'equals' ? '==' :
-                        cond.operator === 'not_equals' ? '!=' :
-                        cond.operator === 'greater_than' ? '>' :
-                        cond.operator === 'less_than' ? '<' :
-                        cond.operator === 'greater_equal' ? '>=' :
-                        cond.operator === 'less_equal' ? '<=' : '==';
+// Comparison operators
+              const op = cond.operator === CONDITION_OPERATOR.EQUALS ? YARN_OPERATOR.EQUALS :
+                        cond.operator === CONDITION_OPERATOR.NOT_EQUALS ? YARN_OPERATOR.NOT_EQUALS :
+                        cond.operator === CONDITION_OPERATOR.GREATER_THAN ? YARN_OPERATOR.GREATER_THAN :
+                        cond.operator === CONDITION_OPERATOR.LESS_THAN ? YARN_OPERATOR.LESS_THAN :
+                        cond.operator === CONDITION_OPERATOR.GREATER_EQUAL ? YARN_OPERATOR.GREATER_EQUAL :
+                        cond.operator === CONDITION_OPERATOR.LESS_EQUAL ? YARN_OPERATOR.LESS_EQUAL : YARN_OPERATOR.EQUALS;
               const value = typeof cond.value === 'string' ? `"${cond.value}"` : cond.value;
               return `${varName} ${op} ${value}`;
             }
             return '';
-          }).filter(c => c).join(' and ');
+          }).filter(c => c).join(` ${YARN_OPERATOR.AND} `);
           
           if (conditions) {
-            yarn += `<<if ${conditions}>>\n`;
+            yarn += `<<${YARN_BLOCK_TYPE.IF} ${conditions}>>\n`;
           }
         }
         
@@ -295,42 +296,42 @@ export function importFromYarn(yarnContent: string, title: string = 'Imported Di
       
       parts.forEach(part => {
         part = part.trim();
-        if (part.startsWith('not ')) {
+if (part.startsWith(`${YARN_OPERATOR.NOT} `)) {
           const varMatch = part.match(/not\s+\$(\w+)/);
           if (varMatch) {
-            conditions.push({ flag: varMatch[1], operator: 'is_not_set' });
+            conditions.push({ flag: varMatch[1], operator: CONDITION_OPERATOR.IS_NOT_SET });
           }
-        } else if (part.includes('==')) {
+        } else if (part.includes(YARN_OPERATOR.EQUALS)) {
           const match = part.match(/\$(\w+)\s*==\s*(.+)/);
           if (match) {
             const value = match[2].trim().replace(/^["']|["']$/g, '');
-            conditions.push({ flag: match[1], operator: 'equals', value });
+            conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.EQUALS, value });
           }
-        } else if (part.includes('!=')) {
+        } else if (part.includes(YARN_OPERATOR.NOT_EQUALS)) {
           const match = part.match(/\$(\w+)\s*!=\s*(.+)/);
           if (match) {
             const value = match[2].trim().replace(/^["']|["']$/g, '');
-            conditions.push({ flag: match[1], operator: 'not_equals', value });
+            conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.NOT_EQUALS, value });
           }
-        } else if (part.includes('>=')) {
+} else if (part.includes(YARN_OPERATOR.GREATER_EQUAL)) {
           const match = part.match(/\$(\w+)\s*>=\s*(.+)/);
           if (match) {
-            conditions.push({ flag: match[1], operator: 'greater_equal', value: parseFloat(match[2]) });
+            conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.GREATER_EQUAL, value: parseFloat(match[2]) });
           }
-        } else if (part.includes('<=')) {
+        } else if (part.includes(YARN_OPERATOR.LESS_EQUAL)) {
           const match = part.match(/\$(\w+)\s*<=\s*(.+)/);
           if (match) {
-            conditions.push({ flag: match[1], operator: 'less_equal', value: parseFloat(match[2]) });
+            conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.LESS_EQUAL, value: parseFloat(match[2]) });
           }
-        } else if (part.includes('>')) {
+        } else if (part.includes(YARN_OPERATOR.GREATER_THAN)) {
           const match = part.match(/\$(\w+)\s*>\s*(.+)/);
           if (match) {
-            conditions.push({ flag: match[1], operator: 'greater_than', value: parseFloat(match[2]) });
+            conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.GREATER_THAN, value: parseFloat(match[2]) });
           }
-        } else if (part.includes('<')) {
+        } else if (part.includes(YARN_OPERATOR.LESS_THAN)) {
           const match = part.match(/\$(\w+)\s*<\s*(.+)/);
           if (match) {
-            conditions.push({ flag: match[1], operator: 'less_than', value: parseFloat(match[2]) });
+            conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.LESS_THAN, value: parseFloat(match[2]) });
           }
         } else {
           // Simple flag check
@@ -424,9 +425,9 @@ export function importFromYarn(yarnContent: string, title: string = 'Imported Di
           }
           
           inConditionalBlock = true;
-          currentBlock = {
+currentBlock = {
             id: `block_${Date.now()}_${conditionalBlocks.length}`,
-            type: 'if',
+            type: YARN_BLOCK_TYPE.IF,
             condition: parsedConditions,
             content: '',
             speaker: undefined
@@ -443,9 +444,9 @@ export function importFromYarn(yarnContent: string, title: string = 'Imported Di
         }
         
         const conditionStr = trimmed.replace(/<<elseif\s+/, '').replace(/>>/, '').trim();
-        currentBlock = {
+currentBlock = {
           id: `block_${Date.now()}_${conditionalBlocks.length}`,
-          type: 'elseif',
+          type: YARN_BLOCK_TYPE.ELSEIF,
           condition: parseCondition(conditionStr),
           content: '',
           speaker: undefined
@@ -460,9 +461,9 @@ export function importFromYarn(yarnContent: string, title: string = 'Imported Di
           conditionalBlocks.push(currentBlock);
         }
         
-        currentBlock = {
+currentBlock = {
           id: `block_${Date.now()}_${conditionalBlocks.length}`,
-          type: 'else',
+          type: YARN_BLOCK_TYPE.ELSE,
           condition: undefined,
           content: '',
           speaker: undefined
@@ -505,7 +506,7 @@ export function importFromYarn(yarnContent: string, title: string = 'Imported Di
     
     nodes[nodeId] = {
       id: nodeId,
-      type: choices.length > 0 ? 'player' : 'npc',
+      type: choices.length > 0 ? NODE_TYPE.PLAYER : NODE_TYPE.NPC,
       speaker: speaker || undefined,
       content: dialogueContent.trim(),
       choices: choices.length > 0 ? choices : undefined,

@@ -6,6 +6,8 @@ export const NARRATIVE_ELEMENT = {
   CHAPTER: 'chapter',
   PAGE: 'page',
   STORYLET: 'storylet',
+  DETOUR: 'detour',
+  CONDITIONAL: 'conditional',
 } as const;
 
 export type NarrativeElement = typeof NARRATIVE_ELEMENT[keyof typeof NARRATIVE_ELEMENT];
@@ -24,6 +26,10 @@ export interface NarrativePage {
   summary?: string;
   dialogueId: string;
   type?: typeof NARRATIVE_ELEMENT.PAGE;
+  nextPageId?: string;
+  nextChapterId?: string;
+  nextActId?: string;
+  position?: { x: number; y: number };
 }
 
 export interface NarrativeChapter {
@@ -34,6 +40,8 @@ export interface NarrativeChapter {
   storyletTemplates?: StoryletTemplate[];
   storyletPools?: StoryletPool[];
   type?: typeof NARRATIVE_ELEMENT.CHAPTER;
+  startPageId?: string;
+  position?: { x: number; y: number };
 }
 
 export interface NarrativeAct {
@@ -42,6 +50,8 @@ export interface NarrativeAct {
   summary?: string;
   chapters: NarrativeChapter[];
   type?: typeof NARRATIVE_ELEMENT.ACT;
+  startChapterId?: string;
+  position?: { x: number; y: number };
 }
 
 export interface StoryThread {
@@ -50,6 +60,11 @@ export interface StoryThread {
   summary?: string;
   acts: NarrativeAct[];
   type?: typeof NARRATIVE_ELEMENT.THREAD;
+  startActId?: string;
+  position?: { x: number; y: number };
+  edges?: NarrativeEdge[];
+  detours?: NarrativeDetour[];
+  conditionals?: NarrativeConditional[];
 }
 
 export interface NarrativeSelection {
@@ -90,4 +105,47 @@ export interface RandomizerBranch {
   weight?: number;
   nextNodeId?: string;
   storyletPoolId?: string;
+}
+
+export interface NarrativeDetour {
+  id: string;
+  title?: string;
+  summary?: string;
+  storyletId: string;
+  returnNodeId?: string;
+  type: typeof NARRATIVE_ELEMENT.DETOUR;
+  position?: { x: number; y: number };
+}
+
+export interface NarrativeConditional {
+  id: string;
+  title?: string;
+  conditions: Condition[];
+  trueBranchNodeId?: string;
+  falseBranchNodeId?: string;
+  type: typeof NARRATIVE_ELEMENT.CONDITIONAL;
+  position?: { x: number; y: number };
+}
+
+export interface NarrativeEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+  label?: string;
+  animated?: boolean;
+}
+
+export interface NarrativeGraph {
+  nodes: {
+    thread?: StoryThread;
+    acts: NarrativeAct[];
+    chapters: NarrativeChapter[];
+    pages: NarrativePage[];
+    detours: NarrativeDetour[];
+    conditionals: NarrativeConditional[];
+  };
+  edges: NarrativeEdge[];
+  nodePositions: Record<string, { x: number; y: number }>;
 }

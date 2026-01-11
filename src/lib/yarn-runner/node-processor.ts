@@ -1,6 +1,7 @@
 import { DialogueNode, ConditionalBlock, Choice } from '../../types';
 import { VariableManager } from './variable-manager';
 import { evaluateConditions } from './condition-evaluator';
+import { NODE_TYPE } from '../../types/constants';
 
 export interface ProcessedNodeResult {
   content: string;
@@ -19,7 +20,7 @@ export function processNode(
   variableManager: VariableManager
 ): ProcessedNodeResult {
   // Player nodes - return choices
-  if (node.type === 'player') {
+  if (node.type === NODE_TYPE.PLAYER) {
     const availableChoices = node.choices?.filter(choice => {
       if (!choice.conditions) return true;
       return evaluateConditions(
@@ -40,7 +41,7 @@ export function processNode(
   }
   
   // Conditional nodes - evaluate blocks
-  if (node.type === 'conditional' && node.conditionalBlocks) {
+  if (node.type === NODE_TYPE.CONDITIONAL && node.conditionalBlocks) {
     const matchedBlock = findMatchingConditionalBlock(node.conditionalBlocks, variableManager);
     
     if (matchedBlock) {
@@ -69,7 +70,7 @@ export function processNode(
   }
   
   // NPC nodes - handle conditional blocks if present
-  if (node.type === 'npc') {
+  if (node.type === NODE_TYPE.NPC) {
     let content = node.content;
     let speaker = node.speaker;
     let nextNodeId = node.nextNodeId;

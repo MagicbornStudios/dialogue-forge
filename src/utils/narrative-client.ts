@@ -11,8 +11,6 @@ import {
   addAct,
   addChapter,
   addPage,
-  addStorylet,
-  removeStorylet,
 } from './narrative-helpers';
 
 /**

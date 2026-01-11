@@ -8,7 +8,7 @@
  * - edges: Array of { id, source, target, sourceHandle?, targetHandle?, type, data? }
  */
 
-import { DialogueTree, DialogueNode } from '../types';
+import { DialogueTree, DialogueNode, FlagSchema } from '../types';
 import { NODE_TYPE } from '../types/constants';
 import { Node, Edge, Position } from 'reactflow';
 import { LayoutDirection } from './layout';
@@ -18,7 +18,7 @@ export const CHOICE_COLORS = ['#e94560', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e
 
 export interface ReactFlowNodeData {
   node: DialogueNode;
-  flagSchema?: any;
+  flagSchema?: FlagSchema;
   layoutDirection?: LayoutDirection;
 }
 

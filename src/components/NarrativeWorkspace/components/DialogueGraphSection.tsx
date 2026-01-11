@@ -1,16 +1,16 @@
 import React from 'react';
 import { LayoutPanelTop, Download, Info } from 'lucide-react';
-import { DialogueGraphEditor } from '../../DialogueGraphEditor/DialogueGraphEditor';
-import { YarnView } from '../../EditorComponents/YarnView';
+import { DialogueGraphEditor } from '../../GraphEditors/DialogueGraphEditor/DialogueGraphEditor';
+import { YarnView } from '../../GraphEditors/shared/YarnView';
 import type { DialogueTree, ViewMode } from '../../../types';
 import type { FlagSchema } from '../../../types/flags';
 import type { Character } from '../../../types/characters';
 import { VIEW_MODE } from '../../../types/constants';
 import { exportDialogueToYarn } from '../utils/narrative-workspace-utils';
-import { GraphViewModeTabs } from '@/src/components/forge/GraphViewModeTabs';
-import { Button } from '@/src/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
-import type { DialoguePanelTab } from '@/src/components/forge/store/forge-ui-store';
+import { GraphViewModeTabs } from '../../GraphEditors/shared/GraphViewModeTabs';
+import { Button } from '../../ui/button';
+import { Tabs, TabsList, TabsTrigger } from '../../ui/tabs';
+import type { DialoguePanelTab } from '../../forge/store/forge-ui-store';
 
 interface DialogueGraphSectionProps {
   dialogue: DialogueTree;

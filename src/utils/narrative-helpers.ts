@@ -1,13 +1,10 @@
-import {
-  NARRATIVE_ELEMENT,
-  type NarrativeAct,
-  type NarrativeChapter,
-  type NarrativePage,
-  type StoryThread,
-  type StoryletPoolMember,
-  type StoryletPool,
-  type StoryletTemplate,
+import type {
+  StoryThread,
+  NarrativeAct,
+  NarrativeChapter,
+  NarrativePage,
 } from '../types/narrative';
+import { NARRATIVE_ELEMENT } from '../types/narrative';
 
 export interface NarrativeSequenceStep {
   act: NarrativeAct;
@@ -18,199 +15,331 @@ export interface NarrativeSequenceStep {
   pageIndex: number;
 }
 
-type NarrativeActInput = Omit<NarrativeAct, 'chapters' | 'type'> & {
-  chapters?: NarrativeChapter[];
-};
-
-type NarrativeChapterInput = Omit<NarrativeChapter, 'pages' | 'type'> & {
-  pages?: NarrativePage[];
-};
-
-type NarrativePageInput = Omit<NarrativePage, 'dialogueId' | 'type'> & {
-  dialogueId?: string;
-};
-
-function normalizeStoryletTemplate(storylet: StoryletTemplate): StoryletTemplate {
-  return {
-    id: storylet.id,
-    title: storylet.title,
-    summary: storylet.summary,
-    dialogueId: storylet.dialogueId,
-    conditions: storylet.conditions ? [...storylet.conditions] : undefined,
-    type: NARRATIVE_ELEMENT.STORYLET,
-  };
+function createId(prefix: string): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 }
 
-function normalizeStoryletMember(member: StoryletPoolMember): StoryletPoolMember {
-  return {
-    templateId: member.templateId,
-    weight: member.weight,
-  };
-}
+export function createEmptyThread(title = 'Untitled Narrative'): StoryThread {
+  const actId = createId(NARRATIVE_ELEMENT.ACT);
+  const chapterId = createId(NARRATIVE_ELEMENT.CHAPTER);
+  const pageId = createId(NARRATIVE_ELEMENT.PAGE);
 
-function normalizeStoryletPool(pool: StoryletPool): StoryletPool {
-  return {
-    id: pool.id,
-    title: pool.title,
-    summary: pool.summary,
-    selectionMode: pool.selectionMode,
-    members: pool.members.map(normalizeStoryletMember),
-    fallbackTemplateId: pool.fallbackTemplateId,
-  };
-}
-
-function normalizePage(page: NarrativePageInput): NarrativePage {
-  return {
-    id: page.id,
-    title: page.title,
-    summary: page.summary,
-    dialogueId: page.dialogueId ?? '',
+  const starterPage: NarrativePage = {
+    id: pageId,
+    title: 'Page 1',
+    dialogueId: '',
     type: NARRATIVE_ELEMENT.PAGE,
   };
-}
 
-function normalizeChapter(chapter: NarrativeChapterInput): NarrativeChapter {
-  return {
-    id: chapter.id,
-    title: chapter.title,
-    summary: chapter.summary,
-    pages: chapter.pages ? chapter.pages.map(normalizePage) : [],
-    storyletTemplates: chapter.storyletTemplates
-      ? chapter.storyletTemplates.map(normalizeStoryletTemplate)
-      : undefined,
-    storyletPools: chapter.storyletPools
-      ? chapter.storyletPools.map(normalizeStoryletPool)
-      : undefined,
+  const starterChapter: NarrativeChapter = {
+    id: chapterId,
+    title: 'Chapter 1',
+    pages: [starterPage],
+    startPageId: pageId,
     type: NARRATIVE_ELEMENT.CHAPTER,
   };
-}
 
-function normalizeAct(act: NarrativeActInput): NarrativeAct {
-  return {
-    id: act.id,
-    title: act.title,
-    summary: act.summary,
-    chapters: act.chapters ? act.chapters.map(normalizeChapter) : [],
+  const starterAct: NarrativeAct = {
+    id: actId,
+    title: 'Act 1',
+    chapters: [starterChapter],
+    startChapterId: chapterId,
     type: NARRATIVE_ELEMENT.ACT,
   };
-}
 
-export function createEmptyNarrativeThread(
-  id: string,
-  options?: { title?: string; summary?: string }
-): StoryThread {
   return {
-    id,
-    title: options?.title,
-    summary: options?.summary,
-    acts: [],
+    id: createId('thread'),
+    title,
+    acts: [starterAct],
+    startActId: actId,
     type: NARRATIVE_ELEMENT.THREAD,
   };
 }
 
-export function addAct(thread: StoryThread, act: NarrativeActInput): StoryThread {
-  const nextAct = normalizeAct(act);
+export function addAct(thread: StoryThread, title = 'New Act'): StoryThread {
+  const actId = createId(NARRATIVE_ELEMENT.ACT);
+
+  const newAct: NarrativeAct = {
+    id: actId,
+    title,
+    chapters: [],
+    type: NARRATIVE_ELEMENT.ACT,
+  };
+
   return {
     ...thread,
-    acts: [...thread.acts, nextAct],
-    type: thread.type ?? NARRATIVE_ELEMENT.THREAD,
+    acts: [...thread.acts, newAct],
+    startActId: thread.startActId ?? actId,
   };
 }
 
-export function addChapter(act: NarrativeAct, chapter: NarrativeChapterInput): NarrativeAct {
-  const nextChapter = normalizeChapter(chapter);
-  return {
-    ...act,
-    chapters: [...act.chapters, nextChapter],
-    type: act.type ?? NARRATIVE_ELEMENT.ACT,
+export function addChapter(
+  thread: StoryThread,
+  actId: string,
+  title = 'New Chapter'
+): StoryThread {
+  const chapterId = createId(NARRATIVE_ELEMENT.CHAPTER);
+
+  const newChapter: NarrativeChapter = {
+    id: chapterId,
+    title,
+    pages: [],
+    type: NARRATIVE_ELEMENT.CHAPTER,
   };
-}
 
-export function addPage(chapter: NarrativeChapter, page: NarrativePageInput): NarrativeChapter {
-  const nextPage = normalizePage(page);
-  return {
-    ...chapter,
-    pages: [...chapter.pages, nextPage],
-    type: chapter.type ?? NARRATIVE_ELEMENT.CHAPTER,
-  };
-}
-
-export function addStorylet(
-  chapter: NarrativeChapter,
-  poolId: string,
-  storylet: StoryletTemplate,
-  member?: StoryletPoolMember
-): NarrativeChapter {
-  const normalizedStorylet = normalizeStoryletTemplate(storylet);
-  const normalizedMember = normalizeStoryletMember(
-    member ?? { templateId: normalizedStorylet.id }
-  );
-  const existingTemplates = chapter.storyletTemplates ?? [];
-  const existingPools = chapter.storyletPools ?? [];
-  const poolIndex = existingPools.findIndex(pool => pool.id === poolId);
-
-  const updatedPools = [...existingPools];
-  if (poolIndex >= 0) {
-    const pool = existingPools[poolIndex];
-    updatedPools[poolIndex] = {
-      ...pool,
-      members: [...pool.members.map(normalizeStoryletMember), normalizedMember],
-    };
-  } else {
-    updatedPools.push({
-      id: poolId,
-      members: [normalizedMember],
-    });
-  }
-
-  return {
-    ...chapter,
-    storyletTemplates: existingTemplates.some(item => item.id === normalizedStorylet.id)
-      ? existingTemplates
-      : [...existingTemplates, normalizedStorylet],
-    storyletPools: updatedPools,
-    type: chapter.type ?? NARRATIVE_ELEMENT.CHAPTER,
-  };
-}
-
-export function removeStorylet(
-  chapter: NarrativeChapter,
-  templateId: string,
-  poolId?: string
-): NarrativeChapter {
-  const existingPools = chapter.storyletPools ?? [];
-  const existingTemplates = chapter.storyletTemplates ?? [];
-
-  const updatedPools = existingPools.map(pool => {
-    if (poolId && pool.id !== poolId) {
-      return pool;
-    }
-
+  const updatedActs = thread.acts.map(act => {
+    if (act.id !== actId) return act;
     return {
-      ...pool,
-      members: pool.members.filter(member => member.templateId !== templateId),
+      ...act,
+      chapters: [...act.chapters, newChapter],
+      startChapterId: act.startChapterId ?? chapterId,
     };
   });
 
-  const remainingTemplateIds = new Set(updatedPools.flatMap(pool => pool.members.map(member => member.templateId)));
-
   return {
-    ...chapter,
-    storyletTemplates: existingTemplates.filter(template => remainingTemplateIds.has(template.id)),
-    storyletPools: updatedPools,
-    type: chapter.type ?? NARRATIVE_ELEMENT.CHAPTER,
+    ...thread,
+    acts: updatedActs,
   };
 }
 
-export function attachDialogueToPage(
-  page: NarrativePage,
-  dialogueId: string
-): NarrativePage {
-  return {
-    ...page,
+export function addPage(
+  thread: StoryThread,
+  actId: string,
+  chapterId: string,
+  title = 'New Page',
+  dialogueId = ''
+): StoryThread {
+  const pageId = createId(NARRATIVE_ELEMENT.PAGE);
+
+  const newPage: NarrativePage = {
+    id: pageId,
+    title,
     dialogueId,
-    type: page.type ?? NARRATIVE_ELEMENT.PAGE,
+    type: NARRATIVE_ELEMENT.PAGE,
   };
+
+  const updatedActs = thread.acts.map(act => {
+    if (act.id !== actId) return act;
+    const chapters = act.chapters.map(chapter => {
+      if (chapter.id !== chapterId) return chapter;
+      
+      return {
+        ...chapter,
+        pages: [...chapter.pages, newPage],
+        startPageId: chapter.startPageId ?? pageId,
+      };
+    });
+    return { ...act, chapters };
+  });
+
+  return {
+    ...thread,
+    acts: updatedActs,
+  };
+}
+
+export function updateThread(thread: StoryThread, updates: Partial<StoryThread>): StoryThread {
+  return {
+    ...thread,
+    ...updates,
+    id: thread.id,
+  };
+}
+
+export function updateAct(
+  thread: StoryThread,
+  actId: string,
+  updates: Partial<NarrativeAct>
+): StoryThread {
+  const acts = thread.acts.map(act =>
+    act.id === actId ? { ...act, ...updates } : act
+  );
+  return { ...thread, acts };
+}
+
+export function updateChapter(
+  thread: StoryThread,
+  actId: string,
+  chapterId: string,
+  updates: Partial<NarrativeChapter>
+): StoryThread {
+  const acts = thread.acts.map(act => {
+    if (act.id !== actId) return act;
+    const chapters = act.chapters.map(chapter =>
+      chapter.id === chapterId ? { ...chapter, ...updates } : chapter
+    );
+    return { ...act, chapters };
+  });
+  return { ...thread, acts };
+}
+
+export function updatePage(
+  thread: StoryThread,
+  actId: string,
+  chapterId: string,
+  pageId: string,
+  updates: Partial<NarrativePage>
+): StoryThread {
+  const acts = thread.acts.map(act => {
+    if (act.id !== actId) return act;
+    const chapters = act.chapters.map(chapter => {
+      if (chapter.id !== chapterId) return chapter;
+      const pages = chapter.pages.map(page =>
+        page.id === pageId ? { ...page, ...updates } : page
+      );
+      return { ...chapter, pages };
+    });
+    return { ...act, chapters };
+  });
+  return { ...thread, acts };
+}
+
+export function removeAct(thread: StoryThread, actId: string): StoryThread {
+  const acts = thread.acts.filter(act => act.id !== actId);
+  const startActId = thread.startActId === actId ? acts[0]?.id : thread.startActId;
+  return { ...thread, acts, startActId };
+}
+
+export function removeChapter(
+  thread: StoryThread,
+  actId: string,
+  chapterId: string
+): StoryThread {
+  const acts = thread.acts.map(act => {
+    if (act.id !== actId) return act;
+    const chapters = act.chapters.filter(ch => ch.id !== chapterId);
+    const startChapterId = act.startChapterId === chapterId ? chapters[0]?.id : act.startChapterId;
+    return { ...act, chapters, startChapterId };
+  });
+  return { ...thread, acts };
+}
+
+export function removePage(
+  thread: StoryThread,
+  actId: string,
+  chapterId: string,
+  pageId: string
+): StoryThread {
+  const acts = thread.acts.map(act => {
+    if (act.id !== actId) return act;
+    const chapters = act.chapters.map(chapter => {
+      if (chapter.id !== chapterId) return chapter;
+      
+      const pageToRemove = chapter.pages.find(p => p.id === pageId);
+      const pages = chapter.pages.filter(p => p.id !== pageId);
+      
+      const updatedPages = pages.map(page => {
+        if (page.nextPageId === pageId) {
+          return {
+            ...page,
+            nextPageId: pageToRemove?.nextPageId,
+          };
+        }
+        return page;
+      });
+      
+      const startPageId = chapter.startPageId === pageId ? updatedPages[0]?.id : chapter.startPageId;
+      return { ...chapter, pages: updatedPages, startPageId };
+    });
+    return { ...act, chapters };
+  });
+  return { ...thread, acts };
+}
+
+export function linkPages(
+  thread: StoryThread,
+  actId: string,
+  chapterId: string,
+  fromPageId: string,
+  toPageId: string
+): StoryThread {
+  return updatePage(thread, actId, chapterId, fromPageId, {
+    nextPageId: toPageId,
+    nextChapterId: undefined,
+    nextActId: undefined,
+  });
+}
+
+export function linkPageToChapter(
+  thread: StoryThread,
+  actId: string,
+  chapterId: string,
+  fromPageId: string,
+  toChapterId: string
+): StoryThread {
+  return updatePage(thread, actId, chapterId, fromPageId, {
+    nextPageId: undefined,
+    nextChapterId: toChapterId,
+    nextActId: undefined,
+  });
+}
+
+export function linkPageToAct(
+  thread: StoryThread,
+  actId: string,
+  chapterId: string,
+  fromPageId: string,
+  toActId: string
+): StoryThread {
+  return updatePage(thread, actId, chapterId, fromPageId, {
+    nextPageId: undefined,
+    nextChapterId: undefined,
+    nextActId: toActId,
+  });
+}
+
+export function unlinkPage(
+  thread: StoryThread,
+  actId: string,
+  chapterId: string,
+  pageId: string
+): StoryThread {
+  return updatePage(thread, actId, chapterId, pageId, {
+    nextPageId: undefined,
+    nextChapterId: undefined,
+    nextActId: undefined,
+  });
+}
+
+export function getAct(thread: StoryThread, actId: string): NarrativeAct | undefined {
+  return thread.acts.find(a => a.id === actId);
+}
+
+export function getChapter(
+  thread: StoryThread,
+  actId: string,
+  chapterId: string
+): NarrativeChapter | undefined {
+  const act = thread.acts.find(a => a.id === actId);
+  return act?.chapters.find(c => c.id === chapterId);
+}
+
+export function getPage(
+  thread: StoryThread,
+  actId: string,
+  chapterId: string,
+  pageId: string
+): NarrativePage | undefined {
+  const act = thread.acts.find(a => a.id === actId);
+  const chapter = act?.chapters.find(c => c.id === chapterId);
+  return chapter?.pages.find(p => p.id === pageId);
+}
+
+export function findPageParent(
+  thread: StoryThread,
+  pageId: string
+): { act: NarrativeAct; chapter: NarrativeChapter } | undefined {
+  for (const act of thread.acts) {
+    for (const chapter of act.chapters) {
+      if (chapter.pages.some(p => p.id === pageId)) {
+        return { act, chapter };
+      }
+    }
+  }
+  return undefined;
 }
 
 export function buildLinearSequence(thread: StoryThread): NarrativeSequenceStep[] {

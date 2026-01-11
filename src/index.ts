@@ -1,5 +1,5 @@
-export { DialogueGraphEditor } from './components/DialogueGraphEditor/DialogueGraphEditor';
-export { NarrativeGraphEditor } from './components/NarrativeGraphEditor/NarrativeGraphEditor';
+export { DialogueGraphEditor } from './components/GraphEditors/DialogueGraphEditor/DialogueGraphEditor';
+export { NarrativeGraphEditor } from './components/GraphEditors/NarrativeGraphEditor/NarrativeGraphEditor';
 export { NarrativeWorkspace } from './components/NarrativeWorkspace/NarrativeWorkspace';
 // Export DialogueForge as the main component (alias for NarrativeWorkspace)
 export { NarrativeWorkspace as DialogueForge } from './components/NarrativeWorkspace/NarrativeWorkspace';
@@ -9,10 +9,9 @@ export { useDialogueRunner } from './components/GamePlayer/hooks/useDialogueRunn
 export { GamePlayer } from './components/GamePlayer/components';
 export { useNarrativeTraversal } from './components/GamePlayer/hooks/useNarrativeTraversal';
 export { GuidePanel } from './components/GamePlayer/components/GuidePanel';
-export { FlagSelector } from './components/DialogueGraphEditor/components/FlagSelector';
+export { FlagSelector } from './components/GraphEditors/shared/FlagSelector';
 export { FlagManager } from './components/GamePlayer/components/FlagManager';
-export { CharacterSelector } from './components/DialogueGraphEditor/components/CharacterSelector';
-export { ZoomControls } from './components/EditorComponents/ZoomControls';
+export { CharacterSelector } from './components/GraphEditors/DialogueGraphEditor/components/CharacterSelector';
 
 // Export styles
 import './styles/scrollbar.css';

@@ -1,4 +1,5 @@
-import type { Edge, Node } from 'reactflow';
+import type { Edge, Node, Position } from 'reactflow';
+import { Position as ReactFlowPosition } from 'reactflow';
 import {
   NARRATIVE_ELEMENT,
   type NarrativeAct,
@@ -6,198 +7,330 @@ import {
   type NarrativeElement,
   type NarrativePage,
   type StoryThread,
-  type StoryletPool,
-  type StoryletPoolMember,
-  type StoryletTemplate,
+  type NarrativeDetour,
+  type NarrativeConditional,
+  type NarrativeEdge,
 } from '../types/narrative';
 
+export type LayoutDirection = 'TB' | 'LR';
+
 export interface NarrativeFlowNodeData {
-  element: StoryThread | NarrativeAct | NarrativeChapter | NarrativePage;
-  elementType: NarrativeElement;
+  label: string;
+  type: NarrativeElement;
+  meta: {
+    actId?: string;
+    chapterId?: string;
+    pageId?: string;
+  };
+  description?: string;
   isDimmed?: boolean;
   isInPath?: boolean;
+  // Context menu callbacks
+  onAddPage?: () => void;
+  onAddChapter?: () => void;
+  onAddAct?: () => void;
+  onEditDialogue?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  canAddChapter?: boolean;
+  canAddAct?: boolean;
 }
 
 export type NarrativeFlowNode = Node<NarrativeFlowNodeData>;
 export type NarrativeFlowEdge = Edge;
 
-const LEVEL_X = {
-  [NARRATIVE_ELEMENT.THREAD]: 0,
-  [NARRATIVE_ELEMENT.ACT]: 260,
-  [NARRATIVE_ELEMENT.CHAPTER]: 540,
-  [NARRATIVE_ELEMENT.PAGE]: 820,
-  [NARRATIVE_ELEMENT.STORYLET]: 1100,
-} as const;
-
-const PAGE_SPACING = 140;
-const CHAPTER_GAP = 80;
-const ACT_GAP = 140;
-
-function normalizeStoryletTemplate(storylet: StoryletTemplate): StoryletTemplate {
-  return {
-    id: storylet.id,
-    title: storylet.title,
-    summary: storylet.summary,
-    dialogueId: storylet.dialogueId,
-    conditions: storylet.conditions ? [...storylet.conditions] : undefined,
-    type: NARRATIVE_ELEMENT.STORYLET,
-  };
+interface IndexTracker {
+  chapter: number;
+  page: number;
 }
 
-function normalizeStoryletMember(member: StoryletPoolMember): StoryletPoolMember {
-  return {
-    templateId: member.templateId,
-    weight: member.weight,
-  };
+function basePosition(index: number, depth: number, direction: LayoutDirection): { x: number; y: number } {
+  const spacingX = 320;
+  const spacingY = 220;
+  if (direction === 'LR') {
+    return { x: depth * spacingX, y: index * spacingY };
+  }
+  return { x: index * spacingX, y: depth * spacingY };
 }
 
-function normalizeStoryletPool(pool: StoryletPool): StoryletPool {
-  return {
-    id: pool.id,
-    title: pool.title,
-    summary: pool.summary,
-    selectionMode: pool.selectionMode,
-    members: pool.members.map(normalizeStoryletMember),
-    fallbackTemplateId: pool.fallbackTemplateId,
-  };
-}
-
-function stripThread(thread: StoryThread): StoryThread {
-  return {
-    id: thread.id,
-    title: thread.title,
-    summary: thread.summary,
-    acts: [],
-    type: NARRATIVE_ELEMENT.THREAD,
-  };
-}
-
-function stripAct(act: NarrativeAct): NarrativeAct {
-  return {
-    id: act.id,
-    title: act.title,
-    summary: act.summary,
-    chapters: [],
-    type: NARRATIVE_ELEMENT.ACT,
-  };
-}
-
-function stripChapter(chapter: NarrativeChapter): NarrativeChapter {
-  return {
-    id: chapter.id,
-    title: chapter.title,
-    summary: chapter.summary,
-    pages: [],
-    storyletTemplates: chapter.storyletTemplates
-      ? chapter.storyletTemplates.map(normalizeStoryletTemplate)
-      : undefined,
-    storyletPools: chapter.storyletPools
-      ? chapter.storyletPools.map(normalizeStoryletPool)
-      : undefined,
-    type: NARRATIVE_ELEMENT.CHAPTER,
-  };
-}
-
-function stripPage(page: NarrativePage): NarrativePage {
-  return {
-    id: page.id,
-    title: page.title,
-    summary: page.summary,
-    dialogueId: page.dialogueId,
-    type: NARRATIVE_ELEMENT.PAGE,
-  };
-}
-
-function edgeId(sourceId: string, targetId: string): string {
-  return `narrative-${sourceId}-${targetId}`;
-}
-
-export function convertNarrativeToReactFlow(thread: StoryThread): {
-  nodes: NarrativeFlowNode[];
-  edges: NarrativeFlowEdge[];
-} {
-  const nodes: NarrativeFlowNode[] = [];
-  const edges: NarrativeFlowEdge[] = [];
-
+function addThreadNode(
+  nodes: NarrativeFlowNode[],
+  thread: StoryThread,
+  direction: LayoutDirection
+): void {
   nodes.push({
     id: thread.id,
     type: NARRATIVE_ELEMENT.THREAD,
-    position: { x: LEVEL_X[NARRATIVE_ELEMENT.THREAD], y: 0 },
+    position: thread.position || basePosition(0, 0, direction),
     data: {
-      element: stripThread(thread),
-      elementType: NARRATIVE_ELEMENT.THREAD,
+      label: thread.title || 'Untitled Thread',
+      type: NARRATIVE_ELEMENT.THREAD,
+      description: thread.summary,
+      meta: {},
     },
+    sourcePosition: direction === 'LR' ? ReactFlowPosition.Right : ReactFlowPosition.Bottom,
+    targetPosition: direction === 'LR' ? ReactFlowPosition.Left : ReactFlowPosition.Top,
   });
+}
 
-  let currentY = 0;
-
-  thread.acts.forEach((act, actIndex) => {
-    const actY = currentY;
-
+function addActNodes(
+  nodes: NarrativeFlowNode[],
+  edges: NarrativeFlowEdge[],
+  thread: StoryThread,
+  direction: LayoutDirection,
+  tracker: IndexTracker
+): void {
+  thread.acts.forEach((act, actIdx) => {
     nodes.push({
       id: act.id,
       type: NARRATIVE_ELEMENT.ACT,
-      position: { x: LEVEL_X[NARRATIVE_ELEMENT.ACT], y: actY },
+      position: act.position || basePosition(actIdx, 1, direction),
       data: {
-        element: stripAct(act),
-        elementType: NARRATIVE_ELEMENT.ACT,
+        label: act.title || `Act ${actIdx + 1}`,
+        type: NARRATIVE_ELEMENT.ACT,
+        description: act.summary,
+        meta: { actId: act.id },
       },
+      sourcePosition: direction === 'LR' ? ReactFlowPosition.Right : ReactFlowPosition.Bottom,
+      targetPosition: direction === 'LR' ? ReactFlowPosition.Left : ReactFlowPosition.Top,
     });
 
-    edges.push({
-      id: edgeId(thread.id, act.id),
-      source: thread.id,
-      target: act.id,
-      type: 'default',
-    });
-
-    let chapterY = actY;
-    act.chapters.forEach((chapter, chapterIndex) => {
-      nodes.push({
-        id: chapter.id,
-        type: NARRATIVE_ELEMENT.CHAPTER,
-        position: { x: LEVEL_X[NARRATIVE_ELEMENT.CHAPTER], y: chapterY },
-        data: {
-          element: stripChapter(chapter),
-          elementType: NARRATIVE_ELEMENT.CHAPTER,
-        },
-      });
-
-      edges.push({
-        id: edgeId(act.id, chapter.id),
-        source: act.id,
-        target: chapter.id,
-        type: 'default',
-      });
-
-      const pageCount = Math.max(chapter.pages.length, 1);
-      chapter.pages.forEach((page, pageIndex) => {
-        const pageY = chapterY + pageIndex * PAGE_SPACING;
-        nodes.push({
-          id: page.id,
-          type: NARRATIVE_ELEMENT.PAGE,
-          position: { x: LEVEL_X[NARRATIVE_ELEMENT.PAGE], y: pageY },
-          data: {
-            element: stripPage(page),
-            elementType: NARRATIVE_ELEMENT.PAGE,
-          },
-        });
-
-        edges.push({
-          id: edgeId(chapter.id, page.id),
-          source: chapter.id,
-          target: page.id,
-          type: 'default',
-        });
-      });
-
-      chapterY += pageCount * PAGE_SPACING + CHAPTER_GAP;
-    });
-
-    currentY = Math.max(chapterY, actY + PAGE_SPACING) + ACT_GAP;
+    addChapterNodes(nodes, edges, thread, act, direction, tracker);
   });
+}
+
+function addChapterNodes(
+  nodes: NarrativeFlowNode[],
+  edges: NarrativeFlowEdge[],
+  thread: StoryThread,
+  act: NarrativeAct,
+  direction: LayoutDirection,
+  tracker: IndexTracker
+): void {
+  act.chapters.forEach((chapter, chapterIdx) => {
+    const fallbackPosition = basePosition(tracker.chapter, 2, direction);
+    tracker.chapter += 1;
+
+    nodes.push({
+      id: chapter.id,
+      type: NARRATIVE_ELEMENT.CHAPTER,
+      position: chapter.position || fallbackPosition,
+      data: {
+        label: chapter.title || 'Untitled Chapter',
+        type: NARRATIVE_ELEMENT.CHAPTER,
+        description: chapter.summary,
+        meta: { actId: act.id, chapterId: chapter.id },
+      },
+      sourcePosition: direction === 'LR' ? ReactFlowPosition.Right : ReactFlowPosition.Bottom,
+      targetPosition: direction === 'LR' ? ReactFlowPosition.Left : ReactFlowPosition.Top,
+    });
+
+    addPageNodes(nodes, edges, thread, act, chapter, direction, tracker);
+  });
+}
+
+function addPageNodes(
+  nodes: NarrativeFlowNode[],
+  edges: NarrativeFlowEdge[],
+  thread: StoryThread,
+  act: NarrativeAct,
+  chapter: NarrativeChapter,
+  direction: LayoutDirection,
+  tracker: IndexTracker
+): void {
+  chapter.pages.forEach((page, pageIndex) => {
+    const fallbackPosition = basePosition(tracker.page, 3, direction);
+    tracker.page += 1;
+
+    nodes.push({
+      id: page.id,
+      type: NARRATIVE_ELEMENT.PAGE,
+      position: page.position || fallbackPosition,
+      data: {
+        label: page.title || `Page ${pageIndex + 1}`,
+        type: NARRATIVE_ELEMENT.PAGE,
+        description: page.summary,
+        meta: { actId: act.id, chapterId: chapter.id, pageId: page.id },
+      },
+      sourcePosition: direction === 'LR' ? ReactFlowPosition.Right : ReactFlowPosition.Bottom,
+      targetPosition: direction === 'LR' ? ReactFlowPosition.Left : ReactFlowPosition.Top,
+    });
+  });
+}
+
+export function convertNarrativeToReactFlow(
+  thread: StoryThread,
+  direction: LayoutDirection = 'TB'
+): { nodes: NarrativeFlowNode[]; edges: NarrativeFlowEdge[] } {
+  const nodes: NarrativeFlowNode[] = [];
+  const edges: NarrativeFlowEdge[] = [];
+  const tracker: IndexTracker = {
+    chapter: 0,
+    page: 0,
+  };
+
+  addThreadNode(nodes, thread, direction);
+  addActNodes(nodes, edges, thread, direction, tracker);
+  
+  addDetourNodes(nodes, thread, direction, tracker);
+  addConditionalNodes(nodes, thread, direction, tracker);
+  
+  if (thread.edges && thread.edges.length > 0) {
+    thread.edges.forEach(edge => {
+      edges.push({
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
+        label: edge.label,
+        animated: edge.animated,
+        data: {},
+      });
+    });
+  } else {
+    addInferredEdges(edges, thread);
+  }
 
   return { nodes, edges };
+}
+
+function addDetourNodes(
+  nodes: NarrativeFlowNode[],
+  thread: StoryThread,
+  direction: LayoutDirection,
+  tracker: IndexTracker
+): void {
+  if (!thread.detours) return;
+  
+  thread.detours.forEach((detour, idx) => {
+    const fallbackPosition = basePosition(tracker.page + idx, 4, direction);
+    
+    nodes.push({
+      id: detour.id,
+      type: NARRATIVE_ELEMENT.DETOUR,
+      position: detour.position || fallbackPosition,
+      data: {
+        id: detour.id,
+        label: detour.title || 'Detour',
+        type: NARRATIVE_ELEMENT.DETOUR,
+        description: detour.summary,
+        storyletId: detour.storyletId,
+        returnNodeId: detour.returnNodeId,
+        meta: {},
+      } as NarrativeFlowNodeData,
+      sourcePosition: direction === 'LR' ? ReactFlowPosition.Right : ReactFlowPosition.Bottom,
+      targetPosition: direction === 'LR' ? ReactFlowPosition.Left : ReactFlowPosition.Top,
+    });
+  });
+}
+
+function addConditionalNodes(
+  nodes: NarrativeFlowNode[],
+  thread: StoryThread,
+  direction: LayoutDirection,
+  tracker: IndexTracker
+): void {
+  if (!thread.conditionals) return;
+  
+  thread.conditionals.forEach((conditional, idx) => {
+    const fallbackPosition = basePosition(tracker.page + idx, 4, direction);
+    
+    nodes.push({
+      id: conditional.id,
+      type: NARRATIVE_ELEMENT.CONDITIONAL,
+      position: conditional.position || fallbackPosition,
+      data: {
+        label: conditional.title || 'Conditional',
+        type: NARRATIVE_ELEMENT.CONDITIONAL,
+        conditions: conditional.conditions,
+        trueBranchNodeId: conditional.trueBranchNodeId,
+        falseBranchNodeId: conditional.falseBranchNodeId,
+        meta: {},
+      } as NarrativeFlowNodeData,
+      sourcePosition: direction === 'LR' ? ReactFlowPosition.Right : ReactFlowPosition.Bottom,
+      targetPosition: direction === 'LR' ? ReactFlowPosition.Left : ReactFlowPosition.Top,
+    });
+  });
+}
+
+function addInferredEdges(edges: NarrativeFlowEdge[], thread: StoryThread): void {
+  edges.push({
+    id: `thread-act-start`,
+    source: thread.id,
+    target: thread.startActId || thread.acts[0]?.id,
+    animated: true,
+    data: {
+      sourceType: NARRATIVE_ELEMENT.THREAD,
+      targetType: NARRATIVE_ELEMENT.ACT,
+    },
+  });
+  
+  thread.acts.forEach(act => {
+    if (act.startChapterId || act.chapters[0]) {
+      edges.push({
+        id: `act-chapter-${act.id}`,
+        source: act.id,
+        target: act.startChapterId || act.chapters[0]?.id,
+        animated: true,
+        data: {
+          sourceType: NARRATIVE_ELEMENT.ACT,
+          targetType: NARRATIVE_ELEMENT.CHAPTER,
+        },
+      });
+    }
+    
+    act.chapters.forEach(chapter => {
+      if (chapter.startPageId || chapter.pages[0]) {
+        edges.push({
+          id: `chapter-page-${chapter.id}`,
+          source: chapter.id,
+          target: chapter.startPageId || chapter.pages[0]?.id,
+          animated: true,
+          data: {
+            sourceType: NARRATIVE_ELEMENT.CHAPTER,
+            targetType: NARRATIVE_ELEMENT.PAGE,
+          },
+        });
+      }
+      
+      chapter.pages.forEach(page => {
+        if (page.nextPageId) {
+          edges.push({
+            id: `page-page-${page.id}-${page.nextPageId}`,
+            source: page.id,
+            target: page.nextPageId,
+            data: {
+              sourceType: NARRATIVE_ELEMENT.PAGE,
+              targetType: NARRATIVE_ELEMENT.PAGE,
+            },
+          });
+        }
+        if (page.nextChapterId) {
+          edges.push({
+            id: `page-chapter-${page.id}-${page.nextChapterId}`,
+            source: page.id,
+            target: page.nextChapterId,
+            data: {
+              sourceType: NARRATIVE_ELEMENT.PAGE,
+              targetType: NARRATIVE_ELEMENT.CHAPTER,
+            },
+          });
+        }
+        if (page.nextActId) {
+          edges.push({
+            id: `page-act-${page.id}-${page.nextActId}`,
+            source: page.id,
+            target: page.nextActId,
+            data: {
+              sourceType: NARRATIVE_ELEMENT.PAGE,
+              targetType: NARRATIVE_ELEMENT.ACT,
+            },
+          });
+        }
+      });
+    });
+  });
 }
 
 function compareNodesByPosition(a: Node, b: Node): number {
@@ -207,56 +340,6 @@ function compareNodesByPosition(a: Node, b: Node): number {
   return a.position.x - b.position.x;
 }
 
-function coerceThread(node: Node<NarrativeFlowNodeData> | undefined): StoryThread {
-  const element = node?.data?.element as StoryThread | undefined;
-  return {
-    id: element?.id ?? node?.id ?? 'thread',
-    title: element?.title,
-    summary: element?.summary,
-    acts: [],
-    type: NARRATIVE_ELEMENT.THREAD,
-  };
-}
-
-function coerceAct(node: Node<NarrativeFlowNodeData>): NarrativeAct {
-  const element = node.data?.element as NarrativeAct | undefined;
-  return {
-    id: element?.id ?? node.id,
-    title: element?.title,
-    summary: element?.summary,
-    chapters: [],
-    type: NARRATIVE_ELEMENT.ACT,
-  };
-}
-
-function coerceChapter(node: Node<NarrativeFlowNodeData>): NarrativeChapter {
-  const element = node.data?.element as NarrativeChapter | undefined;
-  return {
-    id: element?.id ?? node.id,
-    title: element?.title,
-    summary: element?.summary,
-    pages: [],
-    storyletTemplates: element?.storyletTemplates
-      ? element.storyletTemplates.map(normalizeStoryletTemplate)
-      : undefined,
-    storyletPools: element?.storyletPools
-      ? element.storyletPools.map(normalizeStoryletPool)
-      : undefined,
-    type: NARRATIVE_ELEMENT.CHAPTER,
-  };
-}
-
-function coercePage(node: Node<NarrativeFlowNodeData>): NarrativePage {
-  const element = node.data?.element as NarrativePage | undefined;
-  return {
-    id: element?.id ?? node.id,
-    title: element?.title,
-    summary: element?.summary,
-    dialogueId: element?.dialogueId ?? '',
-    type: NARRATIVE_ELEMENT.PAGE,
-  };
-}
-
 export function convertReactFlowToNarrative(
   nodes: NarrativeFlowNode[],
   edges: NarrativeFlowEdge[]
@@ -264,34 +347,54 @@ export function convertReactFlowToNarrative(
   const nodeMap = new Map(nodes.map(node => [node.id, node]));
   const threadNode = nodes.find(node => node.type === NARRATIVE_ELEMENT.THREAD);
 
-  const actsByThread = new Map<string, Set<string>>();
-  const chaptersByAct = new Map<string, Set<string>>();
-  const pagesByChapter = new Map<string, Set<string>>();
+  const threadToActs = new Map<string, Set<string>>();
+  const actToChapters = new Map<string, Set<string>>();
+  const chapterToPages = new Map<string, Set<string>>();
+  const pageToPage = new Map<string, string>();
+  const pageToChapter = new Map<string, string>();
+  const pageToAct = new Map<string, string>();
+  const animatedEdges = new Set<string>();
 
   edges.forEach(edge => {
     const source = nodeMap.get(edge.source);
     const target = nodeMap.get(edge.target);
     if (!source || !target) return;
 
+    if (edge.animated) {
+      animatedEdges.add(edge.id);
+    }
+
     if (source.type === NARRATIVE_ELEMENT.THREAD && target.type === NARRATIVE_ELEMENT.ACT) {
-      if (!actsByThread.has(source.id)) {
-        actsByThread.set(source.id, new Set());
+      if (!threadToActs.has(source.id)) {
+        threadToActs.set(source.id, new Set());
       }
-      actsByThread.get(source.id)?.add(target.id);
+      threadToActs.get(source.id)?.add(target.id);
     }
 
     if (source.type === NARRATIVE_ELEMENT.ACT && target.type === NARRATIVE_ELEMENT.CHAPTER) {
-      if (!chaptersByAct.has(source.id)) {
-        chaptersByAct.set(source.id, new Set());
+      if (!actToChapters.has(source.id)) {
+        actToChapters.set(source.id, new Set());
       }
-      chaptersByAct.get(source.id)?.add(target.id);
+      actToChapters.get(source.id)?.add(target.id);
     }
 
     if (source.type === NARRATIVE_ELEMENT.CHAPTER && target.type === NARRATIVE_ELEMENT.PAGE) {
-      if (!pagesByChapter.has(source.id)) {
-        pagesByChapter.set(source.id, new Set());
+      if (!chapterToPages.has(source.id)) {
+        chapterToPages.set(source.id, new Set());
       }
-      pagesByChapter.get(source.id)?.add(target.id);
+      chapterToPages.get(source.id)?.add(target.id);
+    }
+
+    if (source.type === NARRATIVE_ELEMENT.PAGE && target.type === NARRATIVE_ELEMENT.PAGE) {
+      pageToPage.set(source.id, target.id);
+    }
+
+    if (source.type === NARRATIVE_ELEMENT.PAGE && target.type === NARRATIVE_ELEMENT.CHAPTER) {
+      pageToChapter.set(source.id, target.id);
+    }
+
+    if (source.type === NARRATIVE_ELEMENT.PAGE && target.type === NARRATIVE_ELEMENT.ACT) {
+      pageToAct.set(source.id, target.id);
     }
   });
 
@@ -299,65 +402,150 @@ export function convertReactFlowToNarrative(
     .filter(node => node.type === NARRATIVE_ELEMENT.ACT)
     .sort(compareNodesByPosition);
 
-  const chapterNodes = nodes
-    .filter(node => node.type === NARRATIVE_ELEMENT.CHAPTER)
-    .sort(compareNodesByPosition);
-
-  const pageNodes = nodes
-    .filter(node => node.type === NARRATIVE_ELEMENT.PAGE)
-    .sort(compareNodesByPosition);
-
-  const actIds = actsByThread.get(threadNode?.id ?? '')
-    ? Array.from(actsByThread.get(threadNode?.id ?? '') ?? [])
+  const threadId = threadNode?.id || 'empty-thread';
+  const actIds = threadToActs.get(threadId)
+    ? Array.from(threadToActs.get(threadId) ?? [])
     : actNodes.map(node => node.id);
+
+  let startActId: string | undefined = undefined;
 
   const acts = actIds
     .map(actId => nodeMap.get(actId))
     .filter((node): node is NarrativeFlowNode => Boolean(node))
     .sort(compareNodesByPosition)
-    .map(actNode => {
-      const chapterIds = chaptersByAct.get(actNode.id)
-        ? Array.from(chaptersByAct.get(actNode.id) ?? [])
-        : chapterNodes.map(node => node.id);
+    .map((actNode, actIndex) => {
+      const chapterIds = actToChapters.get(actNode.id)
+        ? Array.from(actToChapters.get(actNode.id) ?? [])
+        : [];
+
+      let startChapterId: string | undefined = undefined;
 
       const chapters = chapterIds
         .map(chapterId => nodeMap.get(chapterId))
         .filter((node): node is NarrativeFlowNode => Boolean(node))
         .sort(compareNodesByPosition)
-        .map(chapterNode => {
-          const pageIds = pagesByChapter.get(chapterNode.id)
-            ? Array.from(pagesByChapter.get(chapterNode.id) ?? [])
-            : pageNodes.map(node => node.id);
+        .map((chapterNode, chapterIndex) => {
+          const pageIds = chapterToPages.get(chapterNode.id)
+            ? Array.from(chapterToPages.get(chapterNode.id) ?? [])
+            : [];
+
+          let startPageId: string | undefined = undefined;
 
           const pages = pageIds
             .map(pageId => nodeMap.get(pageId))
             .filter((node): node is NarrativeFlowNode => Boolean(node))
             .sort(compareNodesByPosition)
-            .map(coercePage);
+            .map((pageNode, pageIndex) => {
+              const page: NarrativePage = {
+                id: pageNode.id,
+                title: pageNode.data.label,
+                summary: pageNode.data.description,
+                dialogueId: '',
+                type: NARRATIVE_ELEMENT.PAGE,
+                position: { x: pageNode.position.x, y: pageNode.position.y },
+              };
 
-          return {
-            ...coerceChapter(chapterNode),
+              const nextPageId = pageToPage.get(pageNode.id);
+              if (nextPageId) {
+                page.nextPageId = nextPageId;
+              }
+
+              const nextChapterId = pageToChapter.get(pageNode.id);
+              if (nextChapterId) {
+                page.nextChapterId = nextChapterId;
+              }
+
+              const nextActId = pageToAct.get(pageNode.id);
+              if (nextActId) {
+                page.nextActId = nextActId;
+              }
+
+              const edgeId = `chapter-page-${page.id}`;
+              if (animatedEdges.has(edgeId) || pageIndex === 0) {
+                startPageId = startPageId || page.id;
+              }
+
+              return page;
+            });
+
+          const chapter: NarrativeChapter = {
+            id: chapterNode.id,
+            title: chapterNode.data.label,
+            summary: chapterNode.data.description,
             pages,
+            type: NARRATIVE_ELEMENT.CHAPTER,
+            startPageId: startPageId || pages[0]?.id,
+            position: { x: chapterNode.position.x, y: chapterNode.position.y },
           };
+
+          const edgeId = `act-chapter-${chapter.id}`;
+          if (animatedEdges.has(edgeId) || chapterIndex === 0) {
+            startChapterId = startChapterId || chapter.id;
+          }
+
+          return chapter;
         });
 
-      return {
-        ...coerceAct(actNode),
+      const act: NarrativeAct = {
+        id: actNode.id,
+        title: actNode.data.label,
+        summary: actNode.data.description,
         chapters,
+        type: NARRATIVE_ELEMENT.ACT,
+        startChapterId: startChapterId || chapters[0]?.id,
+        position: { x: actNode.position.x, y: actNode.position.y },
       };
+
+      const edgeId = `thread-act-${act.id}`;
+      if (animatedEdges.has(edgeId) || actIndex === 0) {
+        startActId = startActId || act.id;
+      }
+
+      return act;
     });
 
-  // Always ensure we have a thread node - if not found, create one from the first node or use defaults
-  const threadData = threadNode 
-    ? coerceThread(threadNode)
-    : {
-        id: nodes[0]?.id || 'empty-thread',
-        title: nodes[0]?.data?.element?.title || 'Empty Thread',
-        type: NARRATIVE_ELEMENT.THREAD,
-      };
+  const detourNodes = nodes.filter(node => node.type === NARRATIVE_ELEMENT.DETOUR);
+  const detours: NarrativeDetour[] = detourNodes.map(node => ({
+    id: node.id,
+    title: node.data.label,
+    summary: node.data.description,
+    storyletId: (node.data as unknown as { storyletId?: string }).storyletId || '',
+    returnNodeId: (node.data as unknown as { returnNodeId?: string }).returnNodeId,
+type: NARRATIVE_ELEMENT.DETOUR,
+    position: { x: node.position.x, y: node.position.y },
+  }));
+
+  const conditionalNodes = nodes.filter(node => node.type === NARRATIVE_ELEMENT.CONDITIONAL);
+  const conditionals: NarrativeConditional[] = conditionalNodes.map(node => ({
+    id: node.id,
+    title: node.data.label,
+    conditions: (node.data as unknown as { conditions?: NarrativeConditional['conditions'] }).conditions || [],
+    trueBranchNodeId: (node.data as unknown as { trueBranchNodeId?: string }).trueBranchNodeId,
+    falseBranchNodeId: (node.data as unknown as { falseBranchNodeId?: string }).falseBranchNodeId,
+    type: NARRATIVE_ELEMENT.CONDITIONAL,
+    position: { x: node.position.x, y: node.position.y },
+  }));
+
+  const narrativeEdges: NarrativeEdge[] = edges.map(edge => ({
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    sourceHandle: edge.sourceHandle || undefined,
+    targetHandle: edge.targetHandle || undefined,
+    label: typeof edge.label === 'string' ? edge.label : undefined,
+    animated: edge.animated,
+  }));
 
   return {
-    ...threadData,
+    id: threadId,
+    title: threadNode?.data.label || 'Empty Thread',
+    summary: threadNode?.data.description,
     acts,
+    type: NARRATIVE_ELEMENT.THREAD,
+    startActId: startActId || acts[0]?.id,
+    position: threadNode ? { x: threadNode.position.x, y: threadNode.position.y } : undefined,
+    edges: narrativeEdges,
+    detours: detours.length > 0 ? detours : undefined,
+    conditionals: conditionals.length > 0 ? conditionals : undefined,
   };
 }

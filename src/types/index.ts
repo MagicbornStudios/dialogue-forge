@@ -4,6 +4,8 @@ import type { StoryletPool } from './narrative';
 export type { ViewMode } from './constants';
 export { DIALOGUE_FORGE_EVENT_TYPE, DIALOGUE_PANEL_TAB, DIALOGUE_OPEN_REASON } from './constants';
 export type { DialogueForgeEventType, DialoguePanelTab, DialogueOpenReason } from './constants';
+export { NODE_TYPE_LABELS, AVAILABLE_NODE_TYPES, CSS_CLASSES } from './ui-constants';
+export type { NODE_TYPE_LABELS as NodeTypeLabelsType, AVAILABLE_NODE_TYPES as AvailableNodeTypesType, CSS_CLASSES as CssClassesType } from './ui-constants';
 export type { Condition, ConditionalBlock } from './conditionals';
 export type {
   NarrativeAct,
@@ -59,7 +61,9 @@ export interface DialogueTree {
   nodes: Record<string, DialogueNode>;
 }
 
-import { FlagSchema } from './flags';
+import { FlagSchema, type FlagSchema as FlagSchemaType } from './flags';
+
+export type { FlagSchemaType as FlagSchema };
 
 export interface DialogueEditorProps {
   dialogue: DialogueTree | null;

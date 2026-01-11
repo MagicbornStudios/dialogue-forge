@@ -99,6 +99,25 @@ export function ProjectSwitcher({ selectedProjectId, onProjectChange }: ProjectS
         <Plus className="h-4 w-4" />
       </Button>
       
+      <div className="ml-auto flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.open('/admin', '_blank')}
+          title="Open Payload Admin"
+        >
+          Admin
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.open('/api/graphql-playground', '_blank')}
+          title="Open GraphQL Playground (API Documentation)"
+        >
+          API
+        </Button>
+      </div>
+      
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>

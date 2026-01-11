@@ -81,9 +81,9 @@ const dialogue = importFromYarn(yarnContent, 'Merchant Dialogue');
 ### 3. Edit Dialogue
 
 ```tsx
-import { DialogueEditorV2, exportToYarn } from '@magicborn/dialogue-forge';
+import { DialogueGraphEditor, exportToYarn } from '@magicborn/dialogue-forge';
 
-<DialogueEditorV2
+<DialogueGraphEditor
   dialogue={dialogue}
   onChange={(updated) => {
     const yarn = exportToYarn(updated);
@@ -152,7 +152,7 @@ See [DATA_STRUCTURES.md](./DATA_STRUCTURES.md) for complete type documentation a
 
 ### Components
 
-- `DialogueEditorV2` - Visual editor for creating/editing dialogues
+- `DialogueGraphEditor` - Visual editor for creating/editing dialogues
 - `NarrativeWorkspace` - Narrative + dialogue editor workspace (storylets/chapters/pages)
 - `GamePlayer` - Runtime player for dialogue + narrative traversal
 - `GuidePanel` - Built-in documentation panel
@@ -174,12 +174,12 @@ See [DATA_STRUCTURES.md](./DATA_STRUCTURES.md) for complete type documentation a
 - `GameFlagState` - Current flag values `{ [flagId]: value }`
 - `DialogueResult` - Result from running dialogue (updated flags, visited nodes)
 
-### Dialogue Editor V2 with View Modes
+### Dialogue Graph Editor with View Modes
 
-`DialogueEditorV2` supports graph, yarn, and play views. Use the exported `VIEW_MODE` constant (instead of string literals) alongside the `ViewMode` type so consumers get auto-complete and type safety when switching views.
+`DialogueGraphEditor` supports graph, yarn, and play views. Use the exported `VIEW_MODE` constant (instead of string literals) alongside the `ViewMode` type so consumers get auto-complete and type safety when switching views.
 
 ```tsx
-import { DialogueEditorV2, VIEW_MODE, type DialogueTree, type ViewMode } from '@magicborn/dialogue-forge';
+import { DialogueGraphEditor, VIEW_MODE, type DialogueTree, type ViewMode } from '@magicborn/dialogue-forge';
 import { useState } from 'react';
 
 export function DialogueEditorDemo() {
@@ -187,7 +187,7 @@ export function DialogueEditorDemo() {
   const [viewMode, setViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);
 
   return (
-    <DialogueEditorV2
+    <DialogueGraphEditor
       dialogue={dialogue}
       onChange={setDialogue}
       viewMode={viewMode}
@@ -259,7 +259,7 @@ const merchantIntro: DialogueTree = {
 
 ```typescript
 import {
-  DialogueEditorV2,
+  DialogueGraphEditor,
   GamePlayer,
   importFromYarn,
   exportToYarn,
@@ -287,7 +287,7 @@ const gameFlags: GameFlagState = {
 };
 
 // Edit dialogue
-<DialogueEditorV2
+<DialogueGraphEditor
   dialogue={dialogue}
   onChange={(updated) => {
     const yarn = exportToYarn(updated);

@@ -19,7 +19,7 @@ Dialogue Forge is a visual node-based dialogue editor with Yarn Spinner support 
 dialogue-forge/
 ├── src/                    # Source code
 │   ├── components/         # React components
-│   │   ├── DialogueEditorV2.tsx    # Main editor component
+│   │   ├── DialogueGraphEditor.tsx    # Main editor component
 │   │   ├── NPCNodeV2.tsx            # NPC node component
 │   │   ├── PlayerNodeV2.tsx          # Player choice node component
 │   │   ├── ConditionalNodeV2.tsx   # Conditional logic node
@@ -43,12 +43,11 @@ dialogue-forge/
 │   │   └── ...
 │   ├── examples/           # Example dialogues and schemas
 │   └── styles/             # CSS files
-├── demo/                   # Next.js demo application
-│   ├── app/                # Next.js app directory
+├── app/                    # Next.js demo application (root level)
+│   ├── (forge-app)/        # Demo app directory
 │   │   ├── layout.tsx      # Root layout (NO shared dependencies)
 │   │   └── page.tsx        # Demo page
-│   ├── components/         # Demo-specific components
-│   └── package.json        # Demo dependencies
+│   └── components/         # Demo-specific components
 ├── dist/                   # Built output (generated)
 ├── bin/                    # CLI scripts
 └── package.json            # Main package config
@@ -181,7 +180,7 @@ const flagSchema: FlagSchema = {
 
 ### View Modes
 
-`DialogueEditorV2` supports three view modes:
+`DialogueGraphEditor` supports three view modes:
 - `VIEW_MODE.GRAPH`: Visual node editor
 - `VIEW_MODE.YARN`: Text-based Yarn format view
 - `VIEW_MODE.PLAY`: Interactive dialogue player
@@ -218,7 +217,7 @@ npm test
 ### Adding Dependencies
 
 1. **Library dependencies**: Add to root `package.json` `dependencies`
-2. **Demo dependencies**: Add to `demo/package.json` `dependencies`
+2. **Demo dependencies**: Add to root `package.json` `dependencies`
 3. **Dev dependencies**: Add to respective `devDependencies`
 
 ### Type Exports
@@ -242,7 +241,7 @@ All public types are exported from `src/index.ts`. When adding new types:
 
 2. Update `NodeType` type
 3. Create component in `src/components/NewTypeNodeV2.tsx`
-4. Register in `DialogueEditorV2.tsx` `nodeTypes` object
+4. Register in `DialogueGraphEditor.tsx` `nodeTypes` object
 5. Update `reactflow-converter.ts` to handle conversion
 
 ### Adding a New Flag Type
@@ -254,7 +253,7 @@ All public types are exported from `src/index.ts`. When adding new types:
 
 ### Modifying the Demo
 
-1. Edit files in `demo/` directory
+1. Edit files in the root demo application (`app/`, `components/`, etc.)
 2. Ensure all imports use `@magicborn/dialogue-forge` package
 3. Never reference paths outside the repo
 4. Test that `npm run build` works in demo folder
@@ -269,7 +268,7 @@ The Yarn converter is in `src/lib/yarn-converter/`:
 
 ### Components
 
-- **V2 Components**: Modern React components (DialogueEditorV2, NPCNodeV2, etc.)
+- **V2 Components**: Modern React components (DialogueGraphEditor, NPCNodeV2, etc.)
 - **Legacy Components**: Older components (may exist for compatibility)
 - **Utility Components**: Reusable UI (FlagSelector, CharacterSelector, etc.)
 
@@ -322,7 +321,7 @@ The Next.js app runs from the root directory. Configure Vercel as follows:
 2. **Demo Independence**: Demo must work without shared packages
 3. **Type Safety**: Leverage TypeScript types and constants
 4. **Constants First**: Check `src/types/constants.ts` before adding new string values
-5. **Component Naming**: V2 components use `V2` suffix (e.g., `DialogueEditorV2`)
+5. **Component Naming**: V2 components use `V2` suffix (e.g., `NPCNodeV2`)
 
 ## Quick Reference
 
@@ -333,7 +332,7 @@ The Next.js app runs from the root directory. Configure Vercel as follows:
 import { NODE_TYPE, FLAG_TYPE, VIEW_MODE, type DialogueTree } from '@magicborn/dialogue-forge';
 
 // Components
-import { DialogueEditorV2 } from '@magicborn/dialogue-forge';
+import { DialogueGraphEditor } from '@magicborn/dialogue-forge';
 
 // Utilities
 import { exportToYarn, importFromYarn } from '@magicborn/dialogue-forge';
@@ -365,5 +364,5 @@ const [viewMode, setViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);  // ✅ Con
 When in doubt:
 1. Check `src/types/constants.ts` for available constants
 2. Look at existing component implementations
-3. Follow the patterns in `DialogueEditorV2.tsx`
+3. Follow the patterns in `DialogueGraphEditor.tsx`
 4. Ensure demo works independently

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { GuidePanel } from '../GamePlayer/components/GuidePanel';
+import { GuidePanel } from '../shared/GuidePanel';
 import type { DialogueTree } from '../../types';
 import type { BaseGameState } from '../../types/game-state';
 import type { Character } from '../../types/characters';

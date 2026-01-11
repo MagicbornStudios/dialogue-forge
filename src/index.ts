@@ -6,11 +6,11 @@ export { NarrativeWorkspace as DialogueForge } from './components/NarrativeWorks
 export { useDialogueRunner } from './components/GamePlayer/hooks/useDialogueRunner';
 // Legacy scene player (use GamePlayer for new experiences)
 // Legacy export for backward compatibility
-export { GamePlayer } from './components/GamePlayer/components';
+export { GamePlayer } from './components/GamePlayer/components/GamePlayer';
 export { useNarrativeTraversal } from './components/GamePlayer/hooks/useNarrativeTraversal';
 export { GuidePanel } from './components/GamePlayer/components/GuidePanel';
 export { FlagSelector } from './components/GraphEditors/shared/FlagSelector';
-export { FlagManager } from './components/GamePlayer/components/FlagManager';
+export { FlagManager } from './components/GamePlayer/components/Manager/FlagManager';
 export { CharacterSelector } from './components/GraphEditors/DialogueGraphEditor/components/CharacterSelector';
 
 // Export styles

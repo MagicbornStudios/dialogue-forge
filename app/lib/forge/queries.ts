@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient, type UseQueryResult, type UseMut
 import { useMemo } from "react"
 import { getPayloadClient } from "./payload-client"
 import { PAYLOAD_COLLECTIONS } from "@/app/payload-collections/enums"
-import type { DialogueTree } from "@magicborn/dialogue-forge/src/types"
+import type { ForgeGraph } from "@magicborn/dialogue-forge/src/types"
 
 // ============================
 // Query Key Factories
@@ -96,7 +96,7 @@ export const queryKeys = {
 export interface DialogueDocument {
   id: string
   title: string
-  tree: DialogueTree
+  tree: ForgeGraph
   startNodeId: string
   project: string | { id: string }
   archivedAt?: string | null
@@ -105,7 +105,7 @@ export interface DialogueDocument {
 /**
  * Get a dialogue by ID (returns DialogueTree)
  */
-export function useDialogue(dialogueId: string | null): UseQueryResult<DialogueTree, Error> {
+export function useDialogue(dialogueId: string | null): UseQueryResult<ForgeGraph, Error> {
   return useQuery({
     queryKey: queryKeys.dialogues.detail(dialogueId || ""),
     queryFn: async () => {
@@ -116,7 +116,7 @@ export function useDialogue(dialogueId: string | null): UseQueryResult<DialogueT
         dialogueId,
         { depth: 1 }
       )
-      return doc.tree as DialogueTree
+      return doc.tree as ForgeGraph
     },
     enabled: !!dialogueId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -287,7 +287,7 @@ export interface StoryletTemplateDocument {
   title?: string
   summary?: string
   project: string | { id: string }
-  dialogue: string | { id: string; tree?: DialogueTree }
+  dialogue: string | { id: string; tree?: ForgeGraph }
   tags?: Array<{ tag: string }>
   defaultWeight?: number
 }

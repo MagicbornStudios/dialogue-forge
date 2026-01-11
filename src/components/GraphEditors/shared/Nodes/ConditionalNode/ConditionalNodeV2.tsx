@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { DialogueNode, Condition, ConditionalBlock } from '../../../../../types';
+import { ForgeNode, Condition, ConditionalBlock } from '../../../../../types';
 import { GitBranch, Play, Flag, Hash, Code, Edit3, Trash2 } from 'lucide-react';
 import { FlagSchema } from '../../../../../types/flags';
 import { Character } from '../../../../../types/characters';
@@ -14,7 +14,7 @@ import {
 } from '../../../../ui/context-menu';
 
 interface ConditionalNodeData {
-  node: DialogueNode;
+  node: ForgeNode;
   flagSchema?: FlagSchema;
   characters?: Record<string, Character>;
   isDimmed?: boolean;

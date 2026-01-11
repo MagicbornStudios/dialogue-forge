@@ -8,7 +8,7 @@
  * - edges: Array of { id, source, target, sourceHandle?, targetHandle?, type, data? }
  */
 
-import { DialogueTree, DialogueNode, FlagSchema } from '../types';
+import { ForgeGraph, ForgeNode, FlagSchema } from '../types';
 import { NODE_TYPE } from '../types/constants';
 import { Node, Edge, Position } from 'reactflow';
 import { LayoutDirection } from './layout';
@@ -17,7 +17,7 @@ import { LayoutDirection } from './layout';
 export const CHOICE_COLORS = ['#e94560', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b'];
 
 export interface ReactFlowNodeData {
-  node: DialogueNode;
+  node: ForgeNode;
   flagSchema?: FlagSchema;
   layoutDirection?: LayoutDirection;
 }
@@ -44,7 +44,7 @@ export function getHandlePositions(direction: LayoutDirection): {
  * Convert DialogueTree to React Flow format
  */
 export function convertDialogueTreeToReactFlow(
-  dialogue: DialogueTree,
+  dialogue: ForgeGraph,
   layoutDirection: LayoutDirection = 'TB'
 ): {
   nodes: ReactFlowNode[];
@@ -58,7 +58,7 @@ export function convertDialogueTreeToReactFlow(
   // Convert nodes - create new node objects to avoid sharing references
   Object.values(dialogue.nodes).forEach(node => {
     // Deep copy node to avoid sharing references, especially for arrays
-    const nodeCopy: DialogueNode = {
+    const nodeCopy: ForgeNode = {
       ...node,
       choices: node.choices ? node.choices.map(choice => ({ ...choice })) : undefined,
       setFlags: node.setFlags ? [...node.setFlags] : undefined,
@@ -190,12 +190,12 @@ export function convertDialogueTreeToReactFlow(
  * This updates node positions and edge connections in the DialogueTree.
  */
 export function updateDialogueTreeFromReactFlow(
-  dialogue: DialogueTree,
+  dialogue: ForgeGraph,
   nodes: Node[],
   edges: Edge[]
-): DialogueTree {
+): ForgeGraph {
   // Create a deep copy of all nodes to avoid mutations
-  const updatedNodes: Record<string, DialogueNode> = {};
+  const updatedNodes: Record<string, ForgeNode> = {};
   
   // First, create copies of all nodes with cleared connections
   Object.values(dialogue.nodes).forEach(node => {

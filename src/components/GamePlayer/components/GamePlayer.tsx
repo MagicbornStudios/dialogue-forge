@@ -1,11 +1,11 @@
 import React from 'react';
-import { DialogueTree, type NarrativeThread } from '../../../types';
+import { ForgeGraph, type NarrativeThread } from '../../../types';
 import { FlagSchema } from '../../../types/flags';
 import { DialogueResult, FlagState } from '../../../types/game-state';
 import { VNStage } from './VNStage';
 
 export interface GamePlayerProps {
-  dialogue: DialogueTree;
+  dialogue: ForgeGraph;
   startNodeId?: string;
   flagSchema?: FlagSchema;
   gameStateFlags?: FlagState;

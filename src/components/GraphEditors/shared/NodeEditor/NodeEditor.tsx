@@ -1,24 +1,24 @@
 import React, { useState, useRef } from 'react';
-import { DialogueNode, DialogueTree, Choice } from '../../../../types';
+import { ForgeNode, ForgeGraph, Choice } from '../../../../types';
 import { FlagSchema } from '../../../../types/flags';
 import { Character } from '../../../../types/characters';
 import { FlagSelector } from '../FlagSelector';
 import { NODE_TYPE } from '../../../../types/constants';
 import { useConditionInputs } from './hooks/useConditionInputs';
 import { getNodeTypeBorderColor, getNodeTypeBadge, getNodeTypeLabel } from './utils/nodeTypeHelpers';
-import { NpcNodeFields } from '../../DialogueGraphEditor/components/NPCNode/NPCNodeFields';
-import { StoryletNodeFields } from '../../DialogueGraphEditor/components/StoryletNode/StoryletNodeFields';
+import { NpcNodeFields } from '../../ForgeStoryletGraphEditor/components/NPCNode/NPCNodeFields';
+import { StoryletNodeFields } from '../../ForgeStoryletGraphEditor/components/StoryletNode/StoryletNodeFields';
 
 
 import { ConditionEditorModal } from './components/ConditionEditorModal';
-import { StoryletPoolNodeFields } from '../../DialogueGraphEditor/components/StoryletPoolNode/StoryletPoolNodeFields';
+import { StoryletPoolNodeFields } from '../../ForgeStoryletGraphEditor/components/StoryletPoolNode/StoryletPoolNodeFields';
 import { ConditionalNodeFields } from '../Nodes/ConditionalNode/ConditionalNodeFields';
-import { PlayerNodeFields } from '../../DialogueGraphEditor/components/PlayerNode/PlayerNodeFields';
+import { PlayerNodeFields } from '../../ForgeStoryletGraphEditor/components/PlayerNode/PlayerNodeFields';
 
 interface NodeEditorProps {
-  node: DialogueNode;
-  dialogue: DialogueTree;
-  onUpdate: (updates: Partial<DialogueNode>) => void;
+  node: ForgeNode;
+  dialogue: ForgeGraph;
+  onUpdate: (updates: Partial<ForgeNode>) => void;
   onDelete: () => void;
   onAddChoice: () => void;
   onUpdateChoice: (idx: number, updates: Partial<Choice>) => void;
@@ -64,7 +64,7 @@ export function NodeEditor({
     debounceTimersRef,
   } = useConditionInputs(node);
 
-  const handleStoryletCallUpdate = (updates: Partial<NonNullable<DialogueNode['storyletCall']>>) => {
+  const handleStoryletCallUpdate = (updates: Partial<NonNullable<ForgeNode['storyletCall']>>) => {
     const nextStoryletCall = {
       ...(node.storyletCall ?? {}),
       ...updates,

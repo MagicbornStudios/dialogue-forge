@@ -1,7 +1,7 @@
 "use client"
 
 import { NARRATIVE_ELEMENT, STORYLET_SELECTION_MODE } from "@magicborn/dialogue-forge/src/types/narrative"
-import type { DialogueTree, StoryThread, NarrativeAct, NarrativeChapter, NarrativePage, StoryletTemplate, StoryletPool } from "@magicborn/dialogue-forge/src/types"
+import type { ForgeGraph, StoryThread, NarrativeAct, NarrativeChapter, NarrativePage, StoryletTemplate, StoryletPool } from "@magicborn/dialogue-forge/src/types"
 import type { FlagSchema } from "@magicborn/dialogue-forge/src/types/flags"
 import type { Character } from "@magicborn/dialogue-forge/src/types/characters"
 import type { BaseGameState } from "@magicborn/dialogue-forge/src/types/game-state"
@@ -170,9 +170,9 @@ function buildChapterData(
 /**
  * Prepare dialogue data from PayloadCMS document
  */
-export function prepareDialogueData(dialogueDoc: DialogueDocument): DialogueTree {
+export function prepareDialogueData(dialogueDoc: DialogueDocument): ForgeGraph {
   // Extract tree JSON field - it should already be a DialogueTree
-  return dialogueDoc.tree as DialogueTree
+  return dialogueDoc.tree as ForgeGraph
 }
 
 // ============================

@@ -36,7 +36,7 @@ export interface StoryletCall {
   returnNodeId?: string;
 }
 
-export interface DialogueNode {
+export interface ForgeNode {
   id: string;
   type: NodeType;
   speaker?: string; // Legacy: text speaker name (deprecated, use characterId)
@@ -54,29 +54,27 @@ export interface DialogueNode {
   y: number;
 }
 
-export interface DialogueTree {
+export interface ForgeGraph {
   id: string;
   title: string;
   startNodeId: string;
-  nodes: Record<string, DialogueNode>;
+  nodes: Record<string, ForgeNode>;
 }
 
 import { FlagSchema, type FlagSchema as FlagSchemaType } from './flags';
 
 export type { FlagSchemaType as FlagSchema };
 
-export interface DialogueEditorProps {
-  dialogue: DialogueTree | null;
-  onChange: (dialogue: DialogueTree) => void;
+export interface ForgeStoryletGraphEditorProps {
+  graph: ForgeGraph | null;
+  onChange: (graph: ForgeGraph) => void;
   onExportYarn?: (yarn: string) => void;
-  onExportJSON?: (json: string) => void;
   flagSchema?: FlagSchema;
   className?: string;
-  showTitleEditor?: boolean;
   // Event hooks
-  onNodeAdd?: (node: DialogueNode) => void;
+  onNodeAdd?: (node: ForgeNode) => void;
   onNodeDelete?: (nodeId: string) => void;
-  onNodeUpdate?: (nodeId: string, updates: Partial<DialogueNode>) => void;
+  onNodeUpdate?: (nodeId: string, updates: Partial<ForgeNode>) => void;
   onConnect?: (sourceId: string, targetId: string, sourceHandle?: string) => void;
   onDisconnect?: (edgeId: string, sourceId: string, targetId: string) => void;
   onNodeSelect?: (nodeId: string | null) => void;

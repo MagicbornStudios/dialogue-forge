@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { processNode, isValidNextNode, ProcessedNodeResult } from '../node-processor';
 import { VariableManager } from '../variable-manager';
-import { DialogueNode, DialogueTree } from '../../../types';
+import { ForgeNode, ForgeGraph } from '../../../types';
 
 describe('node-processor', () => {
   let variableManager: VariableManager;
-  let availableNodes: Record<string, DialogueNode>;
+  let availableNodes: Record<string, ForgeNode>;
 
   beforeEach(() => {
     variableManager = new VariableManager({ flag1: true, flag2: 42 });
@@ -30,7 +30,7 @@ describe('node-processor', () => {
   describe('processNode', () => {
     describe('NPC nodes', () => {
       it('should process simple NPC node', () => {
-        const node: DialogueNode = {
+        const node: ForgeNode = {
           id: 'test',
           type: 'npc',
           content: 'Hello world',
@@ -48,7 +48,7 @@ describe('node-processor', () => {
       });
 
       it('should mark as end when no nextNodeId', () => {
-        const node: DialogueNode = {
+        const node: ForgeNode = {
           id: 'test',
           type: 'npc',
           content: 'End',
@@ -63,7 +63,7 @@ describe('node-processor', () => {
 
     describe('Player nodes', () => {
       it('should return choices for player node', () => {
-        const node: DialogueNode = {
+        const node: ForgeNode = {
           id: 'test',
           type: 'player',
           content: '',
@@ -89,7 +89,7 @@ describe('node-processor', () => {
       });
 
       it('should filter choices based on conditions', () => {
-        const node: DialogueNode = {
+        const node: ForgeNode = {
           id: 'test',
           type: 'player',
           content: '',
@@ -122,7 +122,7 @@ describe('node-processor', () => {
 
     describe('Conditional nodes', () => {
       it('should process conditional node with matching if block', () => {
-        const node: DialogueNode = {
+        const node: ForgeNode = {
           id: 'test',
           type: 'conditional',
           content: '',
@@ -151,7 +151,7 @@ describe('node-processor', () => {
       });
 
       it('should process conditional node with matching elseif block', () => {
-        const node: DialogueNode = {
+        const node: ForgeNode = {
           id: 'test',
           type: 'conditional',
           content: '',
@@ -182,7 +182,7 @@ describe('node-processor', () => {
       });
 
       it('should process conditional node with else block when no conditions match', () => {
-        const node: DialogueNode = {
+        const node: ForgeNode = {
           id: 'test',
           type: 'conditional',
           content: '',
@@ -207,7 +207,7 @@ describe('node-processor', () => {
       });
 
       it('should return end when no block matches', () => {
-        const node: DialogueNode = {
+        const node: ForgeNode = {
           id: 'test',
           type: 'conditional',
           content: '',

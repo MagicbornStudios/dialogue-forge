@@ -51,7 +51,7 @@ export function createForgeUIStore(initialSelection: NarrativeSelection) {
     devtools(
       (set, get) => {
         const layoutSlice = createLayoutSlice(set, get)
-        const narrativeGraphSlice = createNarrativeGraphSlice(set, get, initialSelection)
+        const narrativeGraphSlice = createNarrativeGraphSlice(set, get)
         const dialogueGraphSlice = createDialogueGraphSlice(set, get)
         const storyletsPanelSlice = createStoryletsPanelSlice(set, get)
         const modalsSlice = createModalsSlice(set, get)

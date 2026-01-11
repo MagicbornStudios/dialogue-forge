@@ -29,7 +29,7 @@
  * @module layout
  */
 
-import { DialogueTree } from '../../../../types';
+import { ForgeGraph } from '../../../../types';
 import { layoutRegistry } from './registry';
 import { LayoutOptions, LayoutResult, LayoutDirection } from './types';
 import { DagreLayoutStrategy, ForceLayoutStrategy, GridLayoutStrategy } from './strategies';
@@ -71,7 +71,7 @@ layoutRegistry.register(new GridLayoutStrategy());
  * ```
  */
 export function applyLayout(
-  dialogue: DialogueTree,
+  dialogue: ForgeGraph,
   strategyId?: string,
   options?: LayoutOptions
 ): LayoutResult {
@@ -94,9 +94,9 @@ export function listLayouts(): Array<{ id: string; name: string; description: st
  * @deprecated Use applyLayout(dialogue, 'dagre', options) instead
  */
 export function applyDagreLayout(
-  dialogue: DialogueTree,
+  dialogue: ForgeGraph,
   direction: LayoutDirection = 'TB'
-): DialogueTree {
+): ForgeGraph {
   const result = applyLayout(dialogue, 'dagre', { direction });
   return result.dialogue;
 }

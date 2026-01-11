@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { DialogueTree, type NarrativeThread } from '../../../types';
+import { ForgeGraph, type NarrativeThread } from '../../../types';
 import { FLAG_TYPE } from '../../../types/constants';
 import { FlagSchema, FlagType } from '../../../types/flags';
 import { DialogueResult, FlagState, GameFlagState } from '../../../types/game-state';
-import { initializeFlags } from '../../GamePlayer/utils/flag-manager';
+import { initializeFlags } from '../../shared/FlagManager/utils/flag-manager';
 import { GamePlayer } from '../../GamePlayer/components/GamePlayer';
 
 interface PlayViewProps {
-  dialogue: DialogueTree;
+  graph: ForgeGraph;
   startNodeId?: string;
   flagSchema?: FlagSchema;
   gameStateFlags?: GameFlagState;
@@ -15,7 +15,7 @@ interface PlayViewProps {
 }
 
 export function PlayView({
-  dialogue,
+  graph,
   startNodeId,
   flagSchema,
   gameStateFlags,
@@ -199,7 +199,7 @@ export function PlayView({
       )}
       
       <GamePlayer
-        dialogue={dialogue}
+        dialogue={graph}
         startNodeId={startNodeId}
         flagSchema={flagSchema}
         gameStateFlags={resolvedGameStateFlags}

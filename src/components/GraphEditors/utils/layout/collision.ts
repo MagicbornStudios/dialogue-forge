@@ -7,7 +7,7 @@
  * @see https://reactflow.dev/examples/layout/node-collisions
  */
 
-import { DialogueTree, DialogueNode } from '../../../../types';
+import { ForgeGraph, ForgeNode } from '../../../../types';
 import { LAYOUT_CONSTANTS } from '../constants';
 
 // ============================================================================
@@ -42,9 +42,9 @@ interface CollisionOptions {
  * @returns Updated dialogue tree with resolved positions
  */
 export function resolveNodeCollisions(
-  dialogue: DialogueTree,
+  dialogue: ForgeGraph,
   options: CollisionOptions = {}
-): DialogueTree {
+): ForgeGraph {
   const { 
     maxIterations = LAYOUT_CONSTANTS.MAX_ITERATIONS, 
     overlapThreshold = LAYOUT_CONSTANTS.OVERLAP_THRESHOLD, 
@@ -102,7 +102,7 @@ width: COLLISION_NODE_WIDTH,
   }
 
   // Build updated dialogue with new positions
-  const updatedNodes: Record<string, DialogueNode> = {};
+  const updatedNodes: Record<string, ForgeNode> = {};
   for (const pos of nodePositions) {
     updatedNodes[pos.id] = { ...dialogue.nodes[pos.id], x: pos.x, y: pos.y };
   }

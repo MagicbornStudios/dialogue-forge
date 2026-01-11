@@ -1,4 +1,4 @@
-import { DialogueNode, ConditionalBlock, Choice } from '../../types';
+import { ForgeNode, ConditionalBlock, Choice } from '../../types';
 import { VariableManager } from './variable-manager';
 import { evaluateConditions } from './condition-evaluator';
 import { NODE_TYPE } from '../../types/constants';
@@ -16,7 +16,7 @@ export interface ProcessedNodeResult {
  * Processes a dialogue node and returns the result
  */
 export function processNode(
-  node: DialogueNode,
+  node: ForgeNode,
   variableManager: VariableManager
 ): ProcessedNodeResult {
   // Player nodes - return choices
@@ -161,7 +161,7 @@ function interpolateVariables(text: string, variableManager: VariableManager): s
 /**
  * Validates that a nextNodeId exists and is valid
  */
-export function isValidNextNode(nextNodeId: string | undefined, availableNodes: Record<string, DialogueNode>): boolean {
+export function isValidNextNode(nextNodeId: string | undefined, availableNodes: Record<string, ForgeNode>): boolean {
   if (!nextNodeId || !nextNodeId.trim()) {
     return false;
   }

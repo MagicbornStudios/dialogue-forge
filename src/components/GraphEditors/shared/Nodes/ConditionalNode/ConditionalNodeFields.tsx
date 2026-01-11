@@ -1,22 +1,22 @@
 import React from 'react';
-import { DialogueNode, DialogueTree } from '../../../../../types';
+import { ForgeNode, ForgeGraph } from '../../../../../types';
 import { FlagSchema } from '../../../../../types/flags';
 import { Character } from '../../../../../types/characters';
-import { CharacterSelector } from '../../../DialogueGraphEditor/components/CharacterSelector';
+import { CharacterSelector } from '../../../ForgeStoryletGraphEditor/components/CharacterSelector';
 import { ConditionAutocomplete } from '../../ConditionAutocomplete';
 import { X, User, Maximize2 } from 'lucide-react';
 import { validateCondition, parseCondition } from '../../../utils/condition-utils';
 
 interface ConditionalNodeFieldsProps {
-  node: DialogueNode;
-  dialogue: DialogueTree;
+  node: ForgeNode;
+  dialogue: ForgeGraph;
   characters: Record<string, Character>;
   flagSchema?: FlagSchema;
   conditionInputs: Record<string, string>;
   debouncedConditionInputs: Record<string, string>;
   dismissedConditions: Set<string>;
   expandedConditions: Set<string>;
-  onUpdate: (updates: Partial<DialogueNode>) => void;
+  onUpdate: (updates: Partial<ForgeNode>) => void;
   setConditionInputs: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   setDebouncedConditionInputs: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   setDismissedConditions: React.Dispatch<React.SetStateAction<Set<string>>>;

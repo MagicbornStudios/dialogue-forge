@@ -7,7 +7,7 @@
  */
 
 import { hierarchy, HierarchyNode } from 'd3-hierarchy';
-import { DialogueTree, DialogueNode } from '../types';
+import { ForgeGraph, ForgeNode } from '../types';
 import { NODE_TYPE } from '../types/constants';
 
 /**
@@ -15,14 +15,14 @@ import { NODE_TYPE } from '../types/constants';
  */
 interface TreeNodeData {
   nodeId: string;
-  node: DialogueNode;
+  node: ForgeNode;
   children?: TreeNodeData[];
 }
 
 /**
  * Get all child node IDs for a given node
  */
-function getChildNodeIds(node: DialogueNode): string[] {
+function getChildNodeIds(node: ForgeNode): string[] {
   const childIds: string[] = [];
 
   // NPC, STORYLET, STORYLET_POOL: single nextNodeId
@@ -62,7 +62,7 @@ function getChildNodeIds(node: DialogueNode): string[] {
  * For nodes with multiple parents, only the first path is included.
  */
 function buildTreeStructure(
-  dialogue: DialogueTree,
+  dialogue: ForgeGraph,
   rootNodeId: string,
   visited: Set<string> = new Set()
 ): TreeNodeData | null {
@@ -103,7 +103,7 @@ function buildTreeStructure(
  * Convert DialogueTree to d3.hierarchy
  */
 export function createTreeHierarchy(
-  dialogue: DialogueTree
+  dialogue: ForgeGraph
 ): HierarchyNode<TreeNodeData> | null {
   if (!dialogue.startNodeId || !dialogue.nodes[dialogue.startNodeId]) {
     return null;
@@ -268,7 +268,7 @@ export function getNodeHeight(
  * - Orphaned nodes (not reachable from start)
  * - Invalid node references
  */
-export function validateTreeStructure(dialogue: DialogueTree): {
+export function validateTreeStructure(dialogue: ForgeGraph): {
   valid: boolean;
   errors: string[];
 } {

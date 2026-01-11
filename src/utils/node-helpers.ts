@@ -1,4 +1,4 @@
-import { DialogueNode, DialogueTree, Choice } from '../types';
+import { ForgeNode, ForgeGraph, Choice } from '../types';
 import { NODE_TYPE, NodeType } from '../types/constants';
 
 export function createNode(
@@ -6,7 +6,7 @@ export function createNode(
   id: string,
   x: number,
   y: number
-): DialogueNode {
+): ForgeNode {
   if (type === NODE_TYPE.NPC) {
     return {
       id,
@@ -52,7 +52,7 @@ export function createNode(
   };
 }
 
-export function addChoiceToNode(node: DialogueNode): DialogueNode {
+export function addChoiceToNode(node: ForgeNode): ForgeNode {
   if (node.type !== NODE_TYPE.PLAYER) return node;
   const newChoice: Choice = {
     id: `c_${Date.now()}`,
@@ -65,7 +65,7 @@ export function addChoiceToNode(node: DialogueNode): DialogueNode {
   };
 }
 
-export function removeChoiceFromNode(node: DialogueNode, choiceIdx: number): DialogueNode {
+export function removeChoiceFromNode(node: ForgeNode, choiceIdx: number): ForgeNode {
   if (node.type !== NODE_TYPE.PLAYER || !node.choices) return node;
   return {
     ...node,
@@ -74,17 +74,17 @@ export function removeChoiceFromNode(node: DialogueNode, choiceIdx: number): Dia
 }
 
 export function updateChoiceInNode(
-  node: DialogueNode,
+  node: ForgeNode,
   choiceIdx: number,
   updates: Partial<Choice>
-): DialogueNode {
+): ForgeNode {
   if (node.type !== NODE_TYPE.PLAYER || !node.choices) return node;
   const newChoices = [...node.choices];
   newChoices[choiceIdx] = { ...newChoices[choiceIdx], ...updates };
   return { ...node, choices: newChoices };
 }
 
-export function deleteNodeFromTree(tree: DialogueTree, nodeId: string): DialogueTree {
+export function deleteNodeFromTree(tree: ForgeGraph, nodeId: string): ForgeGraph {
   if (nodeId === tree.startNodeId) {
     throw new Error("Cannot delete the start node");
   }

@@ -23,14 +23,18 @@ export interface NarrativeGraphActions {
 export function createNarrativeGraphSlice(
   set: Parameters<StateCreator<ForgeUIState, [], [], ForgeUIState>>[0],
   get: Parameters<StateCreator<ForgeUIState, [], [], ForgeUIState>>[1],
-  initialSelection: NarrativeSelection
 ): NarrativeGraphSlice & NarrativeGraphActions {
   return {
     narrativeGraph: {
       viewMode: VIEW_MODE.GRAPH,
       showMiniMap: true,
       contextMenu: null,
-      selection: initialSelection,
+      selection: {
+        actId: undefined,
+        chapterId: undefined,
+        pageId: undefined,
+        storyletKey: undefined,
+      },
     },
     setNarrativeViewMode: mode =>
       set(state => ({ narrativeGraph: { ...state.narrativeGraph, viewMode: mode } })),

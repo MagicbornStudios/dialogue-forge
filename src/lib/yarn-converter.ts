@@ -1,4 +1,4 @@
-import { DialogueTree, DialogueNode } from '../types';
+import { ForgeGraph, ForgeNode } from '../types';
 import { NODE_TYPE, CONDITION_OPERATOR, YARN_OPERATOR, YARN_BLOCK_TYPE } from '../types/constants';
 
 /**
@@ -12,7 +12,7 @@ import { NODE_TYPE, CONDITION_OPERATOR, YARN_OPERATOR, YARN_BLOCK_TYPE } from '.
  * - <<set $flag_name = value>> - Sets variable in Variable Storage
  * - <<if $flag_name>> - Checks variable in Variable Storage
  */
-export function exportToYarn(tree: DialogueTree): string {
+export function exportToYarn(tree: ForgeGraph): string {
   let yarn = '';
   
   Object.values(tree.nodes).forEach(node => {
@@ -254,8 +254,8 @@ const op = cond.operator === CONDITION_OPERATOR.EQUALS ? YARN_OPERATOR.EQUALS :
 /**
  * Parse Yarn Spinner format to DialogueTree
  */
-export function importFromYarn(yarnContent: string, title: string = 'Imported Dialogue'): DialogueTree {
-  const nodes: Record<string, DialogueNode> = {};
+export function importFromYarn(yarnContent: string, title: string = 'Imported Dialogue'): ForgeGraph {
+  const nodes: Record<string, ForgeNode> = {};
   const nodeBlocks = yarnContent.split('===').filter(b => b.trim());
   
   let y = 50;

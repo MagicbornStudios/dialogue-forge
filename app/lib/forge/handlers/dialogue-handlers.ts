@@ -2,7 +2,7 @@
 
 import type { DialogueForgeEvent } from "@magicborn/dialogue-forge/src/components/forge/events/events"
 import { DIALOGUE_FORGE_EVENT_TYPE } from "@magicborn/dialogue-forge/src/types/constants"
-import type { DialogueTree } from "@magicborn/dialogue-forge/src/types"
+import type { ForgeGraph } from "@magicborn/dialogue-forge/src/types"
 import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query"
 import { getPayloadClient } from "../payload-client"
 import { PAYLOAD_COLLECTIONS } from "@/app/payload-collections/enums"
@@ -21,13 +21,13 @@ export interface DialogueOpenRequestedHandlerOptions {
    * Optional query hook result. If provided, will use the query data.
    * Otherwise, will fetch directly.
    */
-  query?: UseQueryResult<DialogueTree, Error>
+  query?: UseQueryResult<ForgeGraph, Error>
   
   /**
    * Optional callback to handle the fetched dialogue.
    * If not provided, the handler will just fetch and return.
    */
-  onDialogueLoaded?: (dialogue: DialogueTree) => void | Promise<void>
+  onDialogueLoaded?: (dialogue: ForgeGraph) => void | Promise<void>
   
   /**
    * Optional error handler.
@@ -58,7 +58,7 @@ export function createDialogueOpenRequestedHandler(
         { depth: 1 }
       )
       
-      const dialogue = doc.tree as DialogueTree
+      const dialogue = doc.tree as ForgeGraph
       
       if (options.onDialogueLoaded) {
         await options.onDialogueLoaded(dialogue)
@@ -88,7 +88,7 @@ export interface DialogueChangedHandlerOptions {
   /**
    * Optional callback after successful save.
    */
-  onSaved?: (dialogue: DialogueTree) => void | Promise<void>
+  onSaved?: (dialogue: ForgeGraph) => void | Promise<void>
   
   /**
    * Optional error handler.
@@ -149,7 +149,7 @@ async function saveDialogue(
   dialogue: unknown,
   options: DialogueChangedHandlerOptions
 ) {
-  const dialogueTree = dialogue as DialogueTree
+  const dialogueTree = dialogue as ForgeGraph
   
   await options.updateMutation.mutateAsync({
     id: dialogueId,

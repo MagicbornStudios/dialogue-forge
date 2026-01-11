@@ -1,11 +1,11 @@
 import React from 'react';
-import { DialogueTree } from '../../../../../types';
+import { ForgeGraph } from '../../../../../types';
 import { EdgeIcon } from '../../EdgeIcon';
 
 interface NextNodeSelectorProps {
   nodeId: string;
   nextNodeId?: string;
-  dialogue: DialogueTree;
+  dialogue: ForgeGraph;
   onUpdate: (updates: Partial<{ nextNodeId?: string }>) => void;
   onFocusNode?: (nodeId: string) => void;
   label?: string;

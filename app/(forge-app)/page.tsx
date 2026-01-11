@@ -1,6 +1,6 @@
 'use client';
 
-import { NarrativeWorkspace as DialogueForge } from '@magicborn/dialogue-forge/src/components/NarrativeWorkspace/NarrativeWorkspace';
+import { ForgeWorkspace as DialogueForge } from '@/src/components/ForgeWorkspace/ForgeWorkspace';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { ProjectSwitcher } from '@/components/ProjectSwitcher';
 import { useForgeEventHandlersWithDefaults } from '@/app/lib/forge-event-handlers';
@@ -20,7 +20,7 @@ import {
   prepareGameStateData,
 } from '@/app/lib/forge/transformers';
 import { useMemo, useState, useEffect } from 'react';
-import type { DialogueTree, StoryThread } from '@magicborn/dialogue-forge/src/types';
+import type { ForgeGraph, StoryThread } from '@magicborn/dialogue-forge/src/types';
 import { NODE_TYPE } from '@magicborn/dialogue-forge/src/types/constants';
 import { exampleFlagSchema } from '@magicborn/dialogue-forge/src/types/flags';
 
@@ -28,7 +28,7 @@ import { exampleFlagSchema } from '@magicborn/dialogue-forge/src/types/flags';
 export const dynamic = 'force-static';
 
 // Dummy fallback data for development when queries fail
-const createFallbackDialogue = (): DialogueTree => ({
+const createFallbackDialogue = (): ForgeGraph => ({
   id: 'fallback-dialogue',
   title: 'Fallback Dialogue',
   startNodeId: 'node-1',

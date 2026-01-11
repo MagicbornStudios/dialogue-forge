@@ -1,9 +1,16 @@
 import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Hash, BookOpen, Flag, Play } from 'lucide-react';
+import { Hash, BookOpen, Flag, Play, Edit3, Trash2 } from 'lucide-react';
 import { DialogueNode } from '../../../../../types';
 import { FlagSchema } from '../../../../../types/flags';
 import { LayoutDirection } from '../../../../../utils/layout/types';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '../../../../ui/context-menu';
 
 interface StoryletNodeData {
   node: DialogueNode;
@@ -13,6 +20,9 @@ interface StoryletNodeData {
   layoutDirection?: LayoutDirection;
   isStartNode?: boolean;
   isEndNode?: boolean;
+  // Context menu callbacks
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const FLAG_COLORS: Record<string, string> = {
@@ -38,6 +48,8 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
     layoutDirection = 'TB',
     isStartNode,
     isEndNode,
+    onEdit,
+    onDelete,
   } = data;
 
   const isHorizontal = layoutDirection === 'LR';
@@ -67,10 +79,13 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
   const primaryIdLabel = 'Template ID';
 
   return (
-    <div
-      className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-node-selected/70' : ''} bg-df-npc-bg min-w-[320px] max-w-[450px] relative overflow-hidden`}
-      style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
-    >
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          onContextMenu={(e) => e.stopPropagation()}
+          className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-node-selected/70' : ''} bg-df-npc-bg min-w-[320px] max-w-[450px] relative overflow-hidden`}
+          style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
+        >
       <Handle
         type="target"
         position={targetPosition}
@@ -154,6 +169,25 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
         id="next"
         className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full hover:!border-df-npc-selected hover:!bg-df-npc-selected/20"
       />
-    </div>
+        </div>
+      </ContextMenuTrigger>
+
+      <ContextMenuContent className="w-48">
+        <ContextMenuItem onSelect={() => onEdit?.()}>
+          <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
+        </ContextMenuItem>
+        {!isStartNode && onDelete && (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem 
+              onSelect={() => onDelete?.()}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 size={14} className="mr-2" /> Delete
+            </ContextMenuItem>
+          </>
+        )}
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }

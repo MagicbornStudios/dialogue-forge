@@ -1,5 +1,24 @@
 import React, { useState } from 'react';
 import { BaseEdge, EdgeProps, getSmoothStepPath, getBezierPath, Position } from 'reactflow';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '../../../../ui/context-menu';
+import { NODE_TYPE } from '../../../../../types/constants';
+import type { NodeType } from '../../../../../types/constants';
+
+interface ChoiceEdgeData {
+  onInsertNode?: (type: NodeType, edgeId: string, x: number, y: number) => void;
+  onDelete?: (edgeId: string) => void;
+  insertNodeTypes?: Array<{ type: NodeType; label: string }>;
+  isBackEdge?: boolean;
+  choiceIndex?: number;
+  isDimmed?: boolean;
+  isInPathToSelected?: boolean;
+}
 
 export function ChoiceEdgeV2({
   id,
@@ -14,7 +33,8 @@ export function ChoiceEdgeV2({
 }: EdgeProps) {
   const [hovered, setHovered] = useState(false);
   
-  const isBackEdge = data?.isBackEdge ?? false;
+  const edgeData = data as ChoiceEdgeData | undefined;
+  const isBackEdge = edgeData?.isBackEdge ?? false;
   
   // Use smooth step path for angular look (like the horizontal example)
   // For back edges, use bezier for a more curved appearance
@@ -38,13 +58,13 @@ export function ChoiceEdgeV2({
         borderRadius: 8,
       });
 
-  const choiceIndex = data?.choiceIndex ?? 0;
+  const choiceIndex = edgeData?.choiceIndex ?? 0;
   // Map choice index to CSS variable
   const choiceColorVar = `var(--color-df-edge-choice-${Math.min(choiceIndex % 5, 4) + 1})`;
   // Use loop color for back edges, otherwise use choice color
   const colorVar = isBackEdge ? 'var(--color-df-edge-loop)' : choiceColorVar;
   const isSelected = selected || hovered;
-  const isDimmed = data?.isDimmed ?? false;
+  const isDimmed = edgeData?.isDimmed ?? false;
   
   // Make edge thicker and more opaque when hovered or selected
   // Dim edges not in path when highlighting is on
@@ -60,9 +80,11 @@ export function ChoiceEdgeV2({
   // For pulse animation, we'll use a slightly brighter version
   // Since we can't easily brighten CSS variables, we'll use the same color with higher opacity
   const pulseColor = colorVar;
-  const shouldAnimate = data?.isInPathToSelected ?? false;
+  const shouldAnimate = edgeData?.isInPathToSelected ?? false;
 
-  return (
+  const hasContextMenu = edgeData?.onInsertNode || edgeData?.onDelete;
+
+  const edgeContent = (
     <>
       {/* Invisible wider path for easier clicking and hover detection */}
       <path
@@ -129,6 +151,53 @@ export function ChoiceEdgeV2({
         </marker>
       </defs>
     </>
+  );
+
+  if (!hasContextMenu) {
+    return edgeContent;
+  }
+
+  // Calculate midpoint for insert operations
+  const midX = (sourceX + targetX) / 2;
+  const midY = (sourceY + targetY) / 2;
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <g
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          {edgeContent}
+        </g>
+      </ContextMenuTrigger>
+
+      <ContextMenuContent className="w-52">
+        {edgeData?.insertNodeTypes && edgeData.insertNodeTypes.length > 0 && (
+          <>
+            {edgeData.insertNodeTypes.map(({ type, label }) => (
+              <ContextMenuItem
+                key={type}
+                onSelect={() => edgeData.onInsertNode?.(type, id, midX, midY)}
+              >
+                Insert {label}
+              </ContextMenuItem>
+            ))}
+            {edgeData.onDelete && <ContextMenuSeparator />}
+          </>
+        )}
+        {edgeData.onDelete && (
+          <ContextMenuItem
+            onSelect={() => edgeData.onDelete?.(id)}
+            className="text-destructive focus:text-destructive"
+          >
+            Delete edge
+          </ContextMenuItem>
+        )}
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 

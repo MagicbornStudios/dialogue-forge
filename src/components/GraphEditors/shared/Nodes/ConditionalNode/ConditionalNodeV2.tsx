@@ -1,10 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { DialogueNode, Condition, ConditionalBlock } from '../../../../types';
-import { GitBranch, Play, Flag, Hash, Code } from 'lucide-react';
-import { FlagSchema } from '../../../../types/flags';
-import { Character } from '../../../../types/characters';
-import { LayoutDirection } from '../../../../utils/layout';
+import { DialogueNode, Condition, ConditionalBlock } from '../../../../../types';
+import { GitBranch, Play, Flag, Hash, Code, Edit3, Trash2 } from 'lucide-react';
+import { FlagSchema } from '../../../../../types/flags';
+import { Character } from '../../../../../types/characters';
+import { LayoutDirection } from '../../../utils/layout/types';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '../../../../ui/context-menu';
 
 interface ConditionalNodeData {
   node: DialogueNode;
@@ -15,13 +22,16 @@ interface ConditionalNodeData {
   layoutDirection?: LayoutDirection;
   isStartNode?: boolean;
   isEndNode?: boolean;
+  // Context menu callbacks
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 // Color scheme for conditional block edges
 const CONDITIONAL_COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b'];
 
 export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeData>) {
-  const { node, flagSchema, characters = {}, isDimmed, isInPath, layoutDirection = 'TB', isStartNode, isEndNode } = data;
+  const { node, flagSchema, characters = {}, isDimmed, isInPath, layoutDirection = 'TB', isStartNode, isEndNode, onEdit, onDelete } = data;
   const blocks = node.conditionalBlocks || [];
   const updateNodeInternals = useUpdateNodeInternals();
   const headerRef = useRef<HTMLDivElement>(null);
@@ -80,10 +90,13 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
       : 'bg-df-conditional-header';
 
   return (
-    <div 
-      className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-conditional-border/70' : ''} bg-df-conditional-bg min-w-[320px] max-w-[450px] relative overflow-hidden`}
-      style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
-    >
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div 
+          onContextMenu={(e) => e.stopPropagation()}
+          className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-conditional-border/70' : ''} bg-df-conditional-bg min-w-[320px] max-w-[450px] relative overflow-hidden`}
+          style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
+        >
       {/* Input handle - position based on layout direction */}
       <Handle 
         type="target" 
@@ -229,7 +242,26 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
           })}
         </div>
       )}
-    </div>
+        </div>
+      </ContextMenuTrigger>
+
+      <ContextMenuContent className="w-48">
+        <ContextMenuItem onSelect={() => onEdit?.()}>
+          <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
+        </ContextMenuItem>
+        {!isStartNode && onDelete && (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem 
+              onSelect={() => onDelete?.()}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 size={14} className="mr-2" /> Delete
+            </ContextMenuItem>
+          </>
+        )}
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 

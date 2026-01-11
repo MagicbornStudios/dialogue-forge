@@ -35,25 +35,11 @@ import { PlayView } from '../shared/PlayView';
 import { GraphLeftToolbar } from '../shared/GraphLeftToolbar';
 import { GraphLayoutControls } from '../shared/GraphLayoutControls';
 import { GraphMiniMap } from '../shared/GraphMiniMap';
+import { EdgeDropMenu } from './components/EdgeDropMenu';
 import { DailogueGraphEditorPaneContextMenu } from './components/DailogueGraphEditorPaneContextMenu';
-import { PlayerEdgeDropMenu } from './components/PlayerNode/PlayerEdgeDropMenu';
-import { NPCEdgeDropMenu } from './components/NPCNode/NPCEdgeDropMenu';
-import { ConditionalEdgeDropMenu } from '../shared/Nodes/ConditionalNode/ConditionalEdgeDropMenu';
-import { StoryletEdgeDropMenu } from './components/StoryletNode/StoryletEdgeDropMenu';
-import { StoryletPoolEdgeDropMenu } from './components/StoryletPoolNode/StoryletPoolEdgeDropMenu';
-import { PlayerEdgeContextMenu } from './components/PlayerNode/PlayerEdgeContextMenu';
-import { NPCEdgeContextMenu } from './components/NPCNode/NPCEdgeContextMenu';
-import { ConditionalEdgeContextMenu } from '../shared/Nodes/ConditionalNode/ConditionalEdgeContextMenu';
-import { StoryletEdgeContextMenu } from './components/StoryletNode/StoryletEdgeContextMenu';
-import { StoryletPoolEdgeContextMenu } from './components/StoryletPoolNode/StoryletPoolEdgeContextMenu';
 import { useReactFlowBehaviors } from '../hooks/useReactFlowBehaviors';
 import { NPCNodeV2 } from './components/NPCNode/NPCNodeV2';
 import { PlayerNodeV2 } from './components/PlayerNode/PlayerNodeV2';
-import { PlayerNodeContextMenu } from './components/PlayerNode/PlayerNodeContextMenu';
-import { NPCNodeContextMenu } from './components/NPCNode/NPCNodeContextMenu';
-import { ConditionalNodeContextMenu } from '../shared/Nodes/ConditionalNode/ConditionalNodeContextMenu';
-import { StoryletNodeContextMenu } from './components/StoryletNode/StoryletNodeContextMenu';
-import { StoryletPoolNodeContextMenu } from './components/StoryletPoolNode/StoryletPoolNodeContextMenu';
 import { ConditionalNodeV2 } from '../shared/Nodes/ConditionalNode/ConditionalNodeV2';
 import { StoryletNode } from './components/StoryletNode/StoryletNode';
 import { StoryletPoolNode } from './components/StoryletPoolNode/StoryletPoolNode';
@@ -163,9 +149,7 @@ function DialogueGraphEditorInternal({
   const memoizedNodeTypes = useMemo(() => nodeTypes, []);
   const memoizedEdgeTypes = useMemo(() => edgeTypes, []);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; graphX: number; graphY: number } | null>(null);
-  const [nodeContextMenu, setNodeContextMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
-  const [edgeContextMenu, setEdgeContextMenu] = useState<{ x: number; y: number; edgeId: string; graphX: number; graphY: number } | null>(null);
+  const [paneContextMenu, setPaneContextMenu] = useState<{ x: number; y: number; graphX: number; graphY: number } | null>(null);
   const [edgeDropMenu, setEdgeDropMenu] = useState<{ x: number; y: number; graphX: number; graphY: number; fromNodeId: string; fromChoiceIdx?: number; fromBlockIdx?: number; sourceHandle?: string } | null>(null);
   const reactFlowInstance = useReactFlow();
   const connectingRef = useRef<{ fromNodeId: string; fromChoiceIdx?: number; fromBlockIdx?: number; sourceHandle?: string } | null>(null);
@@ -219,35 +203,6 @@ function DialogueGraphEditorInternal({
     });
     return ends;
   }, [effectiveDialogue]);
-
-  // Add flagSchema, characters, dim state, and layout direction to node data
-  const nodesWithFlags = useMemo(() => {
-    const hasSelection = selectedNodeId !== null && showPathHighlight;
-    const startNodeId = effectiveDialogue?.startNodeId;
-    
-    return nodes.map(node => {
-      const isInPath = showPathHighlight && nodeDepths.has(node.id);
-      const isSelected = node.id === selectedNodeId;
-      // Dim nodes that aren't in the path when something is selected (only if path highlight is on)
-      const isDimmed = hasSelection && !isInPath && !isSelected;
-      const isStartNode = node.id === startNodeId;
-      const isEndNode = endNodeIds.has(node.id);
-      
-      return {
-        ...node,
-        data: {
-          ...node.data,
-          flagSchema,
-          characters, // Pass characters to all nodes including conditional
-          isDimmed,
-          isInPath,
-          layoutDirection,
-          isStartNode,
-          isEndNode,
-        },
-      };
-    });
-  }, [nodes, flagSchema, characters, nodeDepths, selectedNodeId, layoutDirection, showPathHighlight, effectiveDialogue, endNodeIds]);
 
   // Allow rendering even with null dialogue - handleAddNode will create a new one
   // if (!dialogue) {
@@ -672,7 +627,6 @@ function DialogueGraphEditorInternal({
   // Handle node selection
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
     setSelectedNodeId(node.id);
-    setNodeContextMenu(null);
     onNodeSelect?.(node.id);
   }, [onNodeSelect]);
 
@@ -698,52 +652,13 @@ function DialogueGraphEditorInternal({
       x: event.clientX,
       y: event.clientY,
     });
-    setContextMenu({
+    setPaneContextMenu({
       x: event.clientX,
       y: event.clientY,
       graphX: point.x,
       graphY: point.y,
     });
   }, [reactFlowInstance]);
-
-  // Handle node context menu
-  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
-    event.preventDefault();
-    setNodeContextMenu({
-      x: event.clientX,
-      y: event.clientY,
-      nodeId: node.id,
-    });
-    setContextMenu(null);
-  }, []);
-
-  // Handle edge context menu (right-click on edge to insert node)
-  const onEdgeContextMenu = useCallback((event: React.MouseEvent, edge: Edge) => {
-    event.preventDefault();
-    
-    // Calculate midpoint position on the edge
-    const sourceNodePosition = nodes.find(n => n.id === edge.source)?.position;
-    const targetNodePosition = nodes.find(n => n.id === edge.target)?.position;
-    
-    if (!sourceNodePosition || !targetNodePosition) return;
-    
-    // Calculate midpoint in flow coordinates
-    const midX = (sourceNodePosition.x + targetNodePosition.x) / 2;
-    const midY = (sourceNodePosition.y + targetNodePosition.y) / 2;
-    
-    // Convert to screen coordinates for menu positioning
-    const point = reactFlowInstance.flowToScreenPosition({ x: midX, y: midY });
-    
-    setEdgeContextMenu({
-      x: point.x,
-      y: point.y,
-      edgeId: edge.id,
-      graphX: midX,
-      graphY: midY,
-    });
-    setContextMenu(null);
-    setNodeContextMenu(null);
-  }, [nodes, reactFlowInstance]);
 
   // Insert node between two connected nodes
   const handleInsertNode = useCallback((type: NodeType, edgeId: string, x: number, y: number) => {
@@ -818,8 +733,6 @@ function DialogueGraphEditorInternal({
       ...effectiveDialogue,
       nodes: updatedNodes,
     });
-    
-    setEdgeContextMenu(null);
   }, [effectiveDialogue, onChange, edges]);
 
   // Add node from context menu or edge drop
@@ -840,7 +753,6 @@ function DialogueGraphEditorInternal({
       };
       onChange(newDialogue);
       setSelectedNodeId(newId);
-      setContextMenu(null);
       setEdgeDropMenu(null);
       connectingRef.current = null;
       return;
@@ -880,7 +792,6 @@ function DialogueGraphEditorInternal({
     onChange(newDialogue);
     
     setSelectedNodeId(newId);
-    setContextMenu(null);
     setEdgeDropMenu(null);
     connectingRef.current = null;
     
@@ -987,6 +898,73 @@ function DialogueGraphEditorInternal({
     }
   }, [effectiveDialogue, onChange, autoOrganize, layoutDirection, reactFlowInstance]);
 
+  // Add flagSchema, characters, dim state, layout direction, and callbacks to node data
+  const nodesWithFlags = useMemo(() => {
+    const hasSelection = selectedNodeId !== null && showPathHighlight;
+    const startNodeId = effectiveDialogue?.startNodeId;
+    
+    return nodes.map(node => {
+      const isInPath = showPathHighlight && nodeDepths.has(node.id);
+      const isSelected = node.id === selectedNodeId;
+      // Dim nodes that aren't in the path when something is selected (only if path highlight is on)
+      const isDimmed = hasSelection && !isInPath && !isSelected;
+      const isStartNode = node.id === startNodeId;
+      const isEndNode = endNodeIds.has(node.id);
+      
+      const dialogueNode = effectiveDialogue.nodes[node.id];
+      const nodeType = dialogueNode?.type;
+      
+      // Create callbacks based on node type
+      const callbacks: any = {};
+      
+      if (nodeType === NODE_TYPE.NPC) {
+        callbacks.onEdit = () => setSelectedNodeId(node.id);
+        callbacks.onDelete = !isStartNode ? () => handleDeleteNode(node.id) : undefined;
+        // Check if node has conditionals
+        callbacks.hasConditionals = !!dialogueNode?.conditionalBlocks && dialogueNode.conditionalBlocks.length > 0;
+        callbacks.onAddConditionals = !callbacks.hasConditionals ? () => {
+          handleUpdateNode(node.id, {
+            conditionalBlocks: [
+              {
+                id: `block_${Date.now()}`,
+                type: 'if',
+                condition: [],
+                content: '',
+                speaker: '',
+              },
+            ],
+          });
+          setSelectedNodeId(node.id);
+        } : undefined;
+      } else if (nodeType === NODE_TYPE.PLAYER) {
+        callbacks.onEdit = () => setSelectedNodeId(node.id);
+        callbacks.onAddChoice = () => handleAddChoice(node.id);
+        callbacks.onDelete = !isStartNode ? () => handleDeleteNode(node.id) : undefined;
+      } else if (nodeType === NODE_TYPE.CONDITIONAL) {
+        callbacks.onEdit = () => setSelectedNodeId(node.id);
+        callbacks.onDelete = !isStartNode ? () => handleDeleteNode(node.id) : undefined;
+      } else if (nodeType === NODE_TYPE.STORYLET || nodeType === NODE_TYPE.STORYLET_POOL) {
+        callbacks.onEdit = () => setSelectedNodeId(node.id);
+        callbacks.onDelete = !isStartNode ? () => handleDeleteNode(node.id) : undefined;
+      }
+      
+      return {
+        ...node,
+        data: {
+          ...node.data,
+          flagSchema,
+          characters, // Pass characters to all nodes including conditional
+          isDimmed,
+          isInPath,
+          layoutDirection,
+          isStartNode,
+          isEndNode,
+          ...callbacks,
+        },
+      };
+    });
+  }, [nodes, flagSchema, characters, nodeDepths, selectedNodeId, layoutDirection, showPathHighlight, effectiveDialogue, endNodeIds, handleDeleteNode, handleAddChoice, handleUpdateNode]);
+
   // Handle node drag stop - resolve collisions in freeform mode
   const onNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
     // In freeform mode, resolve collisions after drag
@@ -1041,6 +1019,7 @@ function DialogueGraphEditorInternal({
                 // Detect back-edges (loops) based on layout direction
                 const sourceNode = nodes.find(n => n.id === edge.source);
                 const targetNode = nodes.find(n => n.id === edge.target);
+                const sourceDialogueNode = effectiveDialogue.nodes[edge.source];
                 // For TB layout: back-edge if target Y < source Y (going up)
                 // For LR layout: back-edge if target X < source X (going left)
                 const isBackEdge = showBackEdges && sourceNode && targetNode && (
@@ -1053,6 +1032,32 @@ function DialogueGraphEditorInternal({
                 // Dim edges not in the path when path highlighting is on and something is selected
                 const isDimmed = showPathHighlight && selectedNodeId !== null && !isInPath;
                 
+                // Add callbacks for edge context menu
+                const edgeCallbacks: any = {};
+                
+                // For choice edges (Player -> NPC/Conditional)
+                if (edge.type === 'choice' && sourceDialogueNode) {
+                  edgeCallbacks.onInsertNode = (type: NodeType, edgeId: string, x: number, y: number) => {
+                    handleInsertNode(type, edgeId, x, y);
+                  };
+                  edgeCallbacks.insertNodeTypes = [
+                    { type: NODE_TYPE.NPC, label: 'NPC Node' },
+                    { type: NODE_TYPE.CONDITIONAL, label: 'Conditional Node' },
+                  ];
+                }
+                
+                // For NPC edges
+                if (edge.type === 'default' && sourceDialogueNode) {
+                  edgeCallbacks.onInsertNode = (type: NodeType, edgeId: string, x: number, y: number) => {
+                    handleInsertNode(type, edgeId, x, y);
+                  };
+                  edgeCallbacks.insertNodeTypes = [
+                    { type: NODE_TYPE.NPC, label: 'NPC Node' },
+                    { type: NODE_TYPE.PLAYER, label: 'Player Node' },
+                    { type: NODE_TYPE.CONDITIONAL, label: 'Conditional Node' },
+                  ];
+                }
+                
                 return {
                   ...edge,
                   data: {
@@ -1060,6 +1065,7 @@ function DialogueGraphEditorInternal({
                     isInPathToSelected: showPathHighlight && isInPath,
                     isBackEdge,
                     isDimmed,
+                    ...edgeCallbacks,
                   },
                 };
               })}
@@ -1077,13 +1083,10 @@ function DialogueGraphEditorInternal({
               onNodeClick={onNodeClick}
               onNodeDoubleClick={onNodeDoubleClick}
               onPaneContextMenu={onPaneContextMenu}
-              onNodeContextMenu={onNodeContextMenu}
-              onEdgeContextMenu={onEdgeContextMenu}
               onPaneClick={() => {
-                // Close context menus and deselect node when clicking on pane (not nodes)
-                setContextMenu(null);
-                setNodeContextMenu(null);
+                // Deselect node when clicking on pane (not nodes)
                 setSelectedNodeId(null);
+                setPaneContextMenu(null);
               }}
               fitView
               className="bg-df-canvas-bg"
@@ -1181,14 +1184,14 @@ function DialogueGraphEditorInternal({
                 endNodeCount={endNodeIds.size}
               />
               
-              {contextMenu && (
+              {paneContextMenu && (
                 <DailogueGraphEditorPaneContextMenu
-                  x={contextMenu.x}
-                  y={contextMenu.y}
-                  graphX={contextMenu.graphX}
-                  graphY={contextMenu.graphY}
+                  x={paneContextMenu.x}
+                  y={paneContextMenu.y}
+                  graphX={paneContextMenu.graphX}
+                  graphY={paneContextMenu.graphY}
                   onAddNode={(type, x, y) => handleAddNode(type, x, y)}
-                  onClose={() => setContextMenu(null)}
+                  onClose={() => setPaneContextMenu(null)}
                 />
               )}
 
@@ -1196,270 +1199,25 @@ function DialogueGraphEditorInternal({
                 const sourceNode = effectiveDialogue.nodes[edgeDropMenu.fromNodeId];
                 if (!sourceNode) return null;
                 
-                if (sourceNode.type === NODE_TYPE.PLAYER) {
-                  return (
-                    <PlayerEdgeDropMenu
-                      x={edgeDropMenu.x}
-                      y={edgeDropMenu.y}
-                      graphX={edgeDropMenu.graphX}
-                      graphY={edgeDropMenu.graphY}
-                      fromNodeId={edgeDropMenu.fromNodeId}
-                      fromChoiceIdx={edgeDropMenu.fromChoiceIdx}
-                      sourceHandle={edgeDropMenu.sourceHandle}
-                      onAddNode={(type, x, y, autoConnect) => handleAddNode(type, x, y, autoConnect)}
-                      onClose={() => {
-                        setEdgeDropMenu(null);
-                        connectingRef.current = null;
-                      }}
-                    />
-                  );
-                }
-                
-                if (sourceNode.type === NODE_TYPE.NPC) {
-                  return (
-                    <NPCEdgeDropMenu
-                      x={edgeDropMenu.x}
-                      y={edgeDropMenu.y}
-                      graphX={edgeDropMenu.graphX}
-                      graphY={edgeDropMenu.graphY}
-                      fromNodeId={edgeDropMenu.fromNodeId}
-                      sourceHandle={edgeDropMenu.sourceHandle}
-                      onAddNode={(type, x, y, autoConnect) => handleAddNode(type, x, y, autoConnect)}
-                      onClose={() => {
-                        setEdgeDropMenu(null);
-                        connectingRef.current = null;
-                      }}
-                    />
-                  );
-                }
-                
-                if (sourceNode.type === NODE_TYPE.STORYLET) {
-                  return (
-                    <StoryletEdgeDropMenu
-                      x={edgeDropMenu.x}
-                      y={edgeDropMenu.y}
-                      graphX={edgeDropMenu.graphX}
-                      graphY={edgeDropMenu.graphY}
-                      fromNodeId={edgeDropMenu.fromNodeId}
-                      sourceHandle={edgeDropMenu.sourceHandle}
-                      onAddNode={(type, x, y, autoConnect) => handleAddNode(type, x, y, autoConnect)}
-                      onClose={() => {
-                        setEdgeDropMenu(null);
-                        connectingRef.current = null;
-                      }}
-                    />
-                  );
-                }
-                
-                if (sourceNode.type === NODE_TYPE.STORYLET_POOL) {
-                  return (
-                    <StoryletPoolEdgeDropMenu
-                      x={edgeDropMenu.x}
-                      y={edgeDropMenu.y}
-                      graphX={edgeDropMenu.graphX}
-                      graphY={edgeDropMenu.graphY}
-                      fromNodeId={edgeDropMenu.fromNodeId}
-                      sourceHandle={edgeDropMenu.sourceHandle}
-                      onAddNode={(type, x, y, autoConnect) => handleAddNode(type, x, y, autoConnect)}
-                      onClose={() => {
-                        setEdgeDropMenu(null);
-                        connectingRef.current = null;
-                      }}
-                    />
-                  );
-                }
-                
-                if (sourceNode.type === NODE_TYPE.CONDITIONAL) {
-                  return (
-                    <ConditionalEdgeDropMenu
-                      x={edgeDropMenu.x}
-                      y={edgeDropMenu.y}
-                      graphX={edgeDropMenu.graphX}
-                      graphY={edgeDropMenu.graphY}
-                      fromNodeId={edgeDropMenu.fromNodeId}
-                      fromBlockIdx={edgeDropMenu.fromBlockIdx}
-                      sourceHandle={edgeDropMenu.sourceHandle}
-                      onAddNode={(type, x, y, autoConnect) => handleAddNode(type, x, y, autoConnect)}
-                      onClose={() => {
-                        setEdgeDropMenu(null);
-                        connectingRef.current = null;
-                      }}
-                    />
-                  );
-                }
-                
-                return null;
-              })()}
-
-              {edgeContextMenu && (() => {
-                const edge = edges.find(e => e.id === edgeContextMenu.edgeId);
-                if (!edge) return null;
-                const sourceNode = effectiveDialogue.nodes[edge.source];
-                if (!sourceNode) return null;
-                
-                if (sourceNode.type === NODE_TYPE.PLAYER) {
-                  return (
-                    <PlayerEdgeContextMenu
-                      x={edgeContextMenu.x}
-                      y={edgeContextMenu.y}
-                      edgeId={edgeContextMenu.edgeId}
-                      graphX={edgeContextMenu.graphX}
-                      graphY={edgeContextMenu.graphY}
-                      onInsertNode={(type, edgeId, x, y) => handleInsertNode(type, edgeId, x, y)}
-                      onClose={() => setEdgeContextMenu(null)}
-                    />
-                  );
-                }
-                
-                if (sourceNode.type === NODE_TYPE.NPC) {
-                  return (
-                    <NPCEdgeContextMenu
-                      x={edgeContextMenu.x}
-                      y={edgeContextMenu.y}
-                      edgeId={edgeContextMenu.edgeId}
-                      graphX={edgeContextMenu.graphX}
-                      graphY={edgeContextMenu.graphY}
-                      onInsertNode={(type, edgeId, x, y) => handleInsertNode(type, edgeId, x, y)}
-                      onClose={() => setEdgeContextMenu(null)}
-                    />
-                  );
-                }
-                
-                if (sourceNode.type === NODE_TYPE.STORYLET) {
-                  return (
-                    <StoryletEdgeContextMenu
-                      x={edgeContextMenu.x}
-                      y={edgeContextMenu.y}
-                      edgeId={edgeContextMenu.edgeId}
-                      graphX={edgeContextMenu.graphX}
-                      graphY={edgeContextMenu.graphY}
-                      onInsertNode={(type, edgeId, x, y) => handleInsertNode(type, edgeId, x, y)}
-                      onClose={() => setEdgeContextMenu(null)}
-                    />
-                  );
-                }
-                
-                if (sourceNode.type === NODE_TYPE.STORYLET_POOL) {
-                  return (
-                    <StoryletPoolEdgeContextMenu
-                      x={edgeContextMenu.x}
-                      y={edgeContextMenu.y}
-                      edgeId={edgeContextMenu.edgeId}
-                      graphX={edgeContextMenu.graphX}
-                      graphY={edgeContextMenu.graphY}
-                      onInsertNode={(type, edgeId, x, y) => handleInsertNode(type, edgeId, x, y)}
-                      onClose={() => setEdgeContextMenu(null)}
-                    />
-                  );
-                }
-                
-                if (sourceNode.type === NODE_TYPE.CONDITIONAL) {
-                  return (
-                    <ConditionalEdgeContextMenu
-                      x={edgeContextMenu.x}
-                      y={edgeContextMenu.y}
-                      edgeId={edgeContextMenu.edgeId}
-                      graphX={edgeContextMenu.graphX}
-                      graphY={edgeContextMenu.graphY}
-                      onInsertNode={(type, edgeId, x, y) => handleInsertNode(type, edgeId, x, y)}
-                      onClose={() => setEdgeContextMenu(null)}
-                    />
-                  );
-                }
-                
-                return null;
-              })()}
-
-              {nodeContextMenu && (() => {
-                const node = effectiveDialogue.nodes[nodeContextMenu.nodeId];
-                if (!node) return null;
-                
-                if (node.type === NODE_TYPE.PLAYER) {
-                  return (
-                    <PlayerNodeContextMenu
-                      x={nodeContextMenu.x}
-                      y={nodeContextMenu.y}
-                      nodeId={nodeContextMenu.nodeId}
-                      isStartNode={node.id === effectiveDialogue.startNodeId}
-                      onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
-                      onAddChoice={() => handleAddChoice(nodeContextMenu.nodeId)}
-                      onDelete={node.id !== effectiveDialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
-                      onClose={() => setNodeContextMenu(null)}
-                    />
-                  
-                  );
-                }
-                
-                if (node.type === NODE_TYPE.NPC) {
-                  return (
-                    <NPCNodeContextMenu
-                      x={nodeContextMenu.x}
-                      y={nodeContextMenu.y}
-                      nodeId={nodeContextMenu.nodeId}
-                      isStartNode={node.id === effectiveDialogue.startNodeId}
-                      hasConditionals={!!node.conditionalBlocks}
-                      onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
-                      onAddConditionals={!node.conditionalBlocks ? () => {
-                        handleUpdateNode(nodeContextMenu.nodeId, {
-                          conditionalBlocks: [{
-                            id: `block_${Date.now()}`,
-                            type: 'if',
-                            condition: [],
-                            content: node.content,
-                            speaker: node.speaker
-                          }]
-                        });
-                        setSelectedNodeId(nodeContextMenu.nodeId);
-                      } : undefined}
-                      onDelete={node.id !== effectiveDialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
-                      onClose={() => setNodeContextMenu(null)}
-                    />
-                  );
-                }
-                
-                if (node.type === NODE_TYPE.CONDITIONAL) {
-                  return (
-                    <ConditionalNodeContextMenu
-                      x={nodeContextMenu.x}
-                      y={nodeContextMenu.y}
-                      nodeId={nodeContextMenu.nodeId}
-                      isStartNode={node.id === effectiveDialogue.startNodeId}
-                      onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
-                      onDelete={node.id !== effectiveDialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
-                      onClose={() => setNodeContextMenu(null)}
-                    />
-                  );
-                }
-                
-                if (node.type === NODE_TYPE.STORYLET) {
-                  return (
-                    <StoryletNodeContextMenu
-                      x={nodeContextMenu.x}
-                      y={nodeContextMenu.y}
-                      nodeId={nodeContextMenu.nodeId}
-                      isStartNode={node.id === effectiveDialogue.startNodeId}
-                      onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
-                      onDelete={node.id !== effectiveDialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
-                      onClose={() => setNodeContextMenu(null)}
-                    />
-                  );
-                }
-                
-                if (node.type === NODE_TYPE.STORYLET_POOL) {
-                  return (
-                    <StoryletPoolNodeContextMenu
-                      x={nodeContextMenu.x}
-                      y={nodeContextMenu.y}
-                      nodeId={nodeContextMenu.nodeId}
-                      isStartNode={node.id === effectiveDialogue.startNodeId}
-                      onEdit={() => setSelectedNodeId(nodeContextMenu.nodeId)}
-                      onDelete={node.id !== effectiveDialogue.startNodeId ? () => handleDeleteNode(nodeContextMenu.nodeId) : undefined}
-                      onClose={() => setNodeContextMenu(null)}
-                    />
-                  );
-                }
-                
-                return null;
+                return (
+                  <EdgeDropMenu
+                    mode="dialogue"
+                    x={edgeDropMenu.x}
+                    y={edgeDropMenu.y}
+                    graphX={edgeDropMenu.graphX}
+                    graphY={edgeDropMenu.graphY}
+                    fromNodeId={edgeDropMenu.fromNodeId}
+                    fromNodeType={sourceNode.type}
+                    fromChoiceIdx={edgeDropMenu.fromChoiceIdx}
+                    fromBlockIdx={edgeDropMenu.fromBlockIdx}
+                    sourceHandle={edgeDropMenu.sourceHandle}
+                    onAddNode={(type, x, y, autoConnect) => handleAddNode(type, x, y, autoConnect)}
+                    onClose={() => {
+                      setEdgeDropMenu(null);
+                      connectingRef.current = null;
+                    }}
+                  />
+                );
               })()}
             </ReactFlow>
           </div>

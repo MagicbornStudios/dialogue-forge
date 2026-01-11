@@ -13,9 +13,16 @@ import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { DialogueNode } from '../../../../../types';
 import { Character } from '../../../../../types/characters';
-import { MessageSquare, Play, Flag, Hash } from 'lucide-react';
+import { MessageSquare, Play, Flag, Hash, Edit3, Plus, Trash2 } from 'lucide-react';
 import { FlagSchema } from '../../../../../types/flags';
 import { LayoutDirection } from '../../../../../utils/layout';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '../../../../ui/context-menu';
 
 // ============================================================================
 // Types
@@ -30,6 +37,11 @@ interface NPCNodeData {
   layoutDirection?: LayoutDirection;
   isStartNode?: boolean;
   isEndNode?: boolean;
+  // Context menu callbacks
+  onEdit?: () => void;
+  onAddConditionals?: () => void;
+  onDelete?: () => void;
+  hasConditionals?: boolean;
 }
 
 // ============================================================================
@@ -63,7 +75,11 @@ export function NPCNodeV2({ data, selected }: NodeProps<NPCNodeData>) {
     isInPath, 
     layoutDirection = 'TB', 
     isStartNode, 
-    isEndNode 
+    isEndNode,
+    onEdit,
+    onAddConditionals,
+    onDelete,
+    hasConditionals = false,
   } = data;
 
   // Get character if characterId is set
@@ -98,10 +114,13 @@ export function NPCNodeV2({ data, selected }: NodeProps<NPCNodeData>) {
     : node.content;
 
   return (
-    <div 
-      className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-node-selected/70' : ''} bg-df-npc-bg min-w-[320px] max-w-[450px] relative overflow-hidden`}
-      style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
-    >
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div 
+          onContextMenu={(e) => e.stopPropagation()}
+          className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-node-selected/70' : ''} bg-df-npc-bg min-w-[320px] max-w-[450px] relative overflow-hidden`}
+          style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
+        >
       {/* Input handle */}
       <Handle 
         type="target" 
@@ -186,6 +205,30 @@ export function NPCNodeV2({ data, selected }: NodeProps<NPCNodeData>) {
         id="next"
         className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full hover:!border-df-npc-selected hover:!bg-df-npc-selected/20"
       />
-    </div>
+        </div>
+      </ContextMenuTrigger>
+
+      <ContextMenuContent className="w-48">
+        <ContextMenuItem onSelect={() => onEdit?.()}>
+          <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
+        </ContextMenuItem>
+        {!hasConditionals && onAddConditionals && (
+          <ContextMenuItem onSelect={() => onAddConditionals?.()}>
+            <Plus size={14} className="mr-2 text-df-conditional-border" /> Add Conditionals
+          </ContextMenuItem>
+        )}
+        {!isStartNode && onDelete && (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem 
+              onSelect={() => onDelete?.()}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 size={14} className="mr-2" /> Delete
+            </ContextMenuItem>
+          </>
+        )}
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }

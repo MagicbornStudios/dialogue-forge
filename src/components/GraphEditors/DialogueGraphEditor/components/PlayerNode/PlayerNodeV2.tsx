@@ -2,9 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
 import { DialogueNode, Choice } from '../../../../../types';
 import { Character } from '../../../../../types/characters';
-import { GitBranch, Play, Flag, Hash } from 'lucide-react';
+import { GitBranch, Play, Flag, Hash, Edit3, Plus, Trash2 } from 'lucide-react';
 import { FlagSchema } from '../../../../../types/flags';
 import { LayoutDirection } from '../../../../../utils/layout/types';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '../../../../ui/context-menu';
 
 interface PlayerNodeData {
   node: DialogueNode;
@@ -15,13 +22,17 @@ interface PlayerNodeData {
   layoutDirection?: LayoutDirection;
   isStartNode?: boolean;
   isEndNode?: boolean;
+  // Context menu callbacks
+  onEdit?: () => void;
+  onAddChoice?: () => void;
+  onDelete?: () => void;
 }
 
 // Color scheme for choice edges (same as current implementation)
 const CHOICE_COLORS = ['#e94560', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b'];
 
 export function PlayerNodeV2({ data, selected }: NodeProps<PlayerNodeData>) {
-  const { node, flagSchema, characters = {}, isDimmed, isInPath, layoutDirection = 'TB', isStartNode, isEndNode } = data;
+  const { node, flagSchema, characters = {}, isDimmed, isInPath, layoutDirection = 'TB', isStartNode, isEndNode, onEdit, onAddChoice, onDelete } = data;
   const choices = node.choices || [];
 
   // Get character if characterId is set
@@ -94,10 +105,13 @@ export function PlayerNodeV2({ data, selected }: NodeProps<PlayerNodeData>) {
       : 'bg-df-player-header';
 
   return (
-    <div 
-      className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-player-selected/70' : ''} bg-df-player-bg min-w-[320px] max-w-[450px] relative overflow-hidden`}
-      style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
-    >
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div 
+          onContextMenu={(e) => e.stopPropagation()}
+          className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-player-selected/70' : ''} bg-df-player-bg min-w-[320px] max-w-[450px] relative overflow-hidden`}
+          style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
+        >
       {/* Input handle - position based on layout direction */}
       <Handle 
         type="target" 
@@ -220,6 +234,28 @@ export function PlayerNodeV2({ data, selected }: NodeProps<PlayerNodeData>) {
         id="next"
         className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full hover:!border-df-player-selected hover:!bg-df-player-selected/20"
       />
-    </div>
+        </div>
+      </ContextMenuTrigger>
+
+      <ContextMenuContent className="w-48">
+        <ContextMenuItem onSelect={() => onEdit?.()}>
+          <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
+        </ContextMenuItem>
+        <ContextMenuItem onSelect={() => onAddChoice?.()}>
+          <Plus size={14} className="mr-2 text-df-player-selected" /> Add Choice
+        </ContextMenuItem>
+        {!isStartNode && onDelete && (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem 
+              onSelect={() => onDelete?.()}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 size={14} className="mr-2" /> Delete
+            </ContextMenuItem>
+          </>
+        )}
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }

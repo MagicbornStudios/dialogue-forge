@@ -33,16 +33,8 @@ import { GraphMiniMap } from '../shared/GraphMiniMap';
 import { GraphLeftToolbar } from '../shared/GraphLeftToolbar';
 import { GraphLayoutControls } from '../shared/GraphLayoutControls';
 import { useReactFlowBehaviors } from '../hooks/useReactFlowBehaviors';
-import { ThreadEdgeDropMenu } from './components/ThreadNode/ThreadEdgeDropMenu';
-import { ActEdgeDropMenu } from './components/ActNode/ActEdgeDropMenu';
-import { ChapterEdgeDropMenu } from './components/ChapterNode/ChapterEdgeDropMenu';
-import { PageEdgeDropMenu } from './components/PageNode/PageEdgeDropMenu';
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from '../../ui/context-menu';
+import { EdgeDropMenu } from '../DialogueGraphEditor/components/EdgeDropMenu';
+import { NarrativeGraphEditorPaneContextMenu } from './components/NarrativeGraphEditorPaneContextMenu';
 import { createUniqueId } from '../../../utils/narrative-editor-utils';
 import { useNarrativePathHighlighting } from './hooks/useNarrativePathHighlighting';
 import type { LayoutDirection } from '../utils/layout/types';
@@ -108,6 +100,7 @@ function NarrativeGraphEditorInternal({
   const reactFlowInstance = useReactFlow();
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [selectedElementType, setSelectedElementType] = useState<NarrativeElement | null>(null);
+  const [paneContextMenu, setPaneContextMenu] = useState<{ x: number; y: number; graphX: number; graphY: number } | null>(null);
   const [edgeDropMenu, setEdgeDropMenu] = useState<{ x: number; y: number; graphX: number; graphY: number; fromNodeId: string; fromElementType: NarrativeElement } | null>(null);
   const connectingRef = useRef<{ fromNodeId: string; fromElementType: NarrativeElement } | null>(null);
   const localVersionRef = useRef(0);
@@ -116,9 +109,26 @@ function NarrativeGraphEditorInternal({
   // Use path highlighting hook
   const { edgesToSelectedElement, nodeDepths } = useNarrativePathHighlighting(selectedElementId, selectedElementType, effectiveThread);
 
+  // Handle pane context menu (right-click on empty space)
+  const onPaneContextMenu = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+    const point = reactFlowInstance.screenToFlowPosition({
+      x: event.clientX,
+      y: event.clientY,
+    });
+    setPaneContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      graphX: point.x,
+      graphY: point.y,
+    });
+    onPaneContextMenuProp?.(event);
+  }, [reactFlowInstance, onPaneContextMenuProp]);
+
   // Handle pane click (close edge drop menu)
   const onPaneClick = useCallback(() => {
     setEdgeDropMenu(null);
+    setPaneContextMenu(null);
     onPaneClickProp?.();
   }, [onPaneClickProp]);
 
@@ -760,10 +770,8 @@ function NarrativeGraphEditorInternal({
   }, [nodes, edges, layoutDirection, reactFlowInstance]);
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <div className={`h-full w-full rounded-xl border border-[#1a1a2e] bg-[#0b0b14] ${className}`} ref={reactFlowWrapperRef}>
-          <ReactFlow
+    <div className={`h-full w-full rounded-xl border border-[#1a1a2e] bg-[#0b0b14] ${className}`} ref={reactFlowWrapperRef}>
+      <ReactFlow
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
@@ -786,6 +794,7 @@ function NarrativeGraphEditorInternal({
               }
             }}
             onEdgesDelete={onEdgesDelete}
+            onPaneContextMenu={onPaneContextMenu}
             onPaneClick={onPaneClick}
           >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
@@ -809,88 +818,39 @@ function NarrativeGraphEditorInternal({
           onToggleBackEdges={() => setShowBackEdges(!showBackEdges)}
         />
         
+        {paneContextMenu && (
+          <NarrativeGraphEditorPaneContextMenu
+            x={paneContextMenu.x}
+            y={paneContextMenu.y}
+            graphX={paneContextMenu.graphX}
+            graphY={paneContextMenu.graphY}
+            onAddElement={(type, x, y) => handleAddElement(type, x, y)}
+            onClose={() => setPaneContextMenu(null)}
+          />
+        )}
+
         {edgeDropMenu && (() => {
           const { fromElementType, fromNodeId, x, y, graphX, graphY } = edgeDropMenu;
           
-          if (fromElementType === NARRATIVE_ELEMENT.THREAD) {
-            return (
-              <ThreadEdgeDropMenu
-                x={x}
-                y={y}
-                graphX={graphX}
-                graphY={graphY}
-                fromNodeId={fromNodeId}
-                onAddElement={(type, x, y) => {
-                  handleAddElement(type, x, y, { fromNodeId });
-                  setEdgeDropMenu(null);
-                }}
-                onClose={() => setEdgeDropMenu(null)}
-              />
-            );
-          }
-          
-          if (fromElementType === NARRATIVE_ELEMENT.ACT) {
-            return (
-              <ActEdgeDropMenu
-                x={x}
-                y={y}
-                graphX={graphX}
-                graphY={graphY}
-                fromNodeId={fromNodeId}
-                onAddElement={(type, x, y) => {
-                  handleAddElement(type, x, y, { fromNodeId });
-                  setEdgeDropMenu(null);
-                }}
-                onClose={() => setEdgeDropMenu(null)}
-              />
-            );
-          }
-          
-          if (fromElementType === NARRATIVE_ELEMENT.CHAPTER) {
-            return (
-              <ChapterEdgeDropMenu
-                x={x}
-                y={y}
-                graphX={graphX}
-                graphY={graphY}
-                fromNodeId={fromNodeId}
-                onAddElement={(type, x, y) => {
-                  handleAddElement(type, x, y, { fromNodeId });
-                  setEdgeDropMenu(null);
-                }}
-                onClose={() => setEdgeDropMenu(null)}
-              />
-            );
-          }
-          
-          if (fromElementType === NARRATIVE_ELEMENT.PAGE) {
-            return (
-              <PageEdgeDropMenu
-                x={x}
-                y={y}
-                graphX={graphX}
-                graphY={graphY}
-                fromNodeId={fromNodeId}
-                onAddElement={(type, x, y) => {
-                  handleAddElement(type, x, y, { fromNodeId });
-                  setEdgeDropMenu(null);
-                }}
-                onClose={() => setEdgeDropMenu(null)}
-              />
-            );
-          }
-          
-          return null;
+          return (
+            <EdgeDropMenu
+              mode="narrative"
+              x={x}
+              y={y}
+              graphX={graphX}
+              graphY={graphY}
+              fromNodeId={fromNodeId}
+              fromElementType={fromElementType}
+              onAddElement={(type, x, y, autoConnect) => {
+                handleAddElement(type, x, y, autoConnect);
+                setEdgeDropMenu(null);
+              }}
+              onClose={() => setEdgeDropMenu(null)}
+            />
+          );
         })()}
       </ReactFlow>
-        </div>
-      </ContextMenuTrigger>
-
-      <ContextMenuContent className="w-56">
-        {/* Pane context menu - currently disabled for narrative editor (linear structure) */}
-        {/* Can be enabled in the future if needed */}
-      </ContextMenuContent>
-    </ContextMenu>
+    </div>
   );
 }
 

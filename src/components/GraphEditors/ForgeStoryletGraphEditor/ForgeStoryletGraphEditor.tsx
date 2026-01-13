@@ -74,6 +74,8 @@ import {
   useForgeEditorSessionStore,
 } from '@/src/components/GraphEditors/hooks/useForgeEditorSession';
 
+import { useForgeWorkspaceStore } from '@/src/components/ForgeWorkspace/store/forge-workspace-store';
+
 import {
   ForgeEditorActionsProvider,
   makeForgeEditorActions,
@@ -183,6 +185,26 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     shell.selectedNodeId,
     shell.effectiveGraph
   );
+
+  // Consume focus requests from workspace
+  const pendingFocus = useForgeWorkspaceStore((s) => s.pendingFocusByScope.storylet);
+  const clearFocus = useForgeWorkspaceStore((s) => s.actions.clearFocus);
+  
+  React.useEffect(() => {
+    if (pendingFocus && graph && String(graph.id) === pendingFocus.graphId) {
+      if (pendingFocus.nodeId) {
+        // Focus on specific node
+        const node = shell.effectiveGraph.flow.nodes.find(n => n.id === pendingFocus.nodeId);
+        if (node) {
+          reactFlow.fitView({ nodes: [{ id: pendingFocus.nodeId }], duration: 300 });
+        }
+      } else {
+        // Just fit view to show all nodes
+        reactFlow.fitView({ duration: 300 });
+      }
+      clearFocus('storylet');
+    }
+  }, [pendingFocus, graph, reactFlow, clearFocus, shell.effectiveGraph]);
 
 
   // Decorate nodes with UI metadata + read-only context (NO callbacks)

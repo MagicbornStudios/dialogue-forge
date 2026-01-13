@@ -14,6 +14,8 @@ import { DIALOGUE_FORGE_EVENT_TYPE, DIALOGUE_OPEN_REASON } from "@/src/types/con
 import { createGraphSlice } from "./slices/graph.slice"
 import { createGameStateSlice } from "./slices/gameState.slice"
 import { createViewStateSlice } from "./slices/viewState.slice"
+import { createProjectSlice } from "./slices/project.slice"
+import type { ForgeDataAdapter } from "@/src/components/forge/forge-data-adapter/forge-data-adapter"
 
 export interface EventSink {
   emit(event: DialogueForgeEvent): void
@@ -22,8 +24,8 @@ export interface EventSink {
 export interface ForgeWorkspaceState {
   // Graph slice
   graphs: ReturnType<typeof createGraphSlice>["graphs"]
-  narrativeGraph: ReturnType<typeof createGraphSlice>["narrativeGraph"]
-  storyletGraph: ReturnType<typeof createGraphSlice>["storyletGraph"]
+  activeNarrativeGraphId: ReturnType<typeof createGraphSlice>["activeNarrativeGraphId"]
+  activeStoryletGraphId: ReturnType<typeof createGraphSlice>["activeStoryletGraphId"]
   
   // Game state slice
   activeFlagSchema: ReturnType<typeof createGameStateSlice>["activeFlagSchema"]
@@ -34,14 +36,22 @@ export interface ForgeWorkspaceState {
   // View state slice
   graphScope: ReturnType<typeof createViewStateSlice>["graphScope"]
   storyletFocusId: ReturnType<typeof createViewStateSlice>["storyletFocusId"]
+  pendingFocusByScope: ReturnType<typeof createViewStateSlice>["pendingFocusByScope"]
+
+  // Project slice
+  selectedProjectId: ReturnType<typeof createProjectSlice>["selectedProjectId"]
+
+  // Data adapter
+  dataAdapter?: ForgeDataAdapter
 
   actions: {
     // Graph actions
     setGraph: ReturnType<typeof createGraphSlice>["setGraph"]
     setGraphStatus: ReturnType<typeof createGraphSlice>["setGraphStatus"]
-    setNarrativeGraph: ReturnType<typeof createGraphSlice>["setNarrativeGraph"]
-    setStoryletGraph: ReturnType<typeof createGraphSlice>["setStoryletGraph"]
+    setActiveNarrativeGraphId: ReturnType<typeof createGraphSlice>["setActiveNarrativeGraphId"]
+    setActiveStoryletGraphId: ReturnType<typeof createGraphSlice>["setActiveStoryletGraphId"]
     ensureGraph: ReturnType<typeof createGraphSlice>["ensureGraph"]
+    openGraphInScope: ReturnType<typeof createGraphSlice>["openGraphInScope"]
     
     // Game state actions
     setActiveFlagSchema: ReturnType<typeof createGameStateSlice>["setActiveFlagSchema"]
@@ -52,29 +62,91 @@ export interface ForgeWorkspaceState {
     // View state actions
     setGraphScope: ReturnType<typeof createViewStateSlice>["setGraphScope"]
     setStoryletFocusId: ReturnType<typeof createViewStateSlice>["setStoryletFocusId"]
+    requestFocus: ReturnType<typeof createViewStateSlice>["requestFocus"]
+    clearFocus: ReturnType<typeof createViewStateSlice>["clearFocus"]
+    
+    // Project actions
+    setSelectedProjectId: ReturnType<typeof createProjectSlice>["setSelectedProjectId"]
   }
 }
 
 export interface CreateForgeWorkspaceStoreOptions {
   initialNarrativeGraph?: ForgeGraphDoc | null
   initialStoryletGraph?: ForgeGraphDoc | null
+  initialNarrativeGraphId?: string | null
+  initialStoryletGraphId?: string | null
   flagSchema?: FlagSchema
   gameState?: BaseGameState
   resolveGraph?: (id: string) => Promise<ForgeGraphDoc>
+  dataAdapter?: ForgeDataAdapter
 }
 
 export function createForgeWorkspaceStore(
   options: CreateForgeWorkspaceStoreOptions,
   eventSink: EventSink
 ) {
-  const { flagSchema, gameState, initialNarrativeGraph, initialStoryletGraph, resolveGraph } = options
+  const { 
+    flagSchema, 
+    gameState, 
+    initialNarrativeGraph, 
+    initialStoryletGraph,
+    initialNarrativeGraphId,
+    initialStoryletGraphId,
+    resolveGraph,
+    dataAdapter
+  } = options
+
+  // Extract IDs from provided graphs if IDs not explicitly provided
+  const narrativeGraphId = initialNarrativeGraphId ?? (initialNarrativeGraph ? String(initialNarrativeGraph.id) : null)
+  const storyletGraphId = initialStoryletGraphId ?? (initialStoryletGraph ? String(initialStoryletGraph.id) : null)
+
+  // Create cache-first resolver factory
+  function createGraphResolver(
+    getState: () => ForgeWorkspaceState,
+    adapter?: ForgeDataAdapter
+  ): (id: string) => Promise<ForgeGraphDoc> {
+    return async (graphId: string): Promise<ForgeGraphDoc> => {
+      const state = getState()
+      
+      // 1. Check cache first
+      if (state.graphs.byId[graphId] && state.graphs.statusById[graphId] === "ready") {
+        return state.graphs.byId[graphId]
+      }
+      
+      // 2. If not in cache and adapter available, fetch via adapter
+      if (!adapter) {
+        throw new Error(`No dataAdapter available and graph ${graphId} not in cache`)
+      }
+      
+      // 3. Fetch from adapter (graphId is string, adapter expects number)
+      const graph = await adapter.getGraph(Number(graphId))
+      
+      // 4. Store in cache (this will also emit events via setGraphWithEvents)
+      state.actions.setGraph(graphId, graph)
+      
+      return graph
+    }
+  }
 
   return createStore<ForgeWorkspaceState>()(
     devtools(
       (set, get) => {
-        const graphSlice = createGraphSlice(set, get, initialNarrativeGraph, initialStoryletGraph, resolveGraph)
+        // Create resolver with get function (will have access to state once store is created)
+        const graphResolver = createGraphResolver(get, dataAdapter)
+        const finalResolver = resolveGraph ?? graphResolver
+        
+        const graphSlice = createGraphSlice(set, get, narrativeGraphId, storyletGraphId, finalResolver)
+        
+        // If initial graphs provided, add them to cache
+        if (initialNarrativeGraph) {
+          graphSlice.setGraph(String(initialNarrativeGraph.id), initialNarrativeGraph)
+        }
+        if (initialStoryletGraph) {
+          graphSlice.setGraph(String(initialStoryletGraph.id), initialStoryletGraph)
+        }
         const gameStateSlice = createGameStateSlice(set, get, flagSchema, gameState)
         const viewStateSlice = createViewStateSlice(set, get)
+        const projectSlice = createProjectSlice(set, get)
 
         // Wrap setGraph to include event emission
         const setGraphWithEvents = (id: string, graph: ForgeGraphDoc) => {
@@ -122,13 +194,16 @@ export function createForgeWorkspaceStore(
           ...graphSlice,
           ...gameStateSlice,
           ...viewStateSlice,
+          ...projectSlice,
+          dataAdapter,
           actions: {
             // Graph actions
             setGraph: setGraphWithEvents,
             setGraphStatus: graphSlice.setGraphStatus,
-            setNarrativeGraph: graphSlice.setNarrativeGraph,
-            setStoryletGraph: graphSlice.setStoryletGraph,
+            setActiveNarrativeGraphId: graphSlice.setActiveNarrativeGraphId,
+            setActiveStoryletGraphId: graphSlice.setActiveStoryletGraphId,
             ensureGraph: ensureGraphWithEvents,
+            openGraphInScope: graphSlice.openGraphInScope,
             
             // Game state actions
             setActiveFlagSchema: gameStateSlice.setActiveFlagSchema,
@@ -139,6 +214,11 @@ export function createForgeWorkspaceStore(
             // View state actions
             setGraphScope: viewStateSlice.setGraphScope,
             setStoryletFocusId: viewStateSlice.setStoryletFocusId,
+            requestFocus: viewStateSlice.requestFocus,
+            clearFocus: viewStateSlice.clearFocus,
+            
+            // Project actions
+            setSelectedProjectId: projectSlice.setSelectedProjectId,
           },
         }
       },

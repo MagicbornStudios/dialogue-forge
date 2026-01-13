@@ -9,11 +9,14 @@ import type {
   ForgeEdgeKind,
   ForgeChoice,
   ForgeConditionalBlock,
+  ForgeGraphKind,
+  ForgeFlowJson,
 } from '@/src/types/forge/forge-graph';
 import { 
   FORGE_CONDITIONAL_BLOCK_TYPE,
   FORGE_EDGE_KIND,
   FORGE_NODE_TYPE,
+  FORGE_GRAPH_KIND,
 } from '@/src/types/forge/forge-graph';
 
 /**
@@ -390,4 +393,39 @@ export function edgeStrokeColor(edge: ForgeFlowEdge, sourceType?: string): strin
   };
 
   return (sourceType && typePalette[sourceType]) ? typePalette[sourceType] : 'var(--color-df-edge-default)';
+}
+
+/**
+ * Create an empty ForgeGraphDoc with minimal valid structure.
+ * Used for initializing default graphs when none exist.
+ */
+export function createEmptyForgeGraphDoc(opts: {
+  projectId: number
+  kind: ForgeGraphKind
+  title?: string
+}): ForgeGraphDoc {
+  const now = new Date().toISOString()
+  const startNodeId = `start_${Date.now()}`
+  
+  const defaultTitle = opts.title ?? 
+    (opts.kind === FORGE_GRAPH_KIND.NARRATIVE ? 'Untitled Narrative' : 'Untitled Storylet')
+  
+  const emptyFlow: ForgeFlowJson = {
+    nodes: [],
+    edges: [],
+    viewport: { x: 0, y: 0, zoom: 1 },
+  }
+  
+  return {
+    id: 0, // Will be assigned by backend when created
+    project: opts.projectId,
+    kind: opts.kind,
+    title: defaultTitle,
+    startNodeId,
+    endNodeIds: [],
+    flow: emptyFlow,
+    compiledYarn: null,
+    updatedAt: now,
+    createdAt: now,
+  }
 }

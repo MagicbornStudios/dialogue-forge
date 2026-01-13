@@ -1,7 +1,10 @@
 import React from 'react';
+import { ExternalLink } from 'lucide-react';
 import { ForgeGraphDoc } from '../../../../../types';
 import { NextNodeSelector } from '../../../shared/NodeEditor/components/NextNodeSelector';
 import { ForgeNode, FORGE_STORYLET_CALL_MODE, type ForgeStoryletCallMode } from '@/src/types/forge/forge-graph';
+import { useForgeWorkspaceActions } from '@/src/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
+import { Button } from '@/src/components/ui/button';
 
 interface StoryletNodeFieldsProps {
   node: ForgeNode;
@@ -18,8 +21,25 @@ export function StoryletNodeFields({
   onFocusNode,
   onUpdateStoryletCall,
 }: StoryletNodeFieldsProps) {
+  const workspaceActions = useForgeWorkspaceActions();
+  const targetGraphId = node.storyletCall?.targetGraphId;
+  
   return (
     <>
+      {targetGraphId && (
+        <div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => workspaceActions.openStoryletGraph(String(targetGraphId), { focusNodeId: node.storyletCall?.targetStartNodeId })}
+            className="w-full"
+          >
+            <ExternalLink size={14} className="mr-2" />
+            Open Storylet Graph
+          </Button>
+        </div>
+      )}
       <div>
         <label className="text-[10px] text-gray-500 uppercase">Template ID</label>
         <input

@@ -3,13 +3,23 @@
 import { ForgeWorkspace } from '@/src/components/ForgeWorkspace/ForgeWorkspace';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { ProjectSwitcher } from '@/components/ProjectSwitcher';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ForgeGraphDoc } from '@/src/types/forge/forge-graph';
 import { makePayloadForgeAdapter } from '../lib/forge/data-adapter/payload-forge-adapter';
+import { useForgeWorkspaceStore } from '@/src/components/ForgeWorkspace/store/forge-workspace-store';
 
 // Tell Next.js this page is static (no dynamic params/searchParams)
 export const dynamic = 'force-static';
 
+function ProjectSync({ selectedProjectId }: { selectedProjectId: number | null }) {
+  const setSelectedProjectId = useForgeWorkspaceStore((s) => s.actions.setSelectedProjectId);
+  
+  useEffect(() => {
+    setSelectedProjectId(selectedProjectId);
+  }, [selectedProjectId, setSelectedProjectId]);
+  
+  return null;
+}
 
 export default function DialogueForgeApp() {
   // State for selected project
@@ -30,6 +40,7 @@ export default function DialogueForgeApp() {
           toolbarActions={<ThemeSwitcher />}
           dataAdapter={makePayloadForgeAdapter()}
         />
+        <ProjectSync selectedProjectId={selectedProjectId} />
       </div>
     </div>
   );

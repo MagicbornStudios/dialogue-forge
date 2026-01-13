@@ -42,6 +42,7 @@ import { VIEW_MODE, type ViewMode } from '@/src/types/constants';
 
 import { useForgeFlowEditorShell, type ShellNodeData } from '@/src/components/GraphEditors/hooks/useForgeFlowEditorShell';
 import { createForgeEditorSessionStore, ForgeEditorSessionProvider, useForgeEditorSession, useForgeEditorSessionStore } from '@/src/components/GraphEditors/hooks/useForgeEditorSession';
+import { useForgeWorkspaceStore } from '@/src/components/ForgeWorkspace/store/forge-workspace-store';
 import { ForgeEditorActionsProvider, makeForgeEditorActions } from '@/src/components/GraphEditors/hooks/useForgeEditorActions';
 import { NarrativeGraphEditorPaneContextMenu } from './components/NarrativeGraphEditorPaneContextMenu';
 import { FORGE_COMMAND } from '../hooks/forge-commands';
@@ -116,8 +117,48 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
   // Create actions from dispatch and provide to children
   const actions = React.useMemo(() => makeForgeEditorActions(shell.dispatch), [shell.dispatch]);
 
+  // Consume focus requests from workspace
+  const pendingFocus = useForgeWorkspaceStore((s) => s.pendingFocusByScope.narrative);
+  const clearFocus = useForgeWorkspaceStore((s) => s.actions.clearFocus);
+  
+  React.useEffect(() => {
+    if (pendingFocus && graph && String(graph.id) === pendingFocus.graphId) {
+      if (pendingFocus.nodeId) {
+        // Focus on specific node
+        const node = shell.effectiveGraph.flow.nodes.find(n => n.id === pendingFocus.nodeId);
+        if (node) {
+          reactFlow.fitView({ nodes: [{ id: pendingFocus.nodeId }], duration: 300 });
+        }
+      } else {
+        // Just fit view to show all nodes
+        reactFlow.fitView({ duration: 300 });
+      }
+      clearFocus('narrative');
+    }
+  }, [pendingFocus, graph, reactFlow, clearFocus, shell.effectiveGraph]);
+
   // Path highlighting
   const { edgesToSelectedNode, nodeDepths } = useFlowPathHighlighting(shell.selectedNodeId, shell.effectiveGraph);
+
+  // Consume focus requests from workspace
+  const pendingFocus = useForgeWorkspaceStore((s) => s.pendingFocusByScope.narrative);
+  const clearFocus = useForgeWorkspaceStore((s) => s.actions.clearFocus);
+  
+  React.useEffect(() => {
+    if (pendingFocus && graph && String(graph.id) === pendingFocus.graphId) {
+      if (pendingFocus.nodeId) {
+        // Focus on specific node
+        const node = shell.effectiveGraph.flow.nodes.find(n => n.id === pendingFocus.nodeId);
+        if (node) {
+          reactFlow.fitView({ nodes: [{ id: pendingFocus.nodeId }], duration: 300 });
+        }
+      } else {
+        // Just fit view to show all nodes
+        reactFlow.fitView({ duration: 300 });
+      }
+      clearFocus('narrative');
+    }
+  }, [pendingFocus, graph, reactFlow, clearFocus, shell.effectiveGraph]);
 
   const handleAutoLayout = React.useCallback(
     (direction?: LayoutDirection) => {

@@ -2,36 +2,90 @@
 import type { Payload } from 'payload';
 import { PAYLOAD_COLLECTIONS } from '../payload-collections/enums';
 
-type RFNode = {
-  id: string;
-  type: string;
-  position: { x: number; y: number };
-  data?: Record<string, unknown>;
-};
+import {
+  FORGE_GRAPH_KIND,
+  FORGE_NODE_TYPE,
+  FORGE_EDGE_KIND,
+  FORGE_STORYLET_CALL_MODE,
+  type ForgeGraphKind,
+  type ForgeNodeType,
+  type ForgeEdgeKind,
+  type ForgeFlowJson,
+  type ForgeFlowNode,
+  type ForgeFlowEdge,
+  type ForgeGraphDoc,
+  type ForgeStoryletCall,
+  type ForgeNode,
+} from '@/src/types/forge/forge-graph';
 
-type RFEdge = {
-  id: string;
-  source: string;
-  target: string;
-  type?: string;
-  label?: string;
-  data?: Record<string, unknown>;
-};
+function edgeId(source: string, target: string, suffix?: string) {
+  return `e_${source}_${target}${suffix ? `_${suffix}` : ''}`;
+}
 
-type RFJson = {
-  nodes: RFNode[];
-  edges: RFEdge[];
-  viewport?: { x: number; y: number; zoom: number };
-};
+function node(
+  id: string,
+  type: ForgeNodeType,
+  position: { x: number; y: number },
+  data: Partial<ForgeNode> = {}
+): ForgeFlowNode {
+  return {
+    id,
+    type,
+    position,
+    data: {
+      id,
+      type,
+      ...data,
+    },
+  };
+}
 
-function edgeId(source: string, target: string) {
-  return `e_${source}_${target}`;
+function edge(
+  source: string,
+  target: string,
+  opts: {
+    kind?: ForgeEdgeKind;
+    label?: string;
+    type?: string; // reactflow edge "type" for custom rendering (e.g. 'choice')
+    idSuffix?: string;
+    data?: Record<string, unknown>;
+  } = {}
+): ForgeFlowEdge {
+  const { kind, label, type, idSuffix, data } = opts;
+  return {
+    id: edgeId(source, target, idSuffix),
+    source,
+    target,
+    type,
+    label,
+    data: {
+      ...(data ?? {}),
+      kind: kind ?? FORGE_EDGE_KIND.FLOW,
+      ...(label ? { label } : {}),
+    },
+  };
+}
+
+function flow(nodes: ForgeFlowNode[], edges: ForgeFlowEdge[], viewport?: { x: number; y: number; zoom: number }): ForgeFlowJson {
+  return {
+    nodes,
+    edges,
+    viewport,
+  };
+}
+
+async function createForgeGraph(payload: Payload, data: Omit<ForgeGraphDoc, 'updatedAt' | 'createdAt'>) {
+  // Payload will set createdAt/updatedAt
+  return payload.create({
+    collection: PAYLOAD_COLLECTIONS.FORGE_GRAPHS as any,
+    data,
+  }) as unknown as ForgeGraphDoc;
 }
 
 export async function seedProjectWithNarrativeGraph(payload: Payload) {
   // Avoid dupes
   const existing = await payload.find({
-    collection: 'projects',
+    collection: PAYLOAD_COLLECTIONS.PROJECTS as any,
     where: { name: { equals: 'Demo Project' } },
     limit: 1,
   });
@@ -40,196 +94,347 @@ export async function seedProjectWithNarrativeGraph(payload: Payload) {
 
   // 1) Create Project
   const project = await payload.create({
-    collection: 'projects',
+    collection: PAYLOAD_COLLECTIONS.PROJECTS as any,
     data: {
       name: 'Demo Project',
       slug: 'demo-project',
-      description: 'Seeded project with a narrative graph and storylet graphs.',
+      description: 'Seeded project with a narrative graph + a storylet graph (plus referenced storylets).',
     },
   });
 
-  // 2) Create two Storylet graphs (STL1, STL2) so detours can reference real graph docs
-  const stl1Start = 'stl1_start';
-  const stl1End = 'stl1_end';
+  // ---------------------------------------------------------------------------
+  // 2) Create referenced Storylet graphs (STL1 + STL2) so detours point at real docs
+  // ---------------------------------------------------------------------------
 
-  const stl1Flow: RFJson = {
-    nodes: [
-      { id: stl1Start, type: 'PAGE', position: { x: 0, y: 0 }, data: { label: 'STL1 Start', defaultNextNodeId: stl1End } },
-      { id: stl1End, type: 'END', position: { x: 260, y: 0 }, data: { label: 'STL1 End' } },
+  // STL1 (simple)
+  const STL1_START = 'stl1_start';
+  const STL1_END = 'stl1_end';
+
+  const stl1Flow = flow(
+    [
+      node(STL1_START, FORGE_NODE_TYPE.CHARACTER, { x: 0, y: 0 }, { label: 'STL1: Start', content: 'Storylet 1 begins.' }),
+      node(STL1_END, FORGE_NODE_TYPE.END, { x: 320, y: 0 }, { label: 'STL1: End' }),
     ],
-    edges: [{ id: edgeId(stl1Start, stl1End), source: stl1Start, target: stl1End, data: { kind: 'DEFAULT', label: 'default' } }],
-    viewport: { x: 0, y: 0, zoom: 1 },
+    [
+      edge(STL1_START, STL1_END, { kind: FORGE_EDGE_KIND.DEFAULT, label: 'default' }),
+    ],
+    { x: 0, y: 0, zoom: 1 }
+  );
+
+  const stl1 = await createForgeGraph(payload, {
+    id: 0 as any, // ignored by Payload; included to satisfy type in this helper signature
+    project: project.id,
+    kind: FORGE_GRAPH_KIND.STORYLET,
+    title: 'Storylet 1',
+    startNodeId: STL1_START,
+    endNodeIds: [{ nodeId: STL1_END, exitKey: 'end' }],
+    flow: stl1Flow,
+    compiledYarn: null,
+  } as any);
+
+  // STL2 (simple)
+  const STL2_START = 'stl2_start';
+  const STL2_END = 'stl2_end';
+
+  const stl2Flow = flow(
+    [
+      node(STL2_START, FORGE_NODE_TYPE.CHARACTER, { x: 0, y: 0 }, { label: 'STL2: Start', content: 'Storylet 2 begins.' }),
+      node(STL2_END, FORGE_NODE_TYPE.END, { x: 320, y: 0 }, { label: 'STL2: End' }),
+    ],
+    [
+      edge(STL2_START, STL2_END, { kind: FORGE_EDGE_KIND.DEFAULT, label: 'default' }),
+    ],
+    { x: 0, y: 0, zoom: 1 }
+  );
+
+  const stl2 = await createForgeGraph(payload, {
+    id: 0 as any,
+    project: project.id,
+    kind: FORGE_GRAPH_KIND.STORYLET,
+    title: 'Storylet 2',
+    startNodeId: STL2_START,
+    endNodeIds: [{ nodeId: STL2_END, exitKey: 'end' }],
+    flow: stl2Flow,
+    compiledYarn: null,
+  } as any);
+
+  // ---------------------------------------------------------------------------
+  // 3) Create MAIN STORYLET graph (your first flowchart)
+  // ---------------------------------------------------------------------------
+  //
+  // flowchart
+  //   C1[Character] --> CN1{Conditional}
+  //   CN1 --> P1[Player]
+  //   CN1 --> DET1[Detour]
+  //   P1 -->|Choice 1| CH_A[Character A]
+  //   P1 -->|Choice 1| P3[Player B]
+  //   P1 -->|Choice 2| C2[Character after Choice 2]
+  //   C2 --> DET2[Detour Node]
+  //   DET2 --> COND2[Conditional Node]
+  //   COND2 -->|Condition A met| CH_B[Character B]
+  //   COND2 -->|Condition B met| CH_C[Character C]
+  //   COND2 -->|Default| CH_D[Default Character]
+  //   DET1 -. uses storylet .- STL1[Storylet Data]
+  //   DET2 -. uses storylet .- STL2[Storylet Data]
+  //
+  const S_C1 = 's_c1';
+  const S_CN1 = 's_cond1';
+  const S_P1 = 's_player1';
+  const S_DET1 = 's_det1';
+
+  const S_CH_A = 's_char_a';
+  const S_P3 = 's_player_b';
+  const S_C2 = 's_char_after_choice2';
+
+  const S_DET2 = 's_det2';
+  const S_COND2 = 's_cond2';
+  const S_CH_B = 's_char_b';
+  const S_CH_C = 's_char_c';
+  const S_CH_D = 's_char_d';
+
+  const S_STL1_DATA = 's_stl1_data';
+  const S_STL2_DATA = 's_stl2_data';
+
+  const storylet1Call: ForgeStoryletCall = {
+    mode: FORGE_STORYLET_CALL_MODE.DETOUR_RETURN,
+    targetGraphId: stl1.id,
+    targetStartNodeId: STL1_START,
   };
 
-  const stl2Start = 'stl2_start';
-  const stl2End = 'stl2_end';
-
-  const stl2Flow: RFJson = {
-    nodes: [
-      { id: stl2Start, type: 'PAGE', position: { x: 0, y: 0 }, data: { label: 'STL2 Start', defaultNextNodeId: stl2End } },
-      { id: stl2End, type: 'END', position: { x: 260, y: 0 }, data: { label: 'STL2 End' } },
-    ],
-    edges: [{ id: edgeId(stl2Start, stl2End), source: stl2Start, target: stl2End, data: { kind: 'DEFAULT', label: 'default' } }],
-    viewport: { x: 0, y: 0, zoom: 1 },
+  const storylet2Call: ForgeStoryletCall = {
+    mode: FORGE_STORYLET_CALL_MODE.DETOUR_RETURN,
+    targetGraphId: stl2.id,
+    targetStartNodeId: STL2_START,
   };
 
-  const stl1 = await payload.create({
-    collection: PAYLOAD_COLLECTIONS.FORGE_GRAPHS as any,
-    data: {
-      project: project.id,
-      kind: 'STORYLET',
-      title: 'Storylet 1',
-      flow: stl1Flow,
-      startNodeId: stl1Start,
-      endNodeIds: [{ nodeId: stl1End, exitKey: 'end' }],
-    },
-  });
+  const mainStoryletNodes: ForgeFlowNode[] = [
+    node(S_C1, FORGE_NODE_TYPE.CHARACTER, { x: 0, y: 0 }, { label: 'Character', content: 'Opening character line.' }),
+    node(S_CN1, FORGE_NODE_TYPE.CONDITIONAL, { x: 280, y: 0 }, { label: 'Conditional' }),
 
-  const stl2 = await payload.create({
-    collection: PAYLOAD_COLLECTIONS.FORGE_GRAPHS as any,
-    data: {
-      project: project.id,
-      kind: 'STORYLET',
-      title: 'Storylet 2',
-      flow: stl2Flow,
-      startNodeId: stl2Start,
-      endNodeIds: [{ nodeId: stl2End, exitKey: 'end' }],
-    },
-  });
+    node(S_P1, FORGE_NODE_TYPE.PLAYER, { x: 560, y: -80 }, {
+      label: 'Player',
+      content: 'Player prompt.',
+      choices: [
+        { id: 'choice_1', text: 'Choice 1', nextNodeId: S_CH_A },
+        { id: 'choice_2', text: 'Choice 2', nextNodeId: S_C2 },
+      ],
+    }),
 
-  // 3) Build the narrative flow matching your diagram
-  // Node IDs
-  const TS = 'ts_start';
-  const AN = 'act_1';
-  const CH1 = 'chapter_1';
-  const PG1 = 'page_1';
+    node(S_DET1, FORGE_NODE_TYPE.DETOUR, { x: 560, y: 110 }, {
+      label: 'Detour',
+      storyletCall: storylet1Call,
+    }),
 
-  const DET1 = 'detour_1';
-  const COND1 = 'cond_1';
-  const NPA = 'page_a';
-  const NPB = 'page_b';
-  const NPD = 'page_default';
+    node(S_CH_A, FORGE_NODE_TYPE.CHARACTER, { x: 860, y: -150 }, { label: 'Character A', content: 'Branch A response.' }),
+    node(S_P3, FORGE_NODE_TYPE.PLAYER, { x: 860, y: -40 }, {
+      label: 'Player B',
+      content: 'Follow-up player prompt.',
+      choices: [{ id: 'choice_b1', text: 'Continue', nextNodeId: S_C2 }],
+    }),
 
-  const DET2 = 'detour_2';
-  const COND2 = 'cond_2';
-  const NCA = 'chapter_page_a';
-  const NCB = 'chapter_page_b';
-  const NCD = 'chapter_default';
+    node(S_C2, FORGE_NODE_TYPE.CHARACTER, { x: 860, y: 60 }, { label: 'Character after Choice 2', content: 'Post-choice character line.' }),
 
-  const STL1_REF = 'stl1_ref';
-  const STL2_REF = 'stl2_ref';
+    node(S_DET2, FORGE_NODE_TYPE.DETOUR, { x: 1140, y: 60 }, {
+      label: 'Detour Node',
+      storyletCall: storylet2Call,
+    }),
 
-  const END = 'end_1';
+    node(S_COND2, FORGE_NODE_TYPE.CONDITIONAL, { x: 1420, y: 60 }, { label: 'Conditional Node' }),
 
-  const nodes: RFNode[] = [
-    { id: TS, type: 'THREAD_START', position: { x: 0, y: 0 }, data: { label: 'Thread Graph Start', defaultNextNodeId: AN } },
+    node(S_CH_B, FORGE_NODE_TYPE.CHARACTER, { x: 1720, y: -30 }, { label: 'Character B', content: 'Condition A met.' }),
+    node(S_CH_C, FORGE_NODE_TYPE.CHARACTER, { x: 1720, y: 60 }, { label: 'Character C', content: 'Condition B met.' }),
+    node(S_CH_D, FORGE_NODE_TYPE.CHARACTER, { x: 1720, y: 150 }, { label: 'Default Character', content: 'Default branch.' }),
 
-    { id: AN, type: 'ACT', position: { x: 250, y: 0 }, data: { label: 'Act Node' } },
-
-    { id: CH1, type: 'CHAPTER', position: { x: 520, y: 0 }, data: { label: 'Chapter Node' } },
-
-    { id: PG1, type: 'PAGE', position: { x: 780, y: 0 }, data: { label: 'Page Node', defaultNextNodeId: DET1 } },
-
-    // Page-based detour path
-    {
-      id: DET1,
-      type: 'DETOUR',
-      position: { x: 1040, y: -60 },
-      data: {
-        label: 'Detour Node (Page)',
-        storyletCall: { mode: 'DET0UR_RETURN', targetGraphId: stl1.id, targetStartNodeId: stl1Start },
-        defaultNextNodeId: COND1,
-      },
-    },
-    { id: COND1, type: 'CONDITIONAL', position: { x: 1300, y: -60 }, data: { label: 'Conditional Node (Page Detour)' } },
-
-    { id: NPA, type: 'PAGE', position: { x: 1560, y: -140 }, data: { label: 'Next Page A', defaultNextNodeId: END } },
-    { id: NPB, type: 'PAGE', position: { x: 1560, y: -60 }, data: { label: 'Next Page B', defaultNextNodeId: END } },
-    { id: NPD, type: 'PAGE', position: { x: 1560, y: 20 }, data: { label: 'Default Next Page', defaultNextNodeId: END } },
-
-    // Chapter-based detour path
-    {
-      id: DET2,
-      type: 'DETOUR',
-      position: { x: 780, y: 180 },
-      data: {
-        label: 'Detour Node (Chapter)',
-        storyletCall: { mode: 'DET0UR_RETURN', targetGraphId: stl2.id, targetStartNodeId: stl2Start },
-        defaultNextNodeId: COND2,
-      },
-    },
-    { id: COND2, type: 'CONDITIONAL', position: { x: 1040, y: 180 }, data: { label: 'Conditional Node (Chapter Detour)' } },
-
-    { id: NCA, type: 'PAGE', position: { x: 1300, y: 100 }, data: { label: 'Next Chapter Page A', defaultNextNodeId: END } },
-    { id: NCB, type: 'PAGE', position: { x: 1300, y: 180 }, data: { label: 'Next Chapter Page B', defaultNextNodeId: END } },
-    { id: NCD, type: 'PAGE', position: { x: 1300, y: 260 }, data: { label: 'Default Chapter Next', defaultNextNodeId: END } },
-
-    // Storylet refs (visual nodes)
-    { id: STL1_REF, type: 'STORYLET', position: { x: 1040, y: 40 }, data: { label: 'Storylet Data (STL1)', storyletCall: { mode: 'DET0UR_RETURN', targetGraphId: stl1.id } } },
-    { id: STL2_REF, type: 'STORYLET', position: { x: 780, y: 280 }, data: { label: 'Storylet Data (STL2)', storyletCall: { mode: 'DET0UR_RETURN', targetGraphId: stl2.id } } },
-
-    { id: END, type: 'END', position: { x: 1820, y: 0 }, data: { label: 'End' } },
+    // Visual-only "Storylet Data" nodes (still ForgeNodeType.STORYLET)
+    node(S_STL1_DATA, FORGE_NODE_TYPE.STORYLET, { x: 860, y: 220 }, { label: 'Storylet Data (STL1)', storyletCall: { ...storylet1Call } }),
+    node(S_STL2_DATA, FORGE_NODE_TYPE.STORYLET, { x: 1420, y: 260 }, { label: 'Storylet Data (STL2)', storyletCall: { ...storylet2Call } }),
   ];
 
-  const edges: RFEdge[] = [
+  const mainStoryletEdges: ForgeFlowEdge[] = [
+    edge(S_C1, S_CN1, { kind: FORGE_EDGE_KIND.FLOW }),
+
+    // Conditional routes to player or detour
+    edge(S_CN1, S_P1, { kind: FORGE_EDGE_KIND.CONDITION, label: 'to player' }),
+    edge(S_CN1, S_DET1, { kind: FORGE_EDGE_KIND.CONDITION, label: 'to detour' }),
+
+    // Player choices
+    edge(S_P1, S_CH_A, { kind: FORGE_EDGE_KIND.CHOICE, label: 'Choice 1', type: 'choice', idSuffix: 'choice1_a' }),
+    edge(S_P1, S_P3, { kind: FORGE_EDGE_KIND.CHOICE, label: 'Choice 1', type: 'choice', idSuffix: 'choice1_b' }),
+    edge(S_P1, S_C2, { kind: FORGE_EDGE_KIND.CHOICE, label: 'Choice 2', type: 'choice', idSuffix: 'choice2' }),
+
+    // Continue into detour 2 chain
+    edge(S_P3, S_C2, { kind: FORGE_EDGE_KIND.FLOW, label: 'continue' }),
+    edge(S_C2, S_DET2, { kind: FORGE_EDGE_KIND.FLOW }),
+
+    edge(S_DET2, S_COND2, { kind: FORGE_EDGE_KIND.FLOW }),
+
+    // Conditional outputs
+    edge(S_COND2, S_CH_B, { kind: FORGE_EDGE_KIND.CONDITION, label: 'Condition A met' }),
+    edge(S_COND2, S_CH_C, { kind: FORGE_EDGE_KIND.CONDITION, label: 'Condition B met' }),
+    edge(S_COND2, S_CH_D, { kind: FORGE_EDGE_KIND.DEFAULT, label: 'Default' }),
+
+    // Storylet visuals (data reference nodes)
+    edge(S_DET1, S_STL1_DATA, { kind: FORGE_EDGE_KIND.VISUAL, label: 'uses storylet' }),
+    edge(S_DET2, S_STL2_DATA, { kind: FORGE_EDGE_KIND.VISUAL, label: 'uses storylet' }),
+  ];
+
+  const mainStoryletFlow = flow(mainStoryletNodes, mainStoryletEdges, { x: 0, y: 0, zoom: 0.9 });
+
+  const mainStoryletGraph = await createForgeGraph(payload, {
+    id: 0 as any,
+    project: project.id,
+    kind: FORGE_GRAPH_KIND.STORYLET,
+    title: 'Demo Storylet Graph',
+    startNodeId: S_C1,
+    endNodeIds: [
+      { nodeId: S_CH_B, exitKey: 'condA' },
+      { nodeId: S_CH_C, exitKey: 'condB' },
+      { nodeId: S_CH_D, exitKey: 'default' },
+    ],
+    flow: mainStoryletFlow,
+    compiledYarn: null,
+  } as any);
+
+  // ---------------------------------------------------------------------------
+  // 4) Create NARRATIVE graph (your second flowchart)
+  // ---------------------------------------------------------------------------
+  //
+  // flowchart TB
+  //   TS[Thread Graph Start] --> AN[Act Node]
+  //   AN --> CH1[Chapter Node]
+  //   CH1 --> PG1[Page Node]
+  //   PG1 --> DET1[Detour Node] --> COND1[Conditional Node] --> (NPA/NPB/NPD) --> END
+  //   CH1 --> DET2[Detour Node] --> COND2[Conditional Node] --> (NCA/NCB/NCD) --> END
+  //   DET1 -. uses storylet .- STL1[Storylet Data]
+  //   DET2 -. uses storylet .- STL2[Storylet Data]
+  //
+  const N_TS = 'n_ts';
+  const N_AN = 'n_act';
+  const N_CH1 = 'n_ch1';
+  const N_PG1 = 'n_pg1';
+
+  const N_DET1 = 'n_det_page';
+  const N_COND1 = 'n_cond_page';
+  const N_NPA = 'n_page_a';
+  const N_NPB = 'n_page_b';
+  const N_NPD = 'n_page_default';
+
+  const N_DET2 = 'n_det_chapter';
+  const N_COND2 = 'n_cond_chapter';
+  const N_NCA = 'n_ch_page_a';
+  const N_NCB = 'n_ch_page_b';
+  const N_NCD = 'n_ch_default';
+
+  const N_STL1_DATA = 'n_stl1_data';
+  const N_STL2_DATA = 'n_stl2_data';
+
+  const N_END = 'n_end';
+
+  const narrativeNodes: ForgeFlowNode[] = [
+    // Use ACT for "thread start" to stay within ForgeNodeType
+    node(N_TS, FORGE_NODE_TYPE.ACT, { x: 0, y: 0 }, { label: 'Thread Graph Start' }),
+    node(N_AN, FORGE_NODE_TYPE.ACT, { x: 260, y: 0 }, { label: 'Act Node' }),
+
+    node(N_CH1, FORGE_NODE_TYPE.CHAPTER, { x: 520, y: 0 }, { label: 'Chapter Node' }),
+    node(N_PG1, FORGE_NODE_TYPE.PAGE, { x: 780, y: 0 }, { label: 'Page Node' }),
+
+    // Page detour chain
+    node(N_DET1, FORGE_NODE_TYPE.DETOUR, { x: 1040, y: -70 }, {
+      label: 'Detour Node (Page)',
+      storyletCall: { mode: FORGE_STORYLET_CALL_MODE.DETOUR_RETURN, targetGraphId: stl1.id, targetStartNodeId: STL1_START },
+    }),
+    node(N_COND1, FORGE_NODE_TYPE.CONDITIONAL, { x: 1300, y: -70 }, { label: 'Conditional Node (Page Detour)' }),
+    node(N_NPA, FORGE_NODE_TYPE.PAGE, { x: 1560, y: -150 }, { label: 'Next Page A' }),
+    node(N_NPB, FORGE_NODE_TYPE.PAGE, { x: 1560, y: -70 }, { label: 'Next Page B' }),
+    node(N_NPD, FORGE_NODE_TYPE.PAGE, { x: 1560, y: 10 }, { label: 'Default Next Page' }),
+
+    // Chapter detour chain
+    node(N_DET2, FORGE_NODE_TYPE.DETOUR, { x: 780, y: 190 }, {
+      label: 'Detour Node (Chapter)',
+      storyletCall: { mode: FORGE_STORYLET_CALL_MODE.DETOUR_RETURN, targetGraphId: stl2.id, targetStartNodeId: STL2_START },
+    }),
+    node(N_COND2, FORGE_NODE_TYPE.CONDITIONAL, { x: 1040, y: 190 }, { label: 'Conditional Node (Chapter Detour)' }),
+    node(N_NCA, FORGE_NODE_TYPE.PAGE, { x: 1300, y: 110 }, { label: 'Next Chapter Page A' }),
+    node(N_NCB, FORGE_NODE_TYPE.PAGE, { x: 1300, y: 190 }, { label: 'Next Chapter Page B' }),
+    node(N_NCD, FORGE_NODE_TYPE.PAGE, { x: 1300, y: 270 }, { label: 'Default Chapter Next' }),
+
+    // Visual-only storylet data nodes
+    node(N_STL1_DATA, FORGE_NODE_TYPE.STORYLET, { x: 1040, y: 60 }, {
+      label: 'Storylet Data (STL1)',
+      storyletCall: { mode: FORGE_STORYLET_CALL_MODE.DETOUR_RETURN, targetGraphId: stl1.id },
+    }),
+    node(N_STL2_DATA, FORGE_NODE_TYPE.STORYLET, { x: 780, y: 310 }, {
+      label: 'Storylet Data (STL2)',
+      storyletCall: { mode: FORGE_STORYLET_CALL_MODE.DETOUR_RETURN, targetGraphId: stl2.id },
+    }),
+
+    node(N_END, FORGE_NODE_TYPE.END, { x: 1820, y: 0 }, { label: 'End' }),
+  ];
+
+  const narrativeEdges: ForgeFlowEdge[] = [
     // Main flow
-    { id: edgeId(TS, AN), source: TS, target: AN, data: { kind: 'DEFAULT' } },
-    { id: edgeId(AN, CH1), source: AN, target: CH1, data: { kind: 'FLOW' } },
-    { id: edgeId(CH1, PG1), source: CH1, target: PG1, data: { kind: 'FLOW' } },
+    edge(N_TS, N_AN, { kind: FORGE_EDGE_KIND.DEFAULT }),
+    edge(N_AN, N_CH1, { kind: FORGE_EDGE_KIND.FLOW }),
+    edge(N_CH1, N_PG1, { kind: FORGE_EDGE_KIND.FLOW }),
 
     // Chapter detour branch
-    { id: edgeId(CH1, DET2), source: CH1, target: DET2, data: { kind: 'FLOW', label: 'detour' } },
-    { id: edgeId(DET2, COND2), source: DET2, target: COND2, data: { kind: 'FLOW' } },
-    { id: edgeId(COND2, NCA), source: COND2, target: NCA, data: { kind: 'CONDITION', label: 'Condition A met' } },
-    { id: edgeId(COND2, NCB), source: COND2, target: NCB, data: { kind: 'CONDITION', label: 'Condition B met' } },
-    { id: edgeId(COND2, NCD), source: COND2, target: NCD, data: { kind: 'DEFAULT', label: 'Default' } },
+    edge(N_CH1, N_DET2, { kind: FORGE_EDGE_KIND.FLOW, label: 'detour' }),
+    edge(N_DET2, N_COND2, { kind: FORGE_EDGE_KIND.FLOW }),
+    edge(N_COND2, N_NCA, { kind: FORGE_EDGE_KIND.CONDITION, label: 'Condition A met' }),
+    edge(N_COND2, N_NCB, { kind: FORGE_EDGE_KIND.CONDITION, label: 'Condition B met' }),
+    edge(N_COND2, N_NCD, { kind: FORGE_EDGE_KIND.DEFAULT, label: 'Default' }),
 
     // Page detour branch
-    { id: edgeId(PG1, DET1), source: PG1, target: DET1, data: { kind: 'FLOW', label: 'detour' } },
-    { id: edgeId(DET1, COND1), source: DET1, target: COND1, data: { kind: 'FLOW' } },
-    { id: edgeId(COND1, NPA), source: COND1, target: NPA, data: { kind: 'CONDITION', label: 'Condition A met' } },
-    { id: edgeId(COND1, NPB), source: COND1, target: NPB, data: { kind: 'CONDITION', label: 'Condition B met' } },
-    { id: edgeId(COND1, NPD), source: COND1, target: NPD, data: { kind: 'DEFAULT', label: 'Default' } },
+    edge(N_PG1, N_DET1, { kind: FORGE_EDGE_KIND.FLOW, label: 'detour' }),
+    edge(N_DET1, N_COND1, { kind: FORGE_EDGE_KIND.FLOW }),
+    edge(N_COND1, N_NPA, { kind: FORGE_EDGE_KIND.CONDITION, label: 'Condition A met' }),
+    edge(N_COND1, N_NPB, { kind: FORGE_EDGE_KIND.CONDITION, label: 'Condition B met' }),
+    edge(N_COND1, N_NPD, { kind: FORGE_EDGE_KIND.DEFAULT, label: 'Default' }),
 
     // Storylet ref visuals
-    { id: edgeId(DET1, STL1_REF), source: DET1, target: STL1_REF, data: { kind: 'VISUAL', label: 'uses storylet' } },
-    { id: edgeId(DET2, STL2_REF), source: DET2, target: STL2_REF, data: { kind: 'VISUAL', label: 'uses storylet' } },
+    edge(N_DET1, N_STL1_DATA, { kind: FORGE_EDGE_KIND.VISUAL, label: 'uses storylet' }),
+    edge(N_DET2, N_STL2_DATA, { kind: FORGE_EDGE_KIND.VISUAL, label: 'uses storylet' }),
 
     // End connections
-    { id: edgeId(NPA, END), source: NPA, target: END, data: { kind: 'FLOW' } },
-    { id: edgeId(NPB, END), source: NPB, target: END, data: { kind: 'FLOW' } },
-    { id: edgeId(NPD, END), source: NPD, target: END, data: { kind: 'FLOW' } },
-    { id: edgeId(NCA, END), source: NCA, target: END, data: { kind: 'FLOW' } },
-    { id: edgeId(NCB, END), source: NCB, target: END, data: { kind: 'FLOW' } },
-    { id: edgeId(NCD, END), source: NCD, target: END, data: { kind: 'FLOW' } },
+    edge(N_NPA, N_END, { kind: FORGE_EDGE_KIND.FLOW }),
+    edge(N_NPB, N_END, { kind: FORGE_EDGE_KIND.FLOW }),
+    edge(N_NPD, N_END, { kind: FORGE_EDGE_KIND.FLOW }),
+    edge(N_NCA, N_END, { kind: FORGE_EDGE_KIND.FLOW }),
+    edge(N_NCB, N_END, { kind: FORGE_EDGE_KIND.FLOW }),
+    edge(N_NCD, N_END, { kind: FORGE_EDGE_KIND.FLOW }),
   ];
 
-  const narrativeFlow: RFJson = {
-    nodes,
-    edges,
-    viewport: { x: 0, y: 0, zoom: 0.8 },
-  };
+  const narrativeFlow = flow(narrativeNodes, narrativeEdges, { x: 0, y: 0, zoom: 0.8 });
 
-  const narrativeStartNodeId = TS;
+  const narrativeGraph = await createForgeGraph(payload, {
+    id: 0 as any,
+    project: project.id,
+    kind: FORGE_GRAPH_KIND.NARRATIVE,
+    title: 'Narrative Graph',
+    startNodeId: N_TS,
+    endNodeIds: [{ nodeId: N_END, exitKey: 'end' }],
+    flow: narrativeFlow,
+    compiledYarn: null,
+  } as any);
 
-  const narrativeGraph = await payload.create({
-    collection: PAYLOAD_COLLECTIONS.FORGE_GRAPHS as any,
-    data: {
-      project: project.id,
-      kind: 'NARRATIVE',
-      title: 'Narrative Graph',
-      flow: narrativeFlow,
-      startNodeId: narrativeStartNodeId,
-      endNodeIds: [{ nodeId: END, exitKey: 'end' }],
-    },
-  });
+  // ---------------------------------------------------------------------------
+  // 5) Link graphs to project
+  // ---------------------------------------------------------------------------
 
-  // 4) Link narrative graph to project
+  // If your projects collection has both narrativeGraph + storyletGraph, keep both.
+  // If it only has narrativeGraph, remove storyletGraph from this update.
   await payload.update({
     collection: PAYLOAD_COLLECTIONS.PROJECTS as any,
     id: project.id,
-    data: { narrativeGraph: narrativeGraph.id },
+    data: {
+      narrativeGraph: narrativeGraph.id,
+      storyletGraph: mainStoryletGraph.id,
+    },
   });
 
-  console.log('✅ Seeded Demo Project + Narrative Graph + Storylet Graphs');
+  // Optional: you might also want to store stl1/stl2 IDs on project (if schema supports).
+  // Otherwise they remain discoverable via graph listing/filtering.
+
+  // eslint-disable-next-line no-console
+  console.log('✅ Seeded Demo Project + Narrative Graph + Demo Storylet Graph + STL1/STL2');
 }

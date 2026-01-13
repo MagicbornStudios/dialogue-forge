@@ -9,30 +9,33 @@ export interface GraphSlice {
     statusById: Record<string, "loading" | "ready" | "error">
   }
   
-  // Active graphs (for narrative and storylet editors)
-  narrativeGraph: ForgeGraphDoc | null
-  storyletGraph: ForgeGraphDoc | null
-  storyletGraphs: Record<string, ForgeGraphDoc> | null  
+  // Active graph IDs (for narrative and storylet editors)
+  activeNarrativeGraphId: string | null
+  activeStoryletGraphId: string | null
 }
 
 export interface GraphActions {
   setGraph: (id: string, graph: ForgeGraphDoc) => void
   setGraphStatus: (id: string, status: "loading" | "ready" | "error") => void
-  setNarrativeGraph: (graph: ForgeGraphDoc | null) => void
-  setStoryletGraph: (graph: ForgeGraphDoc | null) => void
-  setStoryletGraphs: (graphs: Record<string, ForgeGraphDoc>) => void
+  setActiveNarrativeGraphId: (id: string | null) => void
+  setActiveStoryletGraphId: (id: string | null) => void
   ensureGraph: (
     graphId: string,
     reason: "narrative" | "storylet",
     resolver?: (id: string) => Promise<ForgeGraphDoc>
+  ) => Promise<void>
+  openGraphInScope: (
+    scope: "narrative" | "storylet",
+    graphId: string,
+    opts?: { focusNodeId?: string }
   ) => Promise<void>
 }
 
 export function createGraphSlice(
   set: Parameters<StateCreator<ForgeWorkspaceState, [], [], ForgeWorkspaceState>>[0],
   get: Parameters<StateCreator<ForgeWorkspaceState, [], [], ForgeWorkspaceState>>[1],
-  initialNarrativeGraph?: ForgeGraphDoc | null,
-  initialStoryletGraph?: ForgeGraphDoc | null,
+  initialNarrativeGraphId?: string | null,
+  initialStoryletGraphId?: string | null,
   resolveGraph?: (id: string) => Promise<ForgeGraphDoc>
 ): GraphSlice & GraphActions {
   return {
@@ -40,9 +43,8 @@ export function createGraphSlice(
       byId: {},
       statusById: {},
     },
-    narrativeGraph: initialNarrativeGraph ?? null,
-    storyletGraph: initialStoryletGraph ?? null,
-    storyletGraphs: {},
+    activeNarrativeGraphId: initialNarrativeGraphId ?? null,
+    activeStoryletGraphId: initialStoryletGraphId ?? null,
     
     setGraph: (id: string, graph: ForgeGraphDoc) => {
       set((state) => ({
@@ -63,22 +65,12 @@ export function createGraphSlice(
       }))
     },
     
-    setNarrativeGraph: (graph: ForgeGraphDoc | null) => {
-      set({ narrativeGraph: graph })
-      if (graph) {
-        get().actions.setGraph(String(graph.id), graph)
-      }
+    setActiveNarrativeGraphId: (id: string | null) => {
+      set({ activeNarrativeGraphId: id })
     },
     
-    setStoryletGraph: (graph: ForgeGraphDoc | null) => {
-      set({ storyletGraph: graph })
-      if (graph) {
-        get().actions.setGraph(String(graph.id), graph)
-      }
-    },
-    
-    setStoryletGraphs: (graphs: Record<string, ForgeGraphDoc>) => {
-      set({ storyletGraphs: graphs })
+    setActiveStoryletGraphId: (id: string | null) => {
+      set({ activeStoryletGraphId: id })
     },
     
     ensureGraph: async (
@@ -106,16 +98,35 @@ export function createGraphSlice(
       try {
         const graph = await resolver(graphId)
         state.actions.setGraph(graphId, graph)
-        
-        // Set as active graph based on reason
-        if (reason === "narrative") {
-          state.actions.setNarrativeGraph(graph)
-        } else {
-          state.actions.setStoryletGraph(graph)
-        }
       } catch (error) {
         console.error(`Failed to load graph ${graphId}:`, error)
         state.actions.setGraphStatus(graphId, "error")
+      }
+    },
+    
+    openGraphInScope: async (
+      scope: "narrative" | "storylet",
+      graphId: string,
+      opts?: { focusNodeId?: string }
+    ) => {
+      const state = get()
+      
+      // Set active graph ID
+      if (scope === "narrative") {
+        state.actions.setActiveNarrativeGraphId(graphId)
+      } else {
+        state.actions.setActiveStoryletGraphId(graphId)
+      }
+      
+      // Ensure graph is loaded
+      await state.actions.ensureGraph(graphId, scope)
+      
+      // Request focus if node ID provided
+      if (opts?.focusNodeId) {
+        const state = get() as any
+        if (state.actions?.requestFocus) {
+          state.actions.requestFocus(scope, graphId, opts.focusNodeId)
+        }
       }
     },
   }

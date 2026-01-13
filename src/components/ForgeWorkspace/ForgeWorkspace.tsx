@@ -7,8 +7,9 @@ import type { FlagSchema } from '../../types/flags';
 
 import { GuidePanel } from '../shared/GuidePanel';
 import { ForgeWorkspaceToolbar } from './components/ForgeWorkspaceToolbar';
-import { NarrativeGraphSection } from './components/NarrativeGraphSection';
-import { StoryletGraphSection } from './components/StoryletGraphSection';
+import { ForgeNarrativeGraphEditor } from '../GraphEditors/ForgeNarrativeGraphEditor/ForgeNarrativeGraphEditor';
+import { ForgeStoryletGraphEditor } from '../GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditor';
+import { StoryletsSidebar } from './components/StoryletsSidebar';
 
 import {
   ForgeUIStoreProvider,
@@ -26,7 +27,6 @@ import {
 import { setupForgeWorkspaceSubscriptions } from './store/slices/subscriptions';
 import type { DialogueForgeEvent } from '@/src/components/forge/events/events';
 import { ForgeDataAdapter } from '../forge/forge-data-adapter/forge-data-adapter';
-import { VIEW_MODE } from '@/src/types/constants';
 
 interface ForgeWorkspaceProps {
   // Initial graphs (host-provided)
@@ -83,6 +83,7 @@ export function ForgeWorkspace({
         flagSchema,
         gameState,
         resolveGraph,
+        dataAdapter,
       } as any,
       eventSink
     );
@@ -116,26 +117,37 @@ function ForgeWorkspaceInner({
   const showGuide = useForgeUIStore((s) => s.modals.showGuide);
   const setShowGuide = useForgeUIStore((s) => s.actions.setShowGuide);
 
-  // Pull graphs from the domain store.
-  // If your slice is still `dialogue.byId`, keep it until you rename.
-  const narrativeGraph = useForgeWorkspaceStore((s) => (s as any).graphs?.narrative ?? null);
-  const storyletGraph = useForgeWorkspaceStore((s) => (s as any).graphs?.storylet ?? null);
+  // Get active graph IDs and derive graphs from cache
+  const activeNarrativeGraphId = useForgeWorkspaceStore((s) => s.activeNarrativeGraphId);
+  const activeStoryletGraphId = useForgeWorkspaceStore((s) => s.activeStoryletGraphId);
+  
+  const narrativeGraph = useForgeWorkspaceStore((s) => 
+    activeNarrativeGraphId ? s.graphs.byId[activeNarrativeGraphId] ?? null : null
+  );
+  const storyletGraph = useForgeWorkspaceStore((s) => 
+    activeStoryletGraphId ? s.graphs.byId[activeStoryletGraphId] ?? null : null
+  );
 
-  const setNarrativeGraph = useForgeWorkspaceStore((s) => (s as any).actions?.setNarrativeGraph);
-  const setStoryletGraph = useForgeWorkspaceStore((s) => (s as any).actions?.setStoryletGraph);
+  const setGraph = useForgeWorkspaceStore((s) => s.actions.setGraph);
+  const setActiveNarrativeGraphId = useForgeWorkspaceStore((s) => s.actions.setActiveNarrativeGraphId);
+  const setActiveStoryletGraphId = useForgeWorkspaceStore((s) => s.actions.setActiveStoryletGraphId);
+
+  // Get dataAdapter from workspace store context (we'll need to pass it through)
+  // For now, we'll handle default graph creation in a useEffect
+  // TODO: Pass dataAdapter through context or props if needed for default creation
 
   const onNarrativeGraphChange = useCallback(
     (next: ForgeGraphDoc) => {
-      setNarrativeGraph?.(next);
+      setGraph(String(next.id), next);
     },
-    [setNarrativeGraph]
+    [setGraph]
   );
 
   const onStoryletGraphChange = useCallback(
     (next: ForgeGraphDoc) => {
-      setStoryletGraph?.(next);
+      setGraph(String(next.id), next);
     },
-    [setStoryletGraph]
+    [setGraph]
   );
 
   return (
@@ -148,27 +160,42 @@ function ForgeWorkspaceInner({
         onFlagClick={() => { }}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2 p-2">
-        {narrativeGraph ? (
-          <NarrativeGraphSection 
-          graph={narrativeGraph} 
-          onGraphChange={onNarrativeGraphChange} />
-        ) : (
-          <div className="rounded-lg border border-df-node-border bg-df-editor-bg p-3 text-sm text-df-text-secondary">
-            No narrative graph loaded.
-          </div>
-        )}
+      <div className="flex min-h-0 flex-1 gap-2 p-2">
+        {/* Storylets Sidebar */}
+        <StoryletsSidebar />
 
-        {storyletGraph ? (
-          <StoryletGraphSection
-          graph={storyletGraph}
-          onGraphChange={onStoryletGraphChange}
-          />
-        ) : (
-          <div className="rounded-lg border border-df-node-border bg-df-editor-bg p-3 text-sm text-df-text-secondary">
-            No storylet graph loaded.
-          </div>
-        )}
+        {/* Main editor area */}
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
+          {narrativeGraph ? (
+            <div className="h-[220px] min-h-[200px] rounded-lg border border-df-node-border bg-df-editor-bg p-1">
+              <ForgeNarrativeGraphEditor 
+                graph={narrativeGraph} 
+                onChange={onNarrativeGraphChange} 
+                className="h-full" 
+              />
+            </div>
+          ) : (
+            <div className="rounded-lg border border-df-node-border bg-df-editor-bg p-3 text-sm text-df-text-secondary">
+              No narrative graph loaded.
+            </div>
+          )}
+
+          {storyletGraph ? (
+            <div className="flex-1 min-h-0 rounded-lg border border-df-node-border bg-df-editor-bg p-1">
+              <ForgeStoryletGraphEditor
+                graph={storyletGraph}
+                onChange={onStoryletGraphChange}
+                flagSchema={undefined}
+                characters={characters}
+                className="h-full"
+              />
+            </div>
+          ) : (
+            <div className="rounded-lg border border-df-node-border bg-df-editor-bg p-3 text-sm text-df-text-secondary">
+              No storylet graph loaded.
+            </div>
+          )}
+        </div>
       </div>
 
       <GuidePanel isOpen={showGuide} onClose={() => setShowGuide(false)} />

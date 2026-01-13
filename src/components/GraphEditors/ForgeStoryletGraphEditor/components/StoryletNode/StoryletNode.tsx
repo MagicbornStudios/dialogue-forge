@@ -14,6 +14,7 @@ import {
 import type { ForgeNode } from '@/src/types/forge/forge-graph';
 import { getFlagColorClass } from '../../../utils/flag-styles';
 import { useForgeEditorActions } from '../../../hooks/useForgeEditorActions';
+import { useForgeWorkspaceActions } from '@/src/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
 
 interface StoryletNodeData {
   node: ForgeNode;
@@ -32,6 +33,7 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
   const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
 
   const actions = useForgeEditorActions();
+  const workspaceActions = useForgeWorkspaceActions();
 
   const isHorizontal = layoutDirection === 'LR';
   const targetPosition = isHorizontal ? Position.Left : Position.Top;
@@ -164,7 +166,7 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
         </ContextMenuItem>
 
         {graphId && (
-          <ContextMenuItem onSelect={() => actions.openGraph({ graphId, reason: 'storyletNode' })}>
+          <ContextMenuItem onSelect={() => workspaceActions.openStoryletGraph(String(graphId), { focusNodeId: node.storyletCall?.targetStartNodeId })}>
             <ExternalLink size={14} className="mr-2" /> Open Storylet Graph
           </ContextMenuItem>
         )}

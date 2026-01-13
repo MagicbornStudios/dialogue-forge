@@ -1,5 +1,5 @@
 // src/components/ForgeWorkspace/ForgeWorkspace.tsx
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 import type { ForgeGraphDoc } from '../../types';
 import type { ForgeGameState } from '../../types/forge-game-state';
 import type { ForgeCharacter } from '../../types/characters';
@@ -43,6 +43,9 @@ interface ForgeWorkspaceProps {
 
   // Persistence surface (already implemented)
   dataAdapter?: ForgeDataAdapter;
+
+  // Project selection sync
+  selectedProjectId?: number | null;
 }
 
 export function ForgeWorkspace({
@@ -56,6 +59,7 @@ export function ForgeWorkspace({
   onEvent,
   resolveGraph,
   dataAdapter,
+  selectedProjectId,
 }: ForgeWorkspaceProps) {
   const eventSinkRef = useRef<EventSink>({
     emit: (event) => {
@@ -85,6 +89,7 @@ export function ForgeWorkspace({
 
   return (
     <ForgeWorkspaceStoreProvider store={storeRef.current}>
+      <ProjectSync selectedProjectId={selectedProjectId} />
       <ForgeWorkspaceContent
         characters={initialCharacters}
         className={className}
@@ -92,6 +97,16 @@ export function ForgeWorkspace({
       />
     </ForgeWorkspaceStoreProvider>
   );
+}
+
+function ProjectSync({ selectedProjectId }: { selectedProjectId?: number | null }) {
+  const setSelectedProjectId = useForgeWorkspaceStore((s) => s.actions.setSelectedProjectId);
+  
+  useEffect(() => {
+    setSelectedProjectId(selectedProjectId ?? null);
+  }, [selectedProjectId, setSelectedProjectId]);
+  
+  return null;
 }
 
 function ForgeWorkspaceContent({

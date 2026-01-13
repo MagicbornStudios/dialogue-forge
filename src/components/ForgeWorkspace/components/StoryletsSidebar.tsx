@@ -19,9 +19,11 @@ interface StoryletsSidebarProps {
 export function StoryletsSidebar({ className }: StoryletsSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('')
   
-  // Read from store
-  const storyletGraphs = useForgeWorkspaceStore(s => 
-    Object.values(s.graphs.byId).filter(g => g.kind === FORGE_GRAPH_KIND.STORYLET)
+  // Read from store - memoize the selector result to prevent re-renders
+  const allGraphs = useForgeWorkspaceStore(s => s.graphs.byId)
+  const storyletGraphs = useMemo(() => 
+    Object.values(allGraphs).filter(g => g.kind === FORGE_GRAPH_KIND.STORYLET),
+    [allGraphs]
   )
   const activeStoryletGraphId = useForgeWorkspaceStore(s => s.activeStoryletGraphId)
   const selectedProjectId = useForgeWorkspaceStore(s => s.selectedProjectId)

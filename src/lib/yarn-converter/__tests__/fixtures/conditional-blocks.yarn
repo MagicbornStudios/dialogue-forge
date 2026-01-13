@@ -1,0 +1,10 @@
+title: cond1
+---
+<<if $has_key>>
+    Guard: The door is unlocked.
+<<elseif $has_lockpick>>
+    Guard: You can pick the lock.
+<<else>>
+    Guard: The door is locked.
+<<endif>>
+===

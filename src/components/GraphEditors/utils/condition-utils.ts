@@ -1,5 +1,8 @@
 import { CONDITION_OPERATOR } from '../../../types/constants';
 import { FlagSchema } from '../../../types/flags';
+import type { ForgeCondition } from '../../../types/forge/forge-graph';
+import { parseCondition as parseConditionFromYarn } from '../../../lib/yarn-converter/utils/condition-parser';
+import { formatConditions as formatConditionsFromYarn } from '../../../lib/yarn-converter/utils/condition-formatter';
 
 export interface ConditionValidationResult {
   isValid: boolean;
@@ -103,87 +106,17 @@ export function validateCondition(
 
 /**
  * Parses a Yarn condition expression string into condition objects
+ * Re-exports from yarn-converter for consistency
  */
-export function parseCondition(conditionStr: string): any[] {
-  const conditions: any[] = [];
-  if (!conditionStr.trim()) return conditions;
-  
-  const parts = conditionStr.split(/\s+and\s+/i);
-  parts.forEach(part => {
-    part = part.trim();
-    if (part.startsWith('not ')) {
-      const varMatch = part.match(/not\s+\$(\w+)/);
-      if (varMatch) {
-        conditions.push({ flag: varMatch[1], operator: CONDITION_OPERATOR.IS_NOT_SET });
-      }
-    } else if (part.includes('>=')) {
-      const match = part.match(/\$(\w+)\s*>=\s*(.+)/);
-      if (match) {
-        const value = match[2].trim().replace(/^["']|["']$/g, '');
-        conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.GREATER_EQUAL, value: isNaN(Number(value)) ? value : Number(value) });
-      }
-    } else if (part.includes('<=')) {
-      const match = part.match(/\$(\w+)\s*<=\s*(.+)/);
-      if (match) {
-        const value = match[2].trim().replace(/^["']|["']$/g, '');
-        conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.LESS_EQUAL, value: isNaN(Number(value)) ? value : Number(value) });
-      }
-    } else if (part.includes('!=')) {
-      const match = part.match(/\$(\w+)\s*!=\s*(.+)/);
-      if (match) {
-        const value = match[2].trim().replace(/^["']|["']$/g, '');
-        conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.NOT_EQUALS, value: isNaN(Number(value)) ? value : Number(value) });
-      }
-    } else if (part.includes('==')) {
-      const match = part.match(/\$(\w+)\s*==\s*(.+)/);
-      if (match) {
-        const value = match[2].trim().replace(/^["']|["']$/g, '');
-        conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.EQUALS, value: isNaN(Number(value)) ? value : Number(value) });
-      }
-    } else if (part.includes('>') && !part.includes('>=')) {
-      const match = part.match(/\$(\w+)\s*>\s*(.+)/);
-      if (match) {
-        const value = match[2].trim().replace(/^["']|["']$/g, '');
-        conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.GREATER_THAN, value: isNaN(Number(value)) ? value : Number(value) });
-      }
-    } else if (part.includes('<') && !part.includes('<=')) {
-      const match = part.match(/\$(\w+)\s*<\s*(.+)/);
-      if (match) {
-        const value = match[2].trim().replace(/^["']|["']$/g, '');
-        conditions.push({ flag: match[1], operator: CONDITION_OPERATOR.LESS_THAN, value: isNaN(Number(value)) ? value : Number(value) });
-      }
-    } else {
-      const varMatch = part.match(/\$(\w+)/);
-      if (varMatch) {
-        conditions.push({ flag: varMatch[1], operator: CONDITION_OPERATOR.IS_SET });
-      }
-    }
-  });
-  return conditions;
+export function parseCondition(conditionStr: string): ForgeCondition[] {
+  return parseConditionFromYarn(conditionStr);
 }
 
 /**
  * Converts condition objects to a Yarn-style string
+ * Re-exports from yarn-converter for consistency
  */
-export function conditionToString(conditions: any[]): string {
+export function conditionToString(conditions: ForgeCondition[]): string {
   if (!conditions || conditions.length === 0) return '';
-  
-  return conditions.map(cond => {
-    const varName = `$${cond.flag}`;
-    if (cond.operator === CONDITION_OPERATOR.IS_SET) {
-      return varName;
-    } else if (cond.operator === CONDITION_OPERATOR.IS_NOT_SET) {
-      return `not ${varName}`;
-    } else if (cond.value !== undefined) {
-      const op = cond.operator === CONDITION_OPERATOR.EQUALS ? '==' :
-                cond.operator === CONDITION_OPERATOR.NOT_EQUALS ? '!=' :
-                cond.operator === CONDITION_OPERATOR.GREATER_THAN ? '>' :
-                cond.operator === CONDITION_OPERATOR.LESS_THAN ? '<' :
-                cond.operator === CONDITION_OPERATOR.GREATER_EQUAL ? '>=' :
-                cond.operator === CONDITION_OPERATOR.LESS_EQUAL ? '<=' : '==';
-      const value = typeof cond.value === 'string' ? `"${cond.value}"` : cond.value;
-      return `${varName} ${op} ${value}`;
-    }
-    return '';
-  }).filter(c => c).join(' and ') || '';
+  return formatConditionsFromYarn(conditions);
 }

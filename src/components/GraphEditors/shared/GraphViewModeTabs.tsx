@@ -2,8 +2,7 @@
 
 import React from "react"
 import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
-import type { ViewMode } from "@/src/types"
-import { VIEW_MODE } from "@/src/types/constants"
+import { VIEW_MODE, type ViewMode } from "@/src/types/constants"
 
 interface GraphViewModeTabsProps {
   value: ViewMode

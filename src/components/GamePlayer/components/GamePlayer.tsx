@@ -1,17 +1,16 @@
 import React from 'react';
-import { ForgeGraphDoc, type NarrativeThread } from '../../../types';
+import { ForgeGraphDoc } from '../../../types';
 import { FlagSchema } from '../../../types/flags';
-import { DialogueResult, FlagState } from '../../../types/game-state';
+import { DialogueResult, ForgeFlagState } from '../../../types/forge-game-state';
 import { VNStage } from './VNStage';
 
 export interface GamePlayerProps {
   dialogue: ForgeGraphDoc;
   startNodeId?: string;
   flagSchema?: FlagSchema;
-  gameStateFlags?: FlagState;
+  gameStateFlags?: ForgeFlagState;
   onComplete?: (result: DialogueResult) => void;
-  onFlagsChange?: (flags: FlagState) => void;
-  narrativeThread?: NarrativeThread;
+  onFlagsChange?: (flags: ForgeFlagState) => void;
 }
 
 export function GamePlayer({
@@ -21,7 +20,6 @@ export function GamePlayer({
   gameStateFlags,
   onComplete,
   onFlagsChange,
-  narrativeThread,
 }: GamePlayerProps) {
 
   return (

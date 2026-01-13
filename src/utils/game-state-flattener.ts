@@ -11,7 +11,7 @@
  * - All values must be boolean | number | string (Yarn-compatible)
  */
 
-import type { FlagState } from '../types/game-state';
+import type { ForgeFlagState } from '../types/forge-game-state';
 
 export interface FlattenConfig {
   /** Skip null/undefined values (default: true) */
@@ -23,7 +23,7 @@ export interface FlattenConfig {
 }
 
 export interface FlattenedState {
-  flags: FlagState;
+  flags: ForgeFlagState;
   metadata: {
     sourcePaths: Record<string, string>; // flattened_key -> original.path
   };
@@ -82,7 +82,7 @@ export function flattenGameState(
     maxDepth = 5,
   } = config;
 
-  const flags: FlagState = {};
+  const flags: ForgeFlagState = {};
   const sourcePaths: Record<string, string> = {};
 
   /**
@@ -181,7 +181,7 @@ export function validateGameState(gameState: any): asserts gameState is Record<s
 export function extractFlagsFromGameState(
   gameState: any,
   config?: FlattenConfig
-): FlagState {
+): ForgeFlagState {
   validateGameState(gameState);
   
   const flattened = flattenGameState(gameState, config);

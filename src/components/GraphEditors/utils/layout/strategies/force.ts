@@ -9,7 +9,7 @@
  * - Connected nodes attract (like springs)
  */
 
-import type { ForgeGraphDoc, ForgeFlowNode } from '@/src/types/forge/forge-graph';
+import type { ForgeGraphDoc, ForgeReactFlowNode } from '@/src/types/forge/forge-graph';
 import { LayoutStrategy, LayoutOptions, LayoutResult } from '../types';
 
 // ============================================================================
@@ -149,7 +149,7 @@ export class ForceLayoutStrategy implements LayoutStrategy {
 
     // Calculate bounds and apply positions
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    const updatedNodes: ForgeFlowNode[] = [];
+    const updatedNodes: ForgeReactFlowNode[] = [];
     
     for (const node of nodes) {
       const state = states.get(node.id);

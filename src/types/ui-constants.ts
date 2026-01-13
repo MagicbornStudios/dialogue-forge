@@ -5,26 +5,8 @@
  * Previously duplicated with identical content across multiple context menu components.
  */
 
-import { NODE_TYPE, type NodeType } from './constants';
-import { NARRATIVE_ELEMENT, type NarrativeElement } from './narrative';
-
-import type { ForgeNodeType } from './forge/forge-graph';
-
-/**
- * Node type label constants
- * 
- * Centralized source of truth for all node type labels.
- * Previously duplicated across 15+ files with identical content.
- */
-export const NODE_TYPE_LABELS: Record<NodeType, string> = {
-  [NODE_TYPE.NPC]: 'NPC Node',
-  [NODE_TYPE.PLAYER]: 'Player Node',
-  [NODE_TYPE.CONDITIONAL]: 'Conditional Node',
-  [NODE_TYPE.STORYLET]: 'Storylet Node',
-  [NODE_TYPE.STORYLET_POOL]: 'Storylet Pool Node',
-  [NODE_TYPE.RANDOMIZER]: 'Randomizer Node',
-  [NODE_TYPE.DETOUR]: 'Detour Node',
-};
+import type { ForgeNodeType, NarrativeForgeNodeType } from './forge/forge-graph';
+import { NARRATIVE_FORGE_NODE_TYPE } from './forge/forge-graph';
 
 /**
  * Forge node type label constants
@@ -58,59 +40,43 @@ export const NARRATIVE_NODE_TYPE_LABELS: Record<import('./forge/forge-graph').Na
   CONDITIONAL: 'Conditional Node',
 };
 
+
 /**
- * Available node types by context
- * 
- * Centralized configuration for which node types can be created
- * from different contexts (panes, edges, menus).
+ * Available narrative node types by context
+ * Note: Start node (formerly "thread") can connect to ACT nodes
  */
-export const AVAILABLE_NODE_TYPES = {
-  /** Nodes available from graph pane context menu */
-  PANE: [NODE_TYPE.NPC, NODE_TYPE.PLAYER, NODE_TYPE.CONDITIONAL],
+export const AVAILABLE_NARRATIVE_NODE_TYPES = {
+  /** Node types available from start node connections */
+  START_EDGE: [NARRATIVE_FORGE_NODE_TYPE.ACT],
   
-  /** Nodes available from player node edge connections */
-  PLAYER_EDGE: [NODE_TYPE.NPC, NODE_TYPE.CONDITIONAL],
+  /** Node types available from act node connections */
+  ACT_EDGE: [NARRATIVE_FORGE_NODE_TYPE.CHAPTER],
   
-  /** Nodes available from NPC node edge connections */
-  NPC_EDGE: [NODE_TYPE.PLAYER, NODE_TYPE.CONDITIONAL],
+  /** Node types available from chapter node connections */
+  CHAPTER_EDGE: [NARRATIVE_FORGE_NODE_TYPE.PAGE, NARRATIVE_FORGE_NODE_TYPE.ACT, NARRATIVE_FORGE_NODE_TYPE.CHAPTER],
   
-  /** Nodes available from conditional node connections */
-  CONDITIONAL_EDGE: [NODE_TYPE.PLAYER, NODE_TYPE.CONDITIONAL],
-  
-  /** Nodes available from storylet node connections */
-  STORYLET_EDGE: [NODE_TYPE.PLAYER, NODE_TYPE.CONDITIONAL],
+  /** Node types available from page node connections */
+  PAGE_EDGE: [NARRATIVE_FORGE_NODE_TYPE.PAGE, NARRATIVE_FORGE_NODE_TYPE.CHAPTER, NARRATIVE_FORGE_NODE_TYPE.ACT],
 } as const;
 
 /**
- * Narrative element label constants
- * 
- * Centralized source of truth for all narrative element labels.
+ * Available storylet node types by context
+ * Used for edge drop menus in storylet graph editor
  */
-export const NARRATIVE_ELEMENT_LABELS: Record<NarrativeElement, string> = {
-  [NARRATIVE_ELEMENT.ACT]: 'Act',
-  [NARRATIVE_ELEMENT.CHAPTER]: 'Chapter',
-  [NARRATIVE_ELEMENT.PAGE]: 'Page',
-  [NARRATIVE_ELEMENT.STORYLET]: 'Storylet',
-  [NARRATIVE_ELEMENT.DETOUR]: 'Detour',
-  [NARRATIVE_ELEMENT.CONDITIONAL]: 'Conditional',
-};
+import { FORGE_NODE_TYPE } from './forge/forge-graph';
 
-/**
- * Available narrative element types by context
- * Note: Start node (formerly "thread") can connect to ACT nodes
- */
-export const AVAILABLE_NARRATIVE_ELEMENTS = {
-  /** Elements available from start node connections */
-  START_EDGE: [NARRATIVE_ELEMENT.ACT],
+export const AVAILABLE_STORYLET_NODE_TYPES = {
+  /** Node types available from player node connections */
+  PLAYER_EDGE: [FORGE_NODE_TYPE.CHARACTER, FORGE_NODE_TYPE.CONDITIONAL],
   
-  /** Elements available from act node connections */
-  ACT_EDGE: [NARRATIVE_ELEMENT.CHAPTER],
+  /** Node types available from character node connections */
+  CHARACTER_EDGE: [FORGE_NODE_TYPE.PLAYER, FORGE_NODE_TYPE.CONDITIONAL],
   
-  /** Elements available from chapter node connections */
-  CHAPTER_EDGE: [NARRATIVE_ELEMENT.PAGE, NARRATIVE_ELEMENT.ACT, NARRATIVE_ELEMENT.CHAPTER],
+  /** Node types available from conditional node connections */
+  CONDITIONAL_EDGE: [FORGE_NODE_TYPE.CHARACTER, FORGE_NODE_TYPE.PLAYER],
   
-  /** Elements available from page node connections */
-  PAGE_EDGE: [NARRATIVE_ELEMENT.PAGE, NARRATIVE_ELEMENT.CHAPTER, NARRATIVE_ELEMENT.ACT],
+  /** Node types available from storylet node connections */
+  STORYLET_EDGE: [FORGE_NODE_TYPE.PLAYER, FORGE_NODE_TYPE.CONDITIONAL],
 } as const;
 
 /**

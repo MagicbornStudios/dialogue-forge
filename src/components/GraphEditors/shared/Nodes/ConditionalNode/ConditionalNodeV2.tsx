@@ -4,7 +4,7 @@ import type { ForgeCondition, ForgeConditionalBlock, ForgeNode } from '@/src/typ
 import { FORGE_CONDITIONAL_BLOCK_TYPE } from '@/src/types/forge/forge-graph';
 import { GitBranch, Play, Flag, Hash, Code, Edit3, Trash2 } from 'lucide-react';
 import { FlagSchema } from '../../../../../types/flags';
-import { Character } from '../../../../../types/characters';
+import { ForgeCharacter } from '../../../../../types/characters';
 import { LayoutDirection } from '../../../utils/layout/types';
 import {
   ContextMenu,
@@ -19,7 +19,7 @@ import { useForgeEditorActions } from '../../../hooks/useForgeEditorActions';
 interface ConditionalNodeData {
   node: ForgeNode;
   flagSchema?: FlagSchema;
-  characters?: Record<string, Character>;
+  characters?: Record<string, ForgeCharacter>;
   ui?: {
     isDimmed?: boolean;
     isInPath?: boolean;

@@ -8,7 +8,6 @@ import { CONDITION_OPERATOR, type ConditionOperator } from '../constants';
 export const FORGE_GRAPH_KIND = {
   NARRATIVE: 'NARRATIVE',
   STORYLET: 'STORYLET',
-  DIALOGUE: 'DIALOGUE',
 } as const;
 
 export type ForgeGraphKind = typeof FORGE_GRAPH_KIND[keyof typeof FORGE_GRAPH_KIND];
@@ -150,20 +149,20 @@ export type ForgeNode = {
   defaultNextNodeId?: string; // optional: explicitly mark default path
 };
 
-export type ForgeFlowEdge = Edge & {
+export type ForgeReactFlowEdge = Edge & {
   kind?: ForgeEdgeKind;
   label?: string;
   type?: string;
 };
 
-export type ForgeFlowNode = Node & {
+export type ForgeReactFlowNode = Node & {
   data?: ForgeNode;
   type?: string;
 };
 
-export type ForgeFlowJson = {
-  nodes: ForgeFlowNode[];
-  edges: ForgeFlowEdge[];
+export type ForgeReactFlowJson = {
+  nodes: ForgeReactFlowNode[];
+  edges: ForgeReactFlowEdge[];
   viewport?: Viewport;
 };
 
@@ -174,7 +173,7 @@ export type ForgeGraphDoc = {
   title: string;
   startNodeId: string;
   endNodeIds: { nodeId: string; exitKey?: string }[];
-  flow: ForgeFlowJson;
+  flow: ForgeReactFlowJson;
   compiledYarn?: string | null;
   updatedAt: string;
   createdAt: string;

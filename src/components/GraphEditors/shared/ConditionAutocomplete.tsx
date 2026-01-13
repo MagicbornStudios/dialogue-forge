@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { FlagSchema, FlagDefinition } from '../../../types/flags';
-import { BookOpen, Trophy, Package, TrendingUp, Crown, Globe, MessageSquare } from 'lucide-react';
+import type { FlagSchema, FlagType } from '@/src/types/flags';
+import { flagTypeIcons, flagTypeLabels } from '@/src/components/shared/FlagManager/utils/flag-constants';
+import { flagTypeColors } from '@/src/components/shared/FlagManager/utils/flag-constants';
+import { FLAG_TYPE } from '@/src/types/constants';
 
 interface ConditionAutocompleteProps {
   value: string;
@@ -21,45 +23,6 @@ interface Suggestion {
   flagType?: string;
 }
 
-function getFlagIcon(flagType: string) {
-  switch (flagType) {
-    case 'quest':
-      return BookOpen;
-    case 'achievement':
-      return Trophy;
-    case 'item':
-      return Package;
-    case 'stat':
-      return TrendingUp;
-    case 'title':
-      return Crown;
-    case 'global':
-      return Globe;
-    case 'dialogue':
-    default:
-      return MessageSquare;
-  }
-}
-
-function getFlagColorClasses(flagType: string) {
-  switch (flagType) {
-    case 'quest':
-      return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-    case 'achievement':
-      return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-    case 'item':
-      return 'bg-green-500/20 text-green-400 border-green-500/30';
-    case 'stat':
-      return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-    case 'title':
-      return 'bg-pink-500/20 text-pink-400 border-pink-500/30';
-    case 'global':
-      return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-    case 'dialogue':
-    default:
-      return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-  }
-}
 
 export function ConditionAutocomplete({
   value,
@@ -303,7 +266,7 @@ export function ConditionAutocomplete({
           {suggestions.map((suggestion, idx) => {
             const isSelected = idx === selectedIndex;
             const IconComponent = suggestion.type === 'flag' && suggestion.flagType 
-              ? getFlagIcon(suggestion.flagType) 
+              ? flagTypeIcons[suggestion.flagType as keyof typeof flagTypeIcons] 
               : null;
             
             // Get color classes for operators and keywords
@@ -331,10 +294,10 @@ export function ConditionAutocomplete({
                     {IconComponent && (
                       <IconComponent 
                         size={14} 
-                        className={`flex-shrink-0 ${getFlagColorClasses(suggestion.flagType).split(' ')[1]}`}
+                        className={`flex-shrink-0 ${flagTypeColors[suggestion.flagType as keyof typeof flagTypeColors].split(' ')[1]}`}
                       />
                     )}
-                    <span className={`text-xs px-2 py-1 rounded border flex-shrink-0 font-medium whitespace-nowrap ${getFlagColorClasses(suggestion.flagType)}`}>
+                    <span className={`text-xs px-2 py-1 rounded border flex-shrink-0 font-medium whitespace-nowrap ${flagTypeColors[suggestion.flagType as keyof typeof flagTypeColors]}`}>
                       {suggestion.label}
                     </span>
                     {suggestion.description && (
@@ -342,8 +305,8 @@ export function ConditionAutocomplete({
                         {suggestion.description}
                       </span>
                     )}
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded border flex-shrink-0 whitespace-nowrap ${getFlagColorClasses(suggestion.flagType)}`}>
-                      {suggestion.flagType === 'dialogue' ? 'temp' : suggestion.flagType}
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded border flex-shrink-0 whitespace-nowrap ${flagTypeColors[suggestion.flagType as keyof typeof flagTypeColors]}`}>
+                      {flagTypeLabels[suggestion.flagType as FlagType]}
                     </span>
                   </>
                 )}

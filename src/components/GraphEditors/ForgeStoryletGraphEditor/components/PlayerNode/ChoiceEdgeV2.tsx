@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BaseEdge, EdgeProps, getSmoothStepPath, getBezierPath, Position } from 'reactflow';
-import type { ForgeFlowEdge, ForgeFlowNode } from '@/src/types/forge/forge-graph';
+import type { ForgeReactFlowEdge, ForgeReactFlowNode } from '@/src/types/forge/forge-graph';
 import { edgeColorFor } from '../../../utils/forge-edge-styles';
 import { EdgePulseAnimation, LoopIndicator } from '../../../shared/EdgeSVGElements';
 import {
@@ -19,7 +19,7 @@ interface ChoiceEdgeData {
   choiceIndex?: number;
   isDimmed?: boolean;
   isInPathToSelected?: boolean;
-  sourceNode?: ForgeFlowNode;
+  sourceNode?: ForgeReactFlowNode;
 }
 
 export function ChoiceEdgeV2({
@@ -66,7 +66,7 @@ export function ChoiceEdgeV2({
   const edge = { 
     sourceHandle: `choice-${edgeData?.choiceIndex ?? 0}`,
     id,
-  } as ForgeFlowEdge;
+  } as ForgeReactFlowEdge;
   const baseColor = edgeColorFor(edge, sourceNode);
   
   // Use loop color for back edges, otherwise use choice color

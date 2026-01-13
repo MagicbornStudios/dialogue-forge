@@ -1,22 +1,4 @@
 // src/types/narrative.ts
-import type { NarrativeForgeNodeType } from './forge/forge-graph';
-import { FORGE_GRAPH_KIND } from './forge/forge-graph';
-
-/**
- * Narrative element type constants
- * These map to NarrativeForgeNodeType values
- */
-export const NARRATIVE_ELEMENT = {
-  ACT: 'ACT',
-  CHAPTER: 'CHAPTER',
-  PAGE: 'PAGE',
-  STORYLET: 'STORYLET',
-  DETOUR: 'DETOUR',
-  CONDITIONAL: 'CONDITIONAL',
-} as const;
-
-export type NarrativeElement = typeof NARRATIVE_ELEMENT[keyof typeof NARRATIVE_ELEMENT];
-
 /**
  * Narrative types - Internal library types
  * 
@@ -80,19 +62,3 @@ export type ForgePage = {
   dialogueGraph?: number | null;
 };
 
-/**
- * Narrative graph structure
- * The narrative graph is a ForgeGraphDoc with kind='NARRATIVE'
- * Nodes reference PayloadCMS documents via actId, chapterId, pageId
- */
-import type { ForgeGraphDoc } from './forge/forge-graph';
-
-export interface ForgeNarrativeGraph {
-  // The graph itself (must have kind='NARRATIVE')
-  graph: ForgeGraphDoc & { kind: typeof FORGE_GRAPH_KIND.NARRATIVE };
-  
-  // Referenced PayloadCMS documents
-  acts: ForgeAct[];
-  chapters: ForgeChapter[];
-  pages: ForgePage[];
-}

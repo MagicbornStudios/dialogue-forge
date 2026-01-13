@@ -9,7 +9,7 @@
 
 import { ForgeGraphDoc } from '../../../../types';
 import { LAYOUT_CONSTANTS } from '../constants';
-import { ForgeFlowNode, ForgeNode } from '@/src/types/forge/forge-graph';
+import { ForgeReactFlowNode, ForgeNode } from '@/src/types/forge/forge-graph';
 
 // ============================================================================
 // Local Layout Constants
@@ -108,7 +108,7 @@ export function resolveNodeCollisions(
     updatedNodes[pos.id] = { ...graph.flow.nodes[pos.id as unknown as number].data, x: pos.x, y: pos.y };
   }
 
-  return { ...graph, flow: { ...graph.flow, nodes: Object.values(updatedNodes) as ForgeFlowNode[] } };
+  return { ...graph, flow: { ...graph.flow, nodes: Object.values(updatedNodes) as ForgeReactFlowNode[] } };
 }
 
 

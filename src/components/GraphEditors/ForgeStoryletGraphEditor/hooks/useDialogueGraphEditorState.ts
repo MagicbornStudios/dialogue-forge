@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { ViewMode } from '../../../../types';
 import { VIEW_MODE } from '../../../../types/constants';
-import { LayoutDirection } from '../../../../utils/layout';
+import { LayoutDirection } from '../../../utils/layout/types';
 
 export function useDialogueGraphEditorState(
   initialViewMode: ViewMode = VIEW_MODE.GRAPH,

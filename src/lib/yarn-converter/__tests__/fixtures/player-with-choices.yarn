@@ -1,0 +1,7 @@
+title: player1
+---
+-> Yes, I'll help you
+    <<jump yes_node>>
+-> No, I'm busy
+    <<jump no_node>>
+===

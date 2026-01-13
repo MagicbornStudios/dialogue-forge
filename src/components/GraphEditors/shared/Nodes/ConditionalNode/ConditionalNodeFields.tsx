@@ -1,7 +1,7 @@
 import React from 'react';
 import { ForgeGraphDoc } from '../../../../../types';
 import { FlagSchema } from '../../../../../types/flags';
-import { Character } from '../../../../../types/characters';
+import { ForgeCharacter } from '../../../../../types/characters';
 import { CharacterSelector } from '../../../ForgeStoryletGraphEditor/components/CharacterSelector';
 import { ConditionAutocomplete } from '../../ConditionAutocomplete';
 import { X, User, Maximize2 } from 'lucide-react';
@@ -11,7 +11,7 @@ import { ForgeNode, FORGE_CONDITIONAL_BLOCK_TYPE } from '@/src/types/forge/forge
 interface ConditionalNodeFieldsProps {
   node: ForgeNode;
   graph: ForgeGraphDoc;
-  characters: Record<string, Character>;
+  characters: Record<string, ForgeCharacter>;
   flagSchema?: FlagSchema;
   conditionInputs: Record<string, string>;
   debouncedConditionInputs: Record<string, string>;

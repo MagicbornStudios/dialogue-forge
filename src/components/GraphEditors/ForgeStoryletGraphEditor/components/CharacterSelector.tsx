@@ -3,12 +3,12 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Character } from '../../../../types/characters';
+import { ForgeCharacter } from '../../../../types/characters';
 import { ANIMATION_CONSTANTS } from '../../utils/constants';
 import { Search, X, User } from 'lucide-react';
 
 interface CharacterSelectorProps {
-  characters?: Record<string, Character>;
+  characters?: Record<string, ForgeCharacter>;
   selectedCharacterId?: string;
   onSelect: (characterId: string | undefined) => void;
   placeholder?: string;

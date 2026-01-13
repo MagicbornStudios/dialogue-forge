@@ -1,7 +1,7 @@
 import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { CornerDownRight, Hash, ArrowLeftCircle } from 'lucide-react';
-import type { LayoutDirection } from '../../../../utils/layout';
+import type { LayoutDirection } from '../../../utils/layout/types';
 
 interface DetourNodeData {
   id: string;

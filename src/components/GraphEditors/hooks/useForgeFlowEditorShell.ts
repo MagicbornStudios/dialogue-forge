@@ -13,7 +13,7 @@ import {
 } from 'reactflow';
 import { useStore } from 'zustand';
 
-import type { ForgeFlowJson, ForgeGraphDoc, ForgeNode, ForgeNodeType } from '@/src/types/forge/forge-graph';
+import type { ForgeReactFlowJson, ForgeGraphDoc, ForgeNode, ForgeNodeType } from '@/src/types/forge/forge-graph';
 import { FORGE_GRAPH_KIND } from '@/src/types/forge/forge-graph';
 import {
   applyConnection,
@@ -134,7 +134,7 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
         compiledYarn: null,
         updatedAt: now,
         createdAt: now,
-        flow: { nodes: [], edges: [], viewport: undefined } as ForgeFlowJson,
+        flow: { nodes: [], edges: [], viewport: undefined } as ForgeReactFlowJson,
       }
     );
   }, [graph]);

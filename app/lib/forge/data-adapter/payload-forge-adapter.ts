@@ -1,10 +1,12 @@
 // src/forge/adapter/payload-forge-adapter.ts
 import { PayloadSDK } from '@payloadcms/sdk';
-import type { ForgeDataAdapter, ForgeProjectSummary, ForgeCharacter, ForgeFlagSchema } from '@/src/components/forge/forge-data-adapter/forge-data-adapter';
-import type { ForgeGraphDoc, ForgeFlowJson, ForgeGraphKind } from '@/src/types/forge/forge-graph';
-import type { Project, Character, FlagSchema, ForgeGraph, Act } from '@/app/payload-types';
+import type { ForgeDataAdapter, ForgeProjectSummary, ForgeFlagSchema } from '@/src/components/forge/forge-data-adapter/forge-data-adapter';
+import type { ForgeGraphDoc, ForgeReactFlowJson, ForgeGraphKind } from '@/src/types/forge/forge-graph';
+import type { Project, Character, FlagSchema, ForgeGraph, Act, GameState } from '@/app/payload-types';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
 import { ForgeAct } from '@/src/types/narrative';
+import { ForgeFlagState, ForgeGameState } from '@/src/types/forge-game-state';
+import type { ForgeCharacter } from '@/src/types/characters';
 
 /**
  * Helper to extract narrativeGraph ID from Project
@@ -21,12 +23,13 @@ function extractNarrativeGraphId(project: Project): number | null {
 
 /**
  * Map Payload Character to ForgeCharacter
+ * Converts id from number to string to match canonical type
  */
 function mapCharacter(char: Character): ForgeCharacter {
   return {
-    id: char.id,
+    id: String(char.id), // Convert number ID to string
     name: char.name,
-    avatar: typeof char.avatar === 'number' ? char.avatar : char.avatar?.id ?? null,
+    avatar: typeof char.avatar === 'number' ? String(char.avatar) : (char.avatar?.id ? String(char.avatar.id) : undefined),
     meta: char.meta ?? undefined,
   };
 }
@@ -45,7 +48,7 @@ function mapForgeGraph(graph: ForgeGraph): ForgeGraphDoc {
       nodeId: end.nodeId,
       exitKey: end.exitKey ?? undefined,
     })),
-    flow: graph.flow as ForgeFlowJson,
+    flow: graph.flow as ForgeReactFlowJson,
     compiledYarn: graph.compiledYarn ?? null,
     updatedAt: graph.updatedAt,
     createdAt: graph.createdAt,
@@ -139,7 +142,7 @@ export function makePayloadForgeAdapter(opts?: {
       projectId: number;
       kind: ForgeGraphKind;
       title: string;
-      flow: ForgeFlowJson;
+      flow: ForgeReactFlowJson;
       startNodeId: string;
       endNodeIds: { nodeId: string; exitKey?: string }[];
     }): Promise<ForgeGraphDoc> {
@@ -335,5 +338,66 @@ export function makePayloadForgeAdapter(opts?: {
             _status: result._status as 'draft' | 'published' | null,
         };
     },  
+    async getGameState(projectId: number): Promise<ForgeGameState> {
+        const result = await payload.findByID({
+            collection: PAYLOAD_COLLECTIONS.GAME_STATES,
+            id: projectId,
+        }) as GameState;
+
+        let charactersResult = await payload.find({
+            collection: PAYLOAD_COLLECTIONS.CHARACTERS,
+            where: {
+                project: {
+                    equals: projectId,
+                },
+            },
+        });
+        let characters = charactersResult.docs.map((c) => mapCharacter(c as Character))
+        const forgeCharacters = characters.map((c) => c as ForgeCharacter);
+        const forgeCharactersMapRecord = forgeCharacters.reduce((acc, c) => {
+            acc[c.id] = c; // c.id is already a string
+            return acc;
+        }, {} as Record<string, ForgeCharacter>);
+        const stateData = result.state as { flags?: ForgeFlagState; characters?: unknown } | undefined;
+        const forgeFlags = stateData?.flags as ForgeFlagState | undefined;
+
+        return {
+            flags: forgeFlags || {},
+            characters: forgeCharactersMapRecord,
+        } as ForgeGameState;
+    },
+    async updateGameState(projectId: number, patch: Partial<ForgeGameState>): Promise<ForgeGameState> {
+        const result = await payload.update({
+            collection: PAYLOAD_COLLECTIONS.GAME_STATES,
+            id: projectId,
+            data: {
+                state: patch,
+            },
+        }) as GameState;
+        const stateData = (result.state as unknown) as ForgeGameState | undefined;
+        return stateData || { flags: {} };
+    },
+    async createGameState(input: {
+        projectId: number;
+        state: unknown;
+    }): Promise<ForgeGameState> {
+        const result = await payload.create({
+            collection: PAYLOAD_COLLECTIONS.GAME_STATES,
+            data: {
+                project: input.projectId,
+                type: 'AUTHORED',
+                state: input.state,
+            },
+        }) as GameState;
+        const stateData = (result.state as unknown) as ForgeGameState | undefined;
+        return stateData || { flags: {} };
+    },
+    async deleteGameState(projectId: number): Promise<void> {
+        await payload.delete({
+            collection: PAYLOAD_COLLECTIONS.GAME_STATES,
+            id: projectId,
+        });
+    },
   };
+
 }

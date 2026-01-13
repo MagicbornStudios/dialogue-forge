@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { ForgeGraphDoc, Choice } from '../../../../types';
 import { FlagSchema } from '../../../../types/flags';
-import { Character } from '../../../../types/characters';
+import { ForgeCharacter } from '../../../../types/characters';
 import { FlagSelector } from '../FlagSelector';
 import { useConditionInputs } from './hooks/useConditionInputs';
 import { useChoices } from './hooks/useChoices';
 import { getNodeTypeBorderColor, getNodeTypeBadge, getNodeTypeLabel } from './utils/nodeTypeHelpers';
-import { CharacterNodeFields } from '../../ForgeStoryletGraphEditor/components/NPCNode/CharacterNodeFields';
+import { CharacterNodeFields } from '../../ForgeStoryletGraphEditor/components/CharacterNode/CharacterNodeFields';
 import { StoryletNodeFields } from '../../ForgeStoryletGraphEditor/components/StoryletNode/StoryletNodeFields';
 
 
@@ -23,7 +23,7 @@ interface NodeEditorProps {
   onPlayFromHere?: (nodeId: string) => void;
   onFocusNode?: (nodeId: string) => void;
   flagSchema?: FlagSchema;
-  characters?: Record<string, Character>;
+  characters?: Record<string, ForgeCharacter>;
 }
 
 export function NodeEditor({
@@ -54,10 +54,6 @@ export function NodeEditor({
     expandedChoices,
     dismissedChoices,
     setChoiceInputs,
-    setDebouncedChoiceInputs,
-    setExpandedChoices,
-    setDismissedChoices,
-    debounceTimersRef: choiceDebounceTimersRef,
   } = useChoices(node);
 
   const handleStoryletCallUpdate = (updates: Partial<NonNullable<ForgeNode['storyletCall']>>) => {

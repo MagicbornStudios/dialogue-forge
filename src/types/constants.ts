@@ -14,20 +14,6 @@ export const VIEW_MODE = {
 
 export type ViewMode = typeof VIEW_MODE[keyof typeof VIEW_MODE];
 
-/**
- * Node types in a dialogue tree
- */
-export const NODE_TYPE = {
-  NPC: 'npc',
-  PLAYER: 'player',
-  CONDITIONAL: 'conditional',
-  STORYLET: 'storylet',
-  STORYLET_POOL: 'storylet_pool',
-  RANDOMIZER: 'randomizer',
-  DETOUR: 'detour',
-} as const;
-
-export type NodeType = typeof NODE_TYPE[keyof typeof NODE_TYPE];
 
 /**
  * Flag types for game state management
@@ -86,35 +72,29 @@ export type QuestState = typeof QUEST_STATE[keyof typeof QUEST_STATE];
 /**
  * Dialogue Forge event types
  */
-export const DIALOGUE_FORGE_EVENT_TYPE = {
+export const FORGE_EVENT_TYPE = {
   UI_TAB_CHANGED: 'ui.tabChanged',
-  NARRATIVE_SELECT: 'narrative.select',
-  DIALOGUE_OPEN_REQUESTED: 'dialogue.openRequested',
-  DIALOGUE_CHANGED: 'dialogue.changed',
-  STORYLET_TEMPLATE_OPEN_REQUESTED: 'storyletTemplate.openRequested',
+  GRAPH_CHANGED: 'graph.changed',
+  GRAPH_OPEN_REQUESTED: 'graph.openRequested',
 } as const;
 
-export type DialogueForgeEventType = typeof DIALOGUE_FORGE_EVENT_TYPE[keyof typeof DIALOGUE_FORGE_EVENT_TYPE];
-
-/**
- * Dialogue panel tab types
- */
-export const DIALOGUE_PANEL_TAB = {
-  PAGE: 'page',
-  STORYLET_TEMPLATE: 'storyletTemplate',
+export const GRAPH_CHANGE_REASON = {
+  OPEN: 'open',
+  CLOSE: 'close',
 } as const;
 
-export type DialoguePanelTab = typeof DIALOGUE_PANEL_TAB[keyof typeof DIALOGUE_PANEL_TAB];
+export type GraphChangeReason = typeof GRAPH_CHANGE_REASON[keyof typeof GRAPH_CHANGE_REASON];
 
-/**
- * Dialogue open reason types
- */
-export const DIALOGUE_OPEN_REASON = {
-  PAGE: 'page',
-  STORYLET_TEMPLATE: 'storyletTemplate',
+export const GRAPH_SCOPE = {
+  NARRATIVE: 'narrative',
+  STORYLET: 'storylet',
 } as const;
 
-export type DialogueOpenReason = typeof DIALOGUE_OPEN_REASON[keyof typeof DIALOGUE_OPEN_REASON];
+export type GraphScope = typeof GRAPH_SCOPE[keyof typeof GRAPH_SCOPE];
+
+export type ForgeEventType = typeof FORGE_EVENT_TYPE[keyof typeof FORGE_EVENT_TYPE];
+
+
 
 /**
  * Yarn Spinner operator constants for generating Yarn syntax

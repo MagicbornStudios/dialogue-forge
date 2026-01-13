@@ -1,14 +1,14 @@
-import { GameFlagState } from '../../../types/game-state';
-import { FlagSchema, FlagDefinition } from '../../../types/flags';
-import { FLAG_TYPE, FLAG_VALUE_TYPE } from '../../../types/constants';
+import { ForgeGameFlagState } from '@/src/types/forge-game-state';
+import { FlagSchema, FlagDefinition } from '@/src/types/flags';
+import { FLAG_TYPE, FLAG_VALUE_TYPE } from '@/src/types/constants';
 
 /**
  * Initialize game flags from schema with default values
  */
-export function initializeFlags(schema: FlagSchema): GameFlagState {
-  const flags: GameFlagState = {};
+export function initializeFlags(schema: FlagSchema): ForgeGameFlagState {
+  const flags: ForgeGameFlagState = {};
   
-  schema.flags.forEach(flag => {
+  schema.flags.forEach((flag: FlagDefinition) => {
     if (flag.defaultValue !== undefined) {
       flags[flag.id] = flag.defaultValue;
     } else if (flag.valueType === 'number') {
@@ -27,14 +27,14 @@ export function initializeFlags(schema: FlagSchema): GameFlagState {
  * Merge current flags with updates from dialogue
  */
 export function mergeFlagUpdates(
-  currentFlags: GameFlagState,
+  currentFlags: ForgeGameFlagState,
   updates: string[],
   schema?: FlagSchema
-): GameFlagState {
+): ForgeGameFlagState {
   const newFlags = { ...currentFlags };
   
   updates.forEach(flagId => {
-    const flagDef = schema?.flags.find(f => f.id === flagId);
+    const flagDef = schema?.flags.find((f: FlagDefinition) => f.id === flagId);
     
     if (flagDef) {
       // Use default value or increment if number
@@ -66,14 +66,14 @@ export function mergeFlagUpdates(
 /**
  * Validate flags against schema
  */
-export function validateFlags(flags: GameFlagState, schema: FlagSchema): {
+export function validateFlags(flags: ForgeGameFlagState, schema: FlagSchema): {
   valid: boolean;
   errors: string[];
 } {
   const errors: string[] = [];
   
   Object.keys(flags).forEach(flagId => {
-    const flagDef = schema.flags.find(f => f.id === flagId);
+    const flagDef = schema.flags.find((f: FlagDefinition) => f.id === flagId);
     if (!flagDef) {
       errors.push(`Unknown flag: ${flagId}`);
     } else if (flagDef.valueType) {
@@ -98,7 +98,7 @@ export function validateFlags(flags: GameFlagState, schema: FlagSchema): {
  * Get flag value with type safety
  */
 export function getFlagValue(
-  flags: GameFlagState,
+  flags: ForgeGameFlagState,
   flagId: string,
   defaultValue?: boolean | number | string
 ): boolean | number | string {

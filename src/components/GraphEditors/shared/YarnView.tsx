@@ -11,13 +11,13 @@ interface YarnViewProps {
 
 export function YarnView({ dialogue, onExport, onImport, onChange }: YarnViewProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [yarnText, setYarnText] = useState(exportToYarn(dialogue));
+  const [yarnText, setYarnText] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   
   // Update yarn text when dialogue changes externally
   useEffect(() => {
     if (!isEditing) {
-      setYarnText(exportToYarn(dialogue));
+      exportToYarn(dialogue).then(setYarnText).catch(console.error);
     }
   }, [dialogue, isEditing]);
   
@@ -33,13 +33,14 @@ export function YarnView({ dialogue, onExport, onImport, onChange }: YarnViewPro
         onImport(content);
       }
       if (onChange) {
-        try {
-          const importedDialogue = importFromYarn(content, dialogue.title);
-          onChange(importedDialogue);
-        } catch (err) {
-          console.error('Failed to import Yarn:', err);
-          alert('Failed to import Yarn file. Please check the format.');
-        }
+        importFromYarn(content, dialogue.title)
+          .then(importedDialogue => {
+            onChange(importedDialogue);
+          })
+          .catch(err => {
+            console.error('Failed to import Yarn:', err);
+            alert('Failed to import Yarn file. Please check the format.');
+          });
       }
     };
     reader.readAsText(file);
@@ -48,19 +49,20 @@ export function YarnView({ dialogue, onExport, onImport, onChange }: YarnViewPro
   
   const handleSave = () => {
     if (onChange) {
-      try {
-        const importedDialogue = importFromYarn(yarnText, dialogue.title);
-        onChange(importedDialogue);
-        setIsEditing(false);
-      } catch (err) {
-        console.error('Failed to parse Yarn:', err);
-        alert('Failed to parse Yarn text. Please check the format.');
-      }
+      importFromYarn(yarnText, dialogue.title)
+        .then(importedDialogue => {
+          onChange(importedDialogue);
+          setIsEditing(false);
+        })
+        .catch(err => {
+          console.error('Failed to parse Yarn:', err);
+          alert('Failed to parse Yarn text. Please check the format.');
+        });
     }
   };
   
   const handleCancel = () => {
-    setYarnText(exportToYarn(dialogue));
+    exportToYarn(dialogue).then(setYarnText).catch(console.error);
     setIsEditing(false);
   };
   

@@ -3,10 +3,10 @@ import { ForgeNodeType, FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
 import { FORGE_NODE_TYPE_LABELS } from '@/src/types/ui-constants';
 
 interface NarrativeGraphEditorPaneContextMenuProps {
-  x: number;
-  y: number;
-  graphX: number;
-  graphY: number;
+  x: number; // screenX
+  y: number; // screenY
+  graphX: number; // flowX
+  graphY: number; // flowY
   onAddNode: (type: ForgeNodeType, x: number, y: number) => void;
   onClose: () => void;
 }

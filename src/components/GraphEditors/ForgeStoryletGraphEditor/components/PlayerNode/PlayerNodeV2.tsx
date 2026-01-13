@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
 import { Choice } from '../../../../../types';
-import { Character } from '../../../../../types/characters';
+import { ForgeCharacter } from '../../../../../types/characters';
 import { GitBranch, Play, Flag, Hash, Edit3, Plus, Trash2 } from 'lucide-react';
 import { FlagSchema } from '../../../../../types/flags';
 import { LayoutDirection } from '../../../utils/layout/types';
@@ -19,7 +19,7 @@ import { useForgeEditorActions } from '../../../hooks/useForgeEditorActions';
 interface PlayerNodeData {
   node: ForgeNode;
   flagSchema?: FlagSchema;
-  characters?: Record<string, Character>;
+  characters?: Record<string, ForgeCharacter>;
   ui?: {
     isDimmed?: boolean;
     isInPath?: boolean;

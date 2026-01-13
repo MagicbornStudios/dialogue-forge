@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ForgeGraphDoc, type NarrativeThread } from '../../../types';
+import { ForgeGraphDoc } from '../../../types';
 import { FLAG_TYPE } from '../../../types/constants';
 import { FlagSchema, FlagType } from '../../../types/flags';
-import { DialogueResult, FlagState, GameFlagState } from '../../../types/game-state';
+import { DialogueResult, ForgeFlagState, ForgeGameFlagState } from '../../../types/forge-game-state';
 import { initializeFlags } from '../../shared/FlagManager/utils/flag-manager';
 import { GamePlayer } from '../../GamePlayer/components/GamePlayer';
 
@@ -10,8 +10,7 @@ interface PlayViewProps {
   graph: ForgeGraphDoc;
   startNodeId?: string;
   flagSchema?: FlagSchema;
-  gameStateFlags?: GameFlagState;
-  narrativeThread?: NarrativeThread;
+  gameStateFlags?: ForgeGameFlagState;
 }
 
 export function PlayView({
@@ -19,7 +18,6 @@ export function PlayView({
   startNodeId,
   flagSchema,
   gameStateFlags,
-  narrativeThread,
 }: PlayViewProps) {
   // Initialize game flags with defaults from schema, then merge with gameStateFlags
   const resolvedGameStateFlags = useMemo(() => {
@@ -30,12 +28,12 @@ export function PlayView({
     return gameStateFlags || {};
   }, [flagSchema, gameStateFlags]);
   
-  const [currentFlags, setCurrentFlags] = useState<FlagState>(resolvedGameStateFlags);
+  const [currentFlags, setCurrentFlags] = useState<ForgeFlagState>(resolvedGameStateFlags);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [flagsSetDuringRun, setFlagsSetDuringRun] = useState<Set<string>>(new Set());
 
   // Track baseline flags to detect changes
-  const baseFlagsRef = useRef<GameFlagState>(resolvedGameStateFlags);
+  const baseFlagsRef = useRef<ForgeGameFlagState>(resolvedGameStateFlags);
 
   useEffect(() => {
     baseFlagsRef.current = resolvedGameStateFlags;
@@ -53,7 +51,7 @@ export function PlayView({
     }
   };
   
-  const handleFlagUpdate = (flags: FlagState) => {
+  const handleFlagUpdate = (flags: ForgeFlagState) => {
     setCurrentFlags(flags);
     
     // Track which flags were set during this run
@@ -205,7 +203,6 @@ export function PlayView({
         gameStateFlags={resolvedGameStateFlags}
         onComplete={handleComplete}
         onFlagsChange={handleFlagUpdate}
-        narrativeThread={narrativeThread}
       />
     </main>
   );

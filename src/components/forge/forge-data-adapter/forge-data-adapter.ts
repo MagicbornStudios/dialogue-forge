@@ -1,6 +1,8 @@
 // src/forge/adapter/forge-data-adapter.ts
-import type { ForgeGraphDoc, ForgeFlowJson, ForgeGraphKind } from '@/src/types/forge/forge-graph';
+import type { ForgeGraphDoc, ForgeReactFlowJson, ForgeGraphKind } from '@/src/types/forge/forge-graph';
+import { ForgeGameState } from '@/src/types/forge-game-state';
 import { ForgeAct } from '@/src/types/narrative';
+import type { ForgeCharacter } from '@/src/types/characters';
 
 export type ForgeProjectSummary = {
   id: number;
@@ -10,12 +12,6 @@ export type ForgeProjectSummary = {
   storyletGraphs?: number[] | null;
 };
 
-export type ForgeCharacter = {
-  id: number;
-  name: string;
-  avatar?: number | null;
-  meta?: unknown;
-};
 
 export type ForgeFlagSchema = {
   id: number;
@@ -34,7 +30,7 @@ export interface ForgeDataAdapter {
     projectId: number;
     kind: ForgeGraphKind;
     title: string;
-    flow: ForgeFlowJson;
+    flow: ForgeReactFlowJson;
     startNodeId: string;
     endNodeIds: { nodeId: string; exitKey?: string }[];
   }): Promise<ForgeGraphDoc>;
@@ -53,7 +49,7 @@ export interface ForgeDataAdapter {
     meta?: unknown;
   }): Promise<ForgeCharacter>;
   updateFlagSchema(flagSchemaId: number, patch: Partial<ForgeFlagSchema>): Promise<ForgeFlagSchema>;
-  createFlagSchema(input: {
+  createFlagSchema(input: { 
     projectId: number;
     schema: unknown;
   }): Promise<ForgeFlagSchema>;
@@ -67,4 +63,11 @@ export interface ForgeDataAdapter {
     summary?: string | null;
     order: number;
   }): Promise<ForgeAct>;
+  getGameState(projectId: number): Promise<ForgeGameState>;
+  updateGameState(projectId: number, patch: Partial<ForgeGameState>): Promise<ForgeGameState>;
+  createGameState(input: {
+    projectId: number;
+    state: unknown;
+  }): Promise<ForgeGameState>;
+  deleteGameState(projectId: number): Promise<void>;
 }

@@ -21,9 +21,10 @@
  * ```
  */
 
-import { FLAG_TYPE, FLAG_VALUE_TYPE, FlagValueType } from './constants';
+import { FLAG_TYPE, FLAG_VALUE_TYPE, type FlagValueType } from './constants';
 
 export type FlagType = typeof FLAG_TYPE[keyof typeof FLAG_TYPE];
+export type { FlagValueType };
 
 export interface FlagDefinition {
   id: string;

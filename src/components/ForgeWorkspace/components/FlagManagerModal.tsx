@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { X, CircleDot, BookOpen, Flag } from 'lucide-react';
 import { FlagManager } from '../../shared/FlagManager/FlagManager';
 import type { ForgeGraphDoc } from '../../../types';
-import type { BaseGameState } from '../../../types/game-state';
-import type { Character } from '../../../types/characters';
+import type { ForgeGameState } from '../../../types/forge-game-state';
+import type { ForgeCharacter } from '../../../types/characters';
 import type { FlagSchema } from '../../../types/flags';
 import { FLAG_TYPE } from '../../../types/constants';
 
@@ -12,10 +12,10 @@ interface FlagManagerModalProps {
   onClose: () => void;
   flagSchema: FlagSchema;
   dialogue: ForgeGraphDoc;
-  activeGameState: BaseGameState;
-  resolvedCharacters: Record<string, Character>;
+  activeGameState: ForgeGameState;
+  resolvedCharacters: Record<string, ForgeCharacter>;
   onUpdateFlagSchema: (schema: FlagSchema) => void;
-  onUpdateGameState: (state: BaseGameState) => void;
+  onUpdateGameState: (state: ForgeGameState) => void;
 }
 
 export function FlagManagerModal({
@@ -39,7 +39,7 @@ export function FlagManagerModal({
 
   const handleSaveGameState = () => {
     try {
-      const nextState = JSON.parse(gameStateDraft) as BaseGameState;
+      const nextState = JSON.parse(gameStateDraft) as ForgeGameState;
       if (!nextState.flags) {
         setGameStateError('Game state must include a flags object.');
         return;

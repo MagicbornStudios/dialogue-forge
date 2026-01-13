@@ -1,6 +1,6 @@
 import React from 'react';
 import { Panel, MiniMap } from 'reactflow';
-import { NODE_TYPE } from '../../../types/constants';
+import { FORGE_NODE_TYPE } from '../../../types/forge/forge-graph';
 
 interface GraphMiniMapProps {
   showMiniMap: boolean;
@@ -30,10 +30,10 @@ export function GraphMiniMap({ showMiniMap }: GraphMiniMapProps) {
           }}
           maskColor="rgba(0, 0, 0, 0.7)"
           nodeColor={node => {
-            if (node.type === NODE_TYPE.NPC || node.type === NODE_TYPE.STORYLET || node.type === NODE_TYPE.STORYLET_POOL)
+            if (node.type === FORGE_NODE_TYPE.CHARACTER || node.type === FORGE_NODE_TYPE.STORYLET)
               return '#e94560';
-            if (node.type === NODE_TYPE.PLAYER) return '#8b5cf6';
-            if (node.type === NODE_TYPE.CONDITIONAL) return '#3b82f6';
+            if (node.type === FORGE_NODE_TYPE.PLAYER) return '#8b5cf6';
+            if (node.type === FORGE_NODE_TYPE.CONDITIONAL) return '#3b82f6';
             return '#4a4a6a';
           }}
           nodeStrokeWidth={2}

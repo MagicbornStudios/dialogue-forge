@@ -2,17 +2,15 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { PlayView } from '../../GraphEditors/shared/PlayView';
 import type { ForgeGraphDoc } from '../../../types';
-import type { BaseGameState } from '../../../types/game-state';
+import type { ForgeGameState } from '../../../types/forge-game-state';
 import type { FlagSchema } from '../../../types/flags';
-import type { StoryThread } from '../../../types/narrative';
 
 interface PlayModalProps {
   isOpen: boolean;
   onClose: () => void;
   graph: ForgeGraphDoc;
   flagSchema?: FlagSchema;
-  gameStateFlags?: BaseGameState['flags'];
-  narrativeThread: StoryThread;
+  gameStateFlags?: ForgeGameState['flags'];
   title: string;
   subtitle: string;
 }
@@ -23,7 +21,6 @@ export function PlayModal({
   graph: graph,
   flagSchema,
   gameStateFlags,
-  narrativeThread,
   title,
   subtitle,
 }: PlayModalProps) {
@@ -53,7 +50,6 @@ export function PlayModal({
             startNodeId={graph.startNodeId}
             flagSchema={flagSchema}
             gameStateFlags={gameStateFlags}
-            narrativeThread={narrativeThread}
           />
         </div>
       </div>

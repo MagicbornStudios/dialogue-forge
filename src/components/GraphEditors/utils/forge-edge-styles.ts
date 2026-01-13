@@ -1,5 +1,5 @@
 // src/utils/forge-edge-style.ts
-import type { ForgeFlowEdge, ForgeFlowNode, ForgeNodeType } from '@/src/types/forge/forge-graph';
+import type { ForgeReactFlowEdge, ForgeReactFlowNode, ForgeNodeType } from '@/src/types/forge/forge-graph';
 
 export const CHOICE_COLORS = ['#e94560', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b'];
 
@@ -17,8 +17,8 @@ export const TYPE_COLORS: Record<ForgeNodeType, string> = {
 };
 
 export function edgeColorFor(
-  edge: ForgeFlowEdge,
-  sourceNode?: ForgeFlowNode
+  edge: ForgeReactFlowEdge,
+  sourceNode?: ForgeReactFlowNode
 ): string {
   const handle = edge.sourceHandle ?? '';
   if (handle.startsWith('choice-')) {
@@ -41,10 +41,10 @@ export function edgeColorFor(
 }
 
 export function styleEdge(
-  edge: ForgeFlowEdge,
-  sourceNode: ForgeFlowNode | undefined,
+  edge: ForgeReactFlowEdge,
+  sourceNode: ForgeReactFlowNode | undefined,
   opts: { isInPath: boolean; isDimmed: boolean; isBackEdge: boolean }
-): ForgeFlowEdge {
+): ForgeReactFlowEdge {
   const stroke = edgeColorFor(edge, sourceNode);
   const opacity = opts.isDimmed ? 0.15 : opts.isInPath ? 0.95 : 0.55;
 

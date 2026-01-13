@@ -4,16 +4,13 @@
  * Defines character data structure for dialogue nodes
  */
 
-export interface Character {
+export interface ForgeCharacter {
   id: string;
   name: string;
-  avatar?: string; // URL or path to avatar image
+  avatar?: string | number | null; // URL, path, or numeric ID to avatar image
   description?: string;
+  meta?: unknown; // Additional character metadata
   // Additional character metadata can be added here
   [key: string]: any; // Allow extensibility
-}
-
-export interface CharactersState {
-  [characterId: string]: Character;
 }
 

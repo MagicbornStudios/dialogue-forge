@@ -5,7 +5,7 @@
  * Implements the Strategy pattern to allow swappable layout algorithms.
  */
 
-import type { ForgeGraphDoc } from '../../types';
+import type { ForgeGraphDoc } from '@/src/types';
 
 // ============================================================================
 // Types

@@ -12,15 +12,14 @@ import ReactFlow, {
   Background,
   ConnectionLineType,
   BackgroundVariant,
-  type Node,
   useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 import { useFlowPathHighlighting } from '@/src/components/GraphEditors/hooks/useFlowPathHighlighting';
-import { edgeStrokeColor, removeEdgeAndSemanticLink, type LayoutDirection } from '@/src/utils/forge-flow-helpers';
+import { type LayoutDirection } from '@/src/utils/forge-flow-helpers';
 
-import { applyLayout, resolveNodeCollisions } from '@/src/components/GraphEditors/utils/layout/layout';
+import { applyLayout } from '@/src/components/GraphEditors/utils/layout/layout';
 import { GraphLeftToolbar } from '@/src/components/GraphEditors/shared/GraphLeftToolbar';
 import { GraphLayoutControls } from '@/src/components/GraphEditors/shared/GraphLayoutControls';
 import { GraphMiniMap } from '@/src/components/GraphEditors/shared/GraphMiniMap';
@@ -32,13 +31,10 @@ import { ChapterNode } from './components/ChapterNode/ChapterNode';
 import { PageNode } from './components/PageNode/PageNode';
 import { ConditionalNodeV2 } from '@/src/components/GraphEditors/shared/Nodes/ConditionalNode/ConditionalNodeV2';
 import { DetourNode } from '@/src/components/GraphEditors/shared/Nodes/DetourNode';
-import { CharacterEdge } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/NPCNode/CharacterEdge';
+import { ForgeEdge } from '@/src/components/GraphEditors/shared/Edges/ForgeEdge';
 
-import { ANIMATION_CONSTANTS, LAYOUT_CONSTANTS } from '@/src/components/GraphEditors/utils/constants';
-
-import type { ForgeGraphDoc, ForgeNode, ForgeNodeType, ForgeFlowNode } from '@/src/types/forge/forge-graph';
-import { FORGE_GRAPH_KIND, FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
-import { VIEW_MODE, type ViewMode } from '@/src/types/constants';
+import type { ForgeGraphDoc, ForgeNode, ForgeNodeType, ForgeReactFlowNode } from '@/src/types/forge/forge-graph';
+import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
 
 import { useForgeFlowEditorShell, type ShellNodeData } from '@/src/components/GraphEditors/hooks/useForgeFlowEditorShell';
 import { createForgeEditorSessionStore, ForgeEditorSessionProvider, useForgeEditorSession, useForgeEditorSessionStore } from '@/src/components/GraphEditors/hooks/useForgeEditorSession';
@@ -58,7 +54,7 @@ const nodeTypes = {
 } as const;
 
 const edgeTypes = {
-  default: CharacterEdge,
+  default: ForgeEdge,
 } as const;
 
 export interface ForgeNarrativeGraphEditorProps {
@@ -116,26 +112,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
 
   // Create actions from dispatch and provide to children
   const actions = React.useMemo(() => makeForgeEditorActions(shell.dispatch), [shell.dispatch]);
-
-  // Consume focus requests from workspace
-  const pendingFocus = useForgeWorkspaceStore((s) => s.pendingFocusByScope.narrative);
-  const clearFocus = useForgeWorkspaceStore((s) => s.actions.clearFocus);
-  
-  React.useEffect(() => {
-    if (pendingFocus && graph && String(graph.id) === pendingFocus.graphId) {
-      if (pendingFocus.nodeId) {
-        // Focus on specific node
-        const node = shell.effectiveGraph.flow.nodes.find(n => n.id === pendingFocus.nodeId);
-        if (node) {
-          reactFlow.fitView({ nodes: [{ id: pendingFocus.nodeId }], duration: 300 });
-        }
-      } else {
-        // Just fit view to show all nodes
-        reactFlow.fitView({ duration: 300 });
-      }
-      clearFocus('narrative');
-    }
-  }, [pendingFocus, graph, reactFlow, clearFocus, shell.effectiveGraph]);
 
   // Path highlighting
   const { edgesToSelectedNode, nodeDepths } = useFlowPathHighlighting(shell.selectedNodeId, shell.effectiveGraph);
@@ -205,7 +181,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     return shell.effectiveGraph.flow.edges.map((edge) => {
       const isInPath = showPathHighlight && edgesToSelectedNode.has(edge.id);
       const sourceNode = shell.effectiveGraph.flow.nodes.find((n) => n.id === edge.source);
-      const sourceFlowNode = sourceNode as ForgeFlowNode | undefined;
+      const sourceFlowNode = sourceNode as ForgeReactFlowNode | undefined;
 
       return {
         ...edge,
@@ -258,10 +234,10 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
           event.preventDefault();
           const point = reactFlow.screenToFlowPosition({ x: event.clientX, y: event.clientY });
           shell.setPaneContextMenu({
-            x: event.clientX,
-            y: event.clientY,
-            graphX: point.x,
-            graphY: point.y,
+            screenX: event.clientX,
+            screenY: event.clientY,
+            flowX: point.x,
+            flowY: point.y,
           });
         }}
         onEdgesDelete={(deletedEdges) => {

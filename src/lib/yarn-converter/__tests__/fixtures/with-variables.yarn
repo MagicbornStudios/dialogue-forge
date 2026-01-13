@@ -1,0 +1,16 @@
+title: merchant
+---
+Merchant: You have {$stat_gold} gold.
+<<set $stat_gold += 100>>
+Merchant: Now you have {$stat_gold} gold!
+-> Buy item
+    <<set $stat_gold -= 50>>
+    <<set $item_sword = true>>
+    Merchant: You bought a sword! You have {$stat_gold} gold left.
+    <<jump end>>
+===
+
+title: end
+---
+Merchant: Thanks for shopping!
+===

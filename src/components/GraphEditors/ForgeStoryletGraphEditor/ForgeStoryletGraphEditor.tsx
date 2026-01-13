@@ -20,7 +20,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-import type { GameFlagState } from '@/src/types/game-state';
+import type { ForgeGameFlagState } from '@/src/types/forge-game-state';
 import { useFlowPathHighlighting } from '@/src/components/GraphEditors/hooks/useFlowPathHighlighting';
 
 import {
@@ -36,29 +36,29 @@ import { GraphMiniMap } from '@/src/components/GraphEditors/shared/GraphMiniMap'
 import { ForgeStoryletGraphEditorPaneContextMenu } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/ForgeStoryletGraphEditorPaneContextMenu';
 import { useReactFlowBehaviors } from '@/src/components/GraphEditors/hooks/useReactFlowBehaviors';
 
-import { CharacterNode } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/NPCNode/CharacterNode';
+import { CharacterNode } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/CharacterNode/CharacterNode';
 import { PlayerNodeV2 } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/PlayerNode/PlayerNodeV2';
 import { ConditionalNodeV2 } from '@/src/components/GraphEditors/shared/Nodes/ConditionalNode/ConditionalNodeV2';
 import { StoryletNode } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/StoryletNode/StoryletNode';
 import { ChoiceEdgeV2 } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/PlayerNode/ChoiceEdgeV2';
-import { CharacterEdge } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/NPCNode/CharacterEdge';
+import { ForgeEdge } from '@/src/components/GraphEditors/shared/Edges/ForgeEdge';
 import { DetourNode } from '@/src/components/GraphEditors/shared/Nodes/DetourNode';
 
 // EdgeDropMenu components
-import { CharacterEdgeDropMenu } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/NPCNode/CharacterEdgeDropMenu';
+import { CharacterEdgeDropMenu } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/CharacterNode/CharacterEdgeDropMenu';
 import { PlayerEdgeDropMenu } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/PlayerNode/PlayerEdgeDropMenu';
 import { ConditionalEdgeDropMenu } from '@/src/components/GraphEditors/shared/Nodes/ConditionalNode/ConditionalEdgeDropMenu';
 import { StoryletEdgeDropMenu } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/StoryletNode/StoryletEdgeDropMenu';
 
 import type { FlagSchema } from '@/src/types/flags';
-import type { Character } from '@/src/types/characters';
+import type { ForgeCharacter } from '@/src/types/characters';
 
 
 import type {
   ForgeGraphDoc,
   ForgeNode,
   ForgeNodeType,
-  ForgeFlowNode,
+  ForgeReactFlowNode,
 } from '@/src/types/forge/forge-graph';
 import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
 
@@ -91,7 +91,7 @@ const nodeTypes = {
 
 const edgeTypes = {
   choice: ChoiceEdgeV2,
-  default: CharacterEdge,
+  default: ForgeEdge,
 } as const;
 
 // Registry map for EdgeDropMenu components by node type
@@ -117,8 +117,9 @@ export interface ForgeStoryletGraphEditorProps {
 
   // Rendering context (read-only)
   flagSchema?: FlagSchema;
-  characters?: Record<string, Character>;
-  gameStateFlags?: GameFlagState;
+  characters?: Record<string, ForgeCharacter>;
+  gameState?: import('@/src/types/forge-game-state').ForgeGameState;
+  gameStateFlags?: ForgeGameFlagState; // Legacy prop, use gameState instead
 }
 
 function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) {
@@ -128,8 +129,12 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     className = '',
     flagSchema,
     characters = {},
+    gameState,
     gameStateFlags,
   } = props;
+  
+  // Use gameState.flags if available, fallback to gameStateFlags for backward compatibility
+  const resolvedGameStateFlags = gameState?.flags || gameStateFlags;
 
   const reactFlow = useReactFlow();
   const { reactFlowWrapperRef } = useReactFlowBehaviors();
@@ -244,18 +249,18 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
           // Read-only context
           flagSchema,
           characters,
-          gameStateFlags,
+          gameStateFlags: resolvedGameStateFlags,
         } as ShellNodeData & {
           flagSchema?: FlagSchema;
-          characters?: Record<string, Character>;
-          gameStateFlags?: GameFlagState;
+          characters?: Record<string, ForgeCharacter>;
+          gameStateFlags?: ForgeGameFlagState;
         },
       };
     });
   }, [
     characters,
     flagSchema,
-    gameStateFlags,
+    resolvedGameStateFlags,
     layoutDirection,
     nodeDepths,
     showPathHighlight,
@@ -300,7 +305,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
               { type: FORGE_NODE_TYPE.CONDITIONAL, label: 'Conditional Node' },
             ];
 
-      const sourceFlowNode = sourceFlow as ForgeFlowNode | undefined;
+      const sourceFlowNode = sourceFlow as ForgeReactFlowNode | undefined;
 
       return {
         ...e,
@@ -476,6 +481,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
               characters={characters}
               flagSchema={flagSchema}
               onClose={() => shell.setSelectedNodeId(null)}
+              onUpdate={() => {}}
+              onDelete={() => {}}
             />
           )}
         </div>

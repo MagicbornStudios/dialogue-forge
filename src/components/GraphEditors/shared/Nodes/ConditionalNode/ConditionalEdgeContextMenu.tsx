@@ -1,6 +1,6 @@
 import React from 'react';
-import { NODE_TYPE, type NodeType } from '../../../../../types/constants';
-import { NODE_TYPE_LABELS, AVAILABLE_NODE_TYPES } from '../../../../../types/ui-constants';
+import { FORGE_NODE_TYPE, type ForgeNodeType } from '../../../../../types/forge/forge-graph';
+import { FORGE_NODE_TYPE_LABELS } from '../../../../../types/ui-constants';
 
 interface ConditionalEdgeContextMenuProps {
   x: number;
@@ -8,12 +8,12 @@ interface ConditionalEdgeContextMenuProps {
   edgeId: string;
   graphX: number;
   graphY: number;
-  onInsertNode: (type: NodeType, edgeId: string, x: number, y: number) => void;
+  onInsertNode: (type: ForgeNodeType, edgeId: string, x: number, y: number) => void;
   onClose: () => void;
 }
 
 // Conditional nodes can connect to NPC or Player nodes
-const availableNodeTypes: NodeType[] = AVAILABLE_NODE_TYPES.CONDITIONAL_EDGE;
+const availableNodeTypes: ForgeNodeType[] = [FORGE_NODE_TYPE.CHARACTER, FORGE_NODE_TYPE.PLAYER];
 
 export function ConditionalEdgeContextMenu({
   x,
@@ -39,7 +39,7 @@ export function ConditionalEdgeContextMenu({
             }}
             className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
           >
-            Insert {NODE_TYPE_LABELS[type]}
+            Insert {FORGE_NODE_TYPE_LABELS[type]}
           </button>
         ))}
         <button

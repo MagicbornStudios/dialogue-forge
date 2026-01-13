@@ -9,7 +9,7 @@
  */
 
 import dagre from '@dagrejs/dagre';
-import type { ForgeGraphDoc, ForgeFlowNode, ForgeNode } from '@/src/types/forge/forge-graph';
+import type { ForgeGraphDoc, ForgeReactFlowNode, ForgeNode } from '@/src/types/forge/forge-graph';
 import { LayoutStrategy, LayoutOptions, LayoutResult, LayoutDirection } from '../types';
 
 // ============================================================================
@@ -31,7 +31,7 @@ function calculateNodeDepths(graph: ForgeGraphDoc): Map<string, number> {
   const depths = new Map<string, number>();
   if (!graph.startNodeId) return depths;
   
-  const nodesById = new Map<string, ForgeFlowNode>();
+  const nodesById = new Map<string, ForgeReactFlowNode>();
   for (const node of graph.flow.nodes) {
     nodesById.set(node.id, node);
   }
@@ -68,7 +68,7 @@ function calculateNodeDepths(graph: ForgeGraphDoc): Map<string, number> {
 /**
  * Estimate node height based on content
  */
-function estimateNodeHeight(node: ForgeFlowNode): number {
+function estimateNodeHeight(node: ForgeReactFlowNode): number {
   const nodeData = (node.data ?? {}) as ForgeNode;
   const itemCount = Math.max(
     nodeData.choices?.length || 0,
@@ -143,7 +143,7 @@ export class DagreLayoutStrategy implements LayoutStrategy {
 
     // Extract positions and calculate bounds
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    const updatedNodes: ForgeFlowNode[] = [];
+    const updatedNodes: ForgeReactFlowNode[] = [];
     
     for (const node of graph.flow.nodes) {
       const dagreNode = g.node(node.id);

@@ -1,18 +1,18 @@
 import type { StateCreator } from "zustand"
-import type { BaseGameState } from "@/src/types/game-state"
+import type { ForgeGameState } from "@/src/types/forge-game-state"
 import type { FlagSchema } from "@/src/types/flags"
 import type { ForgeWorkspaceState } from "../forge-workspace-store"
 
 export interface GameStateSlice {
   activeFlagSchema: FlagSchema | undefined
-  activeGameState: BaseGameState
+  activeGameState: ForgeGameState
   gameStateDraft: string
   gameStateError: string | null
 }
 
 export interface GameStateActions {
   setActiveFlagSchema: (schema: FlagSchema | undefined) => void
-  setActiveGameState: (state: BaseGameState) => void
+  setActiveGameState: (state: ForgeGameState) => void
   setGameStateDraft: (draft: string) => void
   setGameStateError: (error: string | null) => void
 }
@@ -21,9 +21,9 @@ export function createGameStateSlice(
   set: Parameters<StateCreator<ForgeWorkspaceState, [], [], ForgeWorkspaceState>>[0],
   get: Parameters<StateCreator<ForgeWorkspaceState, [], [], ForgeWorkspaceState>>[1],
   flagSchema?: FlagSchema,
-  gameState?: BaseGameState
+  gameState?: ForgeGameState
 ): GameStateSlice & GameStateActions {
-  const initialGameState: BaseGameState = gameState ?? { flags: {} }
+  const initialGameState: ForgeGameState = gameState ?? { flags: {} }
 
   return {
     activeFlagSchema: flagSchema,

@@ -1,8 +1,8 @@
 // src/components/ForgeWorkspace/ForgeWorkspace.tsx
 import React, { useRef, useCallback } from 'react';
 import type { ForgeGraphDoc } from '../../types';
-import type { BaseGameState } from '../../types/game-state';
-import type { Character } from '../../types/characters';
+import type { ForgeGameState } from '../../types/forge-game-state';
+import type { ForgeCharacter } from '../../types/characters';
 import type { FlagSchema } from '../../types/flags';
 
 import { GuidePanel } from '../shared/GuidePanel';
@@ -12,12 +12,7 @@ import { ForgeStoryletGraphEditor } from '../GraphEditors/ForgeStoryletGraphEdit
 import { StoryletsSidebar } from './components/StoryletsSidebar';
 
 import {
-  ForgeUIStoreProvider,
-  createForgeUIStore,
-  useForgeUIStore,
-} from '@/src/components/forge/store/forge-ui-store';
-
-import {
+  CreateForgeWorkspaceStoreOptions,
   ForgeWorkspaceStoreProvider,
   createForgeWorkspaceStore,
   useForgeWorkspaceStore,
@@ -25,7 +20,7 @@ import {
 } from './store/forge-workspace-store';
 
 import { setupForgeWorkspaceSubscriptions } from './store/slices/subscriptions';
-import type { DialogueForgeEvent } from '@/src/components/forge/events/events';
+import type { ForgeEvent } from '@/src/components/forge/events/events';
 import { ForgeDataAdapter } from '../forge/forge-data-adapter/forge-data-adapter';
 
 interface ForgeWorkspaceProps {
@@ -35,13 +30,13 @@ interface ForgeWorkspaceProps {
 
   // Optional supporting data
   flagSchema?: FlagSchema;
-  characters?: Record<string, Character>;
-  gameState?: BaseGameState;
+  characters?: Record<string, ForgeCharacter>;
+  gameState?: ForgeGameState;
 
   className?: string;
   toolbarActions?: React.ReactNode;
 
-  onEvent?: (event: DialogueForgeEvent) => void;
+  onEvent?: (event: ForgeEvent) => void;
 
   // Optional graph resolver (if you lazy-load by id)
   resolveGraph?: (graphId: string) => Promise<ForgeGraphDoc>;
@@ -53,73 +48,63 @@ interface ForgeWorkspaceProps {
 export function ForgeWorkspace({
   narrativeGraph,
   storyletGraph,
-  flagSchema,
-  characters,
-  gameState,
+  flagSchema: initialFlagSchema,
+  characters: initialCharacters,
+  gameState: initialGameState,
   className = '',
   toolbarActions,
   onEvent,
   resolveGraph,
   dataAdapter,
 }: ForgeWorkspaceProps) {
-  const uiStoreRef = useRef<ReturnType<typeof createForgeUIStore> | null>(null);
-  const domainStoreRef = useRef<ReturnType<typeof createForgeWorkspaceStore> | null>(null);
+  const eventSinkRef = useRef<EventSink>({
+    emit: (event) => {
+      if (onEvent) {
+        onEvent(event);
+      }
+    },
+  });
 
-  if (!uiStoreRef.current) {
-    // Stop using initialThread. Just create default UI store state.
-    // If your createForgeUIStore requires an argument, pass a minimal selection object.
-    uiStoreRef.current = createForgeUIStore(undefined as any);
-  }
-
-  if (!domainStoreRef.current) {
-    const eventSink: EventSink = {
-      emit: (event) => onEvent?.(event),
-    };
-
-    domainStoreRef.current = createForgeWorkspaceStore(
+  const storeRef = useRef(
+    createForgeWorkspaceStore(
       {
         initialNarrativeGraph: narrativeGraph ?? null,
         initialStoryletGraph: storyletGraph ?? null,
-        flagSchema,
-        gameState,
+        initialFlagSchema: initialFlagSchema,
+        initialGameState: initialGameState,
         resolveGraph,
         dataAdapter,
-      } as any,
-      eventSink
-    );
+      },
+      eventSinkRef.current
+    )
+  );
 
-    setupForgeWorkspaceSubscriptions(
-      domainStoreRef.current,
-      uiStoreRef.current,
-      eventSink,
-      dataAdapter
-    );
-  }
+  React.useEffect(() => {
+    setupForgeWorkspaceSubscriptions(storeRef.current, eventSinkRef.current, dataAdapter);
+  }, [dataAdapter]);
 
   return (
-    <ForgeUIStoreProvider store={uiStoreRef.current}>
-      <ForgeWorkspaceStoreProvider store={domainStoreRef.current}>
-        <ForgeWorkspaceInner
-          className={className}
-          toolbarActions={toolbarActions}
-          characters={characters}
-        />
-      </ForgeWorkspaceStoreProvider>
-    </ForgeUIStoreProvider>
+    <ForgeWorkspaceStoreProvider store={storeRef.current}>
+      <ForgeWorkspaceContent
+        characters={initialCharacters}
+        className={className}
+        toolbarActions={toolbarActions}
+      />
+    </ForgeWorkspaceStoreProvider>
   );
 }
 
-function ForgeWorkspaceInner({
+function ForgeWorkspaceContent({
   characters,
   className = '',
   toolbarActions,
 }: Pick<ForgeWorkspaceProps, 'characters' | 'className' | 'toolbarActions'>) {
-  const showGuide = useForgeUIStore((s) => s.modals.showGuide);
-  const setShowGuide = useForgeUIStore((s) => s.actions.setShowGuide);
 
   // Get active graph IDs and derive graphs from cache
   const activeNarrativeGraphId = useForgeWorkspaceStore((s) => s.activeNarrativeGraphId);
   const activeStoryletGraphId = useForgeWorkspaceStore((s) => s.activeStoryletGraphId);
+  const activeFlagSchema = useForgeWorkspaceStore((s) => s.activeFlagSchema);
+  const activeGameState = useForgeWorkspaceStore((s) => s.activeGameState);
   
   const narrativeGraph = useForgeWorkspaceStore((s) => 
     activeNarrativeGraphId ? s.graphs.byId[activeNarrativeGraphId] ?? null : null
@@ -155,7 +140,7 @@ function ForgeWorkspaceInner({
       <ForgeWorkspaceToolbar
         counts={{ actCount: 0, chapterCount: 0, pageCount: 0, characterCount: Object.keys(characters ?? {}).length }}
         toolbarActions={toolbarActions}
-        onGuideClick={() => setShowGuide(true)}
+        onGuideClick={() => { }}
         onPlayClick={() => { }}
         onFlagClick={() => { }}
       />
@@ -185,7 +170,8 @@ function ForgeWorkspaceInner({
               <ForgeStoryletGraphEditor
                 graph={storyletGraph}
                 onChange={onStoryletGraphChange}
-                flagSchema={undefined}
+                flagSchema={activeFlagSchema}
+                gameState={activeGameState}
                 characters={characters}
                 className="h-full"
               />
@@ -197,11 +183,6 @@ function ForgeWorkspaceInner({
           )}
         </div>
       </div>
-
-      <GuidePanel isOpen={showGuide} onClose={() => setShowGuide(false)} />
     </div>
   );
 }
-
-// Public API
-export { ForgeWorkspace as DialogueForge };

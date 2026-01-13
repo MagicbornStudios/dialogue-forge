@@ -1,8 +1,8 @@
-import type { ForgeUIStore } from "@/src/components/forge/store/ui/createForgeUIStore"
 import type { EventSink } from "../forge-workspace-store"
 import { ForgeWorkspaceStore } from "../forge-workspace-store"
 import { ForgeDataAdapter } from "@/src/components/forge/forge-data-adapter/forge-data-adapter"
 import { FORGE_GRAPH_KIND } from "@/src/types/forge/forge-graph"
+import type { FlagSchema } from "@/src/types/flags"
 
 /**
  * Setup subscriptions for side-effect events.
@@ -10,7 +10,6 @@ import { FORGE_GRAPH_KIND } from "@/src/types/forge/forge-graph"
  */
 export function setupForgeWorkspaceSubscriptions(
   domainStore: ForgeWorkspaceStore,
-  uiStore: ForgeUIStore,
   eventSink: EventSink,
   dataAdapter?: ForgeDataAdapter
 ) {
@@ -56,6 +55,31 @@ export function setupForgeWorkspaceSubscriptions(
         const currentState = domainStore.getState()
         if (storyletGraphs.length > 0 && !currentState.activeStoryletGraphId) {
           currentState.actions.setActiveStoryletGraphId(String(storyletGraphs[0].id))
+        }
+        
+        // 5. Load flag schema for this project
+        try {
+          const flagSchema = await dataAdapter.getFlagSchema(selectedProjectId)
+          if (flagSchema && flagSchema.schema) {
+            // Cast schema to FlagSchema type
+            const schema = flagSchema.schema as FlagSchema
+            state.actions.setActiveFlagSchema(schema)
+          } else {
+            state.actions.setActiveFlagSchema(undefined)
+          }
+        } catch (error) {
+          console.error('Failed to load flag schema:', error)
+          state.actions.setActiveFlagSchema(undefined)
+        }
+        
+        // 6. Load game state for this project
+        try {
+          const gameState = await dataAdapter.getGameState(selectedProjectId)
+          state.actions.setActiveGameState(gameState)
+        } catch (error) {
+          console.error('Failed to load game state:', error)
+          // Set empty game state on error
+          state.actions.setActiveGameState({ flags: {} })
         }
       } catch (error) {
         console.error('Failed to load project graphs:', error)

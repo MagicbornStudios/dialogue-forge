@@ -5,12 +5,12 @@ import type { PropsWithChildren } from "react"
 import { createStore } from "zustand/vanilla"
 import { useStore } from "zustand"
 import { devtools } from "zustand/middleware"
-import type { ForgeGraphDoc } from "@/src/types"
-import type { BaseGameState } from "@/src/types/game-state"
+import { FORGE_GRAPH_KIND, type ForgeGraphDoc } from "@/src/types"
+import type { ForgeGameState } from "@/src/types/forge-game-state"
 import type { FlagSchema } from "@/src/types/flags"
-import type { DialogueForgeEvent } from "@/src/components/forge/events/events"
+import type { ForgeEvent } from "@/src/components/forge/events/events"
 import { createEvent } from "@/src/components/forge/events/events"
-import { DIALOGUE_FORGE_EVENT_TYPE, DIALOGUE_OPEN_REASON } from "@/src/types/constants"
+import { FORGE_EVENT_TYPE, GRAPH_CHANGE_REASON, type GraphChangeReason, type GraphScope, GRAPH_SCOPE } from "@/src/types/constants"
 import { createGraphSlice } from "./slices/graph.slice"
 import { createGameStateSlice } from "./slices/gameState.slice"
 import { createViewStateSlice } from "./slices/viewState.slice"
@@ -18,7 +18,7 @@ import { createProjectSlice } from "./slices/project.slice"
 import type { ForgeDataAdapter } from "@/src/components/forge/forge-data-adapter/forge-data-adapter"
 
 export interface EventSink {
-  emit(event: DialogueForgeEvent): void
+  emit(event: ForgeEvent): void
 }
 
 export interface ForgeWorkspaceState {
@@ -75,8 +75,8 @@ export interface CreateForgeWorkspaceStoreOptions {
   initialStoryletGraph?: ForgeGraphDoc | null
   initialNarrativeGraphId?: string | null
   initialStoryletGraphId?: string | null
-  flagSchema?: FlagSchema
-  gameState?: BaseGameState
+  initialFlagSchema?: FlagSchema
+  initialGameState?: ForgeGameState
   resolveGraph?: (id: string) => Promise<ForgeGraphDoc>
   dataAdapter?: ForgeDataAdapter
 }
@@ -86,8 +86,8 @@ export function createForgeWorkspaceStore(
   eventSink: EventSink
 ) {
   const { 
-    flagSchema, 
-    gameState, 
+    initialFlagSchema: flagSchema, 
+    initialGameState: gameState, 
     initialNarrativeGraph, 
     initialStoryletGraph,
     initialNarrativeGraphId,
@@ -152,12 +152,16 @@ export function createForgeWorkspaceStore(
         const setGraphWithEvents = (id: string, graph: ForgeGraphDoc) => {
           graphSlice.setGraph(id, graph)
 
+          const scope = graph.kind === FORGE_GRAPH_KIND.NARRATIVE ? GRAPH_SCOPE.NARRATIVE : GRAPH_SCOPE.STORYLET
+          const reason = GRAPH_CHANGE_REASON.OPEN
+
           // Emit changed event
           eventSink.emit(
-            createEvent(DIALOGUE_FORGE_EVENT_TYPE.DIALOGUE_CHANGED, {
-              dialogueId: id,
-              dialogue: graph,
-              reason: "edit" as const,
+            createEvent(FORGE_EVENT_TYPE.GRAPH_CHANGED, {
+              graphId: id,
+              graph: graph,
+              reason: reason,
+              scope: scope,  
             })
           )
         }
@@ -165,7 +169,8 @@ export function createForgeWorkspaceStore(
         // Wrap ensureGraph to include event emission
         const ensureGraphWithEvents = async (
           graphId: string,
-          reason: "narrative" | "storylet",
+          reason: GraphChangeReason,
+          scope: GraphScope,
           providedResolver?: (id: string) => Promise<ForgeGraphDoc>
         ) => {
           const state = get()
@@ -177,17 +182,15 @@ export function createForgeWorkspaceStore(
 
           // Emit open requested event
           eventSink.emit(
-            createEvent(DIALOGUE_FORGE_EVENT_TYPE.DIALOGUE_OPEN_REQUESTED, {
-              dialogueId: graphId,
-              reason:
-                reason === "narrative"
-                  ? DIALOGUE_OPEN_REASON.PAGE
-                  : DIALOGUE_OPEN_REASON.STORYLET_TEMPLATE,
+            createEvent(FORGE_EVENT_TYPE.GRAPH_OPEN_REQUESTED, {
+              graphId: graphId,
+              reason: GRAPH_CHANGE_REASON.OPEN,
+              scope: scope,
             })
           )
 
           // Call the original ensureGraph
-          await graphSlice.ensureGraph(graphId, reason, providedResolver)
+          await graphSlice.ensureGraph(graphId, scope, providedResolver)
         }
 
         return {

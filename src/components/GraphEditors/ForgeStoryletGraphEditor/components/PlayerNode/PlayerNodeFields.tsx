@@ -1,21 +1,21 @@
 import React from 'react';
 import { ForgeGraphDoc, Choice } from '../../../../../types';
 import { FlagSchema } from '../../../../../types/flags';
-import { Character } from '../../../../../types/characters';
+import { ForgeCharacter } from '../../../../../types/characters';
 import { CharacterSelector } from '../CharacterSelector';
 import { ConditionAutocomplete } from '../../../shared/ConditionAutocomplete';
 import { FlagSelector } from '../../../shared/FlagSelector';
 import { EdgeIcon } from '../../../shared/EdgeIcon';
 import { User, GitBranch } from 'lucide-react';
 import { validateCondition, parseCondition } from '../../../utils/condition-utils';
-import { ForgeChoice, ForgeFlowEdge, ForgeNode } from '@/src/types/forge/forge-graph';
+import { ForgeChoice, ForgeReactFlowEdge, ForgeNode } from '@/src/types/forge/forge-graph';
 import { edgeStrokeColor, CHOICE_COLORS } from '@/src/utils/forge-flow-helpers';
 import { useForgeEditorActions } from '@/src/components/GraphEditors/hooks/useForgeEditorActions';
 
 interface PlayerNodeFieldsProps {
   node: ForgeNode;
   graph: ForgeGraphDoc;
-  characters: Record<string, Character>;
+  characters: Record<string, ForgeCharacter>;
   flagSchema?: FlagSchema;
   conditionInputs: Record<string, string>;
   debouncedConditionInputs: Record<string, string>;

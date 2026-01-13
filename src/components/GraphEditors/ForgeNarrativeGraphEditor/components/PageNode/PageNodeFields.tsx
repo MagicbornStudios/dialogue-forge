@@ -29,13 +29,13 @@ export function PageNodeFields({ page, onUpdate }: PageNodeFieldsProps) {
         />
       </div>
       <div>
-        <label className="text-[10px] text-gray-500 uppercase">Dialogue ID</label>
+        <label className="text-[10px] text-gray-500 uppercase">Dialogue Graph ID</label>
         <input
-          type="text"
-          value={page.dialogueId || ''}
-          onChange={(event) => onUpdate({ dialogueId: event.target.value })}
+          type="number"
+          value={page.dialogueGraph || ''}
+          onChange={(event) => onUpdate({ dialogueGraph: event.target.value ? Number(event.target.value) : null })}
           className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none font-mono"
-          placeholder="dialogue_id"
+          placeholder="dialogue_graph_id"
         />
       </div>
     </>

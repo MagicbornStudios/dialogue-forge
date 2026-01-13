@@ -1,0 +1,5 @@
+title: storylet_node
+---
+NPC: This will call another storylet.
+<<jump storylet_start>>
+===

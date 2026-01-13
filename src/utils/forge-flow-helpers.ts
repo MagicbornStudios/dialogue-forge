@@ -2,15 +2,15 @@
 import type { Connection } from 'reactflow';
 import type {
   ForgeGraphDoc,
-  ForgeFlowEdge,
-  ForgeFlowNode,
+  ForgeReactFlowEdge,
+  ForgeReactFlowNode,
   ForgeNode,
   ForgeNodeType,
   ForgeEdgeKind,
   ForgeChoice,
   ForgeConditionalBlock,
   ForgeGraphKind,
-  ForgeFlowJson,
+  ForgeReactFlowJson,
 } from '@/src/types/forge/forge-graph';
 import { 
   FORGE_CONDITIONAL_BLOCK_TYPE,
@@ -52,7 +52,7 @@ export function createFlowNode(
   id: string,
   x: number,
   y: number,
-): ForgeFlowNode {
+): ForgeReactFlowNode {
   const base: ForgeNode = {
     id,
     type,
@@ -99,7 +99,7 @@ export function createFlowNode(
     type,
     position: { x, y },
     data: base,
-  } as ForgeFlowNode;
+  } as ForgeReactFlowNode;
 }
 
 export function addChoiceToNodeData(nodeData: ForgeNode): ForgeNode {
@@ -133,7 +133,7 @@ export function removeChoiceFromNodeData(nodeData: ForgeNode, choiceIdx: number)
   return { ...nodeData, choices };
 }
 
-export function upsertFlowNode(graph: ForgeGraphDoc, node: ForgeFlowNode): ForgeGraphDoc {
+export function upsertFlowNode(graph: ForgeGraphDoc, node: ForgeReactFlowNode): ForgeGraphDoc {
   const nodes = graph.flow.nodes.slice();
   const idx = nodes.findIndex(n => n.id === node.id);
   if (idx >= 0) nodes[idx] = node;
@@ -197,7 +197,7 @@ function inferEdgeType(sourceHandle?: string | null): string {
   return 'default';
 }
 
-function upsertEdge(edges: ForgeFlowEdge[], edge: ForgeFlowEdge): ForgeFlowEdge[] {
+function upsertEdge(edges: ForgeReactFlowEdge[], edge: ForgeReactFlowEdge): ForgeReactFlowEdge[] {
   const idx = edges.findIndex(e => e.id === edge.id);
   if (idx >= 0) {
     const copy = edges.slice();
@@ -221,7 +221,7 @@ export function applyConnection(graph: ForgeGraphDoc, connection: Connection): F
 
   // 1) visual edge
   const edgeId = buildEdgeId(source, target, sourceHandle);
-  const nextEdge: ForgeFlowEdge = {
+  const nextEdge: ForgeReactFlowEdge = {
     id: edgeId,
     source,
     target,
@@ -229,7 +229,7 @@ export function applyConnection(graph: ForgeGraphDoc, connection: Connection): F
     targetHandle: connection.targetHandle ?? null,
     type: inferEdgeType(sourceHandle),
     kind: inferKind(sourceHandle),
-  } as ForgeFlowEdge;
+  } as ForgeReactFlowEdge;
 
   let edges = upsertEdge(graph.flow.edges, nextEdge);
 
@@ -367,7 +367,7 @@ export function insertNodeBetweenEdge(
  * - choice-/block- handles use CHOICE_COLORS[idx]
  * - otherwise use the source node type palette (matches your NPCEdgeV2 intent)
  */
-export function edgeStrokeColor(edge: ForgeFlowEdge, sourceType?: string): string {
+export function edgeStrokeColor(edge: ForgeReactFlowEdge, sourceType?: string): string {
   const h = edge.sourceHandle ?? '';
   if (h.startsWith('choice-')) {
     const idx = parseInt(h.replace('choice-', ''), 10);
@@ -410,7 +410,7 @@ export function createEmptyForgeGraphDoc(opts: {
   const defaultTitle = opts.title ?? 
     (opts.kind === FORGE_GRAPH_KIND.NARRATIVE ? 'Untitled Narrative' : 'Untitled Storylet')
   
-  const emptyFlow: ForgeFlowJson = {
+  const emptyFlow: ForgeReactFlowJson = {
     nodes: [],
     edges: [],
     viewport: { x: 0, y: 0, zoom: 1 },

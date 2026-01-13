@@ -1,6 +1,6 @@
 import React from 'react';
-import { NODE_TYPE, type NodeType } from '../../../../types/constants';
-import { NODE_TYPE_LABELS, AVAILABLE_NODE_TYPES } from '../../../../types/ui-constants';
+import { FORGE_NODE_TYPE, type ForgeNodeType } from '../../../../types/forge/forge-graph';
+import { FORGE_NODE_TYPE_LABELS, AVAILABLE_STORYLET_NODE_TYPES } from '../../../../types/ui-constants';
 
 interface PlayerEdgeContextMenuProps {
   x: number;
@@ -8,12 +8,12 @@ interface PlayerEdgeContextMenuProps {
   edgeId: string;
   graphX: number;
   graphY: number;
-  onInsertNode: (type: NodeType, edgeId: string, x: number, y: number) => void;
+  onInsertNode: (type: ForgeNodeType, edgeId: string, x: number, y: number) => void;
   onClose: () => void;
 }
 
-// Player nodes can connect to NPC or Conditional nodes
-const availableNodeTypes: NodeType[] = AVAILABLE_NODE_TYPES.PLAYER_EDGE;
+// Player nodes can connect to CHARACTER or CONDITIONAL nodes
+const availableNodeTypes: ForgeNodeType[] = AVAILABLE_STORYLET_NODE_TYPES.PLAYER_EDGE;
 
 export function PlayerEdgeContextMenu({
   x,
@@ -39,7 +39,7 @@ export function PlayerEdgeContextMenu({
             }}
             className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
           >
-            Insert {NODE_TYPE_LABELS[type]}
+            Insert {FORGE_NODE_TYPE_LABELS[type]}
           </button>
         ))}
         <button

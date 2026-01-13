@@ -10,9 +10,9 @@ import {
   type ForgeGraphKind,
   type ForgeNodeType,
   type ForgeEdgeKind,
-  type ForgeFlowJson,
-  type ForgeFlowNode,
-  type ForgeFlowEdge,
+  type ForgeReactFlowJson,
+  type ForgeReactFlowNode,
+  type ForgeReactFlowEdge,
   type ForgeGraphDoc,
   type ForgeStoryletCall,
   type ForgeNode,
@@ -27,7 +27,7 @@ function node(
   type: ForgeNodeType,
   position: { x: number; y: number },
   data: Partial<ForgeNode> = {}
-): ForgeFlowNode {
+): ForgeReactFlowNode {
   return {
     id,
     type,
@@ -50,7 +50,7 @@ function edge(
     idSuffix?: string;
     data?: Record<string, unknown>;
   } = {}
-): ForgeFlowEdge {
+): ForgeReactFlowEdge {
   const { kind, label, type, idSuffix, data } = opts;
   return {
     id: edgeId(source, target, idSuffix),
@@ -66,7 +66,7 @@ function edge(
   };
 }
 
-function flow(nodes: ForgeFlowNode[], edges: ForgeFlowEdge[], viewport?: { x: number; y: number; zoom: number }): ForgeFlowJson {
+function flow(nodes: ForgeReactFlowNode[], edges: ForgeReactFlowEdge[], viewport?: { x: number; y: number; zoom: number }): ForgeReactFlowJson {
   return {
     nodes,
     edges,
@@ -207,7 +207,7 @@ export async function seedProjectWithNarrativeGraph(payload: Payload) {
     targetStartNodeId: STL2_START,
   };
 
-  const mainStoryletNodes: ForgeFlowNode[] = [
+  const mainStoryletNodes: ForgeReactFlowNode[] = [
     node(S_C1, FORGE_NODE_TYPE.CHARACTER, { x: 0, y: 0 }, { label: 'Character', content: 'Opening character line.' }),
     node(S_CN1, FORGE_NODE_TYPE.CONDITIONAL, { x: 280, y: 0 }, { label: 'Conditional' }),
 
@@ -250,7 +250,7 @@ export async function seedProjectWithNarrativeGraph(payload: Payload) {
     node(S_STL2_DATA, FORGE_NODE_TYPE.STORYLET, { x: 1420, y: 260 }, { label: 'Storylet Data (STL2)', storyletCall: { ...storylet2Call } }),
   ];
 
-  const mainStoryletEdges: ForgeFlowEdge[] = [
+  const mainStoryletEdges: ForgeReactFlowEdge[] = [
     edge(S_C1, S_CN1, { kind: FORGE_EDGE_KIND.FLOW }),
 
     // Conditional routes to player or detour
@@ -330,7 +330,7 @@ export async function seedProjectWithNarrativeGraph(payload: Payload) {
 
   const N_END = 'n_end';
 
-  const narrativeNodes: ForgeFlowNode[] = [
+  const narrativeNodes: ForgeReactFlowNode[] = [
     // Use ACT for "thread start" to stay within ForgeNodeType
     node(N_TS, FORGE_NODE_TYPE.ACT, { x: 0, y: 0 }, { label: 'Thread Graph Start' }),
     node(N_AN, FORGE_NODE_TYPE.ACT, { x: 260, y: 0 }, { label: 'Act Node' }),
@@ -371,7 +371,7 @@ export async function seedProjectWithNarrativeGraph(payload: Payload) {
     node(N_END, FORGE_NODE_TYPE.END, { x: 1820, y: 0 }, { label: 'End' }),
   ];
 
-  const narrativeEdges: ForgeFlowEdge[] = [
+  const narrativeEdges: ForgeReactFlowEdge[] = [
     // Main flow
     edge(N_TS, N_AN, { kind: FORGE_EDGE_KIND.DEFAULT }),
     edge(N_AN, N_CH1, { kind: FORGE_EDGE_KIND.FLOW }),

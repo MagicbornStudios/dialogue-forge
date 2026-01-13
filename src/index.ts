@@ -1,4 +1,5 @@
-export { DialogueGraphEditor } from './components/GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditor';
+// DialogueGraphEditor is now ForgeStoryletGraphEditor - use ForgeWorkspace instead
+export { ForgeStoryletGraphEditor } from './components/GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditor';
 export { ForgeWorkspace as NarrativeWorkspace } from './components/ForgeWorkspace/ForgeWorkspace';
 // Export DialogueForge as the main component (alias for NarrativeWorkspace)
 export { ForgeWorkspace as DialogueForge } from './components/ForgeWorkspace/ForgeWorkspace';
@@ -17,7 +18,7 @@ import './styles/theme.css';
 // Export all types
 export * from './types';
 export * from './types/flags';
-export * from './types/game-state';
+export * from './types/forge-game-state';
 export * from './types/characters';
 export * from './types/constants';
 
@@ -34,5 +35,4 @@ export {
 export { exportToYarn, importFromYarn } from './lib/yarn-converter';
 export { initializeFlags, mergeFlagUpdates, validateFlags, getFlagValue } from './components/shared/FlagManager/utils/flag-manager';
 export * from './utils/forge-flow-helpers';
-export * from './utils/narrative-helpers';
-export * from './utils/narrative-converter';
+// narrative-helpers and narrative-converter removed - use ForgeGraphDoc flow-first paradigm

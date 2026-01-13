@@ -123,10 +123,7 @@ export function createGraphSlice(
       
       // Request focus if node ID provided
       if (opts?.focusNodeId) {
-        const state = get() as any
-        if (state.actions?.requestFocus) {
-          state.actions.requestFocus(scope, graphId, opts.focusNodeId)
-        }
+        state.actions.requestFocus(scope, graphId, opts.focusNodeId)
       }
     },
   }

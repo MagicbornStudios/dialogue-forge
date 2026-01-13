@@ -1,10 +1,11 @@
 'use client';
 
-import { ForgeWorkspace as DialogueForge } from '@/src/components/ForgeWorkspace/ForgeWorkspace';
+import { ForgeWorkspace } from '@/src/components/ForgeWorkspace/ForgeWorkspace';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { ProjectSwitcher } from '@/components/ProjectSwitcher';
 import { useState } from 'react';
-import { ForgeGraph } from '@/src/types';
+import type { ForgeGraphDoc } from '@/src/types/forge/forge-graph';
+import { makePayloadForgeAdapter } from '../lib/forge/data-adapter/payload-forge-adapter';
 
 // Tell Next.js this page is static (no dynamic params/searchParams)
 export const dynamic = 'force-static';
@@ -12,7 +13,7 @@ export const dynamic = 'force-static';
 
 export default function DialogueForgeApp() {
   // State for selected project
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null)
   
 
   return (
@@ -24,9 +25,10 @@ export default function DialogueForgeApp() {
       />
 
       <div className="flex-1 w-full min-h-0">
-        <DialogueForge
+        <ForgeWorkspace
           className="h-full"
           toolbarActions={<ThemeSwitcher />}
+          dataAdapter={makePayloadForgeAdapter()}
         />
       </div>
     </div>

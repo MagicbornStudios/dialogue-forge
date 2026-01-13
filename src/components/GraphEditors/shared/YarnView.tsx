@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ForgeGraph } from '../../../types';
+import { ForgeGraphDoc } from '../../../types';
 import { exportToYarn, importFromYarn } from '../../../lib/yarn-converter';
 
 interface YarnViewProps {
-  dialogue: ForgeGraph;
+  dialogue: ForgeGraphDoc;
   onExport: () => void;
   onImport?: (yarn: string) => void;
-  onChange?: (dialogue: ForgeGraph) => void;
+  onChange?: (dialogue: ForgeGraphDoc) => void;
 }
 
 export function YarnView({ dialogue, onExport, onImport, onChange }: YarnViewProps) {

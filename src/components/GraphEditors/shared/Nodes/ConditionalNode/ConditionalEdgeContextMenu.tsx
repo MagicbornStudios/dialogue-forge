@@ -1,6 +1,6 @@
 import React from 'react';
-import { NODE_TYPE } from '../../../../../types/constants';
-import type { NodeType } from '../../../../../types/constants';
+import { NODE_TYPE, type NodeType } from '../../../../../types/constants';
+import { NODE_TYPE_LABELS, AVAILABLE_NODE_TYPES } from '../../../../../types/ui-constants';
 
 interface ConditionalEdgeContextMenuProps {
   x: number;
@@ -12,18 +12,8 @@ interface ConditionalEdgeContextMenuProps {
   onClose: () => void;
 }
 
-const nodeTypeLabels: Record<NodeType, string> = {
-  [NODE_TYPE.NPC]: 'NPC Node',
-  [NODE_TYPE.PLAYER]: 'Player Node',
-  [NODE_TYPE.CONDITIONAL]: 'Conditional Node',
-  [NODE_TYPE.STORYLET]: 'Storylet Node',
-  [NODE_TYPE.STORYLET_POOL]: 'Storylet Pool Node',
-  [NODE_TYPE.RANDOMIZER]: 'Randomizer Node',
-  [NODE_TYPE.DETOUR]: 'Detour Node',
-};
-
 // Conditional nodes can connect to NPC or Player nodes
-const availableNodeTypes: NodeType[] = [NODE_TYPE.NPC, NODE_TYPE.PLAYER];
+const availableNodeTypes: NodeType[] = AVAILABLE_NODE_TYPES.CONDITIONAL_EDGE;
 
 export function ConditionalEdgeContextMenu({
   x,
@@ -49,7 +39,7 @@ export function ConditionalEdgeContextMenu({
             }}
             className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
           >
-            Insert {nodeTypeLabels[type]}
+            Insert {NODE_TYPE_LABELS[type]}
           </button>
         ))}
         <button

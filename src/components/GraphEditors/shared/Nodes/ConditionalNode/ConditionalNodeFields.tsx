@@ -1,15 +1,16 @@
 import React from 'react';
-import { ForgeNode, ForgeGraph } from '../../../../../types';
+import { ForgeGraphDoc } from '../../../../../types';
 import { FlagSchema } from '../../../../../types/flags';
 import { Character } from '../../../../../types/characters';
 import { CharacterSelector } from '../../../ForgeStoryletGraphEditor/components/CharacterSelector';
 import { ConditionAutocomplete } from '../../ConditionAutocomplete';
 import { X, User, Maximize2 } from 'lucide-react';
 import { validateCondition, parseCondition } from '../../../utils/condition-utils';
+import { ForgeNode, FORGE_CONDITIONAL_BLOCK_TYPE } from '@/src/types/forge/forge-graph';
 
 interface ConditionalNodeFieldsProps {
   node: ForgeNode;
-  dialogue: ForgeGraph;
+  graph: ForgeGraphDoc;
   characters: Record<string, Character>;
   flagSchema?: FlagSchema;
   conditionInputs: Record<string, string>;
@@ -49,10 +50,10 @@ export function ConditionalNodeFields({
         {node.conditionalBlocks ? (
           <div className="space-y-2">
             {node.conditionalBlocks.map((block, idx) => {
-              const conditionValue = block.type !== 'else' ? (conditionInputs[block.id] || '') : '';
-              const debouncedValue = block.type !== 'else' ? (debouncedConditionInputs[block.id] || '') : '';
+              const conditionValue = block.type !== FORGE_CONDITIONAL_BLOCK_TYPE.ELSE ? (conditionInputs[block.id] || '') : '';
+              const debouncedValue = block.type !== FORGE_CONDITIONAL_BLOCK_TYPE.ELSE ? (debouncedConditionInputs[block.id] || '') : '';
               const valueToValidate = debouncedValue || conditionValue;
-              const validation = block.type !== 'else' ? validateCondition(valueToValidate, flagSchema) : { isValid: true, errors: [], warnings: [] };
+              const validation = block.type !== FORGE_CONDITIONAL_BLOCK_TYPE.ELSE ? validateCondition(valueToValidate, flagSchema) : { isValid: true, errors: [], warnings: [] };
               const hasError = !validation.isValid;
               const hasWarning = validation.warnings.length > 0;
               const showValidation = conditionValue.trim().length > 0;
@@ -88,7 +89,7 @@ export function ConditionalNodeFields({
                 <div key={block.id} className={`rounded p-2 space-y-2 ${styles.bg} ${styles.border} border-2`}>
                   <div className="flex items-center gap-2">
                     <span className={`text-[9px] px-1.5 py-0.5 rounded ${styles.tagBg} ${styles.tagText} font-semibold`}>
-                      {block.type === 'if' ? 'IF' : block.type === 'elseif' ? 'ELSE IF' : 'ELSE'}
+                      {block.type === FORGE_CONDITIONAL_BLOCK_TYPE.IF ? 'IF' : block.type === FORGE_CONDITIONAL_BLOCK_TYPE.ELSE_IF ? 'ELSE IF' : 'ELSE'}
                     </span>
                     <div className="flex items-center gap-1.5 flex-1">
                       <CharacterSelector
@@ -109,7 +110,7 @@ export function ConditionalNodeFields({
                       />
                     </div>
                     
-                    {block.type !== 'else' && (
+                    {block.type !== FORGE_CONDITIONAL_BLOCK_TYPE.ELSE && (
                       <button
                         onClick={() => {
                           const newExpanded = new Set(expandedConditions);
@@ -234,7 +235,7 @@ export function ConditionalNodeFields({
                   const newBlocks = [...node.conditionalBlocks!];
                   newBlocks.push({
                     id: `block_${Date.now()}`,
-                    type: 'if',
+                    type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
                     condition: [],
                     content: '',
                     speaker: undefined
@@ -250,7 +251,7 @@ export function ConditionalNodeFields({
                   const newBlocks = [...node.conditionalBlocks!];
                   newBlocks.push({
                     id: `block_${Date.now()}`,
-                    type: 'elseif',
+                    type: FORGE_CONDITIONAL_BLOCK_TYPE.ELSE_IF,
                     condition: [],
                     content: '',
                     speaker: undefined
@@ -267,7 +268,7 @@ export function ConditionalNodeFields({
                     const newBlocks = [...node.conditionalBlocks!];
                     newBlocks.push({
                       id: `block_${Date.now()}`,
-                      type: 'else',
+                      type: FORGE_CONDITIONAL_BLOCK_TYPE.ELSE,
                       condition: undefined,
                       content: '',
                       speaker: undefined

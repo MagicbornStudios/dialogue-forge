@@ -5,8 +5,8 @@
  * Useful for getting a quick overview of all nodes.
  */
 
-import { DialogueTree } from '../../../../types';
-import { LayoutStrategy, LayoutOptions, LayoutResult } from '../../../../utils/layout/types';
+import type { ForgeGraphDoc, ForgeFlowNode } from '@/src/types/forge/forge-graph';
+import { LayoutStrategy, LayoutOptions, LayoutResult } from '../types';
 
 // ============================================================================
 // Constants
@@ -30,42 +30,45 @@ export class GridLayoutStrategy implements LayoutStrategy {
     margin: 50,
   };
 
-  apply(dialogue: DialogueTree, options?: LayoutOptions): LayoutResult {
+  apply(graph: ForgeGraphDoc, options?: LayoutOptions): LayoutResult {
     const startTime = performance.now();
     const opts = { ...this.defaultOptions, ...options };
     const margin = opts.margin || 50;
     const spacingX = opts.nodeSpacingX || 50;
     const spacingY = opts.nodeSpacingY || 50;
     
-    const nodeIds = Object.keys(dialogue.nodes);
-    if (nodeIds.length === 0) {
-      return this.emptyResult(dialogue, startTime);
+    const nodes = graph.flow.nodes;
+    if (nodes.length === 0) {
+      return this.emptyResult(graph, startTime);
     }
 
     // Calculate grid dimensions
-    const cols = Math.ceil(Math.sqrt(nodeIds.length));
+    const cols = Math.ceil(Math.sqrt(nodes.length));
     const cellWidth = NODE_WIDTH + spacingX;
     const cellHeight = NODE_HEIGHT + spacingY;
 
     // Sort nodes: start node first, then by ID
-    const sortedIds = [...nodeIds].sort((a, b) => {
-      if (a === dialogue.startNodeId) return -1;
-      if (b === dialogue.startNodeId) return 1;
-      return a.localeCompare(b);
+    const sortedNodes = [...nodes].sort((a, b) => {
+      if (a.id === graph.startNodeId) return -1;
+      if (b.id === graph.startNodeId) return 1;
+      return a.id.localeCompare(b.id);
     });
 
     // Position nodes in grid
-    const updatedNodes: Record<string, typeof dialogue.nodes[string]> = {};
+    const updatedNodes: ForgeFlowNode[] = [];
     let maxX = 0;
     let maxY = 0;
     
-    sortedIds.forEach((id, index) => {
+    sortedNodes.forEach((node, index) => {
       const col = index % cols;
       const row = Math.floor(index / cols);
       const x = margin + col * cellWidth;
       const y = margin + row * cellHeight;
       
-      updatedNodes[id] = { ...dialogue.nodes[id], x, y };
+      updatedNodes.push({
+        ...node,
+        position: { x, y },
+      });
       
       maxX = Math.max(maxX, x + NODE_WIDTH);
       maxY = Math.max(maxY, y + NODE_HEIGHT);
@@ -74,10 +77,16 @@ export class GridLayoutStrategy implements LayoutStrategy {
     const computeTimeMs = performance.now() - startTime;
 
     return {
-      dialogue: { ...dialogue, nodes: updatedNodes },
+      graph: {
+        ...graph,
+        flow: {
+          ...graph.flow,
+          nodes: updatedNodes,
+        },
+      },
       metadata: {
         computeTimeMs,
-        nodeCount: nodeIds.length,
+        nodeCount: nodes.length,
         bounds: {
           minX: margin,
           minY: margin,
@@ -90,9 +99,9 @@ export class GridLayoutStrategy implements LayoutStrategy {
     };
   }
 
-  private emptyResult(dialogue: DialogueTree, startTime: number): LayoutResult {
+  private emptyResult(graph: ForgeGraphDoc, startTime: number): LayoutResult {
     return {
-      dialogue,
+      graph,
       metadata: {
         computeTimeMs: performance.now() - startTime,
         nodeCount: 0,
@@ -105,7 +114,3 @@ export class GridLayoutStrategy implements LayoutStrategy {
     return true; // Works with any graph
   }
 }
-
-
-
-

@@ -19,6 +19,7 @@ export const PAYLOAD_COLLECTIONS = {
   FLAG_SCHEMAS: 'flag-schemas',
   GAME_STATES: 'game-states',
   USERS: 'users',
+  FORGE_GRAPHS: 'forge-graphs',
 } as const
 
 export type PayloadCollectionName = typeof PAYLOAD_COLLECTIONS[keyof typeof PAYLOAD_COLLECTIONS]

@@ -1,33 +1,21 @@
 import React from 'react';
-import { NARRATIVE_ELEMENT } from '../../../../types/narrative';
-import type { NarrativeElement } from '../../../../types/narrative';
+import { ForgeNodeType, FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
+import { FORGE_NODE_TYPE_LABELS } from '@/src/types/ui-constants';
 
 interface NarrativeGraphEditorPaneContextMenuProps {
   x: number;
   y: number;
   graphX: number;
   graphY: number;
-  onAddElement: (type: NarrativeElement, x: number, y: number) => void;
+  onAddNode: (type: ForgeNodeType, x: number, y: number) => void;
   onClose: () => void;
-  disabled?: boolean;
 }
 
-const elementTypeLabels: Record<NarrativeElement, string> = {
-  [NARRATIVE_ELEMENT.THREAD]: 'Thread',
-  [NARRATIVE_ELEMENT.ACT]: 'Act',
-  [NARRATIVE_ELEMENT.CHAPTER]: 'Chapter',
-  [NARRATIVE_ELEMENT.PAGE]: 'Page',
-  [NARRATIVE_ELEMENT.STORYLET]: 'Storylet',
-  [NARRATIVE_ELEMENT.DETOUR]: 'Detour',
-  [NARRATIVE_ELEMENT.CONDITIONAL]: 'Conditional',
-};
-
-// Available element types for pane context menu
-// Currently hidden, but can be enabled in the future
-const availableElementTypes: NarrativeElement[] = [
-  NARRATIVE_ELEMENT.ACT,
-  NARRATIVE_ELEMENT.CHAPTER,
-  NARRATIVE_ELEMENT.PAGE,
+// Available node types for pane context menu in narrative editor
+const availableNodeTypes: ForgeNodeType[] = [
+  FORGE_NODE_TYPE.ACT,
+  FORGE_NODE_TYPE.CHAPTER,
+  FORGE_NODE_TYPE.PAGE,
 ];
 
 export function NarrativeGraphEditorPaneContextMenu({
@@ -35,24 +23,22 @@ export function NarrativeGraphEditorPaneContextMenu({
   y,
   graphX,
   graphY,
-  onAddElement,
+  onAddNode,
   onClose,
-  disabled = true,
 }: NarrativeGraphEditorPaneContextMenuProps) {
-
-  return disabled ? null : (
+  return (
     <div className="fixed z-50" style={{ left: x, top: y }}>
       <div className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-lg p-1 min-w-[150px]">
-        {availableElementTypes.map(type => (
+        {availableNodeTypes.map(type => (
           <button
             key={type}
             onClick={() => {
-              onAddElement(type, graphX, graphY);
+              onAddNode(type, graphX, graphY);
               onClose();
             }}
             className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
           >
-            Add {elementTypeLabels[type]}
+            Add {FORGE_NODE_TYPE_LABELS[type]}
           </button>
         ))}
         <button

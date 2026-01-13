@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { DialogueNode, ConditionalBlock, Choice } from '../../../../types';
-import { conditionToString } from '../../../utils/condition-utils';
+import { ForgeNode, FORGE_CONDITIONAL_BLOCK_TYPE } from '@/src/types/forge/forge-graph';
+import { conditionToString } from '@/src/components/GraphEditors/utils/condition-utils';
 
 interface UseConditionInputsResult {
   conditionInputs: Record<string, string>;
@@ -14,7 +14,7 @@ interface UseConditionInputsResult {
   debounceTimersRef: React.MutableRefObject<Record<string, NodeJS.Timeout>>;
 }
 
-export function useConditionInputs(node: DialogueNode): UseConditionInputsResult {
+export function useConditionInputs(node: ForgeNode): UseConditionInputsResult {
   const [conditionInputs, setConditionInputs] = useState<Record<string, string>>({});
   const [debouncedConditionInputs, setDebouncedConditionInputs] = useState<Record<string, string>>({});
   const [dismissedConditions, setDismissedConditions] = useState<Set<string>>(new Set());
@@ -40,7 +40,7 @@ export function useConditionInputs(node: DialogueNode): UseConditionInputsResult
       setConditionInputs(prev => {
         const newInputs: Record<string, string> = { ...prev };
         node.conditionalBlocks!.forEach(block => {
-          if (block.type !== 'else') {
+          if (block.type !== FORGE_CONDITIONAL_BLOCK_TYPE.ELSE) {
             if (block.condition && block.condition.length > 0) {
               const conditionStr = conditionToString(block.condition);
               if (newInputs[block.id] !== conditionStr) {

@@ -4,7 +4,7 @@
  * These types define how Dialogue Forge integrates with your game's state system.
  */
 
-import type { ForgeGraph } from './index';
+import type { ForgeGraphDoc } from './index';
 import type { FlagSchema } from './flags';
 
 /**
@@ -49,7 +49,7 @@ export type GameState<T extends Record<string, unknown> = Record<string, never>>
  */
 export interface DialogueResult<TGameState extends BaseGameState = BaseGameState> {
   updatedFlags: FlagState;
-  dialogueTree: ForgeGraph;
+  dialogueTree: ForgeGraphDoc;
   completedNodeIds: string[]; // Nodes that were visited
   gameState: TGameState;
 }
@@ -60,7 +60,7 @@ export interface DialogueResult<TGameState extends BaseGameState = BaseGameState
 export interface DialogueRunProps<
   TGameState extends BaseGameState = BaseGameState,
 > {
-  dialogue: ForgeGraph;
+  dialogue: ForgeGraphDoc;
   gameState: TGameState; // Any JSON game state (will be flattened)
   startNodeId?: string;
   onComplete?: (result: DialogueResult<TGameState>) => void;
@@ -71,9 +71,9 @@ export interface DialogueRunProps<
  * Props for editing a dialogue
  */
 export interface DialogueEditProps {
-  dialogue: ForgeGraph | null;
+  dialogue: ForgeGraphDoc | null;
   flagSchema?: FlagSchema;
-  onChange: (dialogue: ForgeGraph) => void;
+  onChange: (dialogue: ForgeGraphDoc) => void;
   onExportYarn?: (yarn: string) => void;
   onExportJSON?: (json: string) => void;
   className?: string;

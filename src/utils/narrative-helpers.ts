@@ -1,15 +1,15 @@
 import type {
   StoryThread,
-  NarrativeAct,
-  NarrativeChapter,
-  NarrativePage,
+  ForgeAct,
+  ForgeChapter,
+  ForgePage,
 } from '../types/narrative';
 import { NARRATIVE_ELEMENT } from '../types/narrative';
 
 export interface NarrativeSequenceStep {
-  act: NarrativeAct;
-  chapter: NarrativeChapter;
-  page: NarrativePage;
+  act: ForgeAct;
+  chapter: ForgeChapter;
+  page: ForgePage;
   actIndex: number;
   chapterIndex: number;
   pageIndex: number;
@@ -27,14 +27,14 @@ export function createEmptyThread(title = 'Untitled Narrative'): StoryThread {
   const chapterId = createId(NARRATIVE_ELEMENT.CHAPTER);
   const pageId = createId(NARRATIVE_ELEMENT.PAGE);
 
-  const starterPage: NarrativePage = {
+  const starterPage: ForgePage = {
     id: pageId,
     title: 'Page 1',
     dialogueId: '',
     type: NARRATIVE_ELEMENT.PAGE,
   };
 
-  const starterChapter: NarrativeChapter = {
+  const starterChapter: ForgeChapter = {
     id: chapterId,
     title: 'Chapter 1',
     pages: [starterPage],
@@ -42,7 +42,7 @@ export function createEmptyThread(title = 'Untitled Narrative'): StoryThread {
     type: NARRATIVE_ELEMENT.CHAPTER,
   };
 
-  const starterAct: NarrativeAct = {
+  const starterAct: ForgeAct = {
     id: actId,
     title: 'Act 1',
     chapters: [starterChapter],
@@ -62,7 +62,7 @@ export function createEmptyThread(title = 'Untitled Narrative'): StoryThread {
 export function addAct(thread: StoryThread, title = 'New Act'): StoryThread {
   const actId = createId(NARRATIVE_ELEMENT.ACT);
 
-  const newAct: NarrativeAct = {
+  const newAct: ForgeAct = {
     id: actId,
     title,
     chapters: [],
@@ -83,7 +83,7 @@ export function addChapter(
 ): StoryThread {
   const chapterId = createId(NARRATIVE_ELEMENT.CHAPTER);
 
-  const newChapter: NarrativeChapter = {
+  const newChapter: ForgeChapter = {
     id: chapterId,
     title,
     pages: [],
@@ -114,7 +114,7 @@ export function addPage(
 ): StoryThread {
   const pageId = createId(NARRATIVE_ELEMENT.PAGE);
 
-  const newPage: NarrativePage = {
+  const newPage: ForgePage = {
     id: pageId,
     title,
     dialogueId,
@@ -152,7 +152,7 @@ export function updateThread(thread: StoryThread, updates: Partial<StoryThread>)
 export function updateAct(
   thread: StoryThread,
   actId: string,
-  updates: Partial<NarrativeAct>
+  updates: Partial<ForgeAct>
 ): StoryThread {
   const acts = thread.acts.map(act =>
     act.id === actId ? { ...act, ...updates } : act
@@ -164,7 +164,7 @@ export function updateChapter(
   thread: StoryThread,
   actId: string,
   chapterId: string,
-  updates: Partial<NarrativeChapter>
+  updates: Partial<ForgeChapter>
 ): StoryThread {
   const acts = thread.acts.map(act => {
     if (act.id !== actId) return act;
@@ -181,7 +181,7 @@ export function updatePage(
   actId: string,
   chapterId: string,
   pageId: string,
-  updates: Partial<NarrativePage>
+  updates: Partial<ForgePage>
 ): StoryThread {
   const acts = thread.acts.map(act => {
     if (act.id !== actId) return act;
@@ -304,7 +304,7 @@ export function unlinkPage(
   });
 }
 
-export function getAct(thread: StoryThread, actId: string): NarrativeAct | undefined {
+export function getAct(thread: StoryThread, actId: string): ForgeAct | undefined {
   return thread.acts.find(a => a.id === actId);
 }
 
@@ -312,7 +312,7 @@ export function getChapter(
   thread: StoryThread,
   actId: string,
   chapterId: string
-): NarrativeChapter | undefined {
+): ForgeChapter | undefined {
   const act = thread.acts.find(a => a.id === actId);
   return act?.chapters.find(c => c.id === chapterId);
 }
@@ -322,7 +322,7 @@ export function getPage(
   actId: string,
   chapterId: string,
   pageId: string
-): NarrativePage | undefined {
+): ForgePage | undefined {
   const act = thread.acts.find(a => a.id === actId);
   const chapter = act?.chapters.find(c => c.id === chapterId);
   return chapter?.pages.find(p => p.id === pageId);
@@ -331,7 +331,7 @@ export function getPage(
 export function findPageParent(
   thread: StoryThread,
   pageId: string
-): { act: NarrativeAct; chapter: NarrativeChapter } | undefined {
+): { act: ForgeAct; chapter: ForgeChapter } | undefined {
   for (const act of thread.acts) {
     for (const chapter of act.chapters) {
       if (chapter.pages.some(p => p.id === pageId)) {

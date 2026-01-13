@@ -1,5 +1,6 @@
-import { ForgeGraph, ForgeNode } from '../types';
+import { ForgeConditionalBlock, ForgeGraphDoc, ForgeNode } from '../types';
 import { NODE_TYPE, CONDITION_OPERATOR, YARN_OPERATOR, YARN_BLOCK_TYPE } from '../types/constants';
+import { ForgeChoice, ForgeNodeType } from '../types/forge/forge-graph';
 
 /**
  * Convert DialogueTree to Yarn Spinner format
@@ -12,17 +13,17 @@ import { NODE_TYPE, CONDITION_OPERATOR, YARN_OPERATOR, YARN_BLOCK_TYPE } from '.
  * - <<set $flag_name = value>> - Sets variable in Variable Storage
  * - <<if $flag_name>> - Checks variable in Variable Storage
  */
-export function exportToYarn(tree: ForgeGraph): string {
+export function exportToYarn(graph: ForgeGraphDoc): string {
   let yarn = '';
   
-  Object.values(tree.nodes).forEach(node => {
+  Object.values(graph.flow.nodes).forEach(node => {
     yarn += `title: ${node.id}\n`;
     yarn += `---\n`;
     
-    if (node.type === NODE_TYPE.NPC) {
+    if (node.data.type === NODE_TYPE.NPC) {
       // Export conditional blocks if present
-      if (node.conditionalBlocks && node.conditionalBlocks.length > 0) {
-        node.conditionalBlocks.forEach(block => {
+      if (node.data.conditionalBlocks && node.data.conditionalBlocks.length > 0) {
+        node.data.conditionalBlocks.forEach((block: ForgeConditionalBlock) => {
 if (block.type === YARN_BLOCK_TYPE.IF || block.type === YARN_BLOCK_TYPE.ELSEIF) {
             // Build condition string
             const conditions = block.condition?.map(cond => {
@@ -50,7 +51,7 @@ const op = cond.operator === CONDITION_OPERATOR.EQUALS ? YARN_OPERATOR.EQUALS :
           }
           
           // Export block content (remove set commands from content, they'll be exported separately)
-          let blockContent = block.content;
+          let blockContent = block.content ?? '';
           const setCommandsInBlock = blockContent.match(/<<set\s+\$(\w+)\s*([+\-*/=]+)\s*(.+?)>>/g);
           if (setCommandsInBlock) {
             // Remove set commands from content
@@ -75,17 +76,17 @@ const op = cond.operator === CONDITION_OPERATOR.EQUALS ? YARN_OPERATOR.EQUALS :
         yarn += `<<endif>>\n`;
       } else {
         // Regular content (no conditionals)
-        let content = node.content;
+        let content = node.data.content ?? '';
         const setCommandsInContent = content.match(/<<set\s+\$(\w+)\s*([+\-*/=]+)\s*(.+?)>>/g);
         if (setCommandsInContent) {
           // Remove set commands from content
-          setCommandsInContent.forEach(cmd => {
+          setCommandsInContent.forEach((cmd: string) => {
             content = content.replace(cmd, '').trim();
           });
         }
         
-        if (node.speaker) {
-          yarn += `${node.speaker}: ${content.replace(/\n/g, '\n' + node.speaker + ': ')}\n`;
+        if (node.data.speaker) {
+          yarn += `${node.data.speaker}: ${content.replace(/\n/g, '\n' + node.data.speaker + ': ')}\n`;
         } else {
           yarn += `${content}\n`;
         }
@@ -93,25 +94,25 @@ const op = cond.operator === CONDITION_OPERATOR.EQUALS ? YARN_OPERATOR.EQUALS :
       
       // Export flags as Yarn variable commands
       // Check if content contains variable operations first
-      const setCommandsInContent = node.content.match(/<<set\s+\$(\w+)\s*([+\-*/=]+)\s*(.+?)>>/g);
+      const setCommandsInContent = node.data.content?.match(/<<set\s+\$(\w+)\s*([+\-*/=]+)\s*(.+?)>>/g);
       if (setCommandsInContent) {
         // Export the operations found in content
-        setCommandsInContent.forEach(cmd => {
+        setCommandsInContent.forEach((cmd: string) => {
           yarn += `${cmd}\n`;
         });
-      } else if (node.setFlags?.length) {
+      } else if (node.data.setFlags?.length) {
         // Fallback: export as boolean flags
-        node.setFlags.forEach(flag => {
+        node.data.setFlags.forEach((flag: string) => {
           yarn += `<<set $${flag} = true>>\n`;
         });
       }
       
-      if (node.nextNodeId) {
-        yarn += `<<jump ${node.nextNodeId}>>\n`;
+      if (node.data.nextNodeId) {
+        yarn += `<<jump ${node.data.nextNodeId}>>\n`;
       }
-    } else if (node.type === NODE_TYPE.CONDITIONAL && node.conditionalBlocks) {
+    } else if (node.data.type === NODE_TYPE.CONDITIONAL && node.data.conditionalBlocks) {
       // Export conditional node blocks
-      node.conditionalBlocks.forEach(block => {
+      node.data.conditionalBlocks.forEach((block: ForgeConditionalBlock) => {
         if (block.type === YARN_BLOCK_TYPE.IF || block.type === YARN_BLOCK_TYPE.ELSEIF) {
 // Build condition string
           const conditions = block.condition?.map(cond => {
@@ -139,11 +140,11 @@ const op = cond.operator === CONDITION_OPERATOR.EQUALS ? YARN_OPERATOR.EQUALS :
         }
         
         // Export block content (remove set commands from content)
-        let blockContent = block.content;
+        let blockContent = block.content ?? '';
         const setCommandsInBlock = blockContent.match(/<<set\s+\$(\w+)\s*([+\-*/=]+)\s*(.+?)>>/g);
         if (setCommandsInBlock) {
           // Remove set commands from content
-          setCommandsInBlock.forEach(cmd => {
+          setCommandsInBlock.forEach((cmd: string) => {
             blockContent = blockContent.replace(cmd, '').trim();
           });
         }
@@ -169,24 +170,24 @@ const op = cond.operator === CONDITION_OPERATOR.EQUALS ? YARN_OPERATOR.EQUALS :
       yarn += `<<endif>>\n`;
       
       // Export flags as Yarn variable commands
-      const setCommandsInNode = node.content?.match(/<<set\s+\$(\w+)\s*([+\-*/=]+)\s*(.+?)>>/g);
+      const setCommandsInNode = node.data.content?.match(/<<set\s+\$(\w+)\s*([+\-*/=]+)\s*(.+?)>>/g);
       if (setCommandsInNode) {
-        setCommandsInNode.forEach(cmd => {
+        setCommandsInNode.forEach((cmd: string) => {
           yarn += `${cmd}\n`;
         });
-      } else if (node.setFlags?.length) {
-        node.setFlags.forEach(flag => {
+      } else if (node.data.setFlags?.length) {
+        node.data.setFlags.forEach((flag: string) => {
           yarn += `<<set $${flag} = true>>\n`;
         });
       }
       
       // Conditional nodes don't have a main nextNodeId (each block has its own)
-    } else if (node.type === NODE_TYPE.PLAYER && node.choices) {
-      node.choices.forEach(choice => {
+    } else if (node.data.type === NODE_TYPE.PLAYER && node.data.choices) {
+      node.data.choices.forEach((choice: ForgeChoice) => {
         // Export conditions as Yarn if statements (wrap the choice)
         if (choice.conditions && choice.conditions.length > 0) {
           // Combine multiple conditions with AND logic
-          const conditions = choice.conditions.map(cond => {
+          const conditions = choice.conditions.map((cond: ForgeCondition) => {
             const varName = `$${cond.flag}`;
             if (cond.operator === CONDITION_OPERATOR.IS_SET) {
               return varName;
@@ -254,7 +255,7 @@ const op = cond.operator === CONDITION_OPERATOR.EQUALS ? YARN_OPERATOR.EQUALS :
 /**
  * Parse Yarn Spinner format to DialogueTree
  */
-export function importFromYarn(yarnContent: string, title: string = 'Imported Dialogue'): ForgeGraph {
+export function importFromYarn(yarnContent: string, title: string = 'Imported Dialogue'): ForgeGraphDoc {
   const nodes: Record<string, ForgeNode> = {};
   const nodeBlocks = yarnContent.split('===').filter(b => b.trim());
   
@@ -506,7 +507,7 @@ currentBlock = {
     
     nodes[nodeId] = {
       id: nodeId,
-      type: choices.length > 0 ? NODE_TYPE.PLAYER : NODE_TYPE.NPC,
+      type: choices.length > 0 ? NODE_TYPE.PLAYER : NODE_TYPE.NPC as ForgeNodeType,
       speaker: speaker || undefined,
       content: dialogueContent.trim(),
       choices: choices.length > 0 ? choices : undefined,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { PlayView } from '../../GraphEditors/shared/PlayView';
-import type { ForgeGraph } from '../../../types';
+import type { ForgeGraphDoc } from '../../../types';
 import type { BaseGameState } from '../../../types/game-state';
 import type { FlagSchema } from '../../../types/flags';
 import type { StoryThread } from '../../../types/narrative';
@@ -9,7 +9,7 @@ import type { StoryThread } from '../../../types/narrative';
 interface PlayModalProps {
   isOpen: boolean;
   onClose: () => void;
-  graph: ForgeGraph;
+  graph: ForgeGraphDoc;
   flagSchema?: FlagSchema;
   gameStateFlags?: BaseGameState['flags'];
   narrativeThread: StoryThread;

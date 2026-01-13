@@ -1,9 +1,9 @@
 import React from 'react';
-import { NarrativeAct } from '../../../../../types/narrative';
+import { ForgeAct } from '../../../../../types/narrative';
 
 interface ActNodeFieldsProps {
-  act: NarrativeAct;
-  onUpdate: (updates: Partial<NarrativeAct>) => void;
+  act: ForgeAct;
+  onUpdate: (updates: Partial<ForgeAct>) => void;
 }
 
 export function ActNodeFields({ act, onUpdate }: ActNodeFieldsProps) {

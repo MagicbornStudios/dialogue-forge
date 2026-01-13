@@ -1,7 +1,7 @@
 import type {
-  NarrativeAct,
-  NarrativeChapter,
-  NarrativePage,
+  ForgeAct,
+  ForgeChapter,
+  ForgePage,
   StoryThread,
   StoryletPool,
   StoryletPoolMember,
@@ -22,7 +22,7 @@ export function createNarrativeThreadClient(thread: StoryThread) {
     /**
      * Update an act in the thread
      */
-    updateAct(actId: string, updates: Partial<NarrativeAct>): StoryThread {
+    updateAct(actId: string, updates: Partial<ForgeAct>): StoryThread {
       const actIndex = thread.acts.findIndex(act => act.id === actId);
       if (actIndex === -1) return thread;
 
@@ -47,7 +47,7 @@ export function createNarrativeThreadClient(thread: StoryThread) {
     updateChapter(
       actId: string,
       chapterId: string,
-      updates: Partial<NarrativeChapter>
+      updates: Partial<ForgeChapter>
     ): StoryThread {
       const actIndex = thread.acts.findIndex(act => act.id === actId);
       if (actIndex === -1) return thread;
@@ -87,7 +87,7 @@ export function createNarrativeThreadClient(thread: StoryThread) {
       actId: string,
       chapterId: string,
       pageId: string,
-      updates: Partial<NarrativePage>
+      updates: Partial<ForgePage>
     ): StoryThread {
       const actIndex = thread.acts.findIndex(act => act.id === actId);
       if (actIndex === -1) return thread;

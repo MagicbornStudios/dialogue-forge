@@ -29,7 +29,7 @@
  * @module layout
  */
 
-import { ForgeGraph } from '../../../../types';
+import { ForgeGraphDoc } from '../../../../types';
 import { layoutRegistry } from './registry';
 import { LayoutOptions, LayoutResult, LayoutDirection } from './types';
 import { DagreLayoutStrategy, ForceLayoutStrategy, GridLayoutStrategy } from './strategies';
@@ -48,34 +48,34 @@ layoutRegistry.register(new GridLayoutStrategy());
 // ============================================================================
 
 /**
- * Apply a layout algorithm to a dialogue tree
+ * Apply a layout algorithm to a graph
  * 
- * @param dialogue - The dialogue tree to layout
+ * @param graph - The graph to layout
  * @param strategyId - Optional strategy ID (defaults to 'dagre')
  * @param options - Optional layout configuration
- * @returns Layout result with updated dialogue and metadata
+ * @returns Layout result with updated graph and metadata
  * 
  * @example
  * ```typescript
  * // Default dagre layout
- * const result = applyLayout(dialogue);
+ * const result = applyLayout(graph);
  * 
  * // Horizontal dagre layout
- * const result = applyLayout(dialogue, 'dagre', { direction: 'LR' });
+ * const result = applyLayout(graph, 'dagre', { direction: 'LR' });
  * 
  * // Force-directed layout
- * const result = applyLayout(dialogue, 'force');
+ * const result = applyLayout(graph, 'force');
  * 
  * // Grid layout
- * const result = applyLayout(dialogue, 'grid');
+ * const result = applyLayout(graph, 'grid');
  * ```
  */
 export function applyLayout(
-  dialogue: ForgeGraph,
+  graph: ForgeGraphDoc,
   strategyId?: string,
   options?: LayoutOptions
 ): LayoutResult {
-  return layoutRegistry.apply(strategyId, dialogue, options);
+  return layoutRegistry.apply(strategyId, graph, options);
 }
 
 /**
@@ -91,14 +91,14 @@ export function listLayouts(): Array<{ id: string; name: string; description: st
 
 /**
  * Apply dagre layout (backward compatible function)
- * @deprecated Use applyLayout(dialogue, 'dagre', options) instead
+ * @deprecated Use applyLayout(graph, 'dagre', options) instead
  */
 export function applyDagreLayout(
-  dialogue: ForgeGraph,
+  graph: ForgeGraphDoc,
   direction: LayoutDirection = 'TB'
-): ForgeGraph {
-  const result = applyLayout(dialogue, 'dagre', { direction });
-  return result.dialogue;
+): ForgeGraphDoc {
+  const result = applyLayout(graph, 'dagre', { direction });
+  return result.graph;
 }
 
 /**

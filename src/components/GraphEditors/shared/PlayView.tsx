@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ForgeGraph, type NarrativeThread } from '../../../types';
+import { ForgeGraphDoc, type NarrativeThread } from '../../../types';
 import { FLAG_TYPE } from '../../../types/constants';
 import { FlagSchema, FlagType } from '../../../types/flags';
 import { DialogueResult, FlagState, GameFlagState } from '../../../types/game-state';
@@ -7,7 +7,7 @@ import { initializeFlags } from '../../shared/FlagManager/utils/flag-manager';
 import { GamePlayer } from '../../GamePlayer/components/GamePlayer';
 
 interface PlayViewProps {
-  graph: ForgeGraph;
+  graph: ForgeGraphDoc;
   startNodeId?: string;
   flagSchema?: FlagSchema;
   gameStateFlags?: GameFlagState;

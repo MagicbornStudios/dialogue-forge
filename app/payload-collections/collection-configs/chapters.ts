@@ -31,6 +31,7 @@ export const Chapters: CollectionConfig = {
     {
       name: 'title',
       type: 'text',
+      required: true,
     },
     {
       name: 'summary',
@@ -41,30 +42,27 @@ export const Chapters: CollectionConfig = {
       type: 'number',
       required: true,
       defaultValue: 0,
+      index: true,
+    },
+    {
+      name: 'bookHeading',
+      type: 'text',
+    },
+    {
+      name: 'bookBody',
+      type: 'textarea',
+    },
+    {
+      name: '_status',
+      type: 'select',
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'Published', value: 'published' },
+      ],
+      required: false,
     },
   ],
   versions: {
     drafts: true,
-  },
-  hooks: {
-    beforeValidate: [
-      async ({ data, req }) => {
-        if (data?.chapterId && data?.project) {
-          const existing = await req.payload.find({
-            collection: PAYLOAD_COLLECTIONS.CHAPTERS,
-            where: {
-              and: [
-                { chapterId: { equals: data.chapterId } },
-                { project: { equals: data.project } },
-              ],
-            },
-            limit: 1,
-          })
-          if (existing.docs.length > 0 && existing.docs[0].id !== data.id) {
-            throw new Error(`Chapter ID "${data.chapterId}" already exists in this project`)
-          }
-        }
-      },
-    ],
   },
 }

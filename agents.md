@@ -185,6 +185,33 @@ const flagSchema: FlagSchema = {
 - `VIEW_MODE.YARN`: Text-based Yarn format view
 - `VIEW_MODE.PLAY`: Interactive dialogue player
 
+### Type Independence Pattern
+
+**CRITICAL**: The library maintains complete independence from host app types.
+
+#### Library Types vs Host App Types
+
+The library defines internal types that are designed to match PayloadCMS structures for compatibility, but are completely independent:
+
+- **Library types** (in `src/types/`): `ForgeGraphDoc`, `NarrativeAct`, `NarrativeChapter`, `NarrativePage`
+- **Host app types** (in `app/payload-types.ts`): `ForgeGraph`, `Act`, `Chapter`, `Page`
+
+#### Rules
+
+1. **NEVER import host app types in library code**: Library files in `src/` must NEVER import from `@/app/payload-types` or any host app paths
+2. **Match structure, not types**: Library types should match PayloadCMS structure for compatibility, but be defined independently
+3. **Transformation in host app**: Host apps should provide transformation utilities to convert PayloadCMS documents to library types
+4. **Examples**:
+   - ✅ `ForgeGraphDoc` in `src/types/forge/forge-graph.ts` - matches `ForgeGraph` structure but is independent
+   - ✅ `NarrativeAct` in `src/types/narrative.ts` - matches `Act` structure but is independent
+   - ❌ Importing `Act` from `@/app/payload-types` in library code
+
+#### Why This Matters
+
+- **Portability**: Library can be used in any host app, not just PayloadCMS
+- **Independence**: Library doesn't break when host app types change
+- **Clear boundaries**: Separation of concerns between library and host app
+
 ## Working with the Codebase
 
 ### Demo Application

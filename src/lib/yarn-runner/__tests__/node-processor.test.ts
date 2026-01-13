@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { processNode, isValidNextNode, ProcessedNodeResult } from '../node-processor';
 import { VariableManager } from '../variable-manager';
-import { ForgeNode, ForgeGraph } from '../../../types';
+import { ForgeNode, ForgeGraphDoc } from '../../../types';
 
 describe('node-processor', () => {
   let variableManager: VariableManager;

@@ -32,13 +32,6 @@ export const GameStates: CollectionConfig = {
       defaultValue: 'AUTHORED',
     },
     {
-      name: 'thread',
-      type: 'relationship',
-      relationTo: PAYLOAD_COLLECTIONS.THREADS,
-      required: false,
-      index: true,
-    },
-    {
       name: 'playerKey',
       type: 'text',
       // For runtime states - player identifier
@@ -49,6 +42,15 @@ export const GameStates: CollectionConfig = {
       type: 'json',
       required: true,
       // Stores authored schema (players/characters/flags) or runtime values
+    },
+    {
+      name: '_status',
+      type: 'select',
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'Published', value: 'published' },
+      ],
+      required: false,
     },
   ],
   versions: {

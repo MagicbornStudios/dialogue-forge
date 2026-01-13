@@ -8,13 +8,18 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '../../../../ui/context-menu';
-import type { NarrativeFlowNodeData } from '../../../../../utils/narrative-converter';
+import type { ShellNodeData } from '@/src/components/GraphEditors/hooks/useForgeFlowEditorShell';
+import { useForgeEditorActions } from '@/src/components/GraphEditors/hooks/useForgeEditorActions';
+import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
 
-export function ActNode({ data, selected, id }: NodeProps<NarrativeFlowNodeData>) {
-  const title = data.label || id;
-  const summary = data.description;
-  const isDimmed = data.isDimmed ?? false;
-  const isInPath = data.isInPath ?? false;
+export function ActNode({ data, selected, id }: NodeProps<ShellNodeData>) {
+  const { node, ui = {} } = data;
+  const { isDimmed = false, isInPath = false } = ui;
+  
+  const title = node.label || id;
+  const summary = node.content;
+  
+  const actions = useForgeEditorActions();
 
   // Glow effect based on selection and path state - blue for acts
   const glowClass = selected 
@@ -64,23 +69,22 @@ export function ActNode({ data, selected, id }: NodeProps<NarrativeFlowNodeData>
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={() => data.onEdit?.()}>
+        <ContextMenuItem onSelect={() => actions.openNodeEditor(id!)}>
           <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Act
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => data.onAddChapter?.()}>
+        <ContextMenuItem onSelect={() => {
+          // Add Chapter - this will be handled by edge drop menu or pane context menu
+          actions.openNodeEditor(id!);
+        }}>
           <Plus size={14} className="mr-2 text-df-player-selected" /> Add Chapter
         </ContextMenuItem>
-        {data.onDelete && (
-          <>
-            <ContextMenuSeparator />
-            <ContextMenuItem 
-              onSelect={() => data.onDelete?.()}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 size={14} className="mr-2" /> Delete
-            </ContextMenuItem>
-          </>
-        )}
+        <ContextMenuSeparator />
+        <ContextMenuItem 
+          onSelect={() => actions.deleteNode(id!)}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 size={14} className="mr-2" /> Delete
+        </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   );

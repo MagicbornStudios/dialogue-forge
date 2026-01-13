@@ -1,4 +1,4 @@
-import { ForgeNode, ConditionalBlock, Choice } from '../../types';
+import { ForgeNode, ForgeConditionalBlock, Choice } from '../../types';
 import { VariableManager } from './variable-manager';
 import { evaluateConditions } from './condition-evaluator';
 import { NODE_TYPE } from '../../types/constants';
@@ -115,14 +115,16 @@ export function processNode(
 /**
  * Finds the first matching conditional block (if/elseif/else logic)
  */
+import { FORGE_CONDITIONAL_BLOCK_TYPE } from '../../types/forge/forge-graph';
+
 function findMatchingConditionalBlock(
-  blocks: ConditionalBlock[],
+  blocks: ForgeConditionalBlock[],
   variableManager: VariableManager
-): ConditionalBlock | null {
-  let matchedBlock: ConditionalBlock | null = null;
+): ForgeConditionalBlock | null {
+  let matchedBlock: ForgeConditionalBlock | null = null;
   
   for (const block of blocks) {
-    if (block.type === 'else') {
+    if (block.type === FORGE_CONDITIONAL_BLOCK_TYPE.ELSE) {
       // Only match else if no previous block matched
       if (!matchedBlock) {
         matchedBlock = block;

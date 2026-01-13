@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { ForgeNode, Condition, ConditionalBlock } from '../../../../../types';
+import type { ForgeCondition, ForgeConditionalBlock, ForgeNode } from '@/src/types/forge/forge-graph';
+import { FORGE_CONDITIONAL_BLOCK_TYPE } from '@/src/types/forge/forge-graph';
 import { GitBranch, Play, Flag, Hash, Code, Edit3, Trash2 } from 'lucide-react';
 import { FlagSchema } from '../../../../../types/flags';
 import { Character } from '../../../../../types/characters';
@@ -12,27 +13,32 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '../../../../ui/context-menu';
+import { getFlagColorClass } from '../../../utils/flag-styles';
+import { useForgeEditorActions } from '../../../hooks/useForgeEditorActions';
 
 interface ConditionalNodeData {
   node: ForgeNode;
   flagSchema?: FlagSchema;
   characters?: Record<string, Character>;
-  isDimmed?: boolean;
-  isInPath?: boolean;
+  ui?: {
+    isDimmed?: boolean;
+    isInPath?: boolean;
+    isStartNode?: boolean;
+    isEndNode?: boolean;
+  };
   layoutDirection?: LayoutDirection;
-  isStartNode?: boolean;
-  isEndNode?: boolean;
-  // Context menu callbacks
-  onEdit?: () => void;
-  onDelete?: () => void;
 }
 
 // Color scheme for conditional block edges
 const CONDITIONAL_COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b'];
 
 export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeData>) {
-  const { node, flagSchema, characters = {}, isDimmed, isInPath, layoutDirection = 'TB', isStartNode, isEndNode, onEdit, onDelete } = data;
+  const { node, flagSchema, characters = {}, ui = {}, layoutDirection = 'TB' } = data;
+  const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
   const blocks = node.conditionalBlocks || [];
+  
+  // Use actions instead of callbacks
+  const actions = useForgeEditorActions();
   const updateNodeInternals = useUpdateNodeInternals();
   const headerRef = useRef<HTMLDivElement>(null);
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -50,7 +56,7 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
       const headerHeight = headerRef.current.offsetHeight;
       let cumulativeHeight = headerHeight;
       
-      blocks.forEach((_block: ConditionalBlock, idx: number) => {
+      blocks.forEach((_block: ForgeConditionalBlock, idx: number) => {
         const blockEl = blockRefs.current[idx];
         if (blockEl) {
           const blockHeight = blockEl.offsetHeight;
@@ -68,7 +74,7 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
       
       setHandlePositions(positions);
       setTimeout(() => {
-        updateNodeInternals(node.id);
+        updateNodeInternals(node.id as string);
       }, 0);
     }
   }, [blocks.length, node.id, updateNodeInternals]);
@@ -153,7 +159,7 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
       <div className="px-4 py-3">
         {blocks.map((block, idx) => {
           const color = CONDITIONAL_COLORS[idx % CONDITIONAL_COLORS.length];
-          const blockType = block.type === 'if' ? 'IF' : block.type === 'elseif' ? 'ELSE IF' : 'ELSE';
+          const blockType = block.type === FORGE_CONDITIONAL_BLOCK_TYPE.IF ? 'IF' : block.type === FORGE_CONDITIONAL_BLOCK_TYPE.ELSE_IF ? 'ELSE IF' : 'ELSE';
           
           // Get character if characterId is set
           const character = block.characterId ? characters[block.characterId] : undefined;
@@ -172,7 +178,7 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
                 </span>
                 {block.condition && block.condition.length > 0 && (
                   <span className="text-[9px] text-df-text-secondary font-mono truncate flex-1">
-                    {block.condition.map((c: Condition) => {
+                    {block.condition.map((c: ForgeCondition) => {
                       const varName = `$${c.flag}`;
                       if (c.operator === 'is_set') return varName;
                       if (c.operator === 'is_not_set') return `not ${varName}`;
@@ -201,7 +207,7 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
               )}
               
               <div className="text-xs text-df-text-primary line-clamp-2 bg-df-elevated border border-df-control-border rounded px-3 py-1.5">
-                &quot;{block.content.slice(0, 60) + (block.content.length > 60 ? '...' : '')}&quot;
+                &quot;{block.content?.slice(0, 60) + (block.content?.length && block.content.length > 60 ? '...' : '')}&quot;
               </div>
               
               {/* Output handle for each block */}
@@ -226,14 +232,7 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
           {node.setFlags.map(flagId => {
             const flag = flagSchema?.flags.find(f => f.id === flagId);
             const flagType = flag?.type || 'dialogue';
-            const colorClass = flagType === 'dialogue' ? 'bg-df-flag-dialogue-bg text-df-flag-dialogue border-df-flag-dialogue' :
-              flagType === 'quest' ? 'bg-df-flag-quest-bg text-df-flag-quest border-df-flag-quest' :
-              flagType === 'achievement' ? 'bg-df-flag-achievement-bg text-df-flag-achievement border-df-flag-achievement' :
-              flagType === 'item' ? 'bg-df-flag-item-bg text-df-flag-item border-df-flag-item' :
-              flagType === 'stat' ? 'bg-df-flag-stat-bg text-df-flag-stat border-df-flag-stat' :
-              flagType === 'title' ? 'bg-df-flag-title-bg text-df-flag-title border-df-flag-title' :
-              flagType === 'global' ? 'bg-df-flag-global-bg text-df-flag-global border-df-flag-global' :
-              'bg-df-flag-dialogue-bg text-df-flag-dialogue border-df-flag-dialogue';
+            const colorClass = getFlagColorClass(flagType);
             return (
               <span key={flagId} className={`text-[8px] px-1.5 py-0.5 rounded-full border ${colorClass}`} title={flag?.name || flagId}>
                 {flagType === 'dialogue' ? 't' : flagType[0]}
@@ -246,14 +245,14 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={() => onEdit?.()}>
+        <ContextMenuItem onSelect={() => node.id && actions.openNodeEditor(node.id)}>
           <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
         </ContextMenuItem>
-        {!isStartNode && onDelete && (
+        {!isStartNode && node.id && (
           <>
             <ContextMenuSeparator />
             <ContextMenuItem 
-              onSelect={() => onDelete?.()}
+              onSelect={() => node.id && actions.deleteNode(node.id)}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 size={14} className="mr-2" /> Delete

@@ -1,6 +1,5 @@
 import React from 'react';
-import { NODE_TYPE } from '../../../../types/constants';
-import type { NodeType } from '../../../../types/constants';
+import { NODE_TYPE, type NodeType } from '../../../../types/constants';
 import { NARRATIVE_ELEMENT } from '../../../../types/narrative';
 import type { NarrativeElement } from '../../../../types/narrative';
 
@@ -63,7 +62,6 @@ const nodeTypeLabels: Record<NodeType, string> = {
 };
 
 const elementTypeLabels: Record<NarrativeElement, string> = {
-  [NARRATIVE_ELEMENT.THREAD]: 'Thread',
   [NARRATIVE_ELEMENT.ACT]: 'Act',
   [NARRATIVE_ELEMENT.CHAPTER]: 'Chapter',
   [NARRATIVE_ELEMENT.PAGE]: 'Page',
@@ -91,8 +89,6 @@ const getAvailableNodeTypes = (fromNodeType: NodeType): NodeType[] => {
 // Map element types to their available connection targets (narrative)
 const getAvailableElementTypes = (fromElementType: NarrativeElement): NarrativeElement[] => {
   switch (fromElementType) {
-    case NARRATIVE_ELEMENT.THREAD:
-      return [NARRATIVE_ELEMENT.ACT];
     case NARRATIVE_ELEMENT.ACT:
       return [NARRATIVE_ELEMENT.CHAPTER];
     case NARRATIVE_ELEMENT.CHAPTER:

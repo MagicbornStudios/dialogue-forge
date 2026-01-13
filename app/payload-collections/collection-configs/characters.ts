@@ -39,9 +39,15 @@ export const Characters: CollectionConfig = {
     {
       name: 'archivedAt',
       type: 'date',
-      admin: {
-        hidden: true,
-      },
+    },
+    {
+      name: '_status',
+      type: 'select',
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'Published', value: 'published' },
+      ],
+      required: false,
     },
   ],
   versions: {

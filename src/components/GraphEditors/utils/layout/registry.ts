@@ -17,7 +17,7 @@
  * ```
  */
 
-import { ForgeGraph } from '../../../../types';
+import { ForgeGraphDoc } from '../../../../types';
 import { LayoutStrategy, LayoutOptions, LayoutResult, LayoutStrategyEntry } from './types';
 
 // ============================================================================
@@ -108,7 +108,7 @@ class LayoutStrategyRegistry {
    * @param dialogue - The dialogue tree to layout
    * @param options - Layout options
    */
-  apply(id: string | undefined, dialogue: ForgeGraph, options?: LayoutOptions): LayoutResult {
+  apply(id: string | undefined, dialogue: ForgeGraphDoc, options?: LayoutOptions): LayoutResult {
     const strategyId = id || this.defaultStrategyId;
     
     if (!strategyId) {

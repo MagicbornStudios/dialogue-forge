@@ -1,85 +1,54 @@
 import { NodeType } from './constants';
-import type { Condition, ConditionalBlock } from './conditionals';
-import type { StoryletPool } from './narrative';
 export type { ViewMode } from './constants';
 export { DIALOGUE_FORGE_EVENT_TYPE, DIALOGUE_PANEL_TAB, DIALOGUE_OPEN_REASON } from './constants';
 export type { DialogueForgeEventType, DialoguePanelTab, DialogueOpenReason } from './constants';
-export { NODE_TYPE_LABELS, AVAILABLE_NODE_TYPES, CSS_CLASSES } from './ui-constants';
+export { NODE_TYPE_LABELS, AVAILABLE_NODE_TYPES, CSS_CLASSES, FORGE_NODE_TYPE_LABELS, NODE_TYPE_BORDER_COLORS, NODE_TYPE_BADGE_CLASSES } from './ui-constants';
 export type { NODE_TYPE_LABELS as NodeTypeLabelsType, AVAILABLE_NODE_TYPES as AvailableNodeTypesType, CSS_CLASSES as CssClassesType } from './ui-constants';
-export type { Condition, ConditionalBlock } from './conditionals';
 export type {
-  NarrativeAct,
-  NarrativeChapter,
+  ForgeAct as NarrativeAct,
+  ForgeChapter as NarrativeChapter,
   NarrativeElement,
-  NarrativePage,
-  NarrativeThread,
-  StoryThread,
-  StoryletPoolMember,
-  StoryletTemplate,
-  StoryletPool,
-  StoryletSelectionMode,
+  ForgePage as NarrativePage,
+  ForgeNarrativeGraph as NarrativeGraph,
 } from './narrative';
+export { NARRATIVE_ELEMENT } from './narrative';
+import type { 
+  ForgeGraphDoc,
+  ForgeNode,
+} from './forge/forge-graph';
 
-export interface Choice {
-  id: string;
-  text: string;
-  nextNodeId?: string; // Optional - choice can end the dialogue
-  conditions?: Condition[];
-  setFlags?: string[];
-}
+export type { 
+  ForgeGraphDoc,
+  ForgeChoice as Choice,
+  ForgeStoryletCall as StoryletCall,
+  ForgeNode,
+  ForgeNodeType,
+  ForgeGraphKind,
+  ForgeEdgeKind,
+  ForgeFlowNode,
+  ForgeFlowEdge,
+  ForgeFlowJson,
+  ForgeConditionalBlock,
+  ForgeCondition as Condition,
+  ForgeConditionalBlockType,
+  ForgeStoryletCallMode,
+  NarrativeForgeNodeType,
+} from './forge/forge-graph';
+export { 
+  FORGE_CONDITIONAL_BLOCK_TYPE,
+  FORGE_NODE_TYPE,
+  FORGE_GRAPH_KIND,
+  FORGE_EDGE_KIND,
+  FORGE_STORYLET_CALL_MODE,
+  NARRATIVE_FORGE_NODE_TYPE,
+} from './forge/forge-graph';
 
-export interface StoryletCall {
-  templateId?: string;
-  entryPolicy?: string;
-  entryNodeId?: string;
-  returnPolicy?: string;
-  returnNodeId?: string;
-}
-
-export interface ForgeNode {
-  id: string;
-  type: NodeType;
-  speaker?: string; // Legacy: text speaker name (deprecated, use characterId)
-  characterId?: string; // Character ID from game state
-  content: string;
-  choices?: Choice[]; // For player nodes
-  nextNodeId?: string;
-  setFlags?: string[];
-  conditionalBlocks?: ConditionalBlock[]; // For conditional nodes (if/elseif/else/endif)
-  storyletPoolId?: string; // For storylet nodes
-  storyletId?: string; // For storylet nodes targeting a specific storylet
-  storyletPool?: StoryletPool; // Inline pool data for storylet pool nodes
-  storyletCall?: StoryletCall;
-  x: number;
-  y: number;
-}
-
-export interface ForgeGraph {
-  id: string;
-  title: string;
-  startNodeId: string;
-  nodes: Record<string, ForgeNode>;
-}
 
 import { FlagSchema, type FlagSchema as FlagSchemaType } from './flags';
 
 export type { FlagSchemaType as FlagSchema };
 
-export interface ForgeStoryletGraphEditorProps {
-  graph: ForgeGraph | null;
-  onChange: (graph: ForgeGraph) => void;
-  onExportYarn?: (yarn: string) => void;
-  flagSchema?: FlagSchema;
-  className?: string;
-  // Event hooks
-  onNodeAdd?: (node: ForgeNode) => void;
-  onNodeDelete?: (nodeId: string) => void;
-  onNodeUpdate?: (nodeId: string, updates: Partial<ForgeNode>) => void;
-  onConnect?: (sourceId: string, targetId: string, sourceHandle?: string) => void;
-  onDisconnect?: (edgeId: string, sourceId: string, targetId: string) => void;
-  onNodeSelect?: (nodeId: string | null) => void;
-  onNodeDoubleClick?: (nodeId: string) => void;
-}
+
 
 export interface ContextMenu {
   x: number;

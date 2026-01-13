@@ -1,33 +1,26 @@
-import { NODE_TYPE } from '../../../../../types/constants';
-import type { NodeType } from '../../../../../types/constants';
+import type { ForgeNodeType } from '@/src/types/forge/forge-graph';
+import { FORGE_NODE_TYPE_LABELS, NODE_TYPE_BORDER_COLORS, NODE_TYPE_BADGE_CLASSES } from '@/src/types/ui-constants';
 
-export function getNodeTypeBorderColor(nodeType: NodeType): string {
-  if (nodeType === NODE_TYPE.NPC || nodeType === NODE_TYPE.STORYLET || nodeType === NODE_TYPE.STORYLET_POOL) {
-    return 'border-df-npc-border';
-  }
-  if (nodeType === NODE_TYPE.PLAYER) {
-    return 'border-df-player-border';
-  }
-  if (nodeType === NODE_TYPE.CONDITIONAL) return 'border-df-conditional-border';
-  return 'border-df-control-border';
+/**
+ * Get border color CSS class for a node type
+ */
+export function getNodeTypeBorderColor(nodeType: ForgeNodeType | string | undefined): string {
+  if (!nodeType) return 'border-df-control-border';
+  return NODE_TYPE_BORDER_COLORS[nodeType as ForgeNodeType] || 'border-df-control-border';
 }
 
-export function getNodeTypeBadge(nodeType: NodeType): string {
-  if (nodeType === NODE_TYPE.NPC || nodeType === NODE_TYPE.STORYLET || nodeType === NODE_TYPE.STORYLET_POOL) {
-    return 'bg-df-npc-selected/20 text-df-npc-selected';
-  }
-  if (nodeType === NODE_TYPE.PLAYER) {
-    return 'bg-df-player-selected/20 text-df-player-selected';
-  }
-  if (nodeType === NODE_TYPE.CONDITIONAL) return 'bg-df-conditional-border/20 text-df-conditional-border';
-  return 'bg-df-control-bg text-df-text-secondary';
+/**
+ * Get badge CSS classes for a node type
+ */
+export function getNodeTypeBadge(nodeType: ForgeNodeType | string | undefined): string {
+  if (!nodeType) return 'bg-df-control-bg text-df-text-secondary';
+  return NODE_TYPE_BADGE_CLASSES[nodeType as ForgeNodeType] || 'bg-df-control-bg text-df-text-secondary';
 }
 
-export function getNodeTypeLabel(nodeType: NodeType): string {
-  if (nodeType === NODE_TYPE.NPC) return 'NPC';
-  if (nodeType === NODE_TYPE.PLAYER) return 'PLAYER';
-  if (nodeType === NODE_TYPE.CONDITIONAL) return 'CONDITIONAL';
-  if (nodeType === NODE_TYPE.STORYLET) return 'STORYLET';
-  if (nodeType === NODE_TYPE.STORYLET_POOL) return 'STORYLET POOL';
-  return 'UNKNOWN';
+/**
+ * Get label for a node type
+ */
+export function getNodeTypeLabel(nodeType: ForgeNodeType | string | undefined): string {
+  if (!nodeType) return 'UNKNOWN';
+  return FORGE_NODE_TYPE_LABELS[nodeType as ForgeNodeType] || 'UNKNOWN';
 }

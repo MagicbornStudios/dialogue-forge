@@ -7,8 +7,9 @@
  * @see https://reactflow.dev/examples/layout/node-collisions
  */
 
-import { ForgeGraph, ForgeNode } from '../../../../types';
+import { ForgeGraphDoc } from '../../../../types';
 import { LAYOUT_CONSTANTS } from '../constants';
+import { ForgeFlowNode, ForgeNode } from '@/src/types/forge/forge-graph';
 
 // ============================================================================
 // Local Layout Constants
@@ -37,14 +38,14 @@ interface CollisionOptions {
  * Resolve node collisions for freeform layout.
  * Iteratively pushes overlapping nodes apart until no collisions remain.
  * 
- * @param dialogue - The dialogue tree with potentially overlapping nodes
+ * @param graph - The dialogue tree with potentially overlapping nodes
  * @param options - Configuration options
  * @returns Updated dialogue tree with resolved positions
  */
 export function resolveNodeCollisions(
-  dialogue: ForgeGraph,
+  graph: ForgeGraphDoc,
   options: CollisionOptions = {}
-): ForgeGraph {
+): ForgeGraphDoc {
   const { 
     maxIterations = LAYOUT_CONSTANTS.MAX_ITERATIONS, 
     overlapThreshold = LAYOUT_CONSTANTS.OVERLAP_THRESHOLD, 
@@ -52,11 +53,11 @@ export function resolveNodeCollisions(
   } = options;
 
   // Create mutable position array
-  const nodePositions = Object.values(dialogue.nodes).map(node => ({
-    id: node.id,
-    x: node.x,
-    y: node.y,
-width: COLLISION_NODE_WIDTH,
+  const nodePositions = Object.values(graph.flow.nodes).map(node => ({
+    id: node.id as string,
+    x: node.position?.x || 0,
+    y: node.position?.y || 0,
+    width: COLLISION_NODE_WIDTH,
     height: COLLISION_NODE_HEIGHT,
   }));
 
@@ -104,10 +105,10 @@ width: COLLISION_NODE_WIDTH,
   // Build updated dialogue with new positions
   const updatedNodes: Record<string, ForgeNode> = {};
   for (const pos of nodePositions) {
-    updatedNodes[pos.id] = { ...dialogue.nodes[pos.id], x: pos.x, y: pos.y };
+    updatedNodes[pos.id] = { ...graph.flow.nodes[pos.id as unknown as number].data, x: pos.x, y: pos.y };
   }
 
-  return { ...dialogue, nodes: updatedNodes };
+  return { ...graph, flow: { ...graph.flow, nodes: Object.values(updatedNodes) as ForgeFlowNode[] } };
 }
 
 

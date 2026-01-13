@@ -1,64 +1,59 @@
 import React from 'react';
-import { NODE_TYPE } from '../../../../types/constants';
-import type { NodeType } from '../../../../types/constants';
-import { ContextMenuBase, ContextMenuButton } from '../../shared/ContextMenuBase';
+import { ForgeNodeType, FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
+import { FORGE_NODE_TYPE_LABELS } from '@/src/types/ui-constants';
+import { ContextMenuBase, ContextMenuButton } from '../../../shared/ContextMenuBase';
+import { useForgeEditorActions } from '@/src/components/GraphEditors/hooks/useForgeEditorActions';
+import { useForgeEditorSessionStore } from '@/src/components/GraphEditors/hooks/useForgeEditorSession';
 
-const nodeTypeLabels: Record<NodeType, string> = {
-  [NODE_TYPE.NPC]: 'NPC Node',
-  [NODE_TYPE.PLAYER]: 'Player Node',
-  [NODE_TYPE.CONDITIONAL]: 'Conditional Node',
-  [NODE_TYPE.STORYLET]: 'Storylet Node',
-  [NODE_TYPE.STORYLET_POOL]: 'Storylet Pool Node',
-  [NODE_TYPE.RANDOMIZER]: 'Randomizer Node',
-  [NODE_TYPE.DETOUR]: 'Detour Node',
-};
-
-// Storylet nodes can connect to Player or Conditional nodes (same as NPC)
-const availableNodeTypes: NodeType[] = [NODE_TYPE.PLAYER, NODE_TYPE.CONDITIONAL];
+// STORYLET nodes can connect to PLAYER or CONDITIONAL nodes (same as CHARACTER)
+const availableNodeTypes: ForgeNodeType[] = [FORGE_NODE_TYPE.PLAYER, FORGE_NODE_TYPE.CONDITIONAL];
 
 interface StoryletEdgeDropMenuProps {
-  x: number;
-  y: number;
-  graphX: number;
-  graphY: number;
+  screenX: number;
+  screenY: number;
+  flowX: number;
+  flowY: number;
   fromNodeId: string;
   sourceHandle?: string;
-  onAddNode: (
-    type: NodeType,
-    x: number,
-    y: number,
-    autoConnect?: {
-      fromNodeId: string;
-      sourceHandle?: string;
-    }
-  ) => void;
+  edgeId?: string;
   onClose: () => void;
 }
 
 export function StoryletEdgeDropMenu({
-  x,
-  y,
-  graphX,
-  graphY,
+  screenX,
+  screenY,
+  flowX,
+  flowY,
   fromNodeId,
   sourceHandle,
-  onAddNode,
+  edgeId,
   onClose,
 }: StoryletEdgeDropMenuProps) {
+  const actions = useForgeEditorActions();
+  const sessionStore = useForgeEditorSessionStore();
+
+  const handleAddNode = (type: ForgeNodeType) => {
+    if (edgeId) {
+      // Insert node on existing edge
+      actions.insertNodeOnEdge(edgeId, type, flowX, flowY);
+    } else {
+      // Create new node with auto-connect
+      actions.createNode(type, flowX, flowY, {
+        fromNodeId,
+        sourceHandle,
+      });
+    }
+    onClose();
+  };
+
   return (
-    <ContextMenuBase x={x} y={y} title="Create Node">
+    <ContextMenuBase x={screenX} y={screenY} title="Create Node">
       {availableNodeTypes.map(type => (
         <ContextMenuButton
           key={type}
-          onClick={() => {
-            onAddNode(type, graphX, graphY, {
-              fromNodeId,
-              sourceHandle,
-            });
-            onClose();
-          }}
+          onClick={() => handleAddNode(type)}
         >
-          Add {nodeTypeLabels[type]}
+          Add {FORGE_NODE_TYPE_LABELS[type]}
         </ContextMenuButton>
       ))}
       <ContextMenuButton onClick={onClose} variant="secondary">

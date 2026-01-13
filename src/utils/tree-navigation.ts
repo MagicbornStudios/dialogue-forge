@@ -7,7 +7,7 @@
  */
 
 import { hierarchy, HierarchyNode } from 'd3-hierarchy';
-import { ForgeGraph, ForgeNode } from '../types';
+import { ForgeGraphDoc, ForgeNode } from '../types';
 import { NODE_TYPE } from '../types/constants';
 
 /**
@@ -62,7 +62,7 @@ function getChildNodeIds(node: ForgeNode): string[] {
  * For nodes with multiple parents, only the first path is included.
  */
 function buildTreeStructure(
-  dialogue: ForgeGraph,
+  dialogue: ForgeGraphDoc,
   rootNodeId: string,
   visited: Set<string> = new Set()
 ): TreeNodeData | null {
@@ -268,7 +268,7 @@ export function getNodeHeight(
  * - Orphaned nodes (not reachable from start)
  * - Invalid node references
  */
-export function validateTreeStructure(dialogue: ForgeGraph): {
+export function validateTreeStructure(dialogue: ForgeGraphDoc): {
   valid: boolean;
   errors: string[];
 } {

@@ -1,9 +1,9 @@
 import React from 'react';
-import { NarrativeChapter } from '../../../../../types/narrative';
+import { ForgeChapter } from '../../../../../types/narrative';
 
 interface ChapterNodeFieldsProps {
-  chapter: NarrativeChapter;
-  onUpdate: (updates: Partial<NarrativeChapter>) => void;
+  chapter: ForgeChapter;
+  onUpdate: (updates: Partial<ForgeChapter>) => void;
 }
 
 export function ChapterNodeFields({ chapter, onUpdate }: ChapterNodeFieldsProps) {

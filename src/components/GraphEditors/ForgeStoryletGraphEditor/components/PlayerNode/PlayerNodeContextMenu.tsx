@@ -1,6 +1,5 @@
 import React from 'react';
 import { Edit3, Plus, Trash2 } from 'lucide-react';
-import { NODE_TYPE } from '../../../../types/constants';
 
 interface PlayerNodeContextMenuProps {
   x: number;

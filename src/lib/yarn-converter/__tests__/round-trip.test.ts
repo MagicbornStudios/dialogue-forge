@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { importFromYarn, exportToYarn } from '../../yarn-converter';
-import { ForgeGraph } from '../../../types';
+import { ForgeGraphDoc } from '../../../types';
 
 /**
  * Test round-trip conversion: Yarn → DialogueTree → Yarn

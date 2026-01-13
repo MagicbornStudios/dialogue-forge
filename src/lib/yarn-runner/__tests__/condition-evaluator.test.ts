@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { evaluateCondition, evaluateConditions, VariableState } from '../condition-evaluator';
-import { Condition } from '../../../types';
+import { ForgeCondition as Condition } from '../../../types';
 import { CONDITION_OPERATOR } from '../../../types/constants';
 
 describe('condition-evaluator', () => {

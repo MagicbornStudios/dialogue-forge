@@ -9,8 +9,8 @@
  * - Connected nodes attract (like springs)
  */
 
-import { DialogueTree, DialogueNode } from '../../../../types';
-import { LayoutStrategy, LayoutOptions, LayoutResult } from '../../../../utils/layout/types';
+import type { ForgeGraphDoc, ForgeFlowNode } from '@/src/types/forge/forge-graph';
+import { LayoutStrategy, LayoutOptions, LayoutResult } from '../types';
 
 // ============================================================================
 // Constants
@@ -39,18 +39,6 @@ interface NodeState {
 }
 
 // ============================================================================
-// Helper Functions
-// ============================================================================
-
-function getConnectedNodeIds(node: DialogueNode): string[] {
-  const ids: string[] = [];
-  if (node.nextNodeId) ids.push(node.nextNodeId);
-  node.choices?.forEach(c => c.nextNodeId && ids.push(c.nextNodeId));
-  node.conditionalBlocks?.forEach(b => b.nextNodeId && ids.push(b.nextNodeId));
-  return ids;
-}
-
-// ============================================================================
 // Strategy Implementation
 // ============================================================================
 
@@ -65,25 +53,25 @@ export class ForceLayoutStrategy implements LayoutStrategy {
     margin: 50,
   };
 
-  apply(dialogue: DialogueTree, options?: LayoutOptions): LayoutResult {
+  apply(graph: ForgeGraphDoc, options?: LayoutOptions): LayoutResult {
     const startTime = performance.now();
     const opts = { ...this.defaultOptions, ...options };
     
-    const nodeIds = Object.keys(dialogue.nodes);
-    if (nodeIds.length === 0) {
-      return this.emptyResult(dialogue, startTime);
+    const nodes = graph.flow.nodes;
+    if (nodes.length === 0) {
+      return this.emptyResult(graph, startTime);
     }
 
     // Initialize node positions in a circle
     const states: Map<string, NodeState> = new Map();
     const centerX = 500;
     const centerY = 500;
-    const radius = Math.max(200, nodeIds.length * 30);
+    const radius = Math.max(200, nodes.length * 30);
     
-    nodeIds.forEach((id, i) => {
-      const angle = (2 * Math.PI * i) / nodeIds.length;
-      states.set(id, {
-        id,
+    nodes.forEach((node, i) => {
+      const angle = (2 * Math.PI * i) / nodes.length;
+      states.set(node.id, {
+        id: node.id,
         x: centerX + radius * Math.cos(angle),
         y: centerY + radius * Math.sin(angle),
         vx: 0,
@@ -91,21 +79,15 @@ export class ForceLayoutStrategy implements LayoutStrategy {
       });
     });
 
-    // Build edge list for attraction
-    const edges: Array<{ source: string; target: string }> = [];
-    for (const node of Object.values(dialogue.nodes)) {
-      for (const targetId of getConnectedNodeIds(node)) {
-        if (dialogue.nodes[targetId]) {
-          edges.push({ source: node.id, target: targetId });
-        }
-      }
-    }
+    // Build edge list for attraction from flow.edges
+    const edges = graph.flow.edges.map(e => ({ source: e.source, target: e.target }));
 
     // Run force simulation
     for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
       let maxMovement = 0;
 
       // Calculate repulsion forces between all node pairs
+      const nodeIds = Array.from(states.keys());
       for (let i = 0; i < nodeIds.length; i++) {
         for (let j = i + 1; j < nodeIds.length; j++) {
           const a = states.get(nodeIds[i])!;
@@ -167,16 +149,23 @@ export class ForceLayoutStrategy implements LayoutStrategy {
 
     // Calculate bounds and apply positions
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    const updatedNodes: Record<string, DialogueNode> = {};
+    const updatedNodes: ForgeFlowNode[] = [];
     
-    for (const [id, state] of states) {
-      const node = dialogue.nodes[id];
-      updatedNodes[id] = { ...node, x: state.x, y: state.y };
-      
-      minX = Math.min(minX, state.x);
-      maxX = Math.max(maxX, state.x + NODE_WIDTH);
-      minY = Math.min(minY, state.y);
-      maxY = Math.max(maxY, state.y + NODE_HEIGHT);
+    for (const node of nodes) {
+      const state = states.get(node.id);
+      if (state) {
+        updatedNodes.push({
+          ...node,
+          position: { x: state.x, y: state.y },
+        });
+        
+        minX = Math.min(minX, state.x);
+        maxX = Math.max(maxX, state.x + NODE_WIDTH);
+        minY = Math.min(minY, state.y);
+        maxY = Math.max(maxY, state.y + NODE_HEIGHT);
+      } else {
+        updatedNodes.push(node);
+      }
     }
 
     // Normalize to start from margin
@@ -184,18 +173,24 @@ export class ForceLayoutStrategy implements LayoutStrategy {
     const offsetX = margin - minX;
     const offsetY = margin - minY;
     
-    for (const id of nodeIds) {
-      updatedNodes[id].x += offsetX;
-      updatedNodes[id].y += offsetY;
+    for (const node of updatedNodes) {
+      node.position.x += offsetX;
+      node.position.y += offsetY;
     }
 
     const computeTimeMs = performance.now() - startTime;
 
     return {
-      dialogue: { ...dialogue, nodes: updatedNodes },
+      graph: {
+        ...graph,
+        flow: {
+          ...graph.flow,
+          nodes: updatedNodes,
+        },
+      },
       metadata: {
         computeTimeMs,
-        nodeCount: nodeIds.length,
+        nodeCount: nodes.length,
         bounds: {
           minX: margin,
           minY: margin,
@@ -208,9 +203,9 @@ export class ForceLayoutStrategy implements LayoutStrategy {
     };
   }
 
-  private emptyResult(dialogue: DialogueTree, startTime: number): LayoutResult {
+  private emptyResult(graph: ForgeGraphDoc, startTime: number): LayoutResult {
     return {
-      dialogue,
+      graph,
       metadata: {
         computeTimeMs: performance.now() - startTime,
         nodeCount: 0,
@@ -223,7 +218,3 @@ export class ForceLayoutStrategy implements LayoutStrategy {
     return true; // Works with any graph
   }
 }
-
-
-
-

@@ -1,11 +1,11 @@
 import React from 'react';
-import { ForgeGraph } from '../../../../../types';
+import { ForgeGraphDoc } from '../../../../../types';
 import { EdgeIcon } from '../../EdgeIcon';
 
 interface NextNodeSelectorProps {
   nodeId: string;
   nextNodeId?: string;
-  dialogue: ForgeGraph;
+  graph: ForgeGraphDoc;
   onUpdate: (updates: Partial<{ nextNodeId?: string }>) => void;
   onFocusNode?: (nodeId: string) => void;
   label?: string;
@@ -14,7 +14,7 @@ interface NextNodeSelectorProps {
 export function NextNodeSelector({
   nodeId,
   nextNodeId,
-  dialogue,
+  graph,
   onUpdate,
   onFocusNode,
   label = 'Next Node',
@@ -43,7 +43,7 @@ export function NextNodeSelector({
           className="flex-1 bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-sm text-gray-200 outline-none"
         >
           <option value="">— End —</option>
-          {Object.keys(dialogue.nodes).filter(id => id !== nodeId).map(id => (
+          {Object.keys(graph.flow?.nodes ?? {}).filter(id => id !== nodeId).map(id => (
             <option key={id} value={id}>{id}</option>
           ))}
         </select>

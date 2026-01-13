@@ -22,15 +22,9 @@ export const Acts: CollectionConfig = {
       index: true,
     },
     {
-      name: 'thread',
-      type: 'relationship',
-      relationTo: PAYLOAD_COLLECTIONS.THREADS,
-      required: true,
-      index: true,
-    },
-    {
       name: 'title',
       type: 'text',
+      required: true,
     },
     {
       name: 'summary',
@@ -41,30 +35,27 @@ export const Acts: CollectionConfig = {
       type: 'number',
       required: true,
       defaultValue: 0,
+      index: true,
+    },
+    {
+      name: 'bookHeading',
+      type: 'text',
+    },
+    {
+      name: 'bookBody',
+      type: 'textarea',
+    },
+    {
+      name: '_status',
+      type: 'select',
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'Published', value: 'published' },
+      ],
+      required: false,
     },
   ],
   versions: {
     drafts: true,
-  },
-  hooks: {
-    beforeValidate: [
-      async ({ data, req }) => {
-        if (data?.actId && data?.project) {
-          const existing = await req.payload.find({
-            collection: PAYLOAD_COLLECTIONS.ACTS,
-            where: {
-              and: [
-                { actId: { equals: data.actId } },
-                { project: { equals: data.project } },
-              ],
-            },
-            limit: 1,
-          })
-          if (existing.docs.length > 0 && existing.docs[0].id !== data.id) {
-            throw new Error(`Act ID "${data.actId}" already exists in this project`)
-          }
-        }
-      },
-    ],
   },
 }

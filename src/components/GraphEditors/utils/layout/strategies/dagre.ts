@@ -2,15 +2,15 @@
  * Dagre Layout Strategy
  * 
  * Hierarchical layout using the dagre library.
- * Best for dialogue trees with clear start-to-end flow.
+ * Best for graphs with clear start-to-end flow.
  * 
  * @see https://github.com/dagrejs/dagre
  * @see https://reactflow.dev/examples/layout/dagre
  */
 
 import dagre from '@dagrejs/dagre';
-import { DialogueTree, DialogueNode } from '../../../../types';
-import { LayoutStrategy, LayoutOptions, LayoutResult, LayoutDirection } from '../../../../utils/layout/types';
+import type { ForgeGraphDoc, ForgeFlowNode, ForgeNode } from '@/src/types/forge/forge-graph';
+import { LayoutStrategy, LayoutOptions, LayoutResult, LayoutDirection } from '../types';
 
 // ============================================================================
 // Constants
@@ -27,12 +27,17 @@ const EXTRA_HEIGHT_PER_ITEM = 30;
 /**
  * Calculate depth of each node from start using BFS
  */
-function calculateNodeDepths(dialogue: DialogueTree): Map<string, number> {
+function calculateNodeDepths(graph: ForgeGraphDoc): Map<string, number> {
   const depths = new Map<string, number>();
-  if (!dialogue.startNodeId) return depths;
+  if (!graph.startNodeId) return depths;
+  
+  const nodesById = new Map<string, ForgeFlowNode>();
+  for (const node of graph.flow.nodes) {
+    nodesById.set(node.id, node);
+  }
   
   const queue: Array<{ id: string; depth: number }> = [
-    { id: dialogue.startNodeId, depth: 0 }
+    { id: graph.startNodeId, depth: 0 }
   ];
   const visited = new Set<string>();
   
@@ -42,13 +47,16 @@ function calculateNodeDepths(dialogue: DialogueTree): Map<string, number> {
     visited.add(id);
     depths.set(id, depth);
     
-    const node = dialogue.nodes[id];
+    const node = nodesById.get(id);
     if (!node) continue;
     
-    // Queue connected nodes
-    const nextIds = getOutgoingNodeIds(node);
+    // Get connected nodes from edges
+    const nextIds = graph.flow.edges
+      .filter(e => e.source === id)
+      .map(e => e.target);
+    
     for (const nextId of nextIds) {
-      if (dialogue.nodes[nextId] && !visited.has(nextId)) {
+      if (nodesById.has(nextId) && !visited.has(nextId)) {
         queue.push({ id: nextId, depth: depth + 1 });
       }
     }
@@ -58,25 +66,13 @@ function calculateNodeDepths(dialogue: DialogueTree): Map<string, number> {
 }
 
 /**
- * Get all outgoing node IDs from a node
- */
-function getOutgoingNodeIds(node: DialogueNode): string[] {
-  const ids: string[] = [];
-  
-  if (node.nextNodeId) ids.push(node.nextNodeId);
-  node.choices?.forEach(c => c.nextNodeId && ids.push(c.nextNodeId));
-  node.conditionalBlocks?.forEach(b => b.nextNodeId && ids.push(b.nextNodeId));
-  
-  return ids;
-}
-
-/**
  * Estimate node height based on content
  */
-function estimateNodeHeight(node: DialogueNode): number {
+function estimateNodeHeight(node: ForgeFlowNode): number {
+  const nodeData = (node.data ?? {}) as ForgeNode;
   const itemCount = Math.max(
-    node.choices?.length || 0,
-    node.conditionalBlocks?.length || 0
+    nodeData.choices?.length || 0,
+    nodeData.conditionalBlocks?.length || 0
   );
   return NODE_HEIGHT + itemCount * EXTRA_HEIGHT_PER_ITEM;
 }
@@ -88,7 +84,7 @@ function estimateNodeHeight(node: DialogueNode): number {
 export class DagreLayoutStrategy implements LayoutStrategy {
   readonly id = 'dagre';
   readonly name = 'Dagre (Hierarchical)';
-  readonly description = 'Hierarchical layout that flows from start to end. Best for linear dialogue with branches.';
+  readonly description = 'Hierarchical layout that flows from start to end. Best for linear graphs with branches.';
   
   readonly defaultOptions: Partial<LayoutOptions> = {
     direction: 'TB',
@@ -97,7 +93,7 @@ export class DagreLayoutStrategy implements LayoutStrategy {
     margin: 50,
   };
 
-  apply(dialogue: DialogueTree, options?: LayoutOptions): LayoutResult {
+  apply(graph: ForgeGraphDoc, options?: LayoutOptions): LayoutResult {
     const startTime = performance.now();
     const opts = { ...this.defaultOptions, ...options };
     const direction: LayoutDirection = opts.direction || 'TB';
@@ -121,33 +117,24 @@ export class DagreLayoutStrategy implements LayoutStrategy {
     });
 
     // Add nodes ordered by depth
-    const nodeDepths = calculateNodeDepths(dialogue);
-    const sortedNodeIds = Object.keys(dialogue.nodes).sort((a, b) => {
-      return (nodeDepths.get(a) ?? Infinity) - (nodeDepths.get(b) ?? Infinity);
+    const nodeDepths = calculateNodeDepths(graph);
+    const sortedNodes = [...graph.flow.nodes].sort((a, b) => {
+      return (nodeDepths.get(a.id) ?? Infinity) - (nodeDepths.get(b.id) ?? Infinity);
     });
     
-    for (const nodeId of sortedNodeIds) {
-      const node = dialogue.nodes[nodeId];
-      g.setNode(nodeId, { 
+    for (const node of sortedNodes) {
+      g.setNode(node.id, { 
         width: NODE_WIDTH, 
         height: estimateNodeHeight(node),
       });
     }
 
-    // Add edges with weights
-    for (const node of Object.values(dialogue.nodes)) {
-      if (node.nextNodeId && dialogue.nodes[node.nextNodeId]) {
-        g.setEdge(node.id, node.nextNodeId, { weight: 3, minlen: 1 });
-      }
-      for (const choice of node.choices || []) {
-        if (choice.nextNodeId && dialogue.nodes[choice.nextNodeId]) {
-          g.setEdge(node.id, choice.nextNodeId, { weight: 2, minlen: 1 });
-        }
-      }
-      for (const block of node.conditionalBlocks || []) {
-        if (block.nextNodeId && dialogue.nodes[block.nextNodeId]) {
-          g.setEdge(node.id, block.nextNodeId, { weight: 2, minlen: 1 });
-        }
+    // Add edges from flow.edges
+    for (const edge of graph.flow.edges) {
+      const sourceNode = graph.flow.nodes.find(n => n.id === edge.source);
+      const targetNode = graph.flow.nodes.find(n => n.id === edge.target);
+      if (sourceNode && targetNode) {
+        g.setEdge(edge.source, edge.target, { weight: 2, minlen: 1 });
       }
     }
 
@@ -156,46 +143,57 @@ export class DagreLayoutStrategy implements LayoutStrategy {
 
     // Extract positions and calculate bounds
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    const updatedNodes: Record<string, DialogueNode> = {};
+    const updatedNodes: ForgeFlowNode[] = [];
     
-    for (const nodeId of Object.keys(dialogue.nodes)) {
-      const node = dialogue.nodes[nodeId];
-      const dagreNode = g.node(nodeId);
+    for (const node of graph.flow.nodes) {
+      const dagreNode = g.node(node.id);
       
       if (dagreNode) {
         const x = dagreNode.x - NODE_WIDTH / 2;
         const y = dagreNode.y - NODE_HEIGHT / 2;
         
-        updatedNodes[nodeId] = { ...node, x, y };
+        updatedNodes.push({
+          ...node,
+          position: { x, y },
+        });
         
         minX = Math.min(minX, x);
         maxX = Math.max(maxX, x + NODE_WIDTH);
         minY = Math.min(minY, y);
         maxY = Math.max(maxY, y + NODE_HEIGHT);
       } else {
-        // Orphan node
-        updatedNodes[nodeId] = { ...node };
+        // Orphan node - keep existing position
+        updatedNodes.push(node);
       }
     }
 
     // Ensure start node is at edge
-    const startNodeId = dialogue.startNodeId;
-    if (startNodeId && updatedNodes[startNodeId]) {
-      const threshold = 50;
-      if (isHorizontal && updatedNodes[startNodeId].x - minX > threshold) {
-        updatedNodes[startNodeId].x = minX;
-      } else if (!isHorizontal && updatedNodes[startNodeId].y - minY > threshold) {
-        updatedNodes[startNodeId].y = minY;
+    const startNodeId = graph.startNodeId;
+    if (startNodeId) {
+      const startNode = updatedNodes.find(n => n.id === startNodeId);
+      if (startNode) {
+        const threshold = 50;
+        if (isHorizontal && startNode.position.x - minX > threshold) {
+          startNode.position.x = minX;
+        } else if (!isHorizontal && startNode.position.y - minY > threshold) {
+          startNode.position.y = minY;
+        }
       }
     }
 
     const computeTimeMs = performance.now() - startTime;
 
     return {
-      dialogue: { ...dialogue, nodes: updatedNodes },
+      graph: {
+        ...graph,
+        flow: {
+          ...graph.flow,
+          nodes: updatedNodes,
+        },
+      },
       metadata: {
         computeTimeMs,
-        nodeCount: Object.keys(dialogue.nodes).length,
+        nodeCount: graph.flow.nodes.length,
         bounds: {
           minX, minY, maxX, maxY,
           width: maxX - minX,
@@ -205,12 +203,8 @@ export class DagreLayoutStrategy implements LayoutStrategy {
     };
   }
 
-  supports(dialogue: DialogueTree): boolean {
+  supports(graph: ForgeGraphDoc): boolean {
     // Dagre works best with connected graphs that have a clear start
-    return !!dialogue.startNodeId && Object.keys(dialogue.nodes).length > 0;
+    return !!graph.startNodeId && graph.flow.nodes.length > 0;
   }
 }
-
-
-
-

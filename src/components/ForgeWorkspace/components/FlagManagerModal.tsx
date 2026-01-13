@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, CircleDot, BookOpen, Flag } from 'lucide-react';
 import { FlagManager } from '../../shared/FlagManager/FlagManager';
-import type { ForgeGraph } from '../../../types';
+import type { ForgeGraphDoc } from '../../../types';
 import type { BaseGameState } from '../../../types/game-state';
 import type { Character } from '../../../types/characters';
 import type { FlagSchema } from '../../../types/flags';
@@ -11,7 +11,7 @@ interface FlagManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
   flagSchema: FlagSchema;
-  dialogue: ForgeGraph;
+  dialogue: ForgeGraphDoc;
   activeGameState: BaseGameState;
   resolvedCharacters: Record<string, Character>;
   onUpdateFlagSchema: (schema: FlagSchema) => void;
@@ -77,6 +77,7 @@ export function FlagManagerModal({
               graph={dialogue}
               onUpdate={onUpdateFlagSchema}
               onClose={onClose}
+              embedded={true}
             />
           </div>
           <div className="border-l border-df-node-border bg-df-base/60 p-4 space-y-4 text-xs text-df-text-secondary">

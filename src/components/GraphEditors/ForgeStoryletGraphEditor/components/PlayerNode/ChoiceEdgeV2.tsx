@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
 import { BaseEdge, EdgeProps, getSmoothStepPath, getBezierPath, Position } from 'reactflow';
+import type { ForgeFlowEdge, ForgeFlowNode } from '@/src/types/forge/forge-graph';
+import { edgeColorFor } from '../../../utils/forge-edge-styles';
+import { EdgePulseAnimation, LoopIndicator } from '../../../shared/EdgeSVGElements';
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from '../../../ui/context-menu';
-import { NODE_TYPE } from '../../../../types/constants';
-import type { NodeType } from '../../../../types/constants';
+} from '../../../../ui/context-menu';
+import { ForgeNodeType } from '@/src/types/forge/forge-graph';
+import { useForgeEditorActions } from '../../../hooks/useForgeEditorActions';
 
 interface ChoiceEdgeData {
-  onInsertNode?: (type: NodeType, edgeId: string, x: number, y: number) => void;
-  onDelete?: (edgeId: string) => void;
-  insertNodeTypes?: Array<{ type: NodeType; label: string }>;
+  insertElementTypes?: Array<{ type: ForgeNodeType; label: string }>; // Data only, not callback
   isBackEdge?: boolean;
   choiceIndex?: number;
   isDimmed?: boolean;
   isInPathToSelected?: boolean;
+  sourceNode?: ForgeFlowNode;
 }
 
 export function ChoiceEdgeV2({
@@ -35,6 +37,7 @@ export function ChoiceEdgeV2({
   
   const edgeData = data as ChoiceEdgeData | undefined;
   const isBackEdge = edgeData?.isBackEdge ?? false;
+  const sourceNode = edgeData?.sourceNode;
   
   // Use smooth step path for angular look (like the horizontal example)
   // For back edges, use bezier for a more curved appearance
@@ -58,11 +61,16 @@ export function ChoiceEdgeV2({
         borderRadius: 8,
       });
 
-  const choiceIndex = edgeData?.choiceIndex ?? 0;
-  // Map choice index to CSS variable
-  const choiceColorVar = `var(--color-df-edge-choice-${Math.min(choiceIndex % 5, 4) + 1})`;
+  // Get edge color using centralized function
+  // The edgeColorFor function will use the sourceHandle (choice-X) to get the right color
+  const edge = { 
+    sourceHandle: `choice-${edgeData?.choiceIndex ?? 0}`,
+    id,
+  } as ForgeFlowEdge;
+  const baseColor = edgeColorFor(edge, sourceNode);
+  
   // Use loop color for back edges, otherwise use choice color
-  const colorVar = isBackEdge ? 'var(--color-df-edge-loop)' : choiceColorVar;
+  const colorVar = isBackEdge ? 'var(--color-df-edge-loop)' : baseColor;
   const isSelected = selected || hovered;
   const isDimmed = edgeData?.isDimmed ?? false;
   
@@ -77,12 +85,18 @@ export function ChoiceEdgeV2({
   // Add glow effect when hovered (only if not dimmed)
   const filter = hovered && !isDimmed ? `drop-shadow(0 0 4px ${colorVar})` : undefined;
 
-  // For pulse animation, we'll use a slightly brighter version
-  // Since we can't easily brighten CSS variables, we'll use the same color with higher opacity
+  // For pulse animation
   const pulseColor = colorVar;
   const shouldAnimate = edgeData?.isInPathToSelected ?? false;
-
-  const hasContextMenu = edgeData?.onInsertNode || edgeData?.onDelete;
+  
+  const choiceIndex = edgeData?.choiceIndex ?? 0;
+  
+  // Use actions instead of callbacks
+  const actions = useForgeEditorActions();
+  
+  // Get insert node types from edge data
+  const insertNodeTypes = edgeData?.insertElementTypes;
+  const hasContextMenu = !!insertNodeTypes && insertNodeTypes.length > 0;
 
   const edgeContent = (
     <>
@@ -113,22 +127,18 @@ export function ChoiceEdgeV2({
         markerEnd={isDimmed ? undefined : `url(#react-flow__arrowclosed-choice-${choiceIndex})`}
       />
       {/* Loop indicator icon for back edges */}
-      {isBackEdge && (
-        <g transform={`translate(${labelX - 10}, ${labelY - 10})`}>
-          <circle cx="10" cy="10" r="12" fill="var(--color-df-base)" stroke={strokeColor} strokeWidth="2" />
-          <text x="10" y="14" textAnchor="middle" fontSize="12" fill={strokeColor}>↺</text>
-        </g>
-      )}
+      <LoopIndicator 
+        x={labelX} 
+        y={labelY} 
+        color={strokeColor} 
+        visible={isBackEdge} 
+      />
       {/* Pulsing forward animation - only if edge is in path to selected node */}
-      {shouldAnimate && (
-        <circle r="6" fill={pulseColor} opacity={0.9}>
-          <animateMotion 
-            dur="2s" 
-            repeatCount="indefinite" 
-            path={edgePath}
-          />
-        </circle>
-      )}
+      <EdgePulseAnimation 
+        path={edgePath} 
+        color={pulseColor} 
+        visible={shouldAnimate} 
+      />
       {/* Define marker for this choice color */}
       <defs>
         <marker
@@ -175,27 +185,25 @@ export function ChoiceEdgeV2({
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-52">
-        {edgeData?.insertNodeTypes && edgeData.insertNodeTypes.length > 0 && (
+        {insertNodeTypes && insertNodeTypes.length > 0 && (
           <>
-            {edgeData.insertNodeTypes.map(({ type, label }) => (
+            {insertNodeTypes.map((item) => (
               <ContextMenuItem
-                key={type}
-                onSelect={() => edgeData.onInsertNode?.(type, id, midX, midY)}
+                key={item.type}
+                onSelect={() => actions.insertNodeOnEdge(id, item.type, midX, midY)}
               >
-                Insert {label}
+                Insert {item.label}
               </ContextMenuItem>
             ))}
-            {edgeData.onDelete && <ContextMenuSeparator />}
+            <ContextMenuSeparator />
           </>
         )}
-        {edgeData.onDelete && (
-          <ContextMenuItem
-            onSelect={() => edgeData.onDelete?.(id)}
-            className="text-destructive focus:text-destructive"
-          >
-            Delete edge
-          </ContextMenuItem>
-        )}
+        <ContextMenuItem
+          onSelect={() => actions.deleteEdge(id)}
+          className="text-destructive focus:text-destructive"
+        >
+          Delete edge
+        </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   );

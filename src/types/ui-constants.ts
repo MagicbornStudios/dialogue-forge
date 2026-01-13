@@ -8,6 +8,8 @@
 import { NODE_TYPE, type NodeType } from './constants';
 import { NARRATIVE_ELEMENT, type NarrativeElement } from './narrative';
 
+import type { ForgeNodeType } from './forge/forge-graph';
+
 /**
  * Node type label constants
  * 
@@ -22,6 +24,38 @@ export const NODE_TYPE_LABELS: Record<NodeType, string> = {
   [NODE_TYPE.STORYLET_POOL]: 'Storylet Pool Node',
   [NODE_TYPE.RANDOMIZER]: 'Randomizer Node',
   [NODE_TYPE.DETOUR]: 'Detour Node',
+};
+
+/**
+ * Forge node type label constants
+ * 
+ * Labels for ForgeNodeType (used in graph editor)
+ */
+export const FORGE_NODE_TYPE_LABELS: Record<ForgeNodeType, string> = {
+  ACT: 'Act',
+  CHAPTER: 'Chapter',
+  PAGE: 'Page',
+  PLAYER: 'Player Node',
+  CHARACTER: 'Character Node',
+  CONDITIONAL: 'Conditional Node',
+  DETOUR: 'Detour Node',
+  JUMP: 'Jump',
+  END: 'End',
+  STORYLET: 'Storylet Node',
+};
+
+/**
+ * Narrative node type label constants
+ * 
+ * Labels for NarrativeForgeNodeType (used in narrative graph editor)
+ */
+export const NARRATIVE_NODE_TYPE_LABELS: Record<import('./forge/forge-graph').NarrativeForgeNodeType, string> = {
+  ACT: 'Act',
+  CHAPTER: 'Chapter',
+  PAGE: 'Page',
+  STORYLET: 'Storylet Node',
+  DETOUR: 'Detour Node',
+  CONDITIONAL: 'Conditional Node',
 };
 
 /**
@@ -53,7 +87,6 @@ export const AVAILABLE_NODE_TYPES = {
  * Centralized source of truth for all narrative element labels.
  */
 export const NARRATIVE_ELEMENT_LABELS: Record<NarrativeElement, string> = {
-  [NARRATIVE_ELEMENT.THREAD]: 'Thread',
   [NARRATIVE_ELEMENT.ACT]: 'Act',
   [NARRATIVE_ELEMENT.CHAPTER]: 'Chapter',
   [NARRATIVE_ELEMENT.PAGE]: 'Page',
@@ -64,10 +97,11 @@ export const NARRATIVE_ELEMENT_LABELS: Record<NarrativeElement, string> = {
 
 /**
  * Available narrative element types by context
+ * Note: Start node (formerly "thread") can connect to ACT nodes
  */
 export const AVAILABLE_NARRATIVE_ELEMENTS = {
-  /** Elements available from thread node connections */
-  THREAD_EDGE: [NARRATIVE_ELEMENT.ACT],
+  /** Elements available from start node connections */
+  START_EDGE: [NARRATIVE_ELEMENT.ACT],
   
   /** Elements available from act node connections */
   ACT_EDGE: [NARRATIVE_ELEMENT.CHAPTER],
@@ -78,6 +112,38 @@ export const AVAILABLE_NARRATIVE_ELEMENTS = {
   /** Elements available from page node connections */
   PAGE_EDGE: [NARRATIVE_ELEMENT.PAGE, NARRATIVE_ELEMENT.CHAPTER, NARRATIVE_ELEMENT.ACT],
 } as const;
+
+/**
+ * Node type styling constants
+ * 
+ * CSS classes for borders, badges, and labels based on ForgeNodeType.
+ * Centralized to eliminate duplication across NodeEditor and node components.
+ */
+export const NODE_TYPE_BORDER_COLORS: Record<ForgeNodeType, string> = {
+  ACT: 'border-blue-500',
+  CHAPTER: 'border-emerald-500',
+  PAGE: 'border-amber-500',
+  PLAYER: 'border-df-player-border',
+  CHARACTER: 'border-df-npc-border',
+  CONDITIONAL: 'border-df-conditional-border',
+  DETOUR: 'border-purple-500',
+  JUMP: 'border-pink-500',
+  END: 'border-gray-500',
+  STORYLET: 'border-df-npc-border',
+};
+
+export const NODE_TYPE_BADGE_CLASSES: Record<ForgeNodeType, string> = {
+  ACT: 'bg-blue-500/20 text-blue-500',
+  CHAPTER: 'bg-emerald-500/20 text-emerald-500',
+  PAGE: 'bg-amber-500/20 text-amber-500',
+  PLAYER: 'bg-df-player-selected/20 text-df-player-selected',
+  CHARACTER: 'bg-df-npc-selected/20 text-df-npc-selected',
+  CONDITIONAL: 'bg-df-conditional-border/20 text-df-conditional-border',
+  DETOUR: 'bg-purple-500/20 text-purple-500',
+  JUMP: 'bg-pink-500/20 text-pink-500',
+  END: 'bg-gray-500/20 text-gray-500',
+  STORYLET: 'bg-df-npc-selected/20 text-df-npc-selected',
+};
 
 /**
  * CSS class constants for common UI patterns

@@ -2,10 +2,10 @@ import type { Edge, Node, Position } from 'reactflow';
 import { Position as ReactFlowPosition } from 'reactflow';
 import {
   NARRATIVE_ELEMENT,
-  type NarrativeAct,
-  type NarrativeChapter,
+  type ForgeAct,
+  type ForgeChapter,
   type NarrativeElement,
-  type NarrativePage,
+  type ForgePage,
   type StoryThread,
   type NarrativeDetour,
   type NarrativeConditional,
@@ -103,7 +103,7 @@ function addChapterNodes(
   nodes: NarrativeFlowNode[],
   edges: NarrativeFlowEdge[],
   thread: StoryThread,
-  act: NarrativeAct,
+  act: ForgeAct,
   direction: LayoutDirection,
   tracker: IndexTracker
 ): void {
@@ -133,8 +133,8 @@ function addPageNodes(
   nodes: NarrativeFlowNode[],
   edges: NarrativeFlowEdge[],
   thread: StoryThread,
-  act: NarrativeAct,
-  chapter: NarrativeChapter,
+  act: ForgeAct,
+  chapter: ForgeChapter,
   direction: LayoutDirection,
   tracker: IndexTracker
 ): void {
@@ -436,7 +436,7 @@ export function convertReactFlowToNarrative(
             .filter((node): node is NarrativeFlowNode => Boolean(node))
             .sort(compareNodesByPosition)
             .map((pageNode, pageIndex) => {
-              const page: NarrativePage = {
+              const page: ForgePage = {
                 id: pageNode.id,
                 title: pageNode.data.label,
                 summary: pageNode.data.description,
@@ -468,7 +468,7 @@ export function convertReactFlowToNarrative(
               return page;
             });
 
-          const chapter: NarrativeChapter = {
+          const chapter: ForgeChapter = {
             id: chapterNode.id,
             title: chapterNode.data.label,
             summary: chapterNode.data.description,
@@ -486,7 +486,7 @@ export function convertReactFlowToNarrative(
           return chapter;
         });
 
-      const act: NarrativeAct = {
+      const act: ForgeAct = {
         id: actNode.id,
         title: actNode.data.label,
         summary: actNode.data.description,

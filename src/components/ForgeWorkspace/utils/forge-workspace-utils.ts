@@ -1,62 +1,13 @@
 import { exportToYarn } from '../../../lib/yarn-converter';
-import type { ForgeGraph } from '../../../types';
-import type { NarrativePage } from '../../../types/narrative';
-import type { NarrativeSelection } from '../../../types/narrative';
-import type { StoryThread } from '../../../types/narrative';
+import type { ForgeGraphDoc } from '../../../types/forge/forge-graph';
 
-export function getInitialSelection(thread: StoryThread | undefined): NarrativeSelection {
-  if (!thread || !thread.acts || thread.acts.length === 0) {
-    return {
-      actId: undefined,
-      chapterId: undefined,
-      pageId: undefined,
-      storyletKey: undefined,
-    };
-  }
-  return {
-    actId: thread.acts[0]?.id,
-    chapterId: thread.acts[0]?.chapters?.[0]?.id,
-    pageId: thread.acts[0]?.chapters?.[0]?.pages?.[0]?.id,
-    storyletKey: undefined,
-  };
-}
-
-export function buildScopedDialogue(
-  dialogue: ForgeGraph,
-  page: NarrativePage | undefined,
-  storyletDialogueId: string | null,
-  scope: 'page' | 'storylet'
-): ForgeGraph {
-  if (scope === 'storylet') {
-    if (!storyletDialogueId) return dialogue;
-    if (storyletDialogueId !== dialogue.id) {
-      return {
-        ...dialogue,
-        nodes: {},
-        startNodeId: '',
-      };
-    }
-    return dialogue;
-  }
-
-  if (!page) return dialogue;
-  if (page.dialogueId && page.dialogueId !== dialogue.id) {
-    return {
-      ...dialogue,
-      nodes: {},
-      startNodeId: '',
-    };
-  }
-  return dialogue;
-}
-
-export function exportDialogueToYarn(dialogue: ForgeGraph): void {
-  const yarn = exportToYarn(dialogue);
+export function exportDialogueToYarn(graph: ForgeGraphDoc): void {
+  const yarn = exportToYarn(graph);
   const blob = new Blob([yarn], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${dialogue.title.replace(/\s+/g, '_')}.yarn`;
+  a.download = `${graph.title.replace(/\s+/g, '_')}.yarn`;
   a.click();
   URL.revokeObjectURL(url);
 }

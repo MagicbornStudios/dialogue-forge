@@ -1,28 +1,32 @@
 import React from 'react';
-import { ForgeNode, ForgeGraph, Choice } from '../../../../types';
-import { FlagSchema } from '../../../../types/flags';
-import { Character } from '../../../../types/characters';
+import { ForgeGraphDoc, Choice } from '../../../../../types';
+import { FlagSchema } from '../../../../../types/flags';
+import { Character } from '../../../../../types/characters';
 import { CharacterSelector } from '../CharacterSelector';
-import { ConditionAutocomplete } from '../../shared/ConditionAutocomplete';
-import { FlagSelector } from '../../shared/FlagSelector';
-import { EdgeIcon } from '../../shared/EdgeIcon';
+import { ConditionAutocomplete } from '../../../shared/ConditionAutocomplete';
+import { FlagSelector } from '../../../shared/FlagSelector';
+import { EdgeIcon } from '../../../shared/EdgeIcon';
 import { User, GitBranch } from 'lucide-react';
-import { CHOICE_COLORS } from '../../../../utils/reactflow-converter';
-import { validateCondition, parseCondition } from '../../utils/condition-utils';
+import { validateCondition, parseCondition } from '../../../utils/condition-utils';
+import { ForgeChoice, ForgeFlowEdge, ForgeNode } from '@/src/types/forge/forge-graph';
+import { edgeStrokeColor, CHOICE_COLORS } from '@/src/utils/forge-flow-helpers';
+import { useForgeEditorActions } from '@/src/components/GraphEditors/hooks/useForgeEditorActions';
 
 interface PlayerNodeFieldsProps {
   node: ForgeNode;
-  dialogue: ForgeGraph;
+  graph: ForgeGraphDoc;
   characters: Record<string, Character>;
   flagSchema?: FlagSchema;
   conditionInputs: Record<string, string>;
   debouncedConditionInputs: Record<string, string>;
+  choiceInputs: Record<string, Partial<Choice>>;
+  debouncedChoiceInputs: Record<string, Partial<Choice>>;
+  expandedChoices: Set<string>;
+  dismissedChoices: Set<string>;
   onUpdate: (updates: Partial<ForgeNode>) => void;
-  onAddChoice: () => void;
-  onUpdateChoice: (idx: number, updates: Partial<Choice>) => void;
-  onRemoveChoice: (idx: number) => void;
   onFocusNode?: (nodeId: string) => void;
   setConditionInputs: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  setChoiceInputs: React.Dispatch<React.SetStateAction<Record<string, Partial<ForgeChoice>>>>;
 }
 
 function darkenColor(color: string): string {
@@ -38,18 +42,47 @@ function darkenColor(color: string): string {
 
 export function PlayerNodeFields({
   node,
-  dialogue,
+  graph,
   characters,
   flagSchema,
   conditionInputs,
   debouncedConditionInputs,
+  choiceInputs,
+  debouncedChoiceInputs,
+  expandedChoices,
+  dismissedChoices,
   onUpdate,
-  onAddChoice,
-  onUpdateChoice,
-  onRemoveChoice,
   onFocusNode,
   setConditionInputs,
+  setChoiceInputs,
 }: PlayerNodeFieldsProps) {
+  const actions = useForgeEditorActions();
+
+  const handleAddChoice = () => {
+    if (!node.id) return;
+    const newChoice: ForgeChoice = {
+      id: `choice_${Date.now()}`,
+      text: '',
+      nextNodeId: undefined,
+      conditions: undefined,
+      setFlags: undefined,
+    };
+    const updatedChoices = [...(node.choices || []), newChoice];
+    actions.patchNode(node.id, { choices: updatedChoices });
+  };
+
+  const handleUpdateChoice = (idx: number, updates: Partial<ForgeChoice>) => {
+    if (!node.id || !node.choices) return;
+    const updatedChoices = [...node.choices];
+    updatedChoices[idx] = { ...updatedChoices[idx], ...updates };
+    actions.patchNode(node.id, { choices: updatedChoices });
+  };
+
+  const handleRemoveChoice = (idx: number) => {
+    if (!node.id || !node.choices) return;
+    const updatedChoices = node.choices.filter((_, i) => i !== idx);
+    actions.patchNode(node.id, { choices: updatedChoices.length > 0 ? updatedChoices : undefined });
+  };
   return (
     <div>
       <div>
@@ -88,17 +121,24 @@ export function PlayerNodeFields({
       </div>
       <div className="flex items-center justify-between mb-2 mt-4">
         <label className="text-[10px] text-gray-500 uppercase">Choices</label>
-        <button onClick={onAddChoice} className="text-[10px] text-[#e94560] hover:text-[#ff6b6b]">
+        <button onClick={handleAddChoice} className="text-[10px] text-[#e94560] hover:text-[#ff6b6b]">
           + Add
         </button>
       </div>
       <div className="space-y-2">
         {node.choices?.map((choice, idx) => {
           const hasCondition = choice.conditions !== undefined;
-          const choiceKey = `choice-${choice.id}`;
-          const conditionValue = conditionInputs[choiceKey] || '';
-          const debouncedValue = debouncedConditionInputs[choiceKey] || '';
+          const choiceKey = choice.id;
+          const choiceKeyForCondition = `choice-${choice.id}`;
+          const conditionValue = conditionInputs[choiceKeyForCondition] || '';
+          const debouncedValue = debouncedConditionInputs[choiceKeyForCondition] || '';
           const validationResult = validateCondition(debouncedValue, flagSchema);
+          
+          // Get local editing state from choiceInputs, fallback to actual choice data
+          const localInput = choiceInputs[choiceKey];
+          const debouncedInput = debouncedChoiceInputs[choiceKey];
+          const displayText = localInput?.text !== undefined ? localInput.text : (debouncedInput?.text ?? choice.text ?? '');
+          const displayNextNodeId = localInput?.nextNodeId !== undefined ? localInput.nextNodeId : (debouncedInput?.nextNodeId ?? choice.nextNodeId);
           
           const choiceColor = CHOICE_COLORS[idx % CHOICE_COLORS.length];
           const darkChoiceColor = darkenColor(choiceColor);
@@ -128,9 +168,9 @@ export function PlayerNodeFields({
                       checked={hasCondition}
                       onChange={(event) => {
                         if (event.target.checked) {
-                          onUpdateChoice(idx, { conditions: [] });
+                          handleUpdateChoice(idx, { conditions: [] });
                         } else {
-                          onUpdateChoice(idx, { conditions: undefined });
+                          handleUpdateChoice(idx, { conditions: undefined });
                         }
                       }}
                       className="sr-only"
@@ -153,18 +193,18 @@ export function PlayerNodeFields({
                     CHOICE
                   </span>
                 )}
-                {choice.nextNodeId && onFocusNode && (
+                {displayNextNodeId && onFocusNode && (
                   <button
                     type="button"
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
-                      if (choice.nextNodeId && onFocusNode) {
-                        onFocusNode(choice.nextNodeId);
+                      if (displayNextNodeId && onFocusNode) {
+                        onFocusNode(displayNextNodeId);
                       }
                     }}
                     className="transition-colors cursor-pointer flex-shrink-0"
-                    title={`Focus on node: ${choice.nextNodeId}`}
+                    title={`Focus on node: ${displayNextNodeId}`}
                   >
                     <EdgeIcon 
                       size={16} 
@@ -175,21 +215,28 @@ export function PlayerNodeFields({
                 )}
                 <div className="relative flex-1">
                   <select
-                    value={choice.nextNodeId || ''}
-                    onChange={(event) => onUpdateChoice(idx, { nextNodeId: event.target.value || undefined })}
+                    value={displayNextNodeId || ''}
+                    onChange={(event) => {
+                      const newNextNodeId = event.target.value || undefined;
+                      setChoiceInputs(prev => ({
+                        ...prev,
+                        [choiceKey]: { ...prev[choiceKey], nextNodeId: newNextNodeId }
+                      }));
+                      handleUpdateChoice(idx, { nextNodeId: newNextNodeId });
+                    }}
                     className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 outline-none"
                     style={{
-                      borderColor: choice.nextNodeId ? darkChoiceColor : '#2a2a3e',
+                      borderColor: displayNextNodeId ? darkChoiceColor : '#2a2a3e',
                     }}
                     onFocus={(event) => {
-                      if (choice.nextNodeId) {
+                      if (displayNextNodeId) {
                         event.target.style.borderColor = darkChoiceColor;
                       } else {
                         event.target.style.borderColor = '#e94560';
                       }
                     }}
                     onBlur={(event) => {
-                      if (choice.nextNodeId) {
+                      if (displayNextNodeId) {
                         event.target.style.borderColor = darkChoiceColor;
                       } else {
                         event.target.style.borderColor = '#2a2a3e';
@@ -197,14 +244,14 @@ export function PlayerNodeFields({
                     }}
                   >
                     <option value="">— Select target —</option>
-                    {Object.keys(dialogue.nodes).map(id => (
-                      <option key={id} value={id}>{id}</option>
+                    {graph.flow?.nodes?.map((n) => (
+                      <option key={n.id} value={n.id}>{n.id}</option>
                     ))}
                   </select>
-                  {choice.nextNodeId && (
+                  {displayNextNodeId && (
                     <div 
                       className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
-                      title={`Connects to node: ${choice.nextNodeId}`}
+                      title={`Connects to node: ${displayNextNodeId}`}
                       style={{ color: CHOICE_COLORS[idx % CHOICE_COLORS.length] }}
                     >
                       <GitBranch size={14} />
@@ -212,7 +259,7 @@ export function PlayerNodeFields({
                   )}
                 </div>
                 <button 
-                  onClick={() => onRemoveChoice(idx)} 
+                  onClick={() => handleRemoveChoice(idx)} 
                   className="text-gray-600 hover:text-red-400 flex-shrink-0"
                   title="Remove choice"
                 >
@@ -226,13 +273,21 @@ export function PlayerNodeFields({
               <div className="pt-2">
                 <input
                   type="text"
-                  value={choice.text}
-                  onChange={(event) => onUpdateChoice(idx, { text: event.target.value })}
+                  value={displayText}
+                  onChange={(event) => {
+                    const newText = event.target.value;
+                    setChoiceInputs(prev => ({
+                      ...prev,
+                      [choiceKey]: { ...prev[choiceKey], text: newText }
+                    }));
+                    // Also update immediately for better UX
+                    handleUpdateChoice(idx, { text: newText });
+                  }}
                   className={`w-full bg-[#0d0d14] border rounded px-3 py-2 text-sm outline-none transition-colors ${
                     hasCondition ? 'text-gray-100' : 'text-gray-200'
                   }`}
                   style={{
-                    borderColor: choice.text ? darkChoiceColor : '#2a2a3e'
+                    borderColor: displayText ? darkChoiceColor : '#2a2a3e'
                   }}
                   placeholder="Dialogue text..."
                 />
@@ -243,7 +298,7 @@ export function PlayerNodeFields({
                   <div className="flex items-center gap-2">
                     <label className="text-[10px] text-blue-400 uppercase font-medium">Condition</label>
                     <button
-                      onClick={() => onUpdateChoice(idx, { conditions: undefined })}
+                      onClick={() => handleUpdateChoice(idx, { conditions: undefined })}
                       className="text-[10px] text-gray-500 hover:text-red-400 ml-auto"
                       title="Remove condition"
                     >
@@ -254,9 +309,9 @@ export function PlayerNodeFields({
                     <ConditionAutocomplete
                       value={conditionValue}
                       onChange={(newValue) => {
-                        setConditionInputs(prev => ({ ...prev, [choiceKey]: newValue }));
+                        setConditionInputs(prev => ({ ...prev, [choiceKeyForCondition]: newValue }));
                         const newConditions = parseCondition(newValue);
-                        onUpdateChoice(idx, { 
+                        handleUpdateChoice(idx, { 
                           conditions: newConditions.length > 0 ? newConditions : [] 
                         });
                       }}
@@ -288,7 +343,7 @@ export function PlayerNodeFields({
               
               <FlagSelector
                 value={choice.setFlags || []}
-                onChange={(flags) => onUpdateChoice(idx, { setFlags: flags.length > 0 ? flags : undefined })}
+                onChange={(flags) => handleUpdateChoice(idx, { setFlags: flags.length > 0 ? flags : undefined })}
                 flagSchema={flagSchema}
                 placeholder="Set flags..."
               />

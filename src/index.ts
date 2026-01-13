@@ -33,6 +33,6 @@ export {
 // Export utilities
 export { exportToYarn, importFromYarn } from './lib/yarn-converter';
 export { initializeFlags, mergeFlagUpdates, validateFlags, getFlagValue } from './components/shared/FlagManager/utils/flag-manager';
-export * from './utils/node-helpers';
+export * from './utils/forge-flow-helpers';
 export * from './utils/narrative-helpers';
 export * from './utils/narrative-converter';

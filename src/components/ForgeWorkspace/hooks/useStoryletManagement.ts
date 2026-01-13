@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { NARRATIVE_ELEMENT } from '../../../types/narrative';
-import type { NarrativeChapter, StoryletPoolMember, StoryletTemplate } from '../../../types/narrative';
+import type { ForgeChapter, StoryletPoolMember, StoryletTemplate } from '../../../types/narrative';
 import type { NarrativeSelection } from '../../../types/narrative';
 
 interface StoryletEntry {
@@ -10,7 +10,7 @@ interface StoryletEntry {
 }
 
 interface UseStoryletManagementProps {
-  selectedChapter: NarrativeChapter | undefined;
+  selectedChapter: ForgeChapter | undefined;
   selection: NarrativeSelection;
   activePoolId: string | undefined;
   setActivePoolId: (id: string | undefined) => void;

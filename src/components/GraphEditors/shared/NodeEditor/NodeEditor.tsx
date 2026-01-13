@@ -1,28 +1,24 @@
 import React, { useState, useRef } from 'react';
-import { ForgeNode, ForgeGraph, Choice } from '../../../../types';
+import { ForgeGraphDoc, Choice } from '../../../../types';
 import { FlagSchema } from '../../../../types/flags';
 import { Character } from '../../../../types/characters';
 import { FlagSelector } from '../FlagSelector';
-import { NODE_TYPE } from '../../../../types/constants';
 import { useConditionInputs } from './hooks/useConditionInputs';
+import { useChoices } from './hooks/useChoices';
 import { getNodeTypeBorderColor, getNodeTypeBadge, getNodeTypeLabel } from './utils/nodeTypeHelpers';
-import { NpcNodeFields } from '../../ForgeStoryletGraphEditor/components/NPCNode/NPCNodeFields';
+import { CharacterNodeFields } from '../../ForgeStoryletGraphEditor/components/NPCNode/CharacterNodeFields';
 import { StoryletNodeFields } from '../../ForgeStoryletGraphEditor/components/StoryletNode/StoryletNodeFields';
 
 
-import { ConditionEditorModal } from './components/ConditionEditorModal';
-import { StoryletPoolNodeFields } from '../../ForgeStoryletGraphEditor/components/StoryletPoolNode/StoryletPoolNodeFields';
 import { ConditionalNodeFields } from '../Nodes/ConditionalNode/ConditionalNodeFields';
 import { PlayerNodeFields } from '../../ForgeStoryletGraphEditor/components/PlayerNode/PlayerNodeFields';
+import { ForgeNode, ForgeStoryletCall, ForgeNodeType, FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
 
 interface NodeEditorProps {
   node: ForgeNode;
-  dialogue: ForgeGraph;
+  graph: ForgeGraphDoc;
   onUpdate: (updates: Partial<ForgeNode>) => void;
   onDelete: () => void;
-  onAddChoice: () => void;
-  onUpdateChoice: (idx: number, updates: Partial<Choice>) => void;
-  onRemoveChoice: (idx: number) => void;
   onClose: () => void;
   onPlayFromHere?: (nodeId: string) => void;
   onFocusNode?: (nodeId: string) => void;
@@ -32,26 +28,14 @@ interface NodeEditorProps {
 
 export function NodeEditor({
   node,
-  dialogue,
+  graph,
   onUpdate,
   onDelete,
-  onAddChoice,
-  onUpdateChoice,
-  onRemoveChoice,
   onClose,
-  onPlayFromHere,
   onFocusNode,
   flagSchema,
   characters = {},
 }: NodeEditorProps) {
-  const [editingCondition, setEditingCondition] = useState<{
-    id: string;
-    value: string;
-    type: 'block' | 'choice';
-    blockIdx?: number;
-    choiceIdx?: number;
-  } | null>(null);
-
   const {
     conditionInputs,
     debouncedConditionInputs,
@@ -64,6 +48,18 @@ export function NodeEditor({
     debounceTimersRef,
   } = useConditionInputs(node);
 
+  const {
+    choiceInputs,
+    debouncedChoiceInputs,
+    expandedChoices,
+    dismissedChoices,
+    setChoiceInputs,
+    setDebouncedChoiceInputs,
+    setExpandedChoices,
+    setDismissedChoices,
+    debounceTimersRef: choiceDebounceTimersRef,
+  } = useChoices(node);
+
   const handleStoryletCallUpdate = (updates: Partial<NonNullable<ForgeNode['storyletCall']>>) => {
     const nextStoryletCall = {
       ...(node.storyletCall ?? {}),
@@ -72,7 +68,7 @@ export function NodeEditor({
     const hasValues = Object.values(nextStoryletCall).some(
       value => value !== undefined && value !== ''
     );
-    onUpdate({ storyletCall: hasValues ? nextStoryletCall : undefined });
+    onUpdate({ storyletCall: hasValues ? nextStoryletCall as ForgeStoryletCall : undefined });
   };
 
   return (
@@ -124,40 +120,50 @@ export function NodeEditor({
             />
           </div>
 
-          {node.type === NODE_TYPE.NPC && (
-            <NpcNodeFields
+          {node.type === FORGE_NODE_TYPE.CHARACTER && (
+            <CharacterNodeFields
               node={node}
-              dialogue={dialogue}
+              graph={graph}
               characters={characters}
               onUpdate={onUpdate}
               onFocusNode={onFocusNode}
             />
           )}
 
-          {node.type === NODE_TYPE.STORYLET && (
+          {node.type === FORGE_NODE_TYPE.PLAYER && (
+            <PlayerNodeFields
+              node={node}
+              graph={graph}
+              characters={characters}
+              flagSchema={flagSchema}
+              conditionInputs={conditionInputs}
+              debouncedConditionInputs={debouncedConditionInputs}
+              choiceInputs={choiceInputs}
+              debouncedChoiceInputs={debouncedChoiceInputs}
+              expandedChoices={expandedChoices}
+              dismissedChoices={dismissedChoices}
+              onUpdate={onUpdate}
+              onFocusNode={onFocusNode}
+              setConditionInputs={setConditionInputs}
+              setChoiceInputs={setChoiceInputs}
+            />
+          )}
+
+          {node.type === FORGE_NODE_TYPE.STORYLET && (
             <StoryletNodeFields
               node={node}
-              dialogue={dialogue}
+              graph={graph}
               onUpdate={onUpdate}
               onFocusNode={onFocusNode}
               onUpdateStoryletCall={handleStoryletCallUpdate}
             />
           )}
 
-          {node.type === NODE_TYPE.STORYLET_POOL && (
-            <StoryletPoolNodeFields
-              node={node}
-              dialogue={dialogue}
-              onUpdate={onUpdate}
-              onFocusNode={onFocusNode}
-              onUpdateStoryletCall={handleStoryletCallUpdate}
-            />
-          )}
 
-          {node.type === NODE_TYPE.CONDITIONAL && (
+          {node.type === FORGE_NODE_TYPE.CONDITIONAL && (
             <ConditionalNodeFields
               node={node}
-              dialogue={dialogue}
+              graph={graph}
               characters={characters}
               flagSchema={flagSchema}
               conditionInputs={conditionInputs}
@@ -173,23 +179,6 @@ export function NodeEditor({
             />
           )}
 
-          {node.type === NODE_TYPE.PLAYER && (
-            <PlayerNodeFields
-              node={node}
-              dialogue={dialogue}
-              characters={characters}
-              flagSchema={flagSchema}
-              conditionInputs={conditionInputs}
-              debouncedConditionInputs={debouncedConditionInputs}
-              onUpdate={onUpdate}
-              onAddChoice={onAddChoice}
-              onUpdateChoice={onUpdateChoice}
-              onRemoveChoice={onRemoveChoice}
-              onFocusNode={onFocusNode}
-              setConditionInputs={setConditionInputs}
-            />
-          )}
-
           <div>
             <label className="text-[10px] text-gray-500 uppercase">Set Flags (on enter)</label>
             <FlagSelector
@@ -199,29 +188,9 @@ export function NodeEditor({
               placeholder="flag1, flag2"
             />
           </div>
-
-          {onPlayFromHere && (
-            <button
-              onClick={() => onPlayFromHere(node.id)}
-              className="w-full py-2 bg-[#e94560] hover:bg-[#d63850] text-white rounded text-sm flex items-center justify-center gap-2"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="5 3 19 12 5 21 5 3" />
-              </svg>
-              Play from Here
-            </button>
-          )}
         </div>
 
-        <ConditionEditorModal
-          editingCondition={editingCondition}
-          node={node}
-          flagSchema={flagSchema}
-          onClose={() => setEditingCondition(null)}
-          onUpdate={onUpdate}
-          onUpdateChoice={onUpdateChoice}
-          setConditionInputs={setConditionInputs}
-        />
+
       </aside>
     </>
   );

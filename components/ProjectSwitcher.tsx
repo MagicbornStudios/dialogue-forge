@@ -20,8 +20,8 @@ import {
 import { useProjects, useCreateProject, type ProjectDocument } from '@/app/lib/forge/queries';
 
 interface ProjectSwitcherProps {
-  selectedProjectId: string | null;
-  onProjectChange: (projectId: string | null) => void;
+  selectedProjectId: number | null;
+  onProjectChange: (projectId: number | null) => void;
 }
 
 export function ProjectSwitcher({ selectedProjectId, onProjectChange }: ProjectSwitcherProps) {

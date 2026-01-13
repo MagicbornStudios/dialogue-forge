@@ -1,0 +1,651 @@
+// src/components/forge/shared/hooks/useForgeFlowEditorShell.ts
+import * as React from 'react';
+import {
+  addEdge,
+  applyEdgeChanges,
+  applyNodeChanges,
+  type Connection,
+  type Edge,
+  type EdgeChange,
+  type Node,
+  type NodeChange,
+  type ReactFlowInstance,
+} from 'reactflow';
+import { useStore } from 'zustand';
+
+import type { ForgeFlowJson, ForgeGraphDoc, ForgeNode, ForgeNodeType } from '@/src/types/forge/forge-graph';
+import { FORGE_GRAPH_KIND } from '@/src/types/forge/forge-graph';
+import {
+  applyConnection,
+  createFlowNode,
+  deleteFlowNode,
+  insertNodeBetweenEdge,
+  removeEdgeAndSemanticLink,
+  type LayoutDirection,
+} from '@/src/utils/forge-flow-helpers';
+import { applyLayout, resolveNodeCollisions } from '@/src/components/GraphEditors/utils/layout/layout';
+import { LAYOUT_CONSTANTS } from '@/src/components/GraphEditors/utils/constants';
+import type { ForgeEditorSessionStore, EdgeDropMenuState } from './useForgeEditorSession';
+import type { ForgeCommand } from './forge-commands';
+import { FORGE_COMMAND } from './forge-commands';
+
+export type ShellNodeData = {
+  node: ForgeNode;
+  layoutDirection?: LayoutDirection;
+
+  // highlight/meta
+  ui: {
+    isDimmed?: boolean;
+    isInPath?: boolean;
+    isStartNode?: boolean;
+    isEndNode?: boolean;
+  };
+
+  // Read-only flags only (data, not callbacks)
+  hasConditionals?: boolean; // Data, not callback
+  // NO callbacks: onEdit, onDelete, onAddChoice, onAddConditionals
+};
+
+function toReactFlowNodes(flowNodes: ForgeGraphDoc['flow']['nodes'], layoutDirection: LayoutDirection): Node<ShellNodeData>[] {
+  return flowNodes.map((n) => {
+    const d = (n.data ?? {}) as ForgeNode;
+    return {
+      ...n,
+      type: n.type as string,
+      data: {
+        node: { ...d, id: n.id, type: (n.type as ForgeNodeType) ?? d.type },
+        layoutDirection,
+      },
+      selected: false,
+    } as Node<ShellNodeData>;
+  });
+}
+
+function toReactFlowEdges(flowEdges: ForgeGraphDoc['flow']['edges']): Edge[] {
+  return flowEdges.map((e) => ({
+    ...e,
+    type: (e.type as string) ?? 'default',
+  }));
+}
+
+export type UseForgeFlowEditorShellArgs = {
+  graph: ForgeGraphDoc | null;
+  onChange: (graph: ForgeGraphDoc) => void;
+  reactFlow: ReactFlowInstance;
+  sessionStore: ForgeEditorSessionStore;
+
+  /** optional event hooks */
+  onNodeAdd?: (node: any) => void;
+  onNodeDelete?: (nodeId: string) => void;
+  onNodeUpdate?: (nodeId: string, updates: Partial<ForgeNode>) => void;
+  onConnectHook?: (source: string, target: string, sourceHandle?: string) => void;
+  onDisconnectHook?: (edgeId: string, source: string, target: string) => void;
+};
+
+export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
+  const {
+    graph,
+    onChange,
+    reactFlow,
+    sessionStore,
+    onNodeAdd,
+    onNodeDelete,
+    onNodeUpdate,
+    onConnectHook,
+    onDisconnectHook,
+  } = args;
+
+  // Read from session store
+  const layoutDirection = useStore(sessionStore, (s) => s.layoutDirection);
+  const autoOrganize = useStore(sessionStore, (s) => s.autoOrganize);
+  const selectedNodeId = useStore(sessionStore, (s) => s.selectedNodeId);
+  const paneContextMenu = useStore(sessionStore, (s) => s.paneContextMenu);
+  const edgeDropMenu = useStore(sessionStore, (s) => s.edgeDropMenu);
+
+  // Session store setters for layout
+  const setLayoutDirection = React.useCallback(
+    (dir: LayoutDirection) => sessionStore.setState({ layoutDirection: dir }),
+    [sessionStore]
+  );
+
+  // Session store setters
+  const setSelectedNodeId = React.useCallback((nodeId: string | null) => {
+    sessionStore.getState().selectedNodeId !== nodeId && sessionStore.setState({ selectedNodeId: nodeId });
+  }, [sessionStore]);
+
+  const setPaneContextMenu = React.useCallback((menu: { screenX: number; screenY: number; flowX: number; flowY: number } | null) => {
+    sessionStore.getState().paneContextMenu !== menu && sessionStore.setState({ paneContextMenu: menu });
+  }, [sessionStore]);
+
+  const setEdgeDropMenu = React.useCallback((menu: EdgeDropMenuState) => {
+    sessionStore.getState().edgeDropMenu !== menu && sessionStore.setState({ edgeDropMenu: menu });
+  }, [sessionStore]);
+
+  const effectiveGraph: ForgeGraphDoc = React.useMemo(() => {
+    const now = new Date().toISOString();
+    return (
+      graph || {
+        id: 0,
+        project: 0,
+        kind: FORGE_GRAPH_KIND.STORYLET,
+        title: 'New Graph',
+        startNodeId: '',
+        endNodeIds: [],
+        compiledYarn: null,
+        updatedAt: now,
+        createdAt: now,
+        flow: { nodes: [], edges: [], viewport: undefined } as ForgeFlowJson,
+      }
+    );
+  }, [graph]);
+
+  // local RF state (from flow)
+  const [nodes, setNodes] = React.useState<Node<ShellNodeData>[]>(() =>
+    toReactFlowNodes(effectiveGraph.flow.nodes, layoutDirection)
+  );
+  const [edges, setEdges] = React.useState<Edge[]>(() => toReactFlowEdges(effectiveGraph.flow.edges));
+
+  // For connect-start/end behavior
+  const connectingRef = React.useRef<{
+    fromNodeId: string;
+    sourceHandle?: string;
+    fromChoiceIdx?: number;
+    fromBlockIdx?: number;
+  } | null>(null);
+
+  // Avoid full re-init when we do a direct node data update in ReactFlow
+  const directUpdateRef = React.useRef<string | null>(null);
+
+  // Re-sync local RF state if graph changes externally
+  React.useEffect(() => {
+    if (directUpdateRef.current) {
+      directUpdateRef.current = null;
+      return;
+    }
+    setNodes(toReactFlowNodes(effectiveGraph.flow.nodes, layoutDirection));
+    setEdges(toReactFlowEdges(effectiveGraph.flow.edges));
+  }, [effectiveGraph, layoutDirection]);
+
+  // End nodes (semantic no outgoing links)
+  const endNodeIds = React.useMemo(() => {
+    const ends = new Set<string>();
+    for (const n of effectiveGraph.flow.nodes) {
+      const d = (n.data ?? {}) as ForgeNode;
+      const hasNext = !!d.defaultNextNodeId;
+      const hasChoices = d.choices?.some((c) => !!c.nextNodeId) ?? false;
+      const hasBlocks = d.conditionalBlocks?.some((b) => !!b.nextNodeId) ?? false;
+      if (!hasNext && !hasChoices && !hasBlocks) ends.add(n.id);
+    }
+    return ends;
+  }, [effectiveGraph]);
+
+  const selectedNode = React.useMemo(() => {
+    if (!selectedNodeId) return null;
+    const n = effectiveGraph.flow.nodes.find((x) => x.id === selectedNodeId);
+    if (!n) return null;
+    const d = (n.data ?? {}) as ForgeNode;
+    return {
+      ...d,
+      id: n.id,
+      type: (n.type as ForgeNodeType) ?? d.type,
+      choices: d.choices ? d.choices.map((c) => ({ ...c })) : undefined,
+      setFlags: d.setFlags ? [...d.setFlags] : undefined,
+      conditionalBlocks: d.conditionalBlocks
+        ? d.conditionalBlocks.map((b) => ({ ...b, condition: b.condition ? [...b.condition] : undefined }))
+        : undefined,
+    } as ForgeNode;
+  }, [selectedNodeId, effectiveGraph]);
+
+  const handleUpdateNode = React.useCallback(
+    (nodeId: string, updates: Partial<ForgeNode>) => {
+      const exists = effectiveGraph.flow.nodes.some((n) => n.id === nodeId);
+      if (!exists) return;
+
+      // Direct RF node data update for common field edits
+      const isSimpleUpdate = Object.keys(updates).every((k) =>
+        ['speaker', 'content', 'characterId', 'setFlags', 'storyletCall', 'label', 'actId', 'chapterId', 'pageId'].includes(k)
+      );
+
+      if (isSimpleUpdate && reactFlow) {
+        const all = reactFlow.getNodes() as Node<ShellNodeData>[];
+        const found = all.find((n) => n.id === nodeId);
+        if (found) {
+          directUpdateRef.current = nodeId;
+          const nextNodeData: ForgeNode = { ...(found.data?.node ?? ({} as ForgeNode)), ...updates, id: nodeId };
+          const updated = all.map((n) => (n.id === nodeId ? { ...n, data: { ...(n.data ?? {}), node: nextNodeData } } : n));
+          reactFlow.setNodes(updated);
+          setNodes(updated);
+        }
+      }
+
+      const nextGraph: ForgeGraphDoc = {
+        ...effectiveGraph,
+        flow: {
+          ...effectiveGraph.flow,
+          nodes: effectiveGraph.flow.nodes.map((n) => {
+            if (n.id !== nodeId) return n;
+            const d = (n.data ?? {}) as ForgeNode;
+            return { ...n, data: { ...d, ...updates, id: nodeId } };
+          }),
+        },
+      };
+
+      onChange(nextGraph);
+      onNodeUpdate?.(nodeId, updates);
+    },
+    [effectiveGraph, onChange, onNodeUpdate, reactFlow]
+  );
+
+  const handleDeleteNode = React.useCallback(
+    (nodeId: string) => {
+      try {
+        const next = deleteFlowNode(effectiveGraph, nodeId);
+        onChange(next);
+        onNodeDelete?.(nodeId);
+        setSelectedNodeId(nodeId === selectedNodeId ? null : nodeId);
+      } catch (e: any) {
+        alert(e?.message ?? 'Failed to delete node.');
+      }
+    },
+    [effectiveGraph, onChange, onNodeDelete]
+  );
+
+  const onNodesChange = React.useCallback(
+    (changes: NodeChange[]) => {
+      setNodes((prev) => {
+        const nextNodes = applyNodeChanges(changes, prev) as Node<ShellNodeData>[];
+
+        // sync positions back to graph.flow.nodes
+        const moved = changes.filter((c) => c.type === 'position' && !!(c as any).position);
+        if (moved.length) {
+          const nextGraph: ForgeGraphDoc = {
+            ...effectiveGraph,
+            flow: {
+              ...effectiveGraph.flow,
+              nodes: effectiveGraph.flow.nodes.map((fn) => {
+                const m = moved.find((x) => (x as any).id === fn.id) as any;
+                if (!m?.position) return fn;
+                return { ...fn, position: { x: m.position.x, y: m.position.y } };
+              }),
+            },
+          };
+          onChange(nextGraph);
+        }
+
+        return nextNodes;
+      });
+    },
+    [effectiveGraph, onChange]
+  );
+
+  const onNodesDelete = React.useCallback(
+    (deleted: Node[]) => {
+      let next = effectiveGraph;
+      for (const n of deleted) {
+        if (n.id === next.startNodeId) continue;
+        next = deleteFlowNode(next, n.id);
+        onNodeDelete?.(n.id);
+        if (selectedNodeId === n.id) {
+          setSelectedNodeId(null);
+        }
+      }
+      onChange(next);
+    },
+    [effectiveGraph, onChange, onNodeDelete]
+  );
+
+  const onEdgesChange = React.useCallback(
+    (changes: EdgeChange[]) => {
+      setEdges((prev) => applyEdgeChanges(changes, prev));
+
+      // semantic cleanup for removed edges
+      const removals = changes.filter((c) => c.type === 'remove');
+      if (!removals.length) return;
+
+      let next = effectiveGraph;
+      for (const r of removals) {
+        const edgeId = (r as any).id as string;
+        const edge = effectiveGraph.flow.edges.find((e) => e.id === edgeId);
+        if (edge) onDisconnectHook?.(edge.id, edge.source, edge.target);
+        next = removeEdgeAndSemanticLink(next, edgeId);
+      }
+      onChange(next);
+    },
+    [effectiveGraph, onChange, onDisconnectHook]
+  );
+
+  const onEdgesDelete = React.useCallback(
+    (deletedEdges: Edge[]) => {
+      let next = effectiveGraph;
+      for (const e of deletedEdges) {
+        onDisconnectHook?.(e.id, e.source, e.target);
+        next = removeEdgeAndSemanticLink(next, e.id);
+      }
+      onChange(next);
+    },
+    [effectiveGraph, onChange, onDisconnectHook]
+  );
+
+  const onConnectStart = React.useCallback(
+    (_event: React.MouseEvent | React.TouchEvent, params: { nodeId: string | null; handleId: string | null }) => {
+      if (!params.nodeId) return;
+
+      const handleId = params.handleId ?? null;
+
+      if (!handleId || handleId === 'next' || handleId === 'default') {
+        connectingRef.current = { fromNodeId: params.nodeId, sourceHandle: 'next' };
+        return;
+      }
+
+      if (handleId.startsWith('choice-')) {
+        const idx = parseInt(handleId.replace('choice-', ''), 10);
+        connectingRef.current = { fromNodeId: params.nodeId, fromChoiceIdx: idx, sourceHandle: handleId };
+        return;
+      }
+
+      if (handleId.startsWith('block-')) {
+        const idx = parseInt(handleId.replace('block-', ''), 10);
+        connectingRef.current = { fromNodeId: params.nodeId, fromBlockIdx: idx, sourceHandle: handleId };
+        return;
+      }
+
+      connectingRef.current = { fromNodeId: params.nodeId, sourceHandle: handleId };
+    },
+    []
+  );
+
+  const onConnectEnd = React.useCallback(
+    (event: MouseEvent | TouchEvent) => {
+      if (!connectingRef.current) return;
+
+      const clientX = 'clientX' in event ? event.clientX : event.touches?.[0]?.clientX || 0;
+      const clientY = 'clientY' in event ? event.clientY : event.touches?.[0]?.clientY || 0;
+      const point = reactFlow.screenToFlowPosition({ x: clientX, y: clientY });
+
+      // nearest-node auto-connect (same as your good storylet behavior)
+      const threshold = 100;
+      let nearest: Node<ShellNodeData> | null = null;
+      let minDist = Infinity;
+
+      for (const n of nodes) {
+        const w = n.width || 200;
+        const h = n.height || 100;
+        const cx = n.position.x + w / 2;
+        const cy = n.position.y + h / 2;
+        const dist = Math.sqrt((point.x - cx) ** 2 + (point.y - cy) ** 2);
+        if (dist < minDist && dist < threshold) {
+          minDist = dist;
+          nearest = n;
+        }
+      }
+
+      if (nearest && nearest.id !== connectingRef.current.fromNodeId) {
+        const connection: Connection = {
+          source: connectingRef.current.fromNodeId,
+          target: nearest.id,
+          sourceHandle: connectingRef.current.sourceHandle ?? null,
+          targetHandle: null,
+        };
+
+        const nextGraph = applyConnection(effectiveGraph, connection);
+        onChange(nextGraph);
+        setEdges(toReactFlowEdges(nextGraph.flow.edges));
+        onConnectHook?.(connection.source!, connection.target!, connection.sourceHandle ?? undefined);
+
+        connectingRef.current = null;
+        setEdgeDropMenu(null);
+        return;
+      }
+
+      setEdgeDropMenu({
+        screenX: clientX,
+        screenY: clientY,
+        flowX: point.x,
+        flowY: point.y,
+        fromNodeId: connectingRef.current.fromNodeId,
+        fromChoiceIdx: connectingRef.current.fromChoiceIdx,
+        fromBlockIdx: connectingRef.current.fromBlockIdx,
+        sourceHandle: connectingRef.current.sourceHandle,
+      });
+
+      connectingRef.current = null;
+    },
+    [effectiveGraph, nodes, onChange, onConnectHook, reactFlow]
+  );
+
+  const onConnect = React.useCallback(
+    (connection: Connection) => {
+      if (!connection.source || !connection.target) return;
+
+      setEdges((prev) => addEdge(connection, prev));
+
+      const nextGraph = applyConnection(effectiveGraph, connection);
+      onChange(nextGraph);
+      setEdges(toReactFlowEdges(nextGraph.flow.edges));
+
+      onConnectHook?.(connection.source, connection.target, connection.sourceHandle ?? undefined);
+      setEdgeDropMenu(null);
+      connectingRef.current = null;
+    },
+    [effectiveGraph, onChange, onConnectHook]
+  );
+
+  const onPaneContextMenu = React.useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault();
+      const point = reactFlow.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+      setPaneContextMenu({ screenX: event.clientX, screenY: event.clientY, flowX: point.x, flowY: point.y });
+    },
+    [reactFlow]
+  );
+
+  const onPaneClick = React.useCallback(() => {
+    setSelectedNodeId(null);
+    setPaneContextMenu(null);
+    setEdgeDropMenu(null);
+  }, []);
+
+  const handleAddNode = React.useCallback(
+    (
+      type: ForgeNodeType,
+      x: number,
+      y: number,
+      autoConnect?: { fromNodeId: string; sourceHandle?: string; fromChoiceIdx?: number; fromBlockIdx?: number }
+    ) => {
+      const newId = `${type}_${Date.now()}`;
+      const newFlowNode = createFlowNode(type, newId, x, y);
+
+      onNodeAdd?.(newFlowNode);
+
+      let next: ForgeGraphDoc = {
+        ...effectiveGraph,
+        startNodeId: effectiveGraph.startNodeId || newId,
+        flow: { ...effectiveGraph.flow, nodes: [...effectiveGraph.flow.nodes, newFlowNode] },
+      };
+
+      if (autoConnect) {
+        const connection: Connection = {
+          source: autoConnect.fromNodeId,
+          target: newId,
+          sourceHandle: autoConnect.sourceHandle ?? 'next',
+          targetHandle: null,
+        };
+        next = applyConnection(next, connection);
+      }
+
+      onChange(next);
+      setSelectedNodeId(newId);
+      setPaneContextMenu(null);
+      setEdgeDropMenu(null);
+    },
+    [effectiveGraph, onChange, onNodeAdd]
+  );
+
+  const handleInsertNode = React.useCallback(
+    (type: ForgeNodeType, edgeId: string, x: number, y: number) => {
+      const newId = `${type}_${Date.now()}`;
+      const next = insertNodeBetweenEdge(effectiveGraph, edgeId, type, newId, x, y);
+      onChange(next);
+      setSelectedNodeId(newId);
+    },
+    [effectiveGraph, onChange, setSelectedNodeId]
+  );
+
+  // Command dispatcher
+  const dispatch = React.useCallback(
+    (cmd: ForgeCommand) => {
+      switch (cmd.type) {
+        case FORGE_COMMAND.UI.SELECT_NODE:
+          setSelectedNodeId(cmd.nodeId);
+          break;
+        case FORGE_COMMAND.UI.OPEN_NODE_EDITOR:
+          setSelectedNodeId(cmd.nodeId);
+          break;
+        case FORGE_COMMAND.UI.SET_PANE_CONTEXT_MENU:
+          setPaneContextMenu(cmd.menu);
+          break;
+        case FORGE_COMMAND.UI.CLEAR_PANE_CONTEXT_MENU:
+          setPaneContextMenu(null);
+          break;
+        case FORGE_COMMAND.UI.SET_EDGE_DROP_MENU:
+          setEdgeDropMenu(cmd.menu);
+          break;
+        case FORGE_COMMAND.UI.CLEAR_EDGE_DROP_MENU:
+          setEdgeDropMenu(null);
+          break;
+        case FORGE_COMMAND.GRAPH.NODE_CREATE:
+          handleAddNode(cmd.nodeType, cmd.x, cmd.y, cmd.autoConnect);
+          break;
+        case FORGE_COMMAND.GRAPH.NODE_PATCH:
+          handleUpdateNode(cmd.nodeId, cmd.updates);
+          break;
+        case FORGE_COMMAND.GRAPH.NODE_DELETE:
+          handleDeleteNode(cmd.nodeId);
+          break;
+        case FORGE_COMMAND.GRAPH.NODE_INSERT_ON_EDGE:
+          handleInsertNode(cmd.nodeType, cmd.edgeId, cmd.x, cmd.y);
+          break;
+        case FORGE_COMMAND.GRAPH.EDGE_DELETE: {
+          const next = removeEdgeAndSemanticLink(effectiveGraph, cmd.edgeId);
+          onChange(next);
+          break;
+        }
+        case FORGE_COMMAND.GRAPH.EDGE_CREATE:
+          onConnect(cmd.connection);
+          break;
+      }
+    },
+    [
+      effectiveGraph,
+      onChange,
+      setSelectedNodeId,
+      setPaneContextMenu,
+      setEdgeDropMenu,
+      handleAddNode,
+      handleUpdateNode,
+      handleDeleteNode,
+      handleInsertNode,
+      onConnect,
+    ]
+  );
+
+  // Auto layout handler
+  const handleAutoLayout = React.useCallback(
+    (direction?: LayoutDirection) => {
+      const dir = direction || layoutDirection;
+      if (direction) setLayoutDirection(direction);
+
+      const result = applyLayout(effectiveGraph, 'dagre', { direction: dir });
+      onChange(result.graph);
+
+      setTimeout(() => reactFlow?.fitView({ padding: 0.2, duration: 500 }), 100);
+    },
+    [layoutDirection, onChange, reactFlow, effectiveGraph, setLayoutDirection]
+  );
+
+  // Node interaction handlers
+  const onNodeClick = React.useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      setSelectedNodeId(node.id);
+    },
+    [setSelectedNodeId]
+  );
+
+  const onNodeDoubleClick = React.useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      reactFlow?.setCenter(node.position.x + 110, node.position.y + 60, {
+        zoom: 1.5,
+        duration: 500,
+      });
+    },
+    [reactFlow]
+  );
+
+  const onNodeDragStop = React.useCallback(
+    (_event: React.MouseEvent, _node: Node) => {
+      if (autoOrganize) return;
+
+      const collisionResolved = resolveNodeCollisions(effectiveGraph, {
+        maxIterations: LAYOUT_CONSTANTS.MAX_ITERATIONS,
+        overlapThreshold: LAYOUT_CONSTANTS.OVERLAP_THRESHOLD,
+        margin: LAYOUT_CONSTANTS.DEFAULT_MARGIN,
+      });
+
+      const changed = (collisionResolved.flow?.nodes ?? []).some((n: any) => {
+        const orig = effectiveGraph.flow.nodes.find((x) => x.id === n.id);
+        return orig && (orig.position?.x !== n.position?.x || orig.position?.y !== n.position?.y);
+      });
+
+      if (changed) onChange(collisionResolved);
+    },
+    [autoOrganize, onChange, effectiveGraph]
+  );
+
+  return {
+    effectiveGraph,
+
+    nodes,
+    setNodes,
+    edges,
+    setEdges,
+
+    selectedNodeId,
+    setSelectedNodeId,
+    selectedNode,
+
+    endNodeIds,
+
+    paneContextMenu,
+    setPaneContextMenu,
+
+    edgeDropMenu,
+    setEdgeDropMenu,
+
+    connectingRef,
+
+    handleUpdateNode,
+    handleDeleteNode,
+
+    onNodesChange,
+    onNodesDelete,
+    onEdgesChange,
+    onEdgesDelete,
+
+    onConnect,
+    onConnectStart,
+    onConnectEnd,
+
+    onPaneContextMenu,
+    onPaneClick,
+
+    handleAddNode,
+    handleInsertNode,
+
+    handleAutoLayout,
+    onNodeClick,
+    onNodeDoubleClick,
+    onNodeDragStop,
+
+    dispatch,
+  };
+}

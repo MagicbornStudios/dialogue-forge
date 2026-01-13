@@ -1,10 +1,11 @@
 import React from 'react';
-import { ForgeNode, ForgeGraph } from '../../../../types';
-import { NextNodeSelector } from '../../shared/NodeEditor/components/NextNodeSelector';
+import { ForgeGraphDoc } from '../../../../../types';
+import { NextNodeSelector } from '../../../shared/NodeEditor/components/NextNodeSelector';
+import { ForgeNode, FORGE_STORYLET_CALL_MODE, type ForgeStoryletCallMode } from '@/src/types/forge/forge-graph';
 
 interface StoryletNodeFieldsProps {
   node: ForgeNode;
-  dialogue: ForgeGraph;
+  graph: ForgeGraphDoc;
   onUpdate: (updates: Partial<ForgeNode>) => void;
   onFocusNode?: (nodeId: string) => void;
   onUpdateStoryletCall: (updates: Partial<NonNullable<ForgeNode['storyletCall']>>) => void;
@@ -12,7 +13,7 @@ interface StoryletNodeFieldsProps {
 
 export function StoryletNodeFields({
   node,
-  dialogue,
+  graph,
   onUpdate,
   onFocusNode,
   onUpdateStoryletCall,
@@ -23,42 +24,35 @@ export function StoryletNodeFields({
         <label className="text-[10px] text-gray-500 uppercase">Template ID</label>
         <input
           type="text"
-          value={node.storyletCall?.templateId || ''}
-          onChange={(event) => onUpdateStoryletCall({ templateId: event.target.value || undefined })}
+          value={node.storyletCall?.targetGraphId || ''}
+          onChange={(event) => onUpdateStoryletCall({ targetGraphId: parseInt(event.target.value || '0') })}
           className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
-          placeholder="template_id"
+          placeholder="target_graph_id"
         />
       </div>
       <div>
-        <label className="text-[10px] text-gray-500 uppercase">Entry Policy</label>
-        <input
-          type="text"
-          value={node.storyletCall?.entryPolicy || ''}
-          onChange={(event) => onUpdateStoryletCall({ entryPolicy: event.target.value || undefined })}
+        <label className="text-[10px] text-gray-500 uppercase">Flow Policy</label>
+        <select
+          value={node.storyletCall?.mode || ''}
+          onChange={(event) => onUpdateStoryletCall({ mode: event.target.value as ForgeStoryletCallMode })}
           className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
-          placeholder="entry_policy"
-        />
+        >
+          <option value="">Select mode...</option>
+          <option value={FORGE_STORYLET_CALL_MODE.DETOUR_RETURN}>{FORGE_STORYLET_CALL_MODE.DETOUR_RETURN}</option>
+          <option value={FORGE_STORYLET_CALL_MODE.JUMP}>{FORGE_STORYLET_CALL_MODE.JUMP}</option>
+        </select>
       </div>
       <div>
         <label className="text-[10px] text-gray-500 uppercase">Entry Node ID</label>
         <input
           type="text"
-          value={node.storyletCall?.entryNodeId || ''}
-          onChange={(event) => onUpdateStoryletCall({ entryNodeId: event.target.value || undefined })}
+          value={node.storyletCall?.targetStartNodeId || ''}
+          onChange={(event) => onUpdateStoryletCall({ targetStartNodeId: event.target.value || undefined })}
           className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
-          placeholder="entry_node_id"
+          placeholder="target_start_node_id"
         />
       </div>
-      <div>
-        <label className="text-[10px] text-gray-500 uppercase">Return Policy</label>
-        <input
-          type="text"
-          value={node.storyletCall?.returnPolicy || ''}
-          onChange={(event) => onUpdateStoryletCall({ returnPolicy: event.target.value || undefined })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
-          placeholder="return_policy"
-        />
-      </div>
+
       <div>
         <label className="text-[10px] text-gray-500 uppercase">Return Node ID</label>
         <input
@@ -70,10 +64,10 @@ export function StoryletNodeFields({
         />
       </div>
       <NextNodeSelector
-        nodeId={node.id}
-        nextNodeId={node.nextNodeId}
-        dialogue={dialogue}
-        onUpdate={onUpdate}
+        nodeId={node.id as string}
+        nextNodeId={node.defaultNextNodeId}
+        graph={graph}
+        onUpdate={(updates) => onUpdate({ ...node, ...updates })}
         onFocusNode={onFocusNode}
       />
     </>

@@ -1,9 +1,9 @@
 import React from 'react';
-import { NarrativePage } from '../../../../../types/narrative';
+import { ForgePage } from '../../../../../types/narrative';
 
 interface PageNodeFieldsProps {
-  page: NarrativePage;
-  onUpdate: (updates: Partial<NarrativePage>) => void;
+  page: ForgePage;
+  onUpdate: (updates: Partial<ForgePage>) => void;
 }
 
 export function PageNodeFields({ page, onUpdate }: PageNodeFieldsProps) {

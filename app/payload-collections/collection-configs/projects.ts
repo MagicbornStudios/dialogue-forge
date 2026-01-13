@@ -31,6 +31,15 @@ export const Projects: CollectionConfig = {
       type: 'textarea',
     },
     {
+      name: 'narrativeGraph',
+      type: 'relationship',
+      relationTo: PAYLOAD_COLLECTIONS.FORGE_GRAPHS as any,
+      required: false,
+      admin: {
+        description: 'Forge narrative graph (kind=NARRATIVE).',
+      },
+    },
+    {
       name: 'settings',
       type: 'json',
     },

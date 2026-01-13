@@ -5,7 +5,7 @@
  * Implements the Strategy pattern to allow swappable layout algorithms.
  */
 
-import { DialogueTree } from '../../types';
+import type { ForgeGraphDoc } from '../../types';
 
 // ============================================================================
 // Types
@@ -38,8 +38,8 @@ export interface LayoutOptions {
  * Result of a layout operation
  */
 export interface LayoutResult {
-  /** The dialogue tree with updated node positions */
-  dialogue: DialogueTree;
+  /** The graph with updated node positions */
+  graph: ForgeGraphDoc;
   /** Metadata about the layout operation */
   metadata: {
     /** Time taken to compute layout in milliseconds */
@@ -91,18 +91,18 @@ export interface LayoutStrategy {
   readonly defaultOptions?: Partial<LayoutOptions>;
   
   /**
-   * Apply the layout algorithm to a dialogue tree
-   * @param dialogue - The dialogue tree to layout
+   * Apply the layout algorithm to a graph
+   * @param graph - The graph to layout
    * @param options - Optional configuration
    * @returns The layout result with updated positions
    */
-  apply(dialogue: DialogueTree, options?: LayoutOptions): LayoutResult;
+  apply(graph: ForgeGraphDoc, options?: LayoutOptions): LayoutResult;
   
   /**
-   * Check if this strategy supports the given dialogue
+   * Check if this strategy supports the given graph
    * Some strategies may not work well with certain graph structures
    */
-  supports?(dialogue: DialogueTree): boolean;
+  supports?(graph: ForgeGraphDoc): boolean;
 }
 
 /**

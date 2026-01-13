@@ -7,21 +7,19 @@ import { buildConfig } from 'payload'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { sqliteAdapter } from '@payloadcms/db-sqlite'
 import type { Payload } from 'payload'
-import { seedAdmin } from './payload-seed'
+import { seedAdmin } from './seeds/payload-seed'
 import {
   Projects,
   Media,
   Characters,
-  Dialogues,
-  Threads,
   Acts,
   Chapters,
   Pages,
-  StoryletTemplates,
-  StoryletPools,
+  ForgeGraphs,
   FlagSchemas,
   GameStates,
 } from './payload-collections'
+import { seedProjectWithNarrativeGraph } from './seeds/graph-seeds'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -106,13 +104,10 @@ export default buildConfig({
     Projects,
     Media,
     Characters,
-    Dialogues,
-    Threads,
     Acts,
     Chapters,
     Pages,
-    StoryletTemplates,
-    StoryletPools,
+    ForgeGraphs,
     FlagSchemas,
     GameStates,
   ],
@@ -145,6 +140,12 @@ export default buildConfig({
     if (process.env.NODE_ENV !== 'production') {
       await seedAdmin(payload).catch((error) => {
         console.error('Failed to seed admin user:', error)
+      })
+    }
+    // Seed project with narrative graph on initialization
+    if (process.env.NODE_ENV !== 'production') {
+      await seedProjectWithNarrativeGraph(payload).catch((error) => {
+        console.error('Failed to seed project with narrative graph:', error)
       })
     }
   },

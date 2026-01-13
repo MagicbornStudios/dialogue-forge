@@ -1,39 +1,44 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { ForgeNode, Choice } from '../../../../types';
-import { Character } from '../../../../types/characters';
+import { Choice } from '../../../../../types';
+import { Character } from '../../../../../types/characters';
 import { GitBranch, Play, Flag, Hash, Edit3, Plus, Trash2 } from 'lucide-react';
-import { FlagSchema } from '../../../../types/flags';
-import { LayoutDirection } from '../../../../../utils/layout/types';
+import { FlagSchema } from '../../../../../types/flags';
+import { LayoutDirection } from '../../../utils/layout/types';
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from '../../../ui/context-menu';
+} from '../../../../ui/context-menu';
+import { ForgeNode } from '@/src/types/forge/forge-graph';
+import { getFlagColorClass } from '../../../utils/flag-styles';
+import { useForgeEditorActions } from '../../../hooks/useForgeEditorActions';
 
 interface PlayerNodeData {
   node: ForgeNode;
   flagSchema?: FlagSchema;
   characters?: Record<string, Character>;
-  isDimmed?: boolean;
-  isInPath?: boolean;
+  ui?: {
+    isDimmed?: boolean;
+    isInPath?: boolean;
+    isStartNode?: boolean;
+    isEndNode?: boolean;
+  };
   layoutDirection?: LayoutDirection;
-  isStartNode?: boolean;
-  isEndNode?: boolean;
-  // Context menu callbacks
-  onEdit?: () => void;
-  onAddChoice?: () => void;
-  onDelete?: () => void;
 }
 
 // Color scheme for choice edges (same as current implementation)
 const CHOICE_COLORS = ['#e94560', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b'];
 
 export function PlayerNodeV2({ data, selected }: NodeProps<PlayerNodeData>) {
-  const { node, flagSchema, characters = {}, isDimmed, isInPath, layoutDirection = 'TB', isStartNode, isEndNode, onEdit, onAddChoice, onDelete } = data;
+  const { node, flagSchema, characters = {}, ui = {}, layoutDirection = 'TB' } = data;
+  const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
   const choices = node.choices || [];
+  
+  // Use actions instead of callbacks
+  const actions = useForgeEditorActions();
 
   // Get character if characterId is set
   const character = node.characterId ? characters[node.characterId] : undefined;
@@ -75,15 +80,15 @@ export function PlayerNodeV2({ data, selected }: NodeProps<PlayerNodeData>) {
       setHandlePositions(positions);
       // Update React Flow internals after positions are calculated
       setTimeout(() => {
-        updateNodeInternals(node.id);
+        updateNodeInternals(node.id as string);
       }, 0);
     }
-  }, [choices, node.id, updateNodeInternals]);
+  }, [choices, node.label, updateNodeInternals]);
 
   // Update node internals when choices change
   useEffect(() => {
-    updateNodeInternals(node.id);
-  }, [choices.length, node.id, updateNodeInternals]);
+    updateNodeInternals(node.id as string);
+  }, [choices.length, node.id as string, updateNodeInternals]);
 
   // Check if this is an end node (player node with no choices that have nextNodeId)
   const hasNoOutgoingConnections = !choices.some(c => c.nextNodeId);
@@ -191,13 +196,7 @@ export function PlayerNodeV2({ data, selected }: NodeProps<PlayerNodeData>) {
                         const flag = flagSchema?.flags.find(f => f.id === flagId);
                         const flagType = flag?.type || 'dialogue';
                         const colorClass = flagType === 'dialogue' ? 'bg-df-flag-dialogue-bg text-df-flag-dialogue border-df-flag-dialogue' :
-                          flagType === 'quest' ? 'bg-df-flag-quest-bg text-df-flag-quest border-df-flag-quest' :
-                          flagType === 'achievement' ? 'bg-df-flag-achievement-bg text-df-flag-achievement border-df-flag-achievement' :
-                          flagType === 'item' ? 'bg-df-flag-item-bg text-df-flag-item border-df-flag-item' :
-                          flagType === 'stat' ? 'bg-df-flag-stat-bg text-df-flag-stat border-df-flag-stat' :
-                          flagType === 'title' ? 'bg-df-flag-title-bg text-df-flag-title border-df-flag-title' :
-                          flagType === 'global' ? 'bg-df-flag-global-bg text-df-flag-global border-df-flag-global' :
-                          'bg-df-flag-dialogue-bg text-df-flag-dialogue border-df-flag-dialogue';
+                          getFlagColorClass(flagType);
                         return (
                           <span key={flagId} className={`text-[8px] px-1 py-0.5 rounded-full border ${colorClass}`} title={flag?.name || flagId}>
                             {flagType === 'dialogue' ? 't' : flagType[0]}
@@ -238,17 +237,29 @@ export function PlayerNodeV2({ data, selected }: NodeProps<PlayerNodeData>) {
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={() => onEdit?.()}>
+        <ContextMenuItem onSelect={() => node.id && actions.openNodeEditor(node.id)}>
           <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => onAddChoice?.()}>
-          <Plus size={14} className="mr-2 text-df-player-selected" /> Add Choice
-        </ContextMenuItem>
-        {!isStartNode && onDelete && (
+        {node.id && (
+          <ContextMenuItem onSelect={() => {
+            if (!node.id) return;
+            // Add a new choice to the node
+            const newChoice = {
+              id: `c_${Date.now()}`,
+              text: `Choice ${(node.choices?.length ?? 0) + 1}`,
+              nextNodeId: undefined,
+            };
+            const updatedChoices = [...(node.choices || []), newChoice];
+            actions.patchNode(node.id, { choices: updatedChoices });
+          }}>
+            <Plus size={14} className="mr-2 text-df-player-selected" /> Add Choice
+          </ContextMenuItem>
+        )}
+        {!isStartNode && node.id && (
           <>
             <ContextMenuSeparator />
             <ContextMenuItem 
-              onSelect={() => onDelete?.()}
+              onSelect={() => node.id && actions.deleteNode(node.id)}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 size={14} className="mr-2" /> Delete

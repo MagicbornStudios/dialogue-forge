@@ -131,9 +131,9 @@ export function StoryletList({ className }: StoryletsListProps) {
                     <button
                       type="button"
                       onClick={() => workspaceActions.openStoryletGraph(String(graph.id))}
-                      className={`w-full px-2 py-1.5 text-left text-xs transition-colors ${
+                      className={`w-full px-2 py-1.5 text-left text-xs transition-colors duration-200 ${
                         isSelected
-                          ? 'bg-df-control-active text-df-text-primary border-l-2 border-[var(--color-df-border-active)]'
+                          ? 'bg-df-control-hover text-df-text-primary border-l-2 border-[var(--color-df-border-active)]'
                           : 'text-df-text-secondary hover:bg-df-control-hover hover:text-df-text-primary hover:border-l-2 hover:border-[var(--color-df-border-hover)]'
                       }`}
                     >

@@ -26,15 +26,16 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
           if (value) setActiveTab(value as 'narratives' | 'storylets' | 'nodes');
         }}
         variant="outline"
-        className="w-full flex rounded-none bg-transparent h-8 px-0 gap-0 m-0 min-w-0 overflow-hidden border-b border-df-sidebar-border"
+        className="w-full flex rounded-none bg-transparent h-8 px-0 gap-0 m-0 min-w-0 overflow-hidden border-b border-df-sidebar-border relative group"
       >
+        <div className="absolute inset-x-0 bottom-0 h-[1px] bg-[var(--color-df-border-hover)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
         <ToggleGroupItem
           value="narratives"
           aria-label="Narratives"
           className={cn(
             "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight",
             "text-df-text-secondary hover:text-df-text-primary",
-            "data-[state=on]:bg-df-control-active data-[state=on]:text-df-text-primary"
+            "data-[state=on]:bg-df-control-hover data-[state=on]:text-df-text-primary data-[state=on]:border-b-2 data-[state=on]:border-[var(--color-df-border-active)]"
           )}
         >
           <BookOpen
@@ -54,7 +55,7 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
           className={cn(
             "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight",
             "text-df-text-secondary hover:text-df-text-primary",
-            "data-[state=on]:bg-df-control-active data-[state=on]:text-df-text-primary"
+            "data-[state=on]:bg-df-control-hover data-[state=on]:text-df-text-primary data-[state=on]:border-b-2 data-[state=on]:border-[var(--color-df-border-active)]"
           )}
         >
           <Layers
@@ -74,7 +75,7 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
           className={cn(
             "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight",
             "text-df-text-secondary hover:text-df-text-primary",
-            "data-[state=on]:bg-df-control-active data-[state=on]:text-df-text-primary"
+            "data-[state=on]:bg-df-control-hover data-[state=on]:text-df-text-primary data-[state=on]:border-b-2 data-[state=on]:border-[var(--color-df-border-active)]"
           )}
         >
           <Boxes

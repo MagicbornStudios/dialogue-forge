@@ -7,6 +7,12 @@ import type { StoreApi } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { ForgeAct, ForgeChapter, ForgePage } from '@/src/types/narrative';
+import {
+  applyWriterPatchOps,
+  type WriterDocSnapshot,
+  type WriterPatchOp,
+  type WriterSelectionRange,
+} from '@/src/store/writer/writer-patches';
 
 export interface WriterWorkspaceState {
   acts: ForgeAct[];
@@ -14,6 +20,13 @@ export interface WriterWorkspaceState {
   pages: ForgePage[];
   activePageId: number | null;
   drafts: Record<number, WriterDraftState>;
+  aiPreview: WriterPatchOp[] | null;
+  aiPreviewMeta: WriterAiPreviewMeta | null;
+  aiProposalStatus: WriterAiProposalStatus;
+  aiError: string | null;
+  aiSelection: WriterSelectionRange | null;
+  aiSnapshot: WriterDocSnapshot | null;
+  aiUndoSnapshot: WriterDocSnapshot | null;
   actions: {
     setActs: (acts: ForgeAct[]) => void;
     setChapters: (chapters: ForgeChapter[]) => void;
@@ -23,6 +36,10 @@ export interface WriterWorkspaceState {
     setDraftTitle: (pageId: number, title: string) => void;
     setDraftContent: (pageId: number, content: string) => void;
     saveNow: (pageId?: number) => Promise<void>;
+    setAiSelection: (selection: WriterSelectionRange | null) => void;
+    proposeAiEdits: () => Promise<void>;
+    applyAiEdits: () => void;
+    revertAiDraft: () => void;
   };
 }
 
@@ -51,12 +68,35 @@ export type WriterDraftState = {
   revision: number;
 };
 
+export const WRITER_AI_PROPOSAL_STATUS = {
+  IDLE: 'idle',
+  LOADING: 'loading',
+  READY: 'ready',
+  ERROR: 'error',
+} as const;
+
+export type WriterAiProposalStatus =
+  (typeof WRITER_AI_PROPOSAL_STATUS)[keyof typeof WRITER_AI_PROPOSAL_STATUS];
+
+export type WriterAiPreviewMeta = {
+  summary: string;
+  rationale: string;
+  risk: string;
+};
+
 const createDraftFromPage = (page: ForgePage): WriterDraftState => ({
   title: page.title,
   content: page.bookBody ?? '',
   status: WRITER_SAVE_STATUS.SAVED,
   error: null,
   revision: 0,
+});
+
+const createSnapshotFromPage = (
+  page: ForgePage,
+  draft?: WriterDraftState
+): WriterDocSnapshot => ({
+  content: draft?.content ?? page.bookBody ?? '',
 });
 
 export function createWriterWorkspaceStore(options: CreateWriterWorkspaceStoreOptions) {
@@ -76,6 +116,13 @@ export function createWriterWorkspaceStore(options: CreateWriterWorkspaceStoreOp
       drafts: Object.fromEntries(
         initialPages.map((page) => [page.id, createDraftFromPage(page)])
       ),
+      aiPreview: null,
+      aiPreviewMeta: null,
+      aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.IDLE,
+      aiError: null,
+      aiSelection: null,
+      aiSnapshot: null,
+      aiUndoSnapshot: null,
       actions: {
         setActs: (acts) => set({ acts }),
         setChapters: (chapters) => set({ chapters }),
@@ -237,6 +284,134 @@ export function createWriterWorkspaceStore(options: CreateWriterWorkspaceStoreOp
               },
             };
           });
+        },
+        setAiSelection: (selection) => {
+          set({ aiSelection: selection });
+        },
+        proposeAiEdits: async () => {
+          const state = get();
+          const targetId = state.activePageId;
+          if (!targetId) {
+            return;
+          }
+          const page = state.pages.find((entry) => entry.id === targetId);
+          if (!page) {
+            return;
+          }
+          const draft = state.drafts[targetId] ?? createDraftFromPage(page);
+          const snapshot = state.aiSnapshot ?? createSnapshotFromPage(page, draft);
+
+          set({
+            aiPreview: null,
+            aiPreviewMeta: null,
+            aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.LOADING,
+            aiError: null,
+            aiSnapshot: snapshot,
+            aiUndoSnapshot: null,
+          });
+
+          try {
+            const response = await fetch('/api/ai/writer/edits:propose', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                pageId: targetId,
+                selection: state.aiSelection,
+                snapshot,
+              }),
+            });
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(
+                errorText || 'Unable to propose AI edits for this page.'
+              );
+            }
+
+            const data: unknown = await response.json();
+            const parsed = data as {
+              ops?: WriterPatchOp[];
+              summary?: string;
+              rationale?: string;
+              risk?: string;
+            };
+            const ops = Array.isArray(parsed.ops)
+              ? parsed.ops
+              : Array.isArray(data)
+                ? (data as WriterPatchOp[])
+                : [];
+
+            set({
+              aiPreview: ops,
+              aiPreviewMeta: {
+                summary: parsed.summary ?? 'AI rewrite preview',
+                rationale:
+                  parsed.rationale ??
+                  'Suggested edits to improve clarity and flow while preserving intent.',
+                risk:
+                  parsed.risk ??
+                  'Review to ensure names, tone, and facts remain accurate.',
+              },
+              aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.READY,
+              aiError: null,
+              aiSnapshot: snapshot,
+            });
+          } catch (error) {
+            const message =
+              error instanceof Error
+                ? error.message
+                : 'Unable to propose AI edits.';
+            set({
+              aiPreview: null,
+              aiPreviewMeta: null,
+              aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.ERROR,
+              aiError: message,
+            });
+          }
+        },
+        applyAiEdits: () => {
+          const state = get();
+          const targetId = state.activePageId;
+          if (!targetId || !state.aiPreview || state.aiPreview.length === 0) {
+            return;
+          }
+          const page = state.pages.find((entry) => entry.id === targetId);
+          if (!page) {
+            return;
+          }
+          const draft = state.drafts[targetId] ?? createDraftFromPage(page);
+          const snapshot = state.aiSnapshot ?? createSnapshotFromPage(page, draft);
+          const nextSnapshot = applyWriterPatchOps(snapshot, state.aiPreview);
+
+          set({
+            aiPreview: null,
+            aiPreviewMeta: null,
+            aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.IDLE,
+            aiError: null,
+            aiSnapshot: nextSnapshot,
+            aiUndoSnapshot: snapshot,
+          });
+
+          get().actions.setDraftContent(targetId, nextSnapshot.content ?? '');
+        },
+        revertAiDraft: () => {
+          const state = get();
+          const targetId = state.activePageId;
+          const undoSnapshot = state.aiUndoSnapshot;
+          if (!targetId || !undoSnapshot) {
+            return;
+          }
+
+          set({
+            aiUndoSnapshot: null,
+            aiSnapshot: undoSnapshot,
+            aiPreview: null,
+            aiPreviewMeta: null,
+            aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.IDLE,
+            aiError: null,
+          });
+
+          get().actions.setDraftContent(targetId, undoSnapshot.content ?? '');
         },
       },
     }))

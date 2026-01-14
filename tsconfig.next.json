@@ -23,6 +23,11 @@
       }
     ],
     "paths": {
+      "@/shared/*": ["./src/shared/*"],
+      "@/ai/*": ["./src/ai/*"],
+      "@/forge/*": ["./src/forge/*"],
+      "@/writer/*": ["./src/writer/*"],
+      "@/host/*": ["./app/lib/*"],
       "@/*": ["./*"],
       "@magicborn/dialogue-forge/*": ["./src/*"]
     }
@@ -40,4 +45,3 @@
     "src"
   ]
 }
-

@@ -8,11 +8,11 @@ import { useStore } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { ForgeAct, ForgeChapter, ForgePage } from '@/src/types/narrative';
 import {
-  applyWriterPatchOps,
   type WriterDocSnapshot,
   type WriterPatchOp,
-  type WriterSelectionRange,
-} from '@/src/store/writer/writer-patches';
+  type WriterSelectionSnapshot,
+} from '@/src/lib/aiadapter/domains/writer/writer-ai-types';
+import { applyWriterPatchOps } from '@/src/store/writer/writer-patches';
 
 export interface WriterWorkspaceState {
   acts: ForgeAct[];
@@ -24,7 +24,7 @@ export interface WriterWorkspaceState {
   aiPreviewMeta: WriterAiPreviewMeta | null;
   aiProposalStatus: WriterAiProposalStatus;
   aiError: string | null;
-  aiSelection: WriterSelectionRange | null;
+  aiSelection: WriterSelectionSnapshot | null;
   aiSnapshot: WriterDocSnapshot | null;
   aiUndoSnapshot: WriterDocSnapshot | null;
   actions: {
@@ -36,7 +36,7 @@ export interface WriterWorkspaceState {
     setDraftTitle: (pageId: number, title: string) => void;
     setDraftContent: (pageId: number, content: string) => void;
     saveNow: (pageId?: number) => Promise<void>;
-    setAiSelection: (selection: WriterSelectionRange | null) => void;
+    setAiSelection: (selection: WriterSelectionSnapshot | null) => void;
     proposeAiEdits: () => Promise<void>;
     applyAiEdits: () => void;
     revertAiDraft: () => void;
@@ -96,6 +96,7 @@ const createSnapshotFromPage = (
   page: ForgePage,
   draft?: WriterDraftState
 ): WriterDocSnapshot => ({
+  title: draft?.title ?? page.title,
   content: draft?.content ?? page.bookBody ?? '',
 });
 
@@ -406,6 +407,9 @@ export function createWriterWorkspaceStore(options: CreateWriterWorkspaceStoreOp
           });
 
           get().actions.setDraftContent(targetId, nextSnapshot.content ?? '');
+          if (typeof nextSnapshot.title === 'string') {
+            get().actions.setDraftTitle(targetId, nextSnapshot.title);
+          }
         },
         revertAiDraft: () => {
           const state = get();
@@ -425,6 +429,9 @@ export function createWriterWorkspaceStore(options: CreateWriterWorkspaceStoreOp
           });
 
           get().actions.setDraftContent(targetId, undoSnapshot.content ?? '');
+          if (typeof undoSnapshot.title === 'string') {
+            get().actions.setDraftTitle(targetId, undoSnapshot.title);
+          }
         },
       },
     }))

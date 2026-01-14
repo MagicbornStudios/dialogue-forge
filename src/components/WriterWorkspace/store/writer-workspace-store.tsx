@@ -330,26 +330,39 @@ export function createWriterWorkspaceStore(options: CreateWriterWorkspaceStoreOp
 
             const data: unknown = await response.json();
             const parsed = data as {
-              ops?: WriterPatchOp[];
-              summary?: string;
-              rationale?: string;
-              risk?: string;
+              ok: boolean;
+              data?: {
+                patch?: string;
+                summary?: string;
+              };
+              error?: {
+                message?: string;
+              };
             };
-            const ops = Array.isArray(parsed.ops)
-              ? parsed.ops
-              : Array.isArray(data)
-                ? (data as WriterPatchOp[])
-                : [];
+
+            if (!parsed.ok) {
+              throw new Error(
+                parsed.error?.message || 'Unable to propose AI edits for this page.'
+              );
+            }
+
+            const patchRaw = parsed.data?.patch;
+            if (!patchRaw) {
+              throw new Error('AI edit proposal missing patch data.');
+            }
+
+            const ops = JSON.parse(patchRaw) as WriterPatchOp[];
+            if (!Array.isArray(ops)) {
+              throw new Error('AI edit proposal patch is invalid.');
+            }
 
             set({
               aiPreview: ops,
               aiPreviewMeta: {
-                summary: parsed.summary ?? 'AI rewrite preview',
+                summary: parsed.data?.summary ?? 'AI rewrite preview',
                 rationale:
-                  parsed.rationale ??
                   'Suggested edits to improve clarity and flow while preserving intent.',
                 risk:
-                  parsed.risk ??
                   'Review to ensure names, tone, and facts remain accurate.',
               },
               aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.READY,

@@ -43,6 +43,12 @@ export const ForgeGraphs: CollectionConfig = {
     defaultColumns: ['title', 'kind', 'project', 'updatedAt'],
     description: 'Tool-owned canonical graphs (React Flow JSON).',
   },
+  access: {
+    read: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true,
+  },
   fields: [
     {
       name: 'project',

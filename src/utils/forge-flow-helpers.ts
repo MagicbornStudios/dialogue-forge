@@ -378,21 +378,23 @@ export function edgeStrokeColor(edge: ForgeReactFlowEdge, sourceType?: string): 
     return CHOICE_COLORS[(Number.isFinite(idx) ? idx : 0) % CHOICE_COLORS.length];
   }
 
-  // Type palette aligned with your ForgeNodeType set
+  // Type palette aligned with edgeColorFor in forge-edge-styles.ts
   const typePalette: Record<string, string> = {
-    ACT: '#3B82F6',
-    CHAPTER: '#10B981',
-    PAGE: '#F59E0B',
-    PLAYER: '#F59E0B',
-    CHARACTER: '#E94560',
-    CONDITIONAL: '#60A5FA',
-    DETOUR: '#A78BFA',
-    JUMP: '#F472B6',
-    END: '#9CA3AF',
-    STORYLET_REF: '#34D399',
+    ACT: '#8b5cf6',
+    CHAPTER: '#06b6d4',
+    PAGE: '#22c55e',
+    PLAYER: '#f59e0b',
+    CHARACTER: '#e94560',
+    CONDITIONAL: '#60a5fa',
+    DETOUR: '#a78bfa',
+    JUMP: '#f472b6',
+    END: '#9ca3af',
+    STORYLET: '#34d399',
+    STORYLET_REF: '#34d399',
   };
 
-  return (sourceType && typePalette[sourceType]) ? typePalette[sourceType] : 'var(--color-df-edge-default)';
+  // Use bright colors instead of CSS variables for better visibility
+  return (sourceType && typePalette[sourceType]) ? typePalette[sourceType] : '#9ca3af';
 }
 
 /**

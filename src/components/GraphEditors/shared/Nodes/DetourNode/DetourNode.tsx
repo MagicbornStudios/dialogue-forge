@@ -1,30 +1,43 @@
 import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { CornerDownRight, Hash, ArrowLeftCircle } from 'lucide-react';
+import { CornerDownRight, Hash, ArrowLeftCircle, Edit3, Trash2 } from 'lucide-react';
 import type { LayoutDirection } from '../../../utils/layout/types';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '../../../../ui/context-menu';
+import { useForgeEditorActions } from '../../../hooks/useForgeEditorActions';
+import type { ForgeNode } from '@/src/types/forge/forge-graph';
 
 interface DetourNodeData {
-  id: string;
-  title?: string;
-  summary?: string;
-  storyletId: string;
-  returnNodeId?: string;
-  isDimmed?: boolean;
-  isInPath?: boolean;
+  node: ForgeNode;
+  ui?: {
+    isDimmed?: boolean;
+    isInPath?: boolean;
+    isStartNode?: boolean;
+    isEndNode?: boolean;
+  };
   layoutDirection?: LayoutDirection;
 }
 
 export function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
   const { 
-    id,
-    title, 
-    summary,
-    storyletId, 
-    returnNodeId, 
-    isDimmed, 
-    isInPath, 
+    node,
+    ui = {},
     layoutDirection = 'TB' 
   } = data;
+  const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
+  
+  const id = node.id || '';
+  const title = node.label;
+  const summary = node.content;
+  const storyletId = node.storyletCall?.targetGraphId;
+  const returnNodeId = node.storyletCall?.returnNodeId;
+  
+  const actions = useForgeEditorActions();
 
   const isHorizontal = layoutDirection === 'LR';
   const targetPosition = isHorizontal ? Position.Left : Position.Top;
@@ -37,10 +50,17 @@ export function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
   const headerBgClass = 'bg-df-storylet-header';
 
   return (
-    <div 
-      className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-storylet-border/70' : ''} bg-df-storylet-bg min-w-[280px] max-w-[350px] relative overflow-hidden`}
-      style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
-    >
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div 
+          onContextMenu={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            if (node.id) actions.openNodeEditor(node.id);
+          }}
+          className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-storylet-border/70' : ''} bg-df-storylet-bg min-w-[280px] max-w-[350px] relative overflow-hidden`}
+          style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
+        >
       <Handle 
         type="target" 
         position={targetPosition} 
@@ -80,7 +100,7 @@ export function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
         <div className="flex items-center gap-2 text-sm">
           <span className="text-df-text-secondary">Storylet:</span>
           <span className="text-df-storylet-selected font-mono text-xs bg-df-base px-2 py-0.5 rounded border border-df-control-border">
-            {storyletId || 'Not set'}
+            {storyletId ? String(storyletId) : 'Not set'}
           </span>
         </div>
         
@@ -100,6 +120,25 @@ export function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
         position={sourcePosition} 
         className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full"
       />
-    </div>
+        </div>
+      </ContextMenuTrigger>
+
+      <ContextMenuContent className="w-48">
+        <ContextMenuItem onSelect={() => node.id && actions.openNodeEditor(node.id)}>
+          <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
+        </ContextMenuItem>
+        {!isStartNode && node.id && (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem 
+              onSelect={() => node.id && actions.deleteNode(node.id)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 size={14} className="mr-2" /> Delete
+            </ContextMenuItem>
+          </>
+        )}
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }

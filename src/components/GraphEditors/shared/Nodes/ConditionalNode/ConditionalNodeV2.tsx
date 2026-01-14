@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
 import type { ForgeCondition, ForgeConditionalBlock, ForgeNode } from '@/src/types/forge/forge-graph';
 import { FORGE_CONDITIONAL_BLOCK_TYPE } from '@/src/types/forge/forge-graph';
-import { GitBranch, Play, Flag, Hash, Code, Edit3, Trash2 } from 'lucide-react';
+import { GitBranch, Play, Flag, Hash, Code, Edit3, Trash2, Plus } from 'lucide-react';
 import { FlagSchema } from '../../../../../types/flags';
 import { ForgeCharacter } from '../../../../../types/characters';
 import { LayoutDirection } from '../../../utils/layout/types';
@@ -259,6 +259,24 @@ export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeD
             </ContextMenuItem>
           </>
         )}
+        <ContextMenuSeparator />
+        <ContextMenuItem onSelect={() => {
+          if (!node.id) return;
+          const currentBlocks = node.conditionalBlocks || [];
+          const newBlock = {
+            id: `block_${Date.now()}`,
+            type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
+            condition: [],
+            content: '',
+            speaker: undefined,
+          };
+          actions.patchNode(node.id, {
+            conditionalBlocks: [...currentBlocks, newBlock],
+          });
+          actions.openNodeEditor(node.id);
+        }}>
+          <Plus size={14} className="mr-2 text-df-npc-selected" /> Add Conditional Block
+        </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   );

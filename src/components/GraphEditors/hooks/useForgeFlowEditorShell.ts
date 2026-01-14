@@ -155,6 +155,8 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
 
   // Avoid full re-init when we do a direct node data update in ReactFlow
   const directUpdateRef = React.useRef<string | null>(null);
+  const positionUpdateTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const pendingPositionUpdatesRef = React.useRef<Map<string, { x: number; y: number }>>(new Map());
 
   // Re-sync local RF state if graph changes externally
   React.useEffect(() => {
@@ -203,7 +205,7 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
 
       // Direct RF node data update for common field edits
       const isSimpleUpdate = Object.keys(updates).every((k) =>
-        ['speaker', 'content', 'characterId', 'setFlags', 'storyletCall', 'label', 'actId', 'chapterId', 'pageId'].includes(k)
+        ['speaker', 'content', 'characterId', 'setFlags', 'storyletCall', 'label', 'actId', 'chapterId', 'pageId', 'choices', 'conditionalBlocks'].includes(k)
       );
 
       if (isSimpleUpdate && reactFlow) {
@@ -255,21 +257,41 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
       setNodes((prev) => {
         const nextNodes = applyNodeChanges(changes, prev) as Node<ShellNodeData>[];
 
-        // sync positions back to graph.flow.nodes
+        // Collect position updates but don't sync to graph immediately during drag
         const moved = changes.filter((c) => c.type === 'position' && !!(c as any).position);
         if (moved.length) {
-          const nextGraph: ForgeGraphDoc = {
-            ...effectiveGraph,
-            flow: {
-              ...effectiveGraph.flow,
-              nodes: effectiveGraph.flow.nodes.map((fn) => {
-                const m = moved.find((x) => (x as any).id === fn.id) as any;
-                if (!m?.position) return fn;
-                return { ...fn, position: { x: m.position.x, y: m.position.y } };
-              }),
-            },
-          };
-          onChange(nextGraph);
+          // Store pending position updates
+          moved.forEach((change: any) => {
+            if (change.position) {
+              pendingPositionUpdatesRef.current.set(change.id, change.position);
+            }
+          });
+
+          // Debounce graph updates - only sync after drag stops
+          if (positionUpdateTimeoutRef.current) {
+            clearTimeout(positionUpdateTimeoutRef.current);
+          }
+          
+          // Only update graph after a short delay (when drag likely stopped)
+          positionUpdateTimeoutRef.current = setTimeout(() => {
+            if (pendingPositionUpdatesRef.current.size > 0) {
+              const nextGraph: ForgeGraphDoc = {
+                ...effectiveGraph,
+                flow: {
+                  ...effectiveGraph.flow,
+                  nodes: effectiveGraph.flow.nodes.map((fn) => {
+                    const pendingPos = pendingPositionUpdatesRef.current.get(fn.id);
+                    if (pendingPos) {
+                      return { ...fn, position: { x: pendingPos.x, y: pendingPos.y } };
+                    }
+                    return fn;
+                  }),
+                },
+              };
+              pendingPositionUpdatesRef.current.clear();
+              onChange(nextGraph);
+            }
+          }, 150); // 150ms debounce
         }
 
         return nextNodes;

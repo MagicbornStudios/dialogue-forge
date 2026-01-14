@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { ForgeGraphDoc } from '../../../../../types';
 import { NextNodeSelector } from '../../../shared/NodeEditor/components/NextNodeSelector';
-import { ForgeNode, FORGE_STORYLET_CALL_MODE, type ForgeStoryletCallMode } from '@/src/types/forge/forge-graph';
+import { ForgeNode, FORGE_STORYLET_CALL_MODE, type ForgeStoryletCallMode, FORGE_GRAPH_KIND } from '@/src/types/forge/forge-graph';
 import { useForgeWorkspaceActions } from '@/src/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
+import { useForgeWorkspaceStore } from '@/src/components/ForgeWorkspace/store/forge-workspace-store';
 import { Button } from '@/src/components/ui/button';
 
 interface StoryletNodeFieldsProps {
@@ -24,6 +25,13 @@ export function StoryletNodeFields({
   const workspaceActions = useForgeWorkspaceActions();
   const targetGraphId = node.storyletCall?.targetGraphId;
   
+  // Get available storylet graphs from workspace store
+  const allGraphs = useForgeWorkspaceStore(s => s.graphs.byId);
+  const storyletGraphs = useMemo(() => 
+    Object.values(allGraphs).filter(g => g.kind === FORGE_GRAPH_KIND.STORYLET),
+    [allGraphs]
+  );
+  
   return (
     <>
       {targetGraphId && (
@@ -41,11 +49,32 @@ export function StoryletNodeFields({
         </div>
       )}
       <div>
-        <label className="text-[10px] text-gray-500 uppercase">Template ID</label>
+        <label className="text-[10px] text-gray-500 uppercase">Storylet Graph</label>
+        <select
+          value={targetGraphId || ''}
+          onChange={(event) => {
+            const newGraphId = event.target.value ? parseInt(event.target.value) : undefined;
+            onUpdateStoryletCall({ targetGraphId: newGraphId });
+          }}
+          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+        >
+          <option value="">Select storylet graph...</option>
+          {storyletGraphs.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.title || `Graph ${g.id}`}
+            </option>
+          ))}
+        </select>
+        <div className="text-[9px] text-df-text-tertiary mt-1">
+          Or enter Template ID manually below
+        </div>
+      </div>
+      <div>
+        <label className="text-[10px] text-gray-500 uppercase">Template ID (Manual)</label>
         <input
           type="text"
           value={node.storyletCall?.targetGraphId || ''}
-          onChange={(event) => onUpdateStoryletCall({ targetGraphId: parseInt(event.target.value || '0') })}
+          onChange={(event) => onUpdateStoryletCall({ targetGraphId: parseInt(event.target.value || '0') || undefined })}
           className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
           placeholder="target_graph_id"
         />

@@ -33,68 +33,75 @@ export function useConditionInputs(node: ForgeNode): UseConditionInputsResult {
       setExpandedConditions(new Set());
       initializedBlocksRef.current.clear();
       initializedChoicesRef.current.clear();
+      return; // Early return to avoid syncing on node change
     }
     
-    // Always sync condition inputs with actual block conditions
-    if (node.conditionalBlocks) {
-      setConditionInputs(prev => {
-        const newInputs: Record<string, string> = { ...prev };
-        node.conditionalBlocks!.forEach(block => {
+    // Sync condition inputs with actual block conditions using functional update
+    setConditionInputs(prev => {
+      let newInputs: Record<string, string> = { ...prev };
+      let hasChanges = false;
+      
+      // Handle conditional blocks
+      if (node.conditionalBlocks) {
+        node.conditionalBlocks.forEach(block => {
           if (block.type !== FORGE_CONDITIONAL_BLOCK_TYPE.ELSE) {
             if (block.condition && block.condition.length > 0) {
               const conditionStr = conditionToString(block.condition);
               if (newInputs[block.id] !== conditionStr) {
                 newInputs[block.id] = conditionStr;
+                hasChanges = true;
               }
             } else {
               if (newInputs[block.id] === undefined || newInputs[block.id] !== '') {
                 newInputs[block.id] = '';
+                hasChanges = true;
               }
             }
           }
         });
         // Remove inputs for blocks that no longer exist
-        const blockIds = new Set(node.conditionalBlocks!.map(b => b.id));
+        const blockIds = new Set(node.conditionalBlocks.map(b => b.id));
         Object.keys(newInputs).forEach(id => {
           if (!blockIds.has(id) && !id.startsWith('choice-')) {
             delete newInputs[id];
             initializedBlocksRef.current.delete(id);
+            hasChanges = true;
           }
         });
-        return newInputs;
-      });
-    } else {
-      // Clear block inputs but keep choice inputs
-      setConditionInputs(prev => {
-        const newInputs: Record<string, string> = {};
-        Object.keys(prev).forEach(key => {
-          if (key.startsWith('choice-')) {
-            newInputs[key] = prev[key];
-          }
-        });
-        return newInputs;
-      });
-      initializedBlocksRef.current.clear();
-    }
-    
-    // Always sync choice condition inputs with actual choice data
-    if (node.choices) {
-      setConditionInputs(prev => {
-        const newInputs: Record<string, string> = { ...prev };
-        node.choices!.forEach(choice => {
+      } else {
+        // Clear block inputs but keep choice inputs
+        const blockInputsRemoved = Object.keys(newInputs).some(key => !key.startsWith('choice-'));
+        if (blockInputsRemoved) {
+          newInputs = Object.keys(newInputs).reduce((acc, key) => {
+            if (key.startsWith('choice-')) {
+              acc[key] = newInputs[key];
+            }
+            return acc;
+          }, {} as Record<string, string>);
+          initializedBlocksRef.current.clear();
+          hasChanges = true;
+        }
+      }
+      
+      // Handle choice conditions
+      if (node.choices) {
+        node.choices.forEach(choice => {
           const choiceKey = `choice-${choice.id}`;
           if (choice.conditions && choice.conditions.length > 0) {
             const conditionStr = conditionToString(choice.conditions);
             if (newInputs[choiceKey] !== conditionStr) {
               newInputs[choiceKey] = conditionStr;
+              hasChanges = true;
             }
           } else if (choice.conditions !== undefined) {
             if (newInputs[choiceKey] === undefined || newInputs[choiceKey] !== '') {
               newInputs[choiceKey] = '';
+              hasChanges = true;
             }
           } else {
             if (newInputs[choiceKey] !== undefined) {
               delete newInputs[choiceKey];
+              hasChanges = true;
             }
           }
           if (!initializedChoicesRef.current.has(choiceKey)) {
@@ -102,29 +109,33 @@ export function useConditionInputs(node: ForgeNode): UseConditionInputsResult {
           }
         });
         // Remove inputs for choices that no longer exist
-        const choiceIds = new Set(node.choices!.map(c => `choice-${c.id}`));
+        const choiceIds = new Set(node.choices.map(c => `choice-${c.id}`));
         Object.keys(newInputs).forEach(key => {
           if (key.startsWith('choice-') && !choiceIds.has(key)) {
             delete newInputs[key];
             initializedChoicesRef.current.delete(key);
+            hasChanges = true;
           }
         });
-        return newInputs;
-      });
-    } else {
-      // Clear choice inputs
-      setConditionInputs(prev => {
-        const newInputs: Record<string, string> = {};
-        Object.keys(prev).forEach(key => {
-          if (!key.startsWith('choice-')) {
-            newInputs[key] = prev[key];
-          }
-        });
-        return newInputs;
-      });
-      initializedChoicesRef.current.clear();
-    }
-  }, [node.id, node.conditionalBlocks?.length, node.choices?.length]);
+      } else {
+        // Clear choice inputs
+        const choiceInputsRemoved = Object.keys(newInputs).some(key => key.startsWith('choice-'));
+        if (choiceInputsRemoved) {
+          newInputs = Object.keys(newInputs).reduce((acc, key) => {
+            if (!key.startsWith('choice-')) {
+              acc[key] = newInputs[key];
+            }
+            return acc;
+          }, {} as Record<string, string>);
+          initializedChoicesRef.current.clear();
+          hasChanges = true;
+        }
+      }
+      
+      // Only return new object if changes were made
+      return hasChanges ? newInputs : prev;
+    });
+  }, [node.id, node.conditionalBlocks, node.choices]);
 
   return {
     conditionInputs,

@@ -72,13 +72,15 @@ export function ForgeEdge({
       ? 'var(--color-df-edge-loop)' 
       : baseColor;
   
-  const strokeWidth = isSelected || isInPath ? 4 : 2;
-  const opacity = isDimmed ? 0.2 : (isSelected || isInPath ? 1 : 0.7);
+  const strokeWidth = isSelected || isInPath ? 4 : 3;
+  const opacity = isDimmed ? 0.4 : (isSelected || isInPath ? 1 : 0.9);
   
   // Add glow effect when hovered or in path (only if not dimmed)
   const glowColor = isBackEdge ? 'var(--color-df-edge-loop)' : baseColor;
   const filter = (hovered || isInPath) && !isDimmed 
-    ? `drop-shadow(0 0 6px ${glowColor})`
+    ? `drop-shadow(0 0 8px ${glowColor})`
+    : !isDimmed
+    ? `drop-shadow(0 0 2px ${glowColor})`
     : undefined;
 
   // For pulse animation

@@ -43,6 +43,10 @@ import { StoryletNode } from '@/src/components/GraphEditors/ForgeStoryletGraphEd
 import { ChoiceEdgeV2 } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/PlayerNode/ChoiceEdgeV2';
 import { ForgeEdge } from '@/src/components/GraphEditors/shared/Edges/ForgeEdge';
 import { DetourNode } from '@/src/components/GraphEditors/shared/Nodes/DetourNode';
+import { GraphBreadcrumbs } from '@/src/components/ForgeWorkspace/components/GraphBreadcrumbs';
+import { YarnView } from '@/src/components/GraphEditors/shared/YarnView';
+import { PlayView } from '@/src/components/GraphEditors/shared/PlayView';
+import { Network, FileText, Play } from 'lucide-react';
 
 // EdgeDropMenu components
 import { CharacterEdgeDropMenu } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/CharacterNode/CharacterEdgeDropMenu';
@@ -122,6 +126,8 @@ export interface ForgeStoryletGraphEditorProps {
   gameStateFlags?: ForgeGameFlagState; // Legacy prop, use gameState instead
 }
 
+type ViewMode = 'graph' | 'yarn' | 'play';
+
 function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) {
   const {
     graph,
@@ -135,6 +141,9 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
   
   // Use gameState.flags if available, fallback to gameStateFlags for backward compatibility
   const resolvedGameStateFlags = gameState?.flags || gameStateFlags;
+  
+  // View mode state
+  const [viewMode, setViewMode] = React.useState<ViewMode>('graph');
 
   const reactFlow = useReactFlow();
   const { reactFlowWrapperRef } = useReactFlowBehaviors();
@@ -312,8 +321,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
         style: {
           ...(e.style ?? {}),
           stroke,
-          strokeWidth: isInPath ? 4 : 2,
-          opacity: isDimmed ? 0.2 : isInPath ? 1 : 0.7,
+          strokeWidth: isInPath ? 4 : 3,
+          opacity: isDimmed ? 0.4 : isInPath ? 1 : 0.9,
           strokeDasharray: isBackEdge ? '8 4' : undefined,
         },
         data: {
@@ -332,8 +341,53 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
   return (
     <ForgeEditorActionsProvider actions={actions}>
       <div className={`dialogue-graph-editor ${className} w-full h-full flex flex-col`}>
-        <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 relative w-full h-full" ref={reactFlowWrapperRef} style={{ minHeight: 0 }}>
+        {/* Toolbar with breadcrumbs and view toggles */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-df-control-border bg-df-editor-bg flex-shrink-0">
+          <GraphBreadcrumbs scope="storylet" />
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setViewMode('graph')}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                viewMode === 'graph'
+                  ? 'bg-df-control-active text-df-text-primary'
+                  : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
+              }`}
+              title="Graph View"
+            >
+              <Network size={14} className="inline mr-1.5" />
+              Graph
+            </button>
+            <button
+              onClick={() => setViewMode('yarn')}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                viewMode === 'yarn'
+                  ? 'bg-df-control-active text-df-text-primary'
+                  : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
+              }`}
+              title="Yarn View"
+            >
+              <FileText size={14} className="inline mr-1.5" />
+              Yarn
+            </button>
+            <button
+              onClick={() => setViewMode('play')}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                viewMode === 'play'
+                  ? 'bg-df-control-active text-df-text-primary'
+                  : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
+              }`}
+              title="Play View"
+            >
+              <Play size={14} className="inline mr-1.5" />
+              Play
+            </button>
+          </div>
+        </div>
+        
+        {/* View content */}
+        {viewMode === 'graph' && (
+          <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 relative w-full h-full" ref={reactFlowWrapperRef} style={{ minHeight: 0 }}>
             <ReactFlow
               nodes={nodesWithMeta}
               edges={edgesWithMeta}
@@ -474,18 +528,53 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
           </div>
 
           {/* NodeEditor should use actions internally (no callback soup). */}
-          {shell.selectedNodeId && (
+          {shell.selectedNode && (
             <NodeEditor
-              node={shell.nodes.find((n) => n.id === shell.selectedNodeId) as ForgeNode}
+              node={shell.selectedNode}
               graph={shell.effectiveGraph as ForgeGraphDoc}
               characters={characters}
               flagSchema={flagSchema}
               onClose={() => shell.setSelectedNodeId(null)}
-              onUpdate={() => {}}
-              onDelete={() => {}}
+              onUpdate={(updates) => {
+                if (shell.selectedNode?.id) {
+                  actions.patchNode(shell.selectedNode.id, updates);
+                }
+              }}
+              onDelete={() => {
+                if (shell.selectedNode?.id) {
+                  actions.deleteNode(shell.selectedNode.id);
+                }
+              }}
             />
           )}
-        </div>
+          </div>
+        )}
+        
+        {viewMode === 'yarn' && (
+          <div className="flex-1 min-h-0">
+            <YarnView
+              dialogue={shell.effectiveGraph as ForgeGraphDoc}
+              onExport={() => {
+                // Export functionality can be added here
+                console.log('Export Yarn');
+              }}
+              onChange={(updatedGraph) => {
+                onChange(updatedGraph);
+              }}
+            />
+          </div>
+        )}
+        
+        {viewMode === 'play' && (
+          <div className="flex-1 min-h-0">
+            <PlayView
+              graph={shell.effectiveGraph as ForgeGraphDoc}
+              startNodeId={shell.effectiveGraph.startNodeId}
+              flagSchema={flagSchema}
+              gameStateFlags={resolvedGameStateFlags}
+            />
+          </div>
+        )}
       </div>
     </ForgeEditorActionsProvider>
   );

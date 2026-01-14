@@ -5,6 +5,7 @@ import type { PropsWithChildren } from "react"
 import { createStore } from "zustand/vanilla"
 import { useStore } from "zustand"
 import { devtools } from "zustand/middleware"
+import { immer } from "zustand/middleware/immer"
 import { FORGE_GRAPH_KIND, type ForgeGraphDoc } from "@/src/types"
 import type { ForgeGameState } from "@/src/types/forge-game-state"
 import type { FlagSchema } from "@/src/types/flags"
@@ -26,6 +27,7 @@ export interface ForgeWorkspaceState {
   graphs: ReturnType<typeof createGraphSlice>["graphs"]
   activeNarrativeGraphId: ReturnType<typeof createGraphSlice>["activeNarrativeGraphId"]
   activeStoryletGraphId: ReturnType<typeof createGraphSlice>["activeStoryletGraphId"]
+  breadcrumbHistoryByScope: ReturnType<typeof createGraphSlice>["breadcrumbHistoryByScope"]
   
   // Game state slice
   activeFlagSchema: ReturnType<typeof createGameStateSlice>["activeFlagSchema"]
@@ -52,6 +54,10 @@ export interface ForgeWorkspaceState {
     setActiveStoryletGraphId: ReturnType<typeof createGraphSlice>["setActiveStoryletGraphId"]
     ensureGraph: ReturnType<typeof createGraphSlice>["ensureGraph"]
     openGraphInScope: ReturnType<typeof createGraphSlice>["openGraphInScope"]
+    pushBreadcrumb: ReturnType<typeof createGraphSlice>["pushBreadcrumb"]
+    popBreadcrumb: ReturnType<typeof createGraphSlice>["popBreadcrumb"]
+    clearBreadcrumbs: ReturnType<typeof createGraphSlice>["clearBreadcrumbs"]
+    navigateToBreadcrumb: ReturnType<typeof createGraphSlice>["navigateToBreadcrumb"]
     
     // Game state actions
     setActiveFlagSchema: ReturnType<typeof createGameStateSlice>["setActiveFlagSchema"]
@@ -130,7 +136,8 @@ export function createForgeWorkspaceStore(
 
   return createStore<ForgeWorkspaceState>()(
     devtools(
-      (set, get) => {
+      immer(
+        (set, get) => {
         // Create resolver with get function (will have access to state once store is created)
         const graphResolver = createGraphResolver(get, dataAdapter)
         const finalResolver = resolveGraph ?? graphResolver
@@ -207,6 +214,10 @@ export function createForgeWorkspaceStore(
             setActiveStoryletGraphId: graphSlice.setActiveStoryletGraphId,
             ensureGraph: ensureGraphWithEvents,
             openGraphInScope: graphSlice.openGraphInScope,
+            pushBreadcrumb: graphSlice.pushBreadcrumb,
+            popBreadcrumb: graphSlice.popBreadcrumb,
+            clearBreadcrumbs: graphSlice.clearBreadcrumbs,
+            navigateToBreadcrumb: graphSlice.navigateToBreadcrumb,
             
             // Game state actions
             setActiveFlagSchema: gameStateSlice.setActiveFlagSchema,
@@ -224,7 +235,7 @@ export function createForgeWorkspaceStore(
             setSelectedProjectId: projectSlice.setSelectedProjectId,
           },
         }
-      },
+        }),
       { name: "ForgeWorkspaceStore" }
     )
   )

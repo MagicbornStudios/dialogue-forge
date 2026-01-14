@@ -32,6 +32,9 @@ import { PageNode } from './components/PageNode/PageNode';
 import { ConditionalNodeV2 } from '@/src/components/GraphEditors/shared/Nodes/ConditionalNode/ConditionalNodeV2';
 import { DetourNode } from '@/src/components/GraphEditors/shared/Nodes/DetourNode';
 import { ForgeEdge } from '@/src/components/GraphEditors/shared/Edges/ForgeEdge';
+import { GraphBreadcrumbs } from '@/src/components/ForgeWorkspace/components/GraphBreadcrumbs';
+import { YarnView } from '@/src/components/GraphEditors/shared/YarnView';
+import { Network, FileText } from 'lucide-react';
 
 import type { ForgeGraphDoc, ForgeNode, ForgeNodeType, ForgeReactFlowNode } from '@/src/types/forge/forge-graph';
 import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
@@ -63,12 +66,17 @@ export interface ForgeNarrativeGraphEditorProps {
   className?: string;
 }
 
+type ViewMode = 'graph' | 'yarn';
+
 function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps) {
   const {
     graph,
     onChange,
     className = '',
   } = props;
+  
+  // View mode state
+  const [viewMode, setViewMode] = React.useState<ViewMode>('graph');
 
   const reactFlow = useReactFlow();
   const { reactFlowWrapperRef } = useReactFlowBehaviors();
@@ -196,8 +204,42 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
 
   return (
     <ForgeEditorActionsProvider actions={actions}>
-      <div className={`h-full w-full rounded-xl border border-[#1a1a2e] bg-[#0b0b14] ${className}`} ref={reactFlowWrapperRef}>
-        <ReactFlow
+      <div className={`h-full w-full flex flex-col rounded-xl border border-[#1a1a2e] bg-[#0b0b14] ${className}`}>
+        {/* Toolbar with breadcrumbs and view toggles */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-df-control-border bg-df-editor-bg flex-shrink-0">
+          <GraphBreadcrumbs scope="narrative" />
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setViewMode('graph')}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                viewMode === 'graph'
+                  ? 'bg-df-control-active text-df-text-primary'
+                  : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
+              }`}
+              title="Graph View"
+            >
+              <Network size={14} className="inline mr-1.5" />
+              Graph
+            </button>
+            <button
+              onClick={() => setViewMode('yarn')}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                viewMode === 'yarn'
+                  ? 'bg-df-control-active text-df-text-primary'
+                  : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
+              }`}
+              title="Yarn View"
+            >
+              <FileText size={14} className="inline mr-1.5" />
+              Yarn
+            </button>
+          </div>
+        </div>
+        
+        {/* View content */}
+        {viewMode === 'graph' && (
+          <div className="flex-1 min-h-0" ref={reactFlowWrapperRef}>
+            <ReactFlow
         nodes={nodesWithMeta}
         edges={edgesWithMeta}
         nodeTypes={nodeTypes}
@@ -281,7 +323,23 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
 
         {/* Edge drop menu will be handled by registry pattern similar to storylet editor */}
         {/* For now, we'll skip it and add it in a follow-up if needed */}
-        </ReactFlow>
+            </ReactFlow>
+          </div>
+        )}
+        
+        {viewMode === 'yarn' && graph && (
+          <div className="flex-1 min-h-0">
+            <YarnView
+              dialogue={graph}
+              onExport={() => {
+                console.log('Export Yarn');
+              }}
+              onChange={(updatedGraph) => {
+                onChange(updatedGraph);
+              }}
+            />
+          </div>
+        )}
       </div>
     </ForgeEditorActionsProvider>
   );

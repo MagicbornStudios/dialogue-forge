@@ -12,6 +12,7 @@ import { StoryletNodeFields } from '../../ForgeStoryletGraphEditor/components/St
 
 import { ConditionalNodeFields } from '../Nodes/ConditionalNode/ConditionalNodeFields';
 import { PlayerNodeFields } from '../../ForgeStoryletGraphEditor/components/PlayerNode/PlayerNodeFields';
+import { DetourNodeFields } from '../Nodes/DetourNode/DetourNodeFields';
 import { ForgeNode, ForgeStoryletCall, ForgeNodeType, FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
 
 interface NodeEditorProps {
@@ -172,6 +173,15 @@ export function NodeEditor({
               setDismissedConditions={setDismissedConditions}
               setExpandedConditions={setExpandedConditions}
               debounceTimersRef={debounceTimersRef}
+            />
+          )}
+
+          {node.type === FORGE_NODE_TYPE.DETOUR && (
+            <DetourNodeFields
+              node={node}
+              graph={graph}
+              onUpdate={onUpdate}
+              onFocusNode={onFocusNode}
             />
           )}
 

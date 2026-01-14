@@ -2,6 +2,12 @@ import type { StateCreator } from "zustand"
 import type { ForgeWorkspaceState } from "../forge-workspace-store"
 import type { ForgeGraphDoc } from "@/src/types"
 
+export interface BreadcrumbItem {
+  graphId: string
+  title: string
+  scope: "narrative" | "storylet"
+}
+
 export interface GraphSlice {
   // Graph cache: by graph ID
   graphs: {
@@ -12,6 +18,9 @@ export interface GraphSlice {
   // Active graph IDs (for narrative and storylet editors)
   activeNarrativeGraphId: string | null
   activeStoryletGraphId: string | null
+  
+  // Breadcrumb navigation history per scope
+  breadcrumbHistoryByScope: Record<"narrative" | "storylet", BreadcrumbItem[]>
 }
 
 export interface GraphActions {
@@ -29,6 +38,10 @@ export interface GraphActions {
     graphId: string,
     opts?: { focusNodeId?: string }
   ) => Promise<void>
+  pushBreadcrumb: (item: BreadcrumbItem) => void
+  popBreadcrumb: () => BreadcrumbItem | null
+  clearBreadcrumbs: () => void
+  navigateToBreadcrumb: (index: number) => Promise<void>
 }
 
 export function createGraphSlice(
@@ -45,6 +58,10 @@ export function createGraphSlice(
     },
     activeNarrativeGraphId: initialNarrativeGraphId ?? null,
     activeStoryletGraphId: initialStoryletGraphId ?? null,
+    breadcrumbHistoryByScope: {
+      narrative: [],
+      storylet: [],
+    },
     
     setGraph: (id: string, graph: ForgeGraphDoc) => {
       set((state) => ({
@@ -107,9 +124,22 @@ export function createGraphSlice(
     openGraphInScope: async (
       scope: "narrative" | "storylet",
       graphId: string,
-      opts?: { focusNodeId?: string }
+      opts?: { focusNodeId?: string; pushBreadcrumb?: boolean }
     ) => {
       const state = get()
+      
+      // Get graph title for breadcrumb
+      const graph = state.graphs.byId[graphId]
+      const graphTitle = graph?.title || `Graph ${graphId}`
+      
+      // Push breadcrumb if requested (default: true)
+      if (opts?.pushBreadcrumb !== false) {
+        state.actions.pushBreadcrumb({
+          graphId,
+          title: graphTitle,
+          scope,
+        })
+      }
       
       // Set active graph ID
       if (scope === "narrative") {
@@ -125,6 +155,73 @@ export function createGraphSlice(
       if (opts?.focusNodeId) {
         state.actions.requestFocus(scope, graphId, opts.focusNodeId)
       }
+    },
+    
+    pushBreadcrumb: (item: BreadcrumbItem) => {
+      set((state) => {
+        const scopeHistory = state.breadcrumbHistoryByScope[item.scope]
+        // Don't add duplicate consecutive breadcrumbs
+        const lastBreadcrumb = scopeHistory[scopeHistory.length - 1]
+        if (lastBreadcrumb?.graphId === item.graphId && lastBreadcrumb?.scope === item.scope) {
+          return state
+        }
+        return {
+          breadcrumbHistoryByScope: {
+            ...state.breadcrumbHistoryByScope,
+            [item.scope]: [...scopeHistory, item],
+          },
+        }
+      })
+    },
+    
+    popBreadcrumb: (scope: "narrative" | "storylet") => {
+      let popped: BreadcrumbItem | null = null
+      set((state) => {
+        const scopeHistory = state.breadcrumbHistoryByScope[scope]
+        if (scopeHistory.length === 0) {
+          return state
+        }
+        const newHistory = [...scopeHistory]
+        popped = newHistory.pop() || null
+        return {
+          breadcrumbHistoryByScope: {
+            ...state.breadcrumbHistoryByScope,
+            [scope]: newHistory,
+          },
+        }
+      })
+      return popped
+    },
+    
+    clearBreadcrumbs: (scope: "narrative" | "storylet") => {
+      set((state) => ({
+        breadcrumbHistoryByScope: {
+          ...state.breadcrumbHistoryByScope,
+          [scope]: [],
+        },
+      }))
+    },
+    
+    navigateToBreadcrumb: async (scope: "narrative" | "storylet", index: number) => {
+      const state = get()
+      const scopeHistory = state.breadcrumbHistoryByScope[scope]
+      if (index < 0 || index >= scopeHistory.length) {
+        return
+      }
+      
+      // Truncate breadcrumb history to the selected index
+      const targetBreadcrumb = scopeHistory[index]
+      set({
+        breadcrumbHistoryByScope: {
+          ...state.breadcrumbHistoryByScope,
+          [scope]: scopeHistory.slice(0, index + 1),
+        },
+      })
+      
+      // Navigate to the selected graph
+      await state.actions.openGraphInScope(targetBreadcrumb.scope, targetBreadcrumb.graphId, {
+        pushBreadcrumb: false, // Don't push again since we're navigating to existing breadcrumb
+      })
     },
   }
 }

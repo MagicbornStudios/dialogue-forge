@@ -10,6 +10,7 @@ import { ForgeWorkspaceToolbar } from './components/ForgeWorkspaceToolbar';
 import { ForgeNarrativeGraphEditor } from '../GraphEditors/ForgeNarrativeGraphEditor/ForgeNarrativeGraphEditor';
 import { ForgeStoryletGraphEditor } from '../GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditor';
 import { StoryletsSidebar } from './components/StoryletsSidebar';
+import { ResizablePanel } from './components/ResizablePanel';
 
 import {
   CreateForgeWorkspaceStoreOptions,
@@ -167,13 +168,20 @@ function ForgeWorkspaceContent({
         {/* Main editor area */}
         <div className="flex min-h-0 flex-1 flex-col gap-2">
           {narrativeGraph ? (
-            <div className="h-[220px] min-h-[200px] rounded-lg border border-df-node-border bg-df-editor-bg p-1">
+            <ResizablePanel
+              defaultSize={40}
+              minSize={20}
+              maxSize={80}
+              direction="vertical"
+              title="Narrative Graph"
+              className="rounded-lg border border-df-node-border bg-df-editor-bg"
+            >
               <ForgeNarrativeGraphEditor 
                 graph={narrativeGraph} 
                 onChange={onNarrativeGraphChange} 
                 className="h-full" 
               />
-            </div>
+            </ResizablePanel>
           ) : (
             <div className="rounded-lg border border-df-node-border bg-df-editor-bg p-3 text-sm text-df-text-secondary">
               No narrative graph loaded.
@@ -181,7 +189,14 @@ function ForgeWorkspaceContent({
           )}
 
           {storyletGraph ? (
-            <div className="flex-1 min-h-0 rounded-lg border border-df-node-border bg-df-editor-bg p-1">
+            <ResizablePanel
+              defaultSize={60}
+              minSize={20}
+              maxSize={80}
+              direction="vertical"
+              title="Storylet Graph"
+              className="flex-1 rounded-lg border border-df-node-border bg-df-editor-bg"
+            >
               <ForgeStoryletGraphEditor
                 graph={storyletGraph}
                 onChange={onStoryletGraphChange}
@@ -190,7 +205,7 @@ function ForgeWorkspaceContent({
                 characters={characters}
                 className="h-full"
               />
-            </div>
+            </ResizablePanel>
           ) : (
             <div className="rounded-lg border border-df-node-border bg-df-editor-bg p-3 text-sm text-df-text-secondary">
               No storylet graph loaded.

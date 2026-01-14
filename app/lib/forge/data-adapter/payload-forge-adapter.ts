@@ -339,32 +339,42 @@ export function makePayloadForgeAdapter(opts?: {
         };
     },  
     async getGameState(projectId: number): Promise<ForgeGameState> {
-        const result = await payload.findByID({
-            collection: PAYLOAD_COLLECTIONS.GAME_STATES,
-            id: projectId,
-        }) as GameState;
+        try {
+            const result = await payload.findByID({
+                collection: PAYLOAD_COLLECTIONS.GAME_STATES,
+                id: projectId,
+            }) as GameState;
 
-        let charactersResult = await payload.find({
-            collection: PAYLOAD_COLLECTIONS.CHARACTERS,
-            where: {
-                project: {
-                    equals: projectId,
+            let charactersResult = await payload.find({
+                collection: PAYLOAD_COLLECTIONS.CHARACTERS,
+                where: {
+                    project: {
+                        equals: projectId,
+                    },
                 },
-            },
-        });
-        let characters = charactersResult.docs.map((c) => mapCharacter(c as Character))
-        const forgeCharacters = characters.map((c) => c as ForgeCharacter);
-        const forgeCharactersMapRecord = forgeCharacters.reduce((acc, c) => {
-            acc[c.id] = c; // c.id is already a string
-            return acc;
-        }, {} as Record<string, ForgeCharacter>);
-        const stateData = result.state as { flags?: ForgeFlagState; characters?: unknown } | undefined;
-        const forgeFlags = stateData?.flags as ForgeFlagState | undefined;
+            });
+            let characters = charactersResult.docs.map((c) => mapCharacter(c as Character))
+            const forgeCharacters = characters.map((c) => c as ForgeCharacter);
+            const forgeCharactersMapRecord = forgeCharacters.reduce((acc, c) => {
+                acc[c.id] = c; // c.id is already a string
+                return acc;
+            }, {} as Record<string, ForgeCharacter>);
+            const stateData = result.state as { flags?: ForgeFlagState; characters?: unknown } | undefined;
+            const forgeFlags = stateData?.flags as ForgeFlagState | undefined;
 
-        return {
-            flags: forgeFlags || {},
-            characters: forgeCharactersMapRecord,
-        } as ForgeGameState;
+            return {
+                flags: forgeFlags || {},
+                characters: forgeCharactersMapRecord,
+            } as ForgeGameState;
+        } catch (error: any) {
+            // Handle 404 or other errors gracefully
+            if (error?.status === 404 || error?.message?.includes('not found') || error?.message?.includes('Error retrieving the document')) {
+                // Return default empty game state
+                return { flags: {} };
+            }
+            // Re-throw unexpected errors
+            throw error;
+        }
     },
     async updateGameState(projectId: number, patch: Partial<ForgeGameState>): Promise<ForgeGameState> {
         const result = await payload.update({

@@ -134,7 +134,10 @@ export function YarnView({ dialogue, onExport, onImport, onChange }: YarnViewPro
           )}
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 min-h-0">
+      <div 
+        className="flex-1 overflow-y-auto p-4 min-h-0 [&::-webkit-scrollbar]:hidden" 
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
         {isEditing ? (
           <textarea
             value={yarnText}

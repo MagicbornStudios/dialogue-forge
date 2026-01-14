@@ -32,43 +32,53 @@ export function useChoices(node: ForgeNode): UseChoicesResult {
       setDismissedChoices(new Set());
       setExpandedChoices(new Set());
       initializedChoicesRef.current.clear();
+      return; // Early return to avoid syncing on node change
     }
     
-    // Always sync choice inputs with actual choice data
+    // Sync choice inputs with actual choice data using functional update
     if (node.choices) {
-        const newInputs: Record<string, Partial<ForgeChoice>> = { ...choiceInputs };
+      setChoiceInputs(prev => {
+        const newInputs: Record<string, Partial<ForgeChoice>> = { ...prev };
+        let hasChanges = false;
+        
         node.choices!.forEach((choice: ForgeChoice) => {
           const choiceKey = choice.id;
           if (!initializedChoicesRef.current.has(choiceKey)) {
             newInputs[choiceKey] = choice;
             initializedChoicesRef.current.add(choiceKey);
+            hasChanges = true;
           } else {
             const currentInput = newInputs[choiceKey];
             if (currentInput) {
-              if (currentInput.text !== choice.text) {
-                newInputs[choiceKey] = { ...currentInput, text: choice.text };
-              }
-              if (currentInput.nextNodeId !== choice.nextNodeId) {
-                newInputs[choiceKey] = { ...currentInput, nextNodeId: choice.nextNodeId };
-              }
-              if (JSON.stringify(currentInput.setFlags) !== JSON.stringify(choice.setFlags)) {
-                newInputs[choiceKey] = { ...currentInput, setFlags: choice.setFlags };
+              // Only update if values actually changed
+              if (currentInput.text !== choice.text || 
+                  currentInput.nextNodeId !== choice.nextNodeId ||
+                  JSON.stringify(currentInput.setFlags) !== JSON.stringify(choice.setFlags)) {
+                newInputs[choiceKey] = { ...currentInput, ...choice };
+                hasChanges = true;
               }
             }
           }
         });
+        
+        // Remove deleted choices
         const choiceIds = new Set(node.choices!.map((c: ForgeChoice) => c.id));
         Object.keys(newInputs).forEach((key: string) => {
           if (!choiceIds.has(key)) {
             delete newInputs[key];
             initializedChoicesRef.current.delete(key);
+            hasChanges = true;
           }
         });
-        setChoiceInputs(newInputs);
+        
+        // Only return new object if changes were made
+        return hasChanges ? newInputs : prev;
+      });
     } else {
-      setChoiceInputs({ ...choiceInputs });
+      // Only clear if there were inputs
+      setChoiceInputs(prev => Object.keys(prev).length > 0 ? {} : prev);
     }
-  }, [node.id, node.choices?.length, choiceInputs]);
+  }, [node.id, node.choices]);
 
   useEffect(() => {
     Object.keys(choiceInputs).forEach((choiceKey: string) => {

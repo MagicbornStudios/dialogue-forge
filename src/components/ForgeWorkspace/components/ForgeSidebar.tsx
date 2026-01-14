@@ -26,47 +26,70 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
           if (value) setActiveTab(value as 'narratives' | 'storylets' | 'nodes');
         }}
         variant="outline"
-        className="w-full rounded-none border-b border-df-sidebar-border bg-transparent h-9 px-1 gap-0"
+        className="w-full flex rounded-none bg-transparent h-8 px-0 gap-0 m-0 min-w-0 overflow-hidden border-b border-df-sidebar-border"
       >
         <ToggleGroupItem
           value="narratives"
           aria-label="Narratives"
           className={cn(
-            "flex-1 text-sm rounded-none border-r-0 first:rounded-l-md",
-            "data-[state=on]:bg-df-control-active data-[state=on]:text-df-text-primary data-[state=on]:border-b-1 data-[state=on]:border-[var(--color-df-border-active)]",
-            focusedEditor === 'narrative' && "border-l-1 border-l-[var(--color-df-info)]"
+            "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight",
+            "text-df-text-secondary hover:text-df-text-primary",
+            "data-[state=on]:bg-df-control-active data-[state=on]:text-df-text-primary"
           )}
         >
-          <BookOpen size={14} className="mr-1.5" />
-          Narratives
+          <BookOpen
+            size={12}
+            className={cn(
+              "mr-0.5 shrink-0 transition-colors",
+              activeTab === 'narratives'
+                ? "text-[var(--color-df-info)]"
+                : "text-[var(--color-df-info-muted,theme(colors.blue.300))]"
+            )}
+          />
+          <span className="truncate">Narratives</span>
         </ToggleGroupItem>
         <ToggleGroupItem
           value="storylets"
           aria-label="Storylets"
           className={cn(
-            "flex-1 text-sm rounded-none border-r-0",
-            "data-[state=on]:bg-df-control-active data-[state=on]:text-df-text-primary data-[state=on]:border-b-1 data-[state=on]:border-[var(--color-df-border-active)]",
-            focusedEditor === 'storylet' && "border-l-1 border-l-[var(--color-df-edge-choice-1)]"
+            "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight",
+            "text-df-text-secondary hover:text-df-text-primary",
+            "data-[state=on]:bg-df-control-active data-[state=on]:text-df-text-primary"
           )}
         >
-          <Layers size={14} className="mr-1.5" />
-          Storylets
+          <Layers
+            size={12}
+            className={cn(
+              "mr-0.5 shrink-0 transition-colors",
+              activeTab === 'storylets'
+                ? "text-[var(--color-df-edge-choice-1)]"
+                : "text-[var(--color-df-edge-choice-1-muted,theme(colors.green.400))]"
+            )}
+          />
+          <span className="truncate">Storylets</span>
         </ToggleGroupItem>
         <ToggleGroupItem
           value="nodes"
           aria-label="Nodes"
           className={cn(
-            "flex-1 text-sm rounded-none border-r-0 last:rounded-r-md last:border-r",
-            "data-[state=on]:bg-df-control-active data-[state=on]:text-df-text-primary data-[state=on]:border-b-1 data-[state=on]:border-[var(--color-df-border-active)]",
-            focusedEditor === 'narrative' && "border-l-1 border-l-[var(--color-df-info)]",
-            focusedEditor === 'storylet' && "border-l-1 border-l-[var(--color-df-edge-choice-1)]"
+            "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight",
+            "text-df-text-secondary hover:text-df-text-primary",
+            "data-[state=on]:bg-df-control-active data-[state=on]:text-df-text-primary"
           )}
         >
-          <Boxes size={14} className="mr-1.5" />
-          Nodes
+          <Boxes
+            size={12}
+            className={cn(
+              "mr-0.5 shrink-0 transition-colors",
+              activeTab === 'nodes'
+                ? "text-[var(--color-df-warning)]"
+                : "text-[var(--color-df-warning-muted,theme(colors.amber.400))]"
+            )}
+          />
+          <span className="truncate">Nodes</span>
           {focusedEditor && (
             <span className={cn(
-              "ml-1.5 text-[10px] px-1 py-0.5 rounded",
+              "ml-0.5 text-[9px] px-1 py-0.5 rounded shrink-0",
               focusedEditor === 'narrative' && "bg-[var(--color-df-info)]/20 text-[var(--color-df-info)]",
               focusedEditor === 'storylet' && "bg-[var(--color-df-edge-choice-1)]/20 text-[var(--color-df-edge-choice-1)]"
             )}>

@@ -31,6 +31,10 @@ export const Acts: CollectionConfig = {
       type: 'textarea',
     },
     {
+      name: 'content',
+      type: 'json',
+    },
+    {
       name: 'order',
       type: 'number',
       required: true,

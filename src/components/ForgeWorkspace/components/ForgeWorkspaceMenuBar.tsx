@@ -59,7 +59,7 @@ export function ForgeWorkspaceMenuBar({
   headerLinks,
 }: ForgeWorkspaceMenuBarProps) {
   return (
-    <div className="flex items-center justify-between border-b border-df-sidebar-border bg-df-base/80 px-2 py-1">
+    <div className="flex items-center justify-between border-b border-df-sidebar-border bg-df-base/80 px-2 py-1 hover:border-[var(--color-df-border-hover)] transition-colors">
       <div className="flex items-center gap-2">
         <ForgeProjectSwitcher />
         {headerLinks && headerLinks.length > 0 && (

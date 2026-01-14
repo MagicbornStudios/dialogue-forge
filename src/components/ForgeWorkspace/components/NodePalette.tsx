@@ -198,6 +198,7 @@ export function NodePalette({ className }: NodePaletteProps) {
                     className={cn(
                       'flex items-center gap-2 px-2 py-1.5 text-xs cursor-grab active:cursor-grabbing',
                       'text-df-text-secondary hover:bg-df-control-hover hover:text-df-text-primary',
+                      'hover:border-l-2 hover:border-[var(--color-df-border-hover)]',
                       'transition-colors rounded'
                     )}
                   >

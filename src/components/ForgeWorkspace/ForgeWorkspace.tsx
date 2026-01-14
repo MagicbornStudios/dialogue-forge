@@ -250,13 +250,13 @@ function ForgeWorkspaceContent({
     return (
       <div className="flex h-full w-full">
         {panelVisibility.sidebar && (
-          <div className="w-[280px] border-r border-df-sidebar-border flex-shrink-0">
+          <div className="w-[280px] border-r border-df-sidebar-border flex-shrink-0 hover:border-[var(--color-df-border-hover)] transition-colors">
             <SidebarPanel />
           </div>
         )}
         <div className="flex-1 flex flex-col min-w-0">
           {panelVisibility['narrative-editor'] && (
-            <div className="flex-1 border-b border-df-sidebar-border min-h-0">
+            <div className="flex-1 border-b border-df-sidebar-border min-h-0 hover:border-[var(--color-df-border-hover)] transition-colors">
               <NarrativeEditorPanel />
             </div>
           )}

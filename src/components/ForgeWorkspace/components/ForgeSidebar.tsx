@@ -16,13 +16,13 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
         <TabsList className="w-full rounded-none border-b border-df-sidebar-border bg-transparent h-8 px-1">
           <TabsTrigger
             value="storylets"
-            className="flex-1 text-xs data-[state=active]:bg-df-control-active data-[state=active]:text-df-text-primary"
+            className="flex-1 text-xs data-[state=active]:bg-df-control-active data-[state=active]:text-df-text-primary data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-df-border-active)]"
           >
             Storylets
           </TabsTrigger>
           <TabsTrigger
             value="nodes"
-            className="flex-1 text-xs data-[state=active]:bg-df-control-active data-[state=active]:text-df-text-primary"
+            className="flex-1 text-xs data-[state=active]:bg-df-control-active data-[state=active]:text-df-text-primary data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-df-border-active)]"
           >
             Nodes
           </TabsTrigger>

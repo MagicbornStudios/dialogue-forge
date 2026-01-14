@@ -65,12 +65,14 @@ export function ForgeEdge({
   const isDimmed = data?.isDimmed ?? false;
   const isInPath = data?.isInPathToSelected ?? false;
   
-  // Determine stroke color
+  // Determine stroke color - use vibrant green on hover/selected
   const strokeColor = isDimmed 
     ? 'var(--color-df-edge-dimmed)' 
-    : isBackEdge 
-      ? 'var(--color-df-edge-loop)' 
-      : baseColor;
+    : (hovered || selected)
+      ? 'var(--color-df-edge-default-hover)'
+      : isBackEdge 
+        ? 'var(--color-df-edge-loop)' 
+        : baseColor;
   
   const strokeWidth = isSelected || isInPath ? 4 : 3;
   const opacity = isDimmed ? 0.4 : (isSelected || isInPath ? 1 : 0.9);

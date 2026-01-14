@@ -7,89 +7,96 @@ import { Palette } from 'lucide-react';
 export const themes = {
   'dark-fantasy': {
     name: 'Dark Fantasy',
-    description: 'Earthy tones, dark fantasy aesthetic',
+    description: 'Modern Spotify-style dark theme',
     css: `
       :root {
-        /* Base Colors */
-        --color-df-base: oklch(0.15 0.02 250);
-        --color-df-surface: oklch(0.18 0.02 260);
-        --color-df-elevated: oklch(0.22 0.02 270);
+        /* Base Colors - Spotify style with darker shades (#121212, #181818, #282828, #1a1a1a) */
+        --color-df-base: oklch(0.18 0 0);
+        --color-df-surface: oklch(0.22 0 0);
+        --color-df-elevated: oklch(0.28 0 0);
         
-        /* NPC Node Colors (duller borders, bright when selected) */
-        --color-df-npc-bg: oklch(0.25 0.04 45);
-        --color-df-npc-border: oklch(0.35 0.05 35);
-        --color-df-npc-header: oklch(0.30 0.10 25);
-        --color-df-npc-selected: oklch(0.60 0.20 15);
+        /* NPC Node Colors - Subtle warm tones */
+        --color-df-npc-bg: oklch(0.26 0.02 45);
+        --color-df-npc-border: oklch(0.38 0.03 35);
+        --color-df-npc-header: oklch(0.30 0.04 25);
+        --color-df-npc-selected: oklch(0.72 0.22 150);
         
-        /* Player Node Colors (duller borders, bright when selected) */
-        --color-df-player-bg: oklch(0.22 0.08 300);
-        --color-df-player-border: oklch(0.38 0.10 310);
-        --color-df-player-header: oklch(0.28 0.12 290);
-        --color-df-player-selected: oklch(0.65 0.25 280);
+        /* Player Node Colors - Subtle cool tones */
+        --color-df-player-bg: oklch(0.26 0.02 280);
+        --color-df-player-border: oklch(0.38 0.04 300);
+        --color-df-player-header: oklch(0.30 0.05 290);
+        --color-df-player-selected: oklch(0.72 0.22 150);
         
-        /* Conditional Node (duller borders, bright when selected) */
-        --color-df-conditional-bg: oklch(0.24 0.06 150);
-        --color-df-conditional-border: oklch(0.35 0.08 140);
-        --color-df-conditional-header: oklch(0.30 0.10 145);
+        /* Conditional Node - Subtle green */
+        --color-df-conditional-bg: oklch(0.26 0.02 150);
+        --color-df-conditional-border: oklch(0.38 0.04 140);
+        --color-df-conditional-header: oklch(0.30 0.05 145);
         
-        /* Start/End */
-        --color-df-start: oklch(0.55 0.15 140);
-        --color-df-start-bg: oklch(0.25 0.08 140);
-        --color-df-end: oklch(0.50 0.15 45);
-        --color-df-end-bg: oklch(0.25 0.08 45);
+        /* Start/End - Vibrant Spotify green (#1DB954) */
+        --color-df-start: oklch(0.72 0.22 150);
+        --color-df-start-bg: oklch(0.28 0.06 150);
+        --color-df-end: oklch(0.65 0.18 25);
+        --color-df-end-bg: oklch(0.28 0.05 25);
         
-        /* Edges (duller default, bright on hover/selection) */
-        --color-df-edge-default: oklch(0.35 0.02 250);
-        --color-df-edge-default-hover: oklch(0.55 0.10 250);
-        --color-df-edge-choice-1: oklch(0.45 0.12 15);
-        --color-df-edge-choice-2: oklch(0.50 0.15 280);
-        --color-df-edge-choice-3: oklch(0.48 0.12 200);
-        --color-df-edge-choice-4: oklch(0.52 0.12 120);
-        --color-df-edge-choice-5: oklch(0.45 0.10 45);
-        --color-df-edge-loop: oklch(0.50 0.12 60);
-        --color-df-edge-dimmed: oklch(0.25 0.02 250);
+        /* Edges - Subtle with green accents on hover */
+        --color-df-edge-default: oklch(0.42 0 0);
+        --color-df-edge-default-hover: oklch(0.72 0.22 150);
+        --color-df-edge-choice-1: oklch(0.55 0.12 15);
+        --color-df-edge-choice-2: oklch(0.60 0.15 280);
+        --color-df-edge-choice-3: oklch(0.58 0.12 200);
+        --color-df-edge-choice-4: oklch(0.62 0.12 120);
+        --color-df-edge-choice-5: oklch(0.55 0.10 45);
+        --color-df-edge-loop: oklch(0.60 0.12 60);
+        --color-df-edge-dimmed: oklch(0.32 0 0);
         
-        /* Status */
-        --color-df-error: oklch(0.55 0.22 25);
-        --color-df-warning: oklch(0.65 0.18 70);
-        --color-df-success: oklch(0.60 0.18 150);
-        --color-df-info: oklch(0.55 0.15 220);
+        /* Status - Modern, vibrant */
+        --color-df-error: oklch(0.65 0.20 25);
+        --color-df-warning: oklch(0.70 0.18 70);
+        --color-df-success: oklch(0.72 0.22 150);
+        --color-df-info: oklch(0.65 0.15 220);
         
-        /* Text */
-        --color-df-text-primary: oklch(0.85 0.02 250);
-        --color-df-text-secondary: oklch(0.65 0.02 250);
-        --color-df-text-tertiary: oklch(0.45 0.02 250);
+        /* Text - High contrast, Spotify style */
+        --color-df-text-primary: oklch(1.0 0 0);
+        --color-df-text-secondary: oklch(0.70 0 0);
+        --color-df-text-tertiary: oklch(0.50 0 0);
         
-        /* UI Controls */
-        --color-df-control-bg: oklch(0.18 0.02 260);
-        --color-df-control-border: oklch(0.30 0.03 250);
-        --color-df-control-hover: oklch(0.25 0.03 250);
+        /* UI Controls - Subtle backgrounds with green accents */
+        --color-df-control-bg: oklch(0.22 0 0);
+        --color-df-control-border: oklch(0.32 0 0);
+        --color-df-control-hover: oklch(0.26 0 0);
+        --color-df-control-active: oklch(0.72 0.22 150);
         
-        /* Flags */
-        --color-df-flag-dialogue: oklch(0.45 0.03 250);
-        --color-df-flag-dialogue-bg: oklch(0.20 0.02 250);
-        --color-df-flag-quest: oklch(0.50 0.15 220);
-        --color-df-flag-quest-bg: oklch(0.22 0.08 220);
-        --color-df-flag-achievement: oklch(0.60 0.18 70);
-        --color-df-flag-achievement-bg: oklch(0.25 0.10 70);
-        --color-df-flag-item: oklch(0.55 0.15 150);
-        --color-df-flag-item-bg: oklch(0.25 0.08 150);
-        --color-df-flag-stat: oklch(0.55 0.18 280);
-        --color-df-flag-stat-bg: oklch(0.25 0.10 280);
-        --color-df-flag-title: oklch(0.55 0.18 330);
-        --color-df-flag-title-bg: oklch(0.25 0.10 330);
-        --color-df-flag-global: oklch(0.50 0.15 45);
-        --color-df-flag-global-bg: oklch(0.25 0.08 45);
+        /* Flags - Modern, subtle */
+        --color-df-flag-dialogue: oklch(0.50 0 0);
+        --color-df-flag-dialogue-bg: oklch(0.24 0 0);
+        --color-df-flag-quest: oklch(0.60 0.15 220);
+        --color-df-flag-quest-bg: oklch(0.26 0.05 220);
+        --color-df-flag-achievement: oklch(0.70 0.18 70);
+        --color-df-flag-achievement-bg: oklch(0.28 0.06 70);
+        --color-df-flag-item: oklch(0.72 0.22 150);
+        --color-df-flag-item-bg: oklch(0.28 0.06 150);
+        --color-df-flag-stat: oklch(0.65 0.18 280);
+        --color-df-flag-stat-bg: oklch(0.28 0.06 280);
+        --color-df-flag-title: oklch(0.65 0.18 330);
+        --color-df-flag-title-bg: oklch(0.28 0.06 330);
+        --color-df-flag-global: oklch(0.60 0.15 45);
+        --color-df-flag-global-bg: oklch(0.28 0.05 45);
         
-        /* Canvas */
-        --color-df-canvas-bg: oklch(0.12 0.01 250);
-        --color-df-canvas-grid: oklch(0.20 0.02 250);
+        /* Canvas - Very dark, subtle grid */
+        --color-df-canvas-bg: oklch(0.16 0 0);
+        --color-df-canvas-grid: oklch(0.22 0 0);
         
-        /* Sidebar */
-        --color-df-sidebar-bg: oklch(0.18 0.02 260);
-        --color-df-sidebar-border: oklch(0.35 0.05 250);
-        --color-df-editor-bg: oklch(0.15 0.02 240);
-        --color-df-editor-border: oklch(0.30 0.03 250);
+        /* Sidebar - Subtle borders with green accents for active states */
+        --color-df-sidebar-bg: oklch(0.22 0 0);
+        --color-df-sidebar-border: oklch(0.32 0 0);
+        --color-df-sidebar-border-active: oklch(0.72 0.22 150);
+        --color-df-editor-bg: oklch(0.18 0 0);
+        --color-df-editor-border: oklch(0.30 0 0);
+        --color-df-editor-border-active: oklch(0.72 0.22 150);
+        
+        /* Green accent borders for active/selected states */
+        --color-df-border-active: oklch(0.72 0.22 150);
+        --color-df-border-hover: oklch(0.50 0.12 150);
       }
     `,
   },

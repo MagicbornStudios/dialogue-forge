@@ -12,8 +12,19 @@ export function GraphBreadcrumbs({ scope }: GraphBreadcrumbsProps) {
   const navigateToBreadcrumb = useForgeWorkspaceStore((s) => s.actions.navigateToBreadcrumb);
   const clearBreadcrumbs = useForgeWorkspaceStore((s) => s.actions.clearBreadcrumbs);
 
+  // Always show home icon, even when no breadcrumbs exist
   if (breadcrumbHistory.length === 0) {
-    return null;
+    return (
+      <div className="flex items-center gap-1 text-xs text-df-text-secondary">
+        <button
+          onClick={() => clearBreadcrumbs(scope)}
+          className="flex items-center gap-1 px-2 py-1 rounded hover:bg-df-control-bg transition-colors"
+          title="Clear navigation history"
+        >
+          <Home size={14} />
+        </button>
+      </div>
+    );
   }
 
   // Truncate if too long (show first, last 2, and "...")

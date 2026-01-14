@@ -18,7 +18,9 @@ import { useForgeWorkspaceStore } from '../store/forge-workspace-store';
 import { useNodeDrag } from '../hooks/useNodeDrag';
 import { SearchInput } from './SearchInput';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/components/ui/tooltip';
+import { Badge } from '@/src/components/ui/badge';
 import { cn } from '@/src/lib/utils';
+import { FORGE_NODE_TYPE_LABELS } from '@/src/types/ui-constants';
 
 /**
  * Get the CSS color variable for a node type's icon
@@ -146,17 +148,16 @@ export function NodePalette({ className }: NodePaletteProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const { setDraggedNodeType } = useNodeDrag();
   
-  // Determine active editor context
-  const activeNarrativeGraphId = useForgeWorkspaceStore((s) => s.activeNarrativeGraphId);
-  const activeStoryletGraphId = useForgeWorkspaceStore((s) => s.activeStoryletGraphId);
+  // Determine focused editor context
+  const focusedEditor = useForgeWorkspaceStore((s) => s.focusedEditor);
   
-  // Determine which node types to show
+  // Determine which node types to show based on focused editor
   const allowedNodeTypes = useMemo(() => {
-    if (activeNarrativeGraphId) {
-      // Narrative graph: show narrative node types
+    if (focusedEditor === 'narrative') {
+      // Narrative editor: show narrative node types
       return Object.values(NARRATIVE_FORGE_NODE_TYPE);
-    } else if (activeStoryletGraphId) {
-      // Storylet graph: show storylet node types
+    } else if (focusedEditor === 'storylet') {
+      // Storylet editor: show storylet node types
       return [
         FORGE_NODE_TYPE.CHARACTER,
         FORGE_NODE_TYPE.PLAYER,
@@ -165,9 +166,9 @@ export function NodePalette({ className }: NodePaletteProps) {
         FORGE_NODE_TYPE.DETOUR,
       ];
     }
-    // Default: show all
+    // Default: show all when no editor is focused
     return Object.values(FORGE_NODE_TYPE);
-  }, [activeNarrativeGraphId, activeStoryletGraphId]);
+  }, [focusedEditor]);
 
   // Filter and group nodes
   const filteredNodes = useMemo(() => {
@@ -235,8 +236,9 @@ export function NodePalette({ className }: NodePaletteProps) {
                     className={cn(
                       'flex items-center gap-2 px-2 py-1.5 text-xs cursor-grab active:cursor-grabbing',
                       'text-df-text-secondary hover:bg-df-control-hover hover:text-df-text-primary',
-                      'hover:border-l-2 hover:border-[var(--color-df-border-hover)]',
-                      'transition-colors rounded'
+                      'transition-colors rounded',
+                      focusedEditor === 'narrative' && 'border-l-1 border-l-[var(--color-df-info)]',
+                      focusedEditor === 'storylet' && 'border-l-1 border-l-[var(--color-df-edge-choice-1)]'
                     )}
                   >
                     <ColoredNodeIcon nodeType={nodeInfo.type} icon={nodeInfo.icon} />
@@ -244,7 +246,7 @@ export function NodePalette({ className }: NodePaletteProps) {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{nodeInfo.description}</p>
+                  <p>{FORGE_NODE_TYPE_LABELS[nodeInfo.type]}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -254,23 +256,64 @@ export function NodePalette({ className }: NodePaletteProps) {
     );
   };
 
+  // Determine colors based on focused editor
+  const headerBgColor = focusedEditor === 'narrative' 
+    ? 'bg-[var(--color-df-info)]/10' 
+    : focusedEditor === 'storylet'
+    ? 'bg-[var(--color-df-edge-choice-1)]/10'
+    : 'bg-transparent';
+  const headerBorderColor = focusedEditor === 'narrative'
+    ? 'border-b-[var(--color-df-info)]'
+    : focusedEditor === 'storylet'
+    ? 'border-b-[var(--color-df-edge-choice-1)]'
+    : 'border-b-df-sidebar-border';
+  const headerTextColor = focusedEditor === 'narrative'
+    ? 'text-[var(--color-df-info)]'
+    : focusedEditor === 'storylet'
+    ? 'text-[var(--color-df-edge-choice-1)]'
+    : 'text-df-text-secondary';
+  const headerIconColor = focusedEditor === 'narrative'
+    ? 'var(--color-df-info)'
+    : focusedEditor === 'storylet'
+    ? 'var(--color-df-edge-choice-1)'
+    : 'var(--color-df-text-tertiary)';
+
   return (
     <div className={cn('flex h-full w-full flex-col', className)}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-2 py-1.5 border-b border-df-sidebar-border">
-        <div className="flex items-center gap-1.5">
-          <Layers size={14} className="text-df-text-tertiary" />
-          <span className="text-xs font-medium text-df-text-secondary">Nodes</span>
+      {/* Header and Search - Combined colorful section */}
+      <div className={cn(
+        "flex flex-col border-b-1",
+        headerBgColor,
+        headerBorderColor
+      )}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-2 py-1.5">
+          <div className="flex items-center gap-1.5">
+            <Layers size={14} style={{ color: headerIconColor }} />
+            <span className={cn("text-xs font-medium", headerTextColor)}>Nodes</span>
+            {focusedEditor && (
+              <Badge 
+                variant="secondary" 
+                className={cn(
+                  "h-4 px-1.5 text-[10px]",
+                  focusedEditor === 'narrative' && "bg-[var(--color-df-info)]/20 text-[var(--color-df-info)] border-[var(--color-df-info)]/30",
+                  focusedEditor === 'storylet' && "bg-[var(--color-df-edge-choice-1)]/20 text-[var(--color-df-edge-choice-1)] border-[var(--color-df-edge-choice-1)]/30"
+                )}
+              >
+                {focusedEditor === 'narrative' ? 'Narrative' : 'Storylet'}
+              </Badge>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Search */}
-      <div className="px-2 py-1.5 border-b border-df-sidebar-border">
-        <SearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Search nodes..."
-        />
+        {/* Search */}
+        <div className="px-2 py-1.5">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search nodes..."
+          />
+        </div>
       </div>
 
       {/* Node list */}

@@ -30,6 +30,7 @@ export interface ViewStateSlice {
     storylet?: { graphId: string; nodeId?: string }
   }
   panelLayout: PanelLayoutState
+  focusedEditor: "narrative" | "storylet" | null
 }
 
 export interface ViewStateActions {
@@ -40,6 +41,7 @@ export interface ViewStateActions {
   togglePanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor') => void
   dockPanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor') => void
   undockPanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor') => void
+  setFocusedEditor: (editor: "narrative" | "storylet" | null) => void
 }
 
 export function createViewStateSlice(
@@ -51,6 +53,7 @@ export function createViewStateSlice(
     storyletFocusId: null,
     pendingFocusByScope: {},
     panelLayout: defaultPanelLayout,
+    focusedEditor: null,
     setGraphScope: scope => set({ graphScope: scope }),
     setStoryletFocusId: id => set({ storyletFocusId: id }),
     requestFocus: (scope, graphId, nodeId) => {
@@ -101,5 +104,6 @@ export function createViewStateSlice(
         },
       }))
     },
+    setFocusedEditor: (editor) => set({ focusedEditor: editor }),
   }
 }

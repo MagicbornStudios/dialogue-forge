@@ -15,14 +15,18 @@ export function setupForgeWorkspaceSubscriptions(
 ) {
   if (!dataAdapter) return
 
-  // Subscribe to selectedProjectId changes
+  // Track in-flight requests to prevent duplicates
+  const inFlightRequests = new Set<string>()
+  
+  // Track previous project ID to only react to actual changes
   let previousProjectId: number | null = null
   
+  // Subscribe to state changes, but only process when selectedProjectId actually changes
   domainStore.subscribe(
-    async (state) => {
+    async (state, prevState) => {
       const selectedProjectId = state.selectedProjectId
       
-      // Skip if project didn't actually change
+      // Only proceed if project ID actually changed
       if (selectedProjectId === previousProjectId) return
       previousProjectId = selectedProjectId
       
@@ -33,56 +37,103 @@ export function setupForgeWorkspaceSubscriptions(
         return
       }
       
+      // Check if we already have data for this project
+      const hasFlagSchema = state.loadedFlagSchemaProjectId === selectedProjectId && state.activeFlagSchema
+      const hasGameState = state.loadedGameStateProjectId === selectedProjectId && state.activeGameState
+      
+      // Check if storylet graphs are already loaded for this project
+      const existingStoryletGraphs = Object.values(state.graphs.byId).filter(
+        g => g.kind === FORGE_GRAPH_KIND.STORYLET && g.project === selectedProjectId
+      )
+      const hasStoryletGraphs = existingStoryletGraphs.length > 0
+      
       try {
-        // 1. Load project to get narrative graph ID
-        const project = await dataAdapter.getProject(selectedProjectId)
-        
-        // 2. Load narrative graph if it exists
-        if (project.narrativeGraph) {
-          await state.actions.openGraphInScope(
-            'narrative',
-            String(project.narrativeGraph)
-          )
-        }
-        
-        // 3. Load all storylet graphs for this project into cache
-        const storyletGraphs = await dataAdapter.listGraphs(selectedProjectId, FORGE_GRAPH_KIND.STORYLET)
-        for (const graph of storyletGraphs) {
-          state.actions.setGraph(String(graph.id), graph)
-        }
-        
-        // 4. Set first storylet as active if none selected
-        const currentState = domainStore.getState()
-        if (storyletGraphs.length > 0 && !currentState.activeStoryletGraphId) {
-          currentState.actions.setActiveStoryletGraphId(String(storyletGraphs[0].id))
-        }
-        
-        // 5. Load flag schema for this project
-        try {
-          const flagSchema = await dataAdapter.getFlagSchema(selectedProjectId)
-          if (flagSchema && flagSchema.schema) {
-            // Cast schema to FlagSchema type
-            const schema = flagSchema.schema as FlagSchema
-            state.actions.setActiveFlagSchema(schema)
-          } else {
-            state.actions.setActiveFlagSchema(undefined)
+        // 1. Load project to get narrative graph ID (always needed)
+        const projectRequestKey = `project-${selectedProjectId}`
+        if (!inFlightRequests.has(projectRequestKey)) {
+          inFlightRequests.add(projectRequestKey)
+          try {
+            const project = await dataAdapter.getProject(selectedProjectId)
+            
+            // 2. Load narrative graph if it exists
+            if (project.narrativeGraph) {
+              await state.actions.openGraphInScope(
+                'narrative',
+                String(project.narrativeGraph)
+              )
+            }
+          } finally {
+            inFlightRequests.delete(projectRequestKey)
           }
-        } catch (error) {
-          console.error('Failed to load flag schema:', error)
-          state.actions.setActiveFlagSchema(undefined)
         }
         
-        // 6. Load game state for this project
-        try {
-          const gameState = await dataAdapter.getGameState(selectedProjectId)
-          state.actions.setActiveGameState(gameState)
-        } catch (error) {
-          console.error('Failed to load game state:', error)
-          // Set empty game state on error
-          state.actions.setActiveGameState({ flags: {} })
+        // 3. Load storylet graphs only if not already cached
+        if (!hasStoryletGraphs) {
+          const storyletRequestKey = `storylets-${selectedProjectId}`
+          if (!inFlightRequests.has(storyletRequestKey)) {
+            inFlightRequests.add(storyletRequestKey)
+            try {
+              const storyletGraphs = await dataAdapter.listGraphs(selectedProjectId, FORGE_GRAPH_KIND.STORYLET)
+              const currentState = domainStore.getState()
+              for (const graph of storyletGraphs) {
+                currentState.actions.setGraph(String(graph.id), graph)
+              }
+              
+              // Set first storylet as active if none selected
+              if (storyletGraphs.length > 0 && !currentState.activeStoryletGraphId) {
+                currentState.actions.setActiveStoryletGraphId(String(storyletGraphs[0].id))
+              }
+            } finally {
+              inFlightRequests.delete(storyletRequestKey)
+            }
+          }
+        }
+        
+        // 4. Load flag schema only if not already cached
+        if (!hasFlagSchema) {
+          const flagSchemaRequestKey = `flag-schema-${selectedProjectId}`
+          if (!inFlightRequests.has(flagSchemaRequestKey)) {
+            inFlightRequests.add(flagSchemaRequestKey)
+            try {
+              const flagSchema = await dataAdapter.getFlagSchema(selectedProjectId)
+              const currentState = domainStore.getState()
+              if (flagSchema && flagSchema.schema) {
+                const schema = flagSchema.schema as FlagSchema
+                currentState.actions.setActiveFlagSchema(schema, selectedProjectId)
+              } else {
+                currentState.actions.setActiveFlagSchema(undefined, selectedProjectId)
+              }
+            } catch (error) {
+              console.error('Failed to load flag schema:', error)
+              const currentState = domainStore.getState()
+              currentState.actions.setActiveFlagSchema(undefined, selectedProjectId)
+            } finally {
+              inFlightRequests.delete(flagSchemaRequestKey)
+            }
+          }
+        }
+        
+        // 5. Load game state only if not already cached
+        if (!hasGameState) {
+          const gameStateRequestKey = `game-state-${selectedProjectId}`
+          if (!inFlightRequests.has(gameStateRequestKey)) {
+            inFlightRequests.add(gameStateRequestKey)
+            try {
+              const gameState = await dataAdapter.getGameState(selectedProjectId)
+              const currentState = domainStore.getState()
+              currentState.actions.setActiveGameState(gameState, selectedProjectId)
+            } catch (error) {
+              console.error('Failed to load game state:', error)
+              const currentState = domainStore.getState()
+              // Set empty game state on error
+              currentState.actions.setActiveGameState({ flags: {} }, selectedProjectId)
+            } finally {
+              inFlightRequests.delete(gameStateRequestKey)
+            }
+          }
         }
       } catch (error) {
-        console.error('Failed to load project graphs:', error)
+        console.error('Failed to load project data:', error)
       }
     }
   )

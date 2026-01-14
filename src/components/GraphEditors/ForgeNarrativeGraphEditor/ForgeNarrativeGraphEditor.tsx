@@ -34,8 +34,9 @@ import { DetourNode } from '@/src/components/GraphEditors/shared/Nodes/DetourNod
 import { ForgeEdge } from '@/src/components/GraphEditors/shared/Edges/ForgeEdge';
 import { GraphBreadcrumbs } from '@/src/components/ForgeWorkspace/components/GraphBreadcrumbs';
 import { YarnView } from '@/src/components/GraphEditors/shared/YarnView';
-import { Network, FileText } from 'lucide-react';
+import { Network, FileText, Focus } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/src/components/ui/toggle-group';
+import { cn } from '@/src/lib/utils';
 
 import type { ForgeGraphDoc, ForgeNode, ForgeNodeType, ForgeReactFlowNode } from '@/src/types/forge/forge-graph';
 import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
@@ -84,6 +85,15 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
 
   const reactFlow = useReactFlow();
   const { reactFlowWrapperRef } = useReactFlowBehaviors();
+
+  // Editor focus tracking - click-only, no hover preview
+  const setFocusedEditor = useForgeWorkspaceStore((s) => s.actions.setFocusedEditor);
+  const focusedEditor = useForgeWorkspaceStore((s) => s.focusedEditor);
+  const isFocused = focusedEditor === 'narrative';
+
+  const handleClick = React.useCallback(() => {
+    setFocusedEditor('narrative');
+  }, [setFocusedEditor]);
 
   // Get session store instance
   const sessionStore = useForgeEditorSessionStore();
@@ -211,10 +221,24 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
 
   return (
     <ForgeEditorActionsProvider actions={actions}>
-      <div className={`h-full w-full flex flex-col rounded-xl border border-[#1a1a2e] bg-[#0b0b14] ${className}`}>
+      <div 
+        className={cn(
+          "h-full w-full flex flex-col bg-[#0b0b14]",
+          className
+        )}
+        onClick={handleClick}
+      >
         {/* Toolbar with breadcrumbs and view toggles */}
-        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-df-control-border bg-df-editor-bg flex-shrink-0">
-          <GraphBreadcrumbs scope="narrative" />
+        <div className={cn(
+          "flex items-center justify-between gap-2 px-3 py-2 border-t-1 bg-df-editor-bg flex-shrink-0 transition-colors",
+          isFocused ? "border-t-[var(--color-df-info)]" : "border-t-df-control-border"
+        )}>
+          <div className="flex items-center gap-2">
+            <GraphBreadcrumbs scope="narrative" />
+            {isFocused && (
+              <Focus size={14} style={{ color: 'var(--color-df-info)' }} />
+            )}
+          </div>
           <ToggleGroup
             type="single"
             value={viewMode}

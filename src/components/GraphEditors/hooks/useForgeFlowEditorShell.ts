@@ -153,6 +153,9 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
     fromBlockIdx?: number;
   } | null>(null);
 
+  // Track last mouse position as fallback for onConnectEnd
+  const lastMousePositionRef = React.useRef<{ x: number; y: number } | null>(null);
+
   // Avoid full re-init when we do a direct node data update in ReactFlow
   const directUpdateRef = React.useRef<string | null>(null);
   const positionUpdateTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -348,6 +351,27 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
     [effectiveGraph, onChange, onDisconnectHook]
   );
 
+  // Track mouse position for edge drop menu fallback
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      lastMousePositionRef.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        lastMousePositionRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
+
   const onConnectStart = React.useCallback(
     (_event: React.MouseEvent | React.TouchEvent, params: { nodeId: string | null; handleId: string | null }) => {
       if (!params.nodeId) return;
@@ -377,11 +401,32 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
   );
 
   const onConnectEnd = React.useCallback(
-    (event: MouseEvent | TouchEvent) => {
+    (event: MouseEvent | TouchEvent | null) => {
       if (!connectingRef.current) return;
 
-      const clientX = 'clientX' in event ? event.clientX : event.touches?.[0]?.clientX || 0;
-      const clientY = 'clientY' in event ? event.clientY : event.touches?.[0]?.clientY || 0;
+      // Handle null event (ReactFlow sometimes passes null)
+      let clientX = 0;
+      let clientY = 0;
+
+      if (event) {
+        clientX = 'clientX' in event ? event.clientX : event.touches?.[0]?.clientX || 0;
+        clientY = 'clientY' in event ? event.clientY : event.touches?.[0]?.clientY || 0;
+      }
+
+      // Fallback to last tracked mouse position if event is null or invalid
+      if ((!event || clientX === 0 || clientY === 0) && lastMousePositionRef.current) {
+        clientX = lastMousePositionRef.current.x;
+        clientY = lastMousePositionRef.current.y;
+      }
+
+      // Final fallback: use viewport center if we still don't have valid coordinates
+      if (clientX === 0 || clientY === 0) {
+        const viewport = reactFlow.getViewport();
+        const bounds = reactFlow.getViewport();
+        clientX = window.innerWidth / 2;
+        clientY = window.innerHeight / 2;
+      }
+
       const point = reactFlow.screenToFlowPosition({ x: clientX, y: clientY });
 
       // nearest-node auto-connect (same as your good storylet behavior)
@@ -418,6 +463,17 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
         setEdgeDropMenu(null);
         return;
       }
+
+      // Debug logging (temporary)
+      console.log('[EdgeDrop] Setting edge drop menu', {
+        fromNodeId: connectingRef.current.fromNodeId,
+        sourceHandle: connectingRef.current.sourceHandle,
+        clientX,
+        clientY,
+        flowX: point.x,
+        flowY: point.y,
+        eventWasNull: !event,
+      });
 
       setEdgeDropMenu({
         screenX: clientX,

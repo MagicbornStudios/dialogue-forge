@@ -16,11 +16,11 @@ import { FORGE_GRAPH_KIND, FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph
 import { createEmptyForgeGraphDoc } from '@/src/utils/forge-flow-helpers';
 import { SearchInput } from './SearchInput';
 
-interface StoryletsSidebarProps {
+interface StoryletsListProps {
   className?: string;
 }
 
-export function StoryletsSidebar({ className }: StoryletsSidebarProps) {
+export function StoryletList({ className }: StoryletsListProps) {
   const [searchQuery, setSearchQuery] = useState('')
   
   // Read from store - memoize the selector result to prevent re-renders

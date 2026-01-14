@@ -35,12 +35,15 @@ export interface ForgeWorkspaceState {
   activeGameState: ReturnType<typeof createGameStateSlice>["activeGameState"]
   gameStateDraft: ReturnType<typeof createGameStateSlice>["gameStateDraft"]
   gameStateError: ReturnType<typeof createGameStateSlice>["gameStateError"]
+  loadedFlagSchemaProjectId: ReturnType<typeof createGameStateSlice>["loadedFlagSchemaProjectId"]
+  loadedGameStateProjectId: ReturnType<typeof createGameStateSlice>["loadedGameStateProjectId"]
   
   // View state slice
   graphScope: ReturnType<typeof createViewStateSlice>["graphScope"]
   storyletFocusId: ReturnType<typeof createViewStateSlice>["storyletFocusId"]
   pendingFocusByScope: ReturnType<typeof createViewStateSlice>["pendingFocusByScope"]
   panelLayout: ReturnType<typeof createViewStateSlice>["panelLayout"]
+  focusedEditor: ReturnType<typeof createViewStateSlice>["focusedEditor"]
 
   // Project slice
   selectedProjectId: ReturnType<typeof createProjectSlice>["selectedProjectId"]
@@ -80,6 +83,7 @@ export interface ForgeWorkspaceState {
     togglePanel: ReturnType<typeof createViewStateSlice>["togglePanel"]
     dockPanel: ReturnType<typeof createViewStateSlice>["dockPanel"]
     undockPanel: ReturnType<typeof createViewStateSlice>["undockPanel"]
+    setFocusedEditor: ReturnType<typeof createViewStateSlice>["setFocusedEditor"]
     
     // Project actions
     setSelectedProjectId: ReturnType<typeof createProjectSlice>["setSelectedProjectId"]
@@ -245,6 +249,7 @@ export function createForgeWorkspaceStore(
             togglePanel: viewStateSlice.togglePanel,
             dockPanel: viewStateSlice.dockPanel,
             undockPanel: viewStateSlice.undockPanel,
+            setFocusedEditor: viewStateSlice.setFocusedEditor,
             
             // Project actions
             setSelectedProjectId: projectSlice.setSelectedProjectId,

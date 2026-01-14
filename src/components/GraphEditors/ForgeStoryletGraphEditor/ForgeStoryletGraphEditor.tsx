@@ -46,8 +46,9 @@ import { DetourNode } from '@/src/components/GraphEditors/shared/Nodes/DetourNod
 import { GraphBreadcrumbs } from '@/src/components/ForgeWorkspace/components/GraphBreadcrumbs';
 import { YarnView } from '@/src/components/GraphEditors/shared/YarnView';
 import { PlayView } from '@/src/components/GraphEditors/shared/PlayView';
-import { Network, FileText, Play } from 'lucide-react';
+import { Network, FileText, Play, Focus } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/src/components/ui/toggle-group';
+import { cn } from '@/src/lib/utils';
 
 // EdgeDropMenu components
 import { CharacterEdgeDropMenu } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/CharacterNode/CharacterEdgeDropMenu';
@@ -148,6 +149,15 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
   const reactFlow = useReactFlow();
   const { reactFlowWrapperRef } = useReactFlowBehaviors();
+
+  // Editor focus tracking - click-only, no hover preview
+  const setFocusedEditor = useForgeWorkspaceStore((s) => s.actions.setFocusedEditor);
+  const focusedEditor = useForgeWorkspaceStore((s) => s.focusedEditor);
+  const isFocused = focusedEditor === 'storylet';
+
+  const handleClick = React.useCallback(() => {
+    setFocusedEditor('storylet');
+  }, [setFocusedEditor]);
 
   // Session store for this editor instance
   const sessionStore = useForgeEditorSessionStore();
@@ -341,10 +351,24 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
   return (
     <ForgeEditorActionsProvider actions={actions}>
-      <div className={`dialogue-graph-editor ${className} w-full h-full flex flex-col`}>
+      <div 
+        className={cn(
+          "dialogue-graph-editor w-full h-full flex flex-col",
+          className
+        )}
+        onClick={handleClick}
+      >
         {/* Toolbar with breadcrumbs and view toggles */}
-        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-df-control-border bg-df-editor-bg flex-shrink-0">
-          <GraphBreadcrumbs scope="storylet" />
+        <div className={cn(
+          "flex items-center justify-between gap-2 px-3 py-2 border-t-1 bg-df-editor-bg flex-shrink-0 transition-colors",
+          isFocused ? "border-t-[var(--color-df-edge-choice-1)]" : "border-t-df-control-border"
+        )}>
+          <div className="flex items-center gap-2">
+            <GraphBreadcrumbs scope="storylet" />
+            {isFocused && (
+              <Focus size={14} style={{ color: 'var(--color-df-edge-choice-1)' }} />
+            )}
+          </div>
           <ToggleGroup
             type="single"
             value={viewMode}
@@ -396,7 +420,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
                 const nodeType = event.dataTransfer.getData('application/reactflow') as ForgeNodeType;
                 
                 // Validate node type is allowed for storylet graphs
-                const allowedTypes = [
+                const allowedTypes: ForgeNodeType[] = [
                   FORGE_NODE_TYPE.CHARACTER,
                   FORGE_NODE_TYPE.PLAYER,
                   FORGE_NODE_TYPE.CONDITIONAL,
@@ -510,11 +534,30 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
                   const sourceNode = shell.effectiveGraph.flow.nodes.find(
                     (n) => n.id === shell.edgeDropMenu!.fromNodeId
                   );
-                  const sourceNodeType =
-                    (sourceNode?.type as ForgeNodeType) ?? FORGE_NODE_TYPE.CHARACTER;
+                  
+                  // Try multiple ways to get node type
+                  let sourceNodeType: ForgeNodeType = FORGE_NODE_TYPE.CHARACTER;
+                  if (sourceNode) {
+                    sourceNodeType = (sourceNode.type as ForgeNodeType) ?? 
+                                    ((sourceNode.data as any)?.type as ForgeNodeType) ?? 
+                                    FORGE_NODE_TYPE.CHARACTER;
+                  }
+
+                  // Debug logging (temporary)
+                  console.log('[EdgeDrop] Rendering menu', {
+                    fromNodeId: shell.edgeDropMenu.fromNodeId,
+                    sourceNode: sourceNode ? { id: sourceNode.id, type: sourceNode.type } : null,
+                    sourceNodeType,
+                    hasMenuComponent: !!storyletEdgeDropMenuByNodeType[sourceNodeType],
+                    availableTypes: Object.keys(storyletEdgeDropMenuByNodeType),
+                  });
+
                   const MenuComponent = storyletEdgeDropMenuByNodeType[sourceNodeType];
 
-                  if (!MenuComponent) return null;
+                  if (!MenuComponent) {
+                    console.warn('[EdgeDrop] No menu component found for node type:', sourceNodeType);
+                    return null;
+                  }
 
                   return (
                     <MenuComponent

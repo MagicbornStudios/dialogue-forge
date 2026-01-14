@@ -37,6 +37,16 @@ export {
   NARRATIVE_FORGE_NODE_TYPE,
 } from './forge/forge-graph';
 
+export type {
+  WriterScope,
+  WriterSnapshot,
+  WriterSelection,
+  WriterPatchOp,
+  WriterPatchProposal,
+  WriterPlan,
+  WriterPlanStep,
+} from './writer-ai';
+
 
 import { FlagSchema, type FlagSchema as FlagSchemaType } from './flags';
 

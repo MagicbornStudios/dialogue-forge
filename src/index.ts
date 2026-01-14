@@ -21,6 +21,7 @@ export * from './types/flags';
 export * from './types/forge-game-state';
 export * from './types/characters';
 export * from './types/constants';
+export * from './types/writer-ai';
 
 // Export game state utilities
 export { 

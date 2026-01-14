@@ -12,6 +12,12 @@ import {
   type WriterPageDoc,
   type WriterTreeDto,
 } from './writer-types';
+import {
+  applyWriterPatchOps,
+  type WriterDocSnapshot,
+  type WriterPatchOp,
+  type WriterSelectionRange,
+} from './writer-patches';
 
 export const WRITER_SAVE_STATUS = {
   DIRTY: 'dirty',
@@ -31,12 +37,27 @@ export type WriterDraftState = {
   revision: number;
 };
 
+export const WRITER_AI_PROPOSAL_STATUS = {
+  IDLE: 'idle',
+  LOADING: 'loading',
+  READY: 'ready',
+  ERROR: 'error',
+} as const;
+
+export type WriterAiProposalStatus =
+  (typeof WRITER_AI_PROPOSAL_STATUS)[keyof typeof WRITER_AI_PROPOSAL_STATUS];
+
 export interface WriterStoreState {
   projectId: number | null;
   docs: WriterDocMaps;
   tree: WriterTreeDto;
   activeDoc: DocRef | null;
   drafts: Record<string, WriterDraftState>;
+  aiPreview: WriterPatchOp[] | null;
+  aiProposalStatus: WriterAiProposalStatus;
+  aiError: string | null;
+  aiSelection: WriterSelectionRange | null;
+  aiSnapshot: WriterDocSnapshot | null;
   dataAdapter?: WriterDataAdapter;
   actions: {
     loadProject: (projectId: number) => Promise<void>;
@@ -45,6 +66,10 @@ export interface WriterStoreState {
     setDraftContent: (content: string | null) => void;
     saveNow: (ref?: DocRef) => Promise<void>;
     scheduleAutosave: (ref?: DocRef) => void;
+    setAiSelection: (selection: WriterSelectionRange | null) => void;
+    setAiSnapshot: (snapshot: WriterDocSnapshot | null) => void;
+    proposeAiEdits: () => Promise<void>;
+    applyAiEdits: () => void;
   };
 }
 
@@ -166,6 +191,11 @@ export function createWriterStore(options: CreateWriterStoreOptions = {}) {
         tree: [],
         activeDoc: null,
         drafts: {},
+        aiPreview: null,
+        aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.IDLE,
+        aiError: null,
+        aiSelection: null,
+        aiSnapshot: null,
         dataAdapter,
         actions: {
           loadProject: async (projectId: number) => {
@@ -194,6 +224,11 @@ export function createWriterStore(options: CreateWriterStoreOptions = {}) {
               tree: buildTree(acts, chapters, pages),
               activeDoc: null,
               drafts: {},
+              aiPreview: null,
+              aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.IDLE,
+              aiError: null,
+              aiSelection: null,
+              aiSnapshot: null,
             });
           },
           openDoc: (ref: DocRef) => {
@@ -209,6 +244,9 @@ export function createWriterStore(options: CreateWriterStoreOptions = {}) {
                 ...state.drafts,
                 [key]: state.drafts[key] ?? createDraftFromDoc(doc),
               },
+              aiPreview: null,
+              aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.IDLE,
+              aiError: null,
             });
           },
           setDraftTitle: (title: string) => {
@@ -380,6 +418,111 @@ export function createWriterStore(options: CreateWriterStoreOptions = {}) {
               void get().actions.saveNow(target);
             }, autosaveDelayMs);
             autosaveTimers.set(key, timer);
+          },
+          setAiSelection: (selection) => {
+            set({ aiSelection: selection });
+          },
+          setAiSnapshot: (snapshot) => {
+            set({ aiSnapshot: snapshot });
+          },
+          proposeAiEdits: async () => {
+            const state = get();
+            const target = state.activeDoc;
+            if (!target) {
+              return;
+            }
+            const doc = getDocFromState(state.docs, target);
+            if (!doc) {
+              return;
+            }
+            const key = toDocKey(target);
+            const draft = state.drafts[key] ?? createDraftFromDoc(doc);
+            const snapshot: WriterDocSnapshot = state.aiSnapshot ?? {
+              content: draft.content,
+              blocks: null,
+            };
+
+            set({
+              aiPreview: null,
+              aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.LOADING,
+              aiError: null,
+              aiSnapshot: snapshot,
+            });
+
+            try {
+              const response = await fetch('/api/ai/writer/edits:propose', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  projectId: state.projectId,
+                  doc: target,
+                  selection: state.aiSelection,
+                  snapshot,
+                }),
+              });
+
+              if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(
+                  errorText || 'Unable to propose AI edits for this document.'
+                );
+              }
+
+              const data: unknown = await response.json();
+              const ops = Array.isArray((data as { ops?: unknown }).ops)
+                ? ((data as { ops: WriterPatchOp[] }).ops ?? [])
+                : Array.isArray(data)
+                  ? (data as WriterPatchOp[])
+                  : [];
+
+              set({
+                aiPreview: ops,
+                aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.READY,
+                aiError: null,
+                aiSnapshot: snapshot,
+              });
+            } catch (error) {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : 'Unable to propose AI edits.';
+              set({
+                aiPreview: null,
+                aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.ERROR,
+                aiError: message,
+              });
+            }
+          },
+          applyAiEdits: () => {
+            const state = get();
+            const target = state.activeDoc;
+            if (!target || !state.aiPreview || state.aiPreview.length === 0) {
+              return;
+            }
+            const doc = getDocFromState(state.docs, target);
+            if (!doc) {
+              return;
+            }
+            const key = toDocKey(target);
+            const draft = state.drafts[key] ?? createDraftFromDoc(doc);
+            const snapshot: WriterDocSnapshot = state.aiSnapshot ?? {
+              content: draft.content,
+              blocks: null,
+            };
+            const nextSnapshot = applyWriterPatchOps(
+              snapshot,
+              state.aiPreview
+            );
+
+            set({
+              aiPreview: null,
+              aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.IDLE,
+              aiError: null,
+              aiSnapshot: nextSnapshot,
+            });
+
+            get().actions.setDraftContent(nextSnapshot.content);
+            get().actions.scheduleAutosave(target);
           },
         },
       }),

@@ -27,6 +27,14 @@ Use this decision tree to place new files consistently with the reorg plan and t
 - Shared types, UI primitives, utilities → **Shared**.
 - Forge graph editor or Writer workspace UI → **Domain**.
 
+## How to Place New Files (Checklist)
+
+- [ ] Needs Next.js, PayloadCMS, or host wiring? → **Host (app/)**.
+- [ ] Reused across Forge + Writer? → **Shared (src/shared/)**.
+- [ ] Forge- or Writer-specific? → **Domain (src/forge/, src/writer/)**.
+- [ ] AI infrastructure or AI contracts? → **AI (src/ai/)**.
+- [ ] Confirm import direction rules (`src/**` never imports `app/**` or `app/payload-types.ts`).
+
 ## Non-Negotiable Boundary Rule
 
 - **`src/**` must not import `app/**` or `app/payload-types.ts`.**

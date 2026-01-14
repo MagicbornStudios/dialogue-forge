@@ -17,31 +17,11 @@ Dialogue Forge is a visual node-based dialogue editor with Yarn Spinner support 
 
 ```
 dialogue-forge/
-├── src/                    # Source code
-│   ├── components/         # React components
-│   │   ├── DialogueGraphEditor.tsx    # Main editor component
-│   │   ├── NPCNodeV2.tsx            # NPC node component
-│   │   ├── PlayerNodeV2.tsx          # Player choice node component
-│   │   ├── ConditionalNodeV2.tsx   # Conditional logic node
-│   │   ├── NodeEditor.tsx            # Node editing panel
-│   │   ├── FlagManager.tsx           # Flag management UI
-│   │   ├── FlagSelector.tsx          # Flag autocomplete
-│   │   ├── GuidePanel.tsx            # Built-in documentation
-│   │   └── ...
-│   ├── types/              # TypeScript types and constants
-│   │   ├── constants.ts    # ⚠️ CRITICAL: All type constants
-│   │   ├── flags.ts         # Flag system types
-│   │   ├── characters.ts   # Character types
-│   │   └── index.ts        # Main type exports
-│   ├── lib/                # Core libraries
-│   │   ├── yarn-converter/ # Yarn Spinner conversion
-│   │   ├── yarn-runner/    # Yarn execution engine
-│   │   └── flag-manager.ts # Flag state management
-│   ├── utils/              # Utility functions
-│   │   ├── layout/         # Graph layout algorithms
-│   │   ├── reactflow-converter.ts  # React Flow conversion
-│   │   └── ...
-│   ├── examples/           # Example dialogues and schemas
+├── src/                    # Library source code
+│   ├── forge/              # Forge domain (graph editor, forge types, forge UI)
+│   ├── writer/             # Writer domain (writer workflows, writer UI)
+│   ├── shared/             # Cross-domain types, utilities, UI primitives
+│   ├── ai/                 # AI infrastructure + domain AI adapters
 │   └── styles/             # CSS files
 ├── app/                    # Next.js demo application (root level)
 │   ├── (forge-app)/        # Demo app directory
@@ -93,7 +73,7 @@ const viewMode: ViewMode = VIEW_MODE.GRAPH;  // ✅ Constant
 
 ### Available Constants
 
-All constants are exported from `src/types/constants.ts`:
+All constants are exported from `src/shared/types/constants.ts`:
 
 - **`NODE_TYPE`**: `NPC`, `PLAYER`, `CONDITIONAL`
 - **`FLAG_TYPE`**: `DIALOGUE`, `QUEST`, `ACHIEVEMENT`, `ITEM`, `STAT`, `TITLE`, `GLOBAL`
@@ -113,15 +93,15 @@ All constants are exported from `src/types/constants.ts`:
 
 ### Component Organization
 - **Small, focused files**: Keep reusable UI elements in their own files (e.g., `ListPanel.tsx`, `StoryletPanel.tsx`) and compose higher-level components from them.
-- **Feature folders are OK**: For larger UIs, group related components under a folder (e.g., `src/components/narrative-editor/`) with a local `index.ts`.
+- **Feature folders are OK**: For larger UIs, group related components under a folder (e.g., `src/forge/components/narrative-editor/`) with a local `index.ts`.
 - **Prefer single-purpose exports**: Export one component per file unless helpers are tightly coupled and only used together.
 
 ### Utilities & Data Flow
-- **UI vs. domain logic**: Keep data transformations in `src/utils/` and keep components focused on rendering + wiring handlers.
+- **UI vs. domain logic**: Keep data transformations in `src/shared/utils/` or the domain's local utils and keep components focused on rendering + wiring handlers.
 - **Explicit props over implicit coupling**: Pass state and handlers into subcomponents; avoid hidden imports or global state.
 - **Use immutable updates**: Always return new arrays/objects when modifying nested structures to keep React updates predictable.
 - **Prefer client helpers for navigation**: When nested data access gets verbose, add a small “client” helper (e.g., `createNarrativeThreadClient`) that encapsulates lookups and updates.
-- **Deduplicate helpers**: If a helper is reused across components (e.g., ID generation or list parsing), promote it to `src/utils/` instead of re-implementing it.
+- **Deduplicate helpers**: If a helper is reused across components (e.g., ID generation or list parsing), promote it to `src/shared/utils/` instead of re-implementing it.
 
 ### Stability & Bug Prevention
 - **Guard optional data**: Fail fast when required selections are missing, and provide clear empty states.
@@ -131,6 +111,18 @@ All constants are exported from `src/types/constants.ts`:
 ### Documentation Style
 - **Structure matters**: Use headings and short lists; avoid large paragraphs.
 - **Include intent**: Document the “why” in addition to the “what” for non-obvious decisions.
+
+## Architecture Boundaries (North Star Rules)
+
+### North Star Placement Rule
+
+> **Place code in the lowest layer that can own it without depending on higher layers.**
+
+If later reused across domains, **promote it upward** from domain → shared.
+
+### Import Direction Rule (Non-Negotiable)
+
+- **`src/**` must not import `app/**` or `app/payload-types.ts`.**
 
 ## Key Concepts
 
@@ -193,7 +185,7 @@ const flagSchema: FlagSchema = {
 
 The library defines internal types that are designed to match PayloadCMS structures for compatibility, but are completely independent:
 
-- **Library types** (in `src/types/`): `ForgeGraphDoc`, `NarrativeAct`, `NarrativeChapter`, `NarrativePage`
+- **Library types** (in domain/shared folders): `ForgeGraphDoc`, `NarrativeAct`, `NarrativeChapter`, `NarrativePage`
 - **Host app types** (in `app/payload-types.ts`): `ForgeGraph`, `Act`, `Chapter`, `Page`
 
 #### Rules
@@ -202,8 +194,8 @@ The library defines internal types that are designed to match PayloadCMS structu
 2. **Match structure, not types**: Library types should match PayloadCMS structure for compatibility, but be defined independently
 3. **Transformation in host app**: Host apps should provide transformation utilities to convert PayloadCMS documents to library types
 4. **Examples**:
-   - ✅ `ForgeGraphDoc` in `src/types/forge/forge-graph.ts` - matches `ForgeGraph` structure but is independent
-   - ✅ `NarrativeAct` in `src/types/narrative.ts` - matches `Act` structure but is independent
+   - ✅ `ForgeGraphDoc` in `src/forge/types/forge-graph.ts` - matches `ForgeGraph` structure but is independent
+   - ✅ `NarrativeAct` in `src/writer/types/narrative.ts` - matches `Act` structure but is independent
    - ❌ Importing `Act` from `@/app/payload-types` in library code
 
 #### Why This Matters
@@ -224,7 +216,7 @@ The Next.js demo application runs from the **root directory**:
 - Dev command: `npm run dev` or `next dev`
 
 **Important**: 
-- The demo imports source files directly: `@magicborn/dialogue-forge/src/components/...`
+- The demo imports source files directly: `@magicborn/dialogue-forge/src/forge/...` or `@magicborn/dialogue-forge/src/shared/...`
 - Webpack is configured in `next.config.mjs` to resolve `@magicborn/dialogue-forge` to root
 - Path mapping in `tsconfig.json` ensures TypeScript resolves imports correctly
 
@@ -250,15 +242,15 @@ npm test
 ### Type Exports
 
 All public types are exported from `src/index.ts`. When adding new types:
-1. Define in appropriate `src/types/` file
-2. Export from `src/types/index.ts`
+1. Define in the appropriate domain/shared folder (e.g., `src/forge/types/`, `src/writer/types/`, `src/shared/types/`)
+2. Export from the local domain/shared index
 3. Re-export from `src/index.ts`
 
 ## Common Tasks
 
 ### Adding a New Node Type
 
-1. Define constant in `src/types/constants.ts`:
+1. Define constant in `src/shared/types/constants.ts`:
    ```typescript
    export const NODE_TYPE = {
      // ... existing
@@ -267,15 +259,15 @@ All public types are exported from `src/index.ts`. When adding new types:
    ```
 
 2. Update `NodeType` type
-3. Create component in `src/components/NewTypeNodeV2.tsx`
+3. Create component in `src/forge/components/NewTypeNodeV2.tsx`
 4. Register in `DialogueGraphEditor.tsx` `nodeTypes` object
-5. Update `reactflow-converter.ts` to handle conversion
+5. Update the Forge graph converter to handle conversion
 
 ### Adding a New Flag Type
 
-1. Add constant to `FLAG_TYPE` in `src/types/constants.ts`
+1. Add constant to `FLAG_TYPE` in `src/shared/types/constants.ts`
 2. Update `FlagType` type
-3. Update flag validation in `src/lib/flag-manager.ts`
+3. Update flag validation in the Forge domain lib (e.g., `src/forge/lib/flag-manager.ts`)
 4. Update UI components if needed (FlagSelector, FlagManager)
 
 ### Modifying the Demo
@@ -287,7 +279,7 @@ All public types are exported from `src/index.ts`. When adding new types:
 
 ### Exporting to Yarn Format
 
-The Yarn converter is in `src/lib/yarn-converter/`:
+The Yarn converter is in the Forge domain (e.g., `src/forge/lib/yarn-converter/`):
 - `exportToYarn(dialogue)`: Converts DialogueTree to Yarn string
 - `importFromYarn(yarnContent, title)`: Parses Yarn to DialogueTree
 
@@ -301,23 +293,23 @@ The Yarn converter is in `src/lib/yarn-converter/`:
 
 ### Types
 
-- `src/types/constants.ts`: **All constants** (most important file)
-- `src/types/index.ts`: Main type exports
-- `src/types/flags.ts`: Flag system types
-- `src/types/characters.ts`: Character types
-- `src/types/conditionals.ts`: Conditional logic types
+- `src/shared/types/constants.ts`: **All constants** (most important file)
+- `src/shared/types/index.ts`: Main shared type exports
+- `src/shared/types/flags.ts`: Flag system types
+- `src/shared/types/characters.ts`: Character types
+- `src/shared/types/conditionals.ts`: Conditional logic types
 
 ### Utilities
 
-- `src/utils/reactflow-converter.ts`: Converts between DialogueTree and React Flow format
-- `src/utils/layout/`: Graph layout algorithms (dagre, etc.)
-- `src/utils/node-helpers.ts`: Node manipulation utilities
+- `src/forge/utils/reactflow-converter.ts`: Converts between DialogueTree and React Flow format
+- `src/forge/utils/layout/`: Graph layout algorithms (dagre, etc.)
+- `src/forge/utils/node-helpers.ts`: Node manipulation utilities
 
 ## Testing
 
 Tests use Vitest. Key test files:
 - `src/**/*.test.ts`: Unit tests
-- Test utilities in `src/utils/` if needed
+- Test utilities in `src/shared/utils/` if needed
 
 ### Build Requirement
 
@@ -347,7 +339,7 @@ The Next.js app runs from the root directory. Configure Vercel as follows:
 1. **String Literals**: Never use string literals for types - always use constants
 2. **Demo Independence**: Demo must work without shared packages
 3. **Type Safety**: Leverage TypeScript types and constants
-4. **Constants First**: Check `src/types/constants.ts` before adding new string values
+4. **Constants First**: Check `src/shared/types/constants.ts` before adding new string values
 5. **Component Naming**: V2 components use `V2` suffix (e.g., `NPCNodeV2`)
 
 ## Quick Reference
@@ -389,7 +381,7 @@ const [viewMode, setViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);  // ✅ Con
 ## Questions?
 
 When in doubt:
-1. Check `src/types/constants.ts` for available constants
+1. Check `src/shared/types/constants.ts` for available constants
 2. Look at existing component implementations
 3. Follow the patterns in `DialogueGraphEditor.tsx`
 4. Ensure demo works independently

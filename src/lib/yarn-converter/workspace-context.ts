@@ -8,6 +8,7 @@
 import type { ForgeWorkspaceStore } from '@/src/components/ForgeWorkspace/store/forge-workspace-store';
 import type { ForgeGraphDoc } from '@/src/types/forge/forge-graph';
 import type { YarnConverterContext } from './types';
+import { GRAPH_CHANGE_REASON, GRAPH_SCOPE } from '@/src/types/constants';
 
 /**
  * Create a YarnConverterContext from a ForgeWorkspaceStore
@@ -44,7 +45,7 @@ export function createWorkspaceContext(
       
       // Use workspace store's ensureGraph action
       // This will check cache, then fetch via adapter if needed
-      await state.actions.ensureGraph(graphId, 'storylet');
+      await state.actions.ensureGraph(graphId, GRAPH_CHANGE_REASON.OPEN, GRAPH_SCOPE.STORYLET);
       
       // Get from cache after ensure
       const stateAfter = store.getState();

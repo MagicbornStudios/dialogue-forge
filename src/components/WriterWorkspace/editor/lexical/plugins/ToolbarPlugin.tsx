@@ -94,7 +94,7 @@ export function ToolbarPlugin() {
       <button
         type="button"
         className={toolbarButtonBase}
-        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'h1')}
+        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'h1' as any)}
         aria-label="Heading 1"
       >
         H1

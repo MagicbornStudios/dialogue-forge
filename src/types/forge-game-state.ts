@@ -28,3 +28,11 @@ export interface ForgeGameState {
   // player?: PlayerState;
   // etc.
 }
+
+/**
+ * Result returned when a dialogue completes
+ */
+export interface DialogueResult {
+  updatedFlags?: ForgeFlagState;
+  // Users can extend this with additional result data
+}

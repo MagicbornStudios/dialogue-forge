@@ -1,9 +1,8 @@
 'use client';
 
 import { ProjectSwitcher } from '@/components/ProjectSwitcher';
-import { ForgeWorkspace as WriterWorkspace } from '@/src/components/ForgeWorkspace/ForgeWorkspace';
+import { WriterWorkspace } from '@/src/components/WriterWorkspace/WriterWorkspace';
 import { useState } from 'react';
-import { makePayloadWriterAdapter } from '../lib/writer/data-adapter/payload-writer-adapter';
 
 // Tell Next.js this page is static (no dynamic params/searchParams)
 export const dynamic = 'force-static';
@@ -21,8 +20,6 @@ export default function WriterApp() {
       <div className="flex-1 w-full min-h-0">
         <WriterWorkspace
           className="h-full"
-          dataAdapter={makePayloadWriterAdapter()}
-          selectedProjectId={selectedProjectId}
         />
       </div>
     </div>

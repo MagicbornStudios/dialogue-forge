@@ -1,6 +1,7 @@
 import type { StateCreator } from "zustand"
 import type { ForgeWorkspaceState } from "../forge-workspace-store"
 import type { ForgeGraphDoc } from "@/src/types"
+import { GRAPH_CHANGE_REASON, GRAPH_SCOPE } from "@/src/types/constants"
 
 export interface BreadcrumbItem {
   graphId: string
@@ -36,12 +37,12 @@ export interface GraphActions {
   openGraphInScope: (
     scope: "narrative" | "storylet",
     graphId: string,
-    opts?: { focusNodeId?: string }
+    opts?: { focusNodeId?: string; pushBreadcrumb?: boolean }
   ) => Promise<void>
   pushBreadcrumb: (item: BreadcrumbItem) => void
-  popBreadcrumb: () => BreadcrumbItem | null
-  clearBreadcrumbs: () => void
-  navigateToBreadcrumb: (index: number) => Promise<void>
+  popBreadcrumb: (scope: "narrative" | "storylet") => BreadcrumbItem | null
+  clearBreadcrumbs: (scope: "narrative" | "storylet") => void
+  navigateToBreadcrumb: (scope: "narrative" | "storylet", index: number) => Promise<void>
 }
 
 export function createGraphSlice(
@@ -149,7 +150,8 @@ export function createGraphSlice(
       }
       
       // Ensure graph is loaded
-      await state.actions.ensureGraph(graphId, scope)
+      const graphScope = scope === "narrative" ? GRAPH_SCOPE.NARRATIVE : GRAPH_SCOPE.STORYLET
+      await state.actions.ensureGraph(graphId, GRAPH_CHANGE_REASON.OPEN, graphScope)
       
       // Request focus if node ID provided
       if (opts?.focusNodeId) {

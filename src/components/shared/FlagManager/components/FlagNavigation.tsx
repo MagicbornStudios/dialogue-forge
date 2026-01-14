@@ -43,7 +43,7 @@ export function FlagNavigation({
               onClick={() => onSectionChange(type)}
             >
               <span className="flex items-center gap-2">
-                <span>{flagTypeIcons[type]}</span>
+                <span>{React.createElement(flagTypeIcons[type], { size: 16 })}</span>
                 <span>{flagTypeLabels[type]}</span>
               </span>
               <span className="text-xs text-muted-foreground">{sectionCounts[type] || 0}</span>

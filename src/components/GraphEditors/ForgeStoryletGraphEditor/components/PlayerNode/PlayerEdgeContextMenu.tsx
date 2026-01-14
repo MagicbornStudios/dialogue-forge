@@ -1,6 +1,6 @@
 import React from 'react';
-import { FORGE_NODE_TYPE, type ForgeNodeType } from '../../../../types/forge/forge-graph';
-import { FORGE_NODE_TYPE_LABELS, AVAILABLE_STORYLET_NODE_TYPES } from '../../../../types/ui-constants';
+import { FORGE_NODE_TYPE, type ForgeNodeType } from '../../../../../types';
+import { FORGE_NODE_TYPE_LABELS, AVAILABLE_STORYLET_NODE_TYPES } from '../../../../../types/ui-constants';
 
 interface PlayerEdgeContextMenuProps {
   x: number;
@@ -13,7 +13,7 @@ interface PlayerEdgeContextMenuProps {
 }
 
 // Player nodes can connect to CHARACTER or CONDITIONAL nodes
-const availableNodeTypes: ForgeNodeType[] = AVAILABLE_STORYLET_NODE_TYPES.PLAYER_EDGE;
+const availableNodeTypes: readonly ForgeNodeType[] = AVAILABLE_STORYLET_NODE_TYPES.PLAYER_EDGE;
 
 export function PlayerEdgeContextMenu({
   x,

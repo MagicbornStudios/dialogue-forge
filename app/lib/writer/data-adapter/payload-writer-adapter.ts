@@ -87,7 +87,7 @@ export function makePayloadWriterAdapter(opts?: {
 
       const result = await payload.find({
         collection: PAYLOAD_COLLECTIONS.CHAPTERS,
-        where,
+        where: where as any,
         limit: 200,
       });
       const chapters = result.docs.map((doc) => mapChapter(doc as Chapter));
@@ -109,7 +109,7 @@ export function makePayloadWriterAdapter(opts?: {
 
       const result = await payload.find({
         collection: PAYLOAD_COLLECTIONS.PAGES,
-        where,
+        where: where as any,
         limit: 200,
       });
       const pages = result.docs.map((doc) => mapPage(doc as Page));

@@ -18,8 +18,7 @@ const ResizablePanelGroup = ({
   }
 }) => (
   <Group
-    direction={direction}
-    storage={storage}
+    {...({ direction, storage } as any)}
     className={cn(
       "flex h-full w-full",
       className

@@ -47,6 +47,7 @@ import { GraphBreadcrumbs } from '@/src/components/ForgeWorkspace/components/Gra
 import { YarnView } from '@/src/components/GraphEditors/shared/YarnView';
 import { PlayView } from '@/src/components/GraphEditors/shared/PlayView';
 import { Network, FileText, Play } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/src/components/ui/toggle-group';
 
 // EdgeDropMenu components
 import { CharacterEdgeDropMenu } from '@/src/components/GraphEditors/ForgeStoryletGraphEditor/components/CharacterNode/CharacterEdgeDropMenu';
@@ -344,44 +345,25 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
         {/* Toolbar with breadcrumbs and view toggles */}
         <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-df-control-border bg-df-editor-bg flex-shrink-0">
           <GraphBreadcrumbs scope="storylet" />
-          <div className="flex items-center gap-0.5">
-            <button
-              onClick={() => setViewMode('graph')}
-              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                viewMode === 'graph'
-                  ? 'bg-df-control-active text-df-text-primary'
-                  : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
-              }`}
-              title="Graph View"
-            >
-              <Network size={14} className="inline mr-1" />
-              Graph
-            </button>
-            <button
-              onClick={() => setViewMode('yarn')}
-              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                viewMode === 'yarn'
-                  ? 'bg-df-control-active text-df-text-primary'
-                  : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
-              }`}
-              title="Yarn View"
-            >
-              <FileText size={14} className="inline mr-1" />
-              Yarn
-            </button>
-            <button
-              onClick={() => setViewMode('play')}
-              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                viewMode === 'play'
-                  ? 'bg-df-control-active text-df-text-primary'
-                  : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
-              }`}
-              title="Play View"
-            >
-              <Play size={14} className="inline mr-1" />
-              Play
-            </button>
-          </div>
+          <ToggleGroup
+            type="single"
+            value={viewMode}
+            onValueChange={(value) => {
+              if (value) setViewMode(value as ViewMode);
+            }}
+            variant="outline"
+            className="gap-0"
+          >
+            <ToggleGroupItem value="graph" aria-label="Graph view" className="rounded-none border-r-0 first:rounded-l-md last:rounded-r-md last:border-r">
+              <Network className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="yarn" aria-label="Yarn view" className="rounded-none border-r-0">
+              <FileText className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="play" aria-label="Play view" className="rounded-none border-r-0 last:rounded-r-md last:border-r">
+              <Play className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
         
         {/* View content */}

@@ -38,9 +38,26 @@ function mapCharacter(char: Character): ForgeCharacter {
  * Map Payload ForgeGraph to ForgeGraphDoc
  */
 function mapForgeGraph(graph: ForgeGraph): ForgeGraphDoc {
+  // Handle project field - it can be a number, an object with id, or undefined/null
+  let projectId: number;
+  if (typeof graph.project === 'number') {
+    projectId = graph.project;
+  } else if (graph.project && typeof graph.project === 'object' && 'id' in graph.project) {
+    projectId = graph.project.id;
+  } else if (graph.project && typeof graph.project === 'object') {
+    // Try to get id if project exists but structure is unexpected
+    projectId = (graph.project as any)?.id;
+    if (typeof projectId !== 'number') {
+      throw new Error(`Cannot map ForgeGraph: project.id is not a number. Graph ID: ${graph.id}`);
+    }
+  } else {
+    // If project is undefined/null, this is an error condition
+    throw new Error(`Cannot map ForgeGraph: project field is missing or invalid. Graph ID: ${graph.id}`);
+  }
+
   return {
     id: graph.id,
-    project: typeof graph.project === 'number' ? graph.project : graph.project.id,
+    project: projectId,
     kind: graph.kind,
     title: graph.title,
     startNodeId: graph.startNodeId,
@@ -157,6 +174,12 @@ export function makePayloadForgeAdapter(opts?: {
           endNodeIds: input.endNodeIds,
         },
       }) as ForgeGraph;
+      
+      // If the response doesn't have project populated, use the input projectId
+      if (!doc.project) {
+        doc.project = input.projectId;
+      }
+      
       return mapForgeGraph(doc);
     },
 

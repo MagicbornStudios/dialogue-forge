@@ -20,6 +20,43 @@ import { SearchInput } from './SearchInput';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/components/ui/tooltip';
 import { cn } from '@/src/lib/utils';
 
+/**
+ * Get the CSS color variable for a node type's icon
+ */
+function getNodeIconColor(nodeType: ForgeNodeType): string {
+  const colorMap: Record<ForgeNodeType, string> = {
+    [FORGE_NODE_TYPE.CHARACTER]: 'var(--color-df-npc-border)',
+    [FORGE_NODE_TYPE.PLAYER]: 'var(--color-df-player-border)',
+    [FORGE_NODE_TYPE.CONDITIONAL]: 'var(--color-df-conditional-border)',
+    [FORGE_NODE_TYPE.ACT]: '#8b5cf6', // Purple
+    [FORGE_NODE_TYPE.CHAPTER]: '#06b6d4', // Cyan
+    [FORGE_NODE_TYPE.PAGE]: '#22c55e', // Green
+    [FORGE_NODE_TYPE.DETOUR]: '#a78bfa', // Light purple
+    [FORGE_NODE_TYPE.STORYLET]: 'var(--color-df-npc-border)', // Use NPC color
+    [FORGE_NODE_TYPE.JUMP]: '#f472b6', // Pink
+    [FORGE_NODE_TYPE.END]: '#9ca3af', // Gray
+  };
+  return colorMap[nodeType] || 'var(--color-df-text-tertiary)';
+}
+
+/**
+ * Create a colored icon component for a node type
+ */
+function ColoredNodeIcon({ nodeType, icon }: { nodeType: ForgeNodeType; icon: React.ReactNode }) {
+  const color = getNodeIconColor(nodeType);
+  if (React.isValidElement(icon)) {
+    return (
+      <div className="shrink-0" style={{ color }}>
+        {React.cloneElement(icon as React.ReactElement<any>, { 
+          size: 14,
+          className: cn((icon as React.ReactElement<any>).props?.className, 'shrink-0')
+        })}
+      </div>
+    );
+  }
+  return <div className="shrink-0" style={{ color }}>{icon}</div>;
+}
+
 interface NodeTypeInfo {
   type: ForgeNodeType;
   label: string;
@@ -202,7 +239,7 @@ export function NodePalette({ className }: NodePaletteProps) {
                       'transition-colors rounded'
                     )}
                   >
-                    <div className="text-df-text-tertiary shrink-0">{nodeInfo.icon}</div>
+                    <ColoredNodeIcon nodeType={nodeInfo.type} icon={nodeInfo.icon} />
                     <span className="font-medium">{nodeInfo.label}</span>
                   </div>
                 </TooltipTrigger>

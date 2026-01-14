@@ -579,7 +579,7 @@ export function ThemeSwitcher({ currentTheme = 'dark-fantasy', onThemeChange }: 
     <div className="relative">
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="p-1.5 bg-zinc-800 border border-zinc-700 rounded text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors"
+        className="p-1.5 bg-df-control-bg border border-df-control-border rounded text-df-text-secondary hover:text-df-text-primary hover:border-[var(--color-df-border-hover)] transition-colors"
         title="Change Theme"
       >
         <Palette size={14} />
@@ -591,8 +591,8 @@ export function ThemeSwitcher({ currentTheme = 'dark-fantasy', onThemeChange }: 
             className="fixed inset-0 z-40" 
             onClick={() => setShowMenu(false)}
           />
-          <div className="absolute right-0 top-full mt-2 z-50 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl p-1 min-w-[200px]">
-            <div className="px-3 py-1 text-[10px] text-zinc-500 uppercase border-b border-zinc-700">
+          <div className="absolute right-0 top-full mt-2 z-50 bg-df-elevated border border-df-control-border rounded-lg shadow-xl p-1 min-w-[200px]">
+            <div className="px-3 py-1 text-[10px] text-df-text-tertiary uppercase border-b border-df-control-border">
               Theme
             </div>
             {Object.entries(themes).map(([id, theme]) => (
@@ -601,12 +601,12 @@ export function ThemeSwitcher({ currentTheme = 'dark-fantasy', onThemeChange }: 
                 onClick={() => handleThemeChange(id as ThemeId)}
                 className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${
                   selectedTheme === id
-                    ? 'bg-indigo-600/20 text-indigo-400'
-                    : 'text-zinc-300 hover:bg-zinc-800'
+                    ? 'bg-df-control-active text-df-text-primary'
+                    : 'text-df-text-secondary hover:bg-df-control-hover hover:text-df-text-primary'
                 }`}
               >
                 <div className="font-medium">{theme.name}</div>
-                <div className="text-[10px] text-zinc-500 mt-0.5">{theme.description}</div>
+                <div className="text-[10px] text-df-text-tertiary mt-0.5">{theme.description}</div>
               </button>
             ))}
           </div>

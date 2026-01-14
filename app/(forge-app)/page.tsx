@@ -1,7 +1,6 @@
 'use client';
 
 import { ForgeWorkspace } from '@/src/components/ForgeWorkspace/ForgeWorkspace';
-import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { useState } from 'react';
 import { makePayloadForgeAdapter } from '../lib/forge/data-adapter/payload-forge-adapter';
 import { Settings, Code } from 'lucide-react';
@@ -16,7 +15,6 @@ export default function DialogueForgeApp() {
   return (
     <ForgeWorkspace
       className="h-screen"
-      toolbarActions={<ThemeSwitcher />}
       dataAdapter={makePayloadForgeAdapter()}
       selectedProjectId={selectedProjectId}
       onProjectChange={setSelectedProjectId}

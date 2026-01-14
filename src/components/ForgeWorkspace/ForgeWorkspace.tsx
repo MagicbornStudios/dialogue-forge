@@ -41,7 +41,6 @@ interface ForgeWorkspaceProps {
   gameState?: ForgeGameState;
 
   className?: string;
-  toolbarActions?: React.ReactNode;
 
   onEvent?: (event: ForgeEvent) => void;
 
@@ -66,7 +65,6 @@ export function ForgeWorkspace({
   characters: initialCharacters,
   gameState: initialGameState,
   className = '',
-  toolbarActions,
   onEvent,
   resolveGraph,
   dataAdapter,
@@ -107,7 +105,6 @@ export function ForgeWorkspace({
         <ForgeWorkspaceContent
           characters={initialCharacters}
           className={className}
-          toolbarActions={toolbarActions}
           headerLinks={headerLinks}
         />
       </NodeDragProvider>
@@ -130,9 +127,8 @@ type PanelId = 'sidebar' | 'narrative-editor' | 'storylet-editor';
 function ForgeWorkspaceContent({
   characters,
   className = '',
-  toolbarActions,
   headerLinks,
-}: Pick<ForgeWorkspaceProps, 'characters' | 'className' | 'toolbarActions' | 'headerLinks'>) {
+}: Pick<ForgeWorkspaceProps, 'characters' | 'className' | 'headerLinks'>) {
 
   // Get active graph IDs and derive graphs from cache
   const activeNarrativeGraphId = useForgeWorkspaceStore((s) => s.activeNarrativeGraphId);
@@ -274,7 +270,6 @@ function ForgeWorkspaceContent({
     <div className={`flex h-full w-full flex-col ${className}`}>
       <ForgeWorkspaceMenuBar
         counts={{ actCount: 0, chapterCount: 0, pageCount: 0, characterCount: Object.keys(characters ?? {}).length }}
-        toolbarActions={toolbarActions}
         onGuideClick={() => { }}
         onPlayClick={() => { }}
         onFlagClick={() => { }}

@@ -13,10 +13,16 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@/shared/*": ["./src/shared/*"],
+      "@/ai/*": ["./src/ai/*"],
+      "@/forge/*": ["./src/forge/*"],
+      "@/writer/*": ["./src/writer/*"],
+      "@/host/*": ["./app/lib/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "app", "components", "styles", ".next"]
 }
-
 

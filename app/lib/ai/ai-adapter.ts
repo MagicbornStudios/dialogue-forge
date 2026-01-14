@@ -220,7 +220,7 @@ const buildEditProposalMessages = (payload: unknown): OpenRouterMessage[] => [
   {
     role: 'system',
     content:
-      'You are an expert narrative editor. Output JSON with { "ops": WriterPatchOp[], "summary": string, "rationale": string, "risk": string }. Use ops with type values "replace_content", "splice_content", or "replace_blocks". Return ONLY JSON.',
+      'You are an expert editor. Use the provided context to propose edits (text, structured content, or graph data). Output JSON with { "patch": string, "summary": string }. "patch" must be a JSON string encoding an array of edit operations. Use ops with type values "replace_content", "splice_content", or "replace_blocks". Return ONLY JSON.',
   },
   {
     role: 'user',
@@ -289,7 +289,51 @@ export const createAiEditProposal = async (
     stream: false,
   });
 
-  return readOpenRouterContent<AiEditProposal>(response);
+  const rawResponse = await readOpenRouterContent<unknown>(response);
+  if (!rawResponse.ok) {
+    return rawResponse;
+  }
+
+  const proposal = rawResponse.data;
+  if (Array.isArray(proposal)) {
+    return {
+      ok: true,
+      data: {
+        patch: JSON.stringify(proposal),
+      },
+    };
+  }
+
+  if (!proposal || typeof proposal !== 'object') {
+    return errorResponse('AI response missing edit proposal.', 502);
+  }
+
+  const candidate = proposal as {
+    patch?: unknown;
+    summary?: unknown;
+    ops?: unknown;
+  };
+  const summary = typeof candidate.summary === 'string' ? candidate.summary : undefined;
+
+  if (typeof candidate.patch === 'string') {
+    return { ok: true, data: { patch: candidate.patch, summary } };
+  }
+
+  if (Array.isArray(candidate.patch)) {
+    return {
+      ok: true,
+      data: { patch: JSON.stringify(candidate.patch), summary },
+    };
+  }
+
+  if (Array.isArray(candidate.ops)) {
+    return {
+      ok: true,
+      data: { patch: JSON.stringify(candidate.ops), summary },
+    };
+  }
+
+  return errorResponse('AI response missing patch data.', 502);
 };
 
 export const createAiPlan = async (

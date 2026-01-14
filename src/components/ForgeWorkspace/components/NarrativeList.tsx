@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Layers, Plus, ExternalLink, Edit, Trash2 } from 'lucide-react';
+import { BookOpen, Plus, ExternalLink, Edit, Trash2 } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -16,20 +16,20 @@ import { FORGE_GRAPH_KIND } from '@/src/types/forge/forge-graph';
 import { createGraphWithStartEnd } from '@/src/utils/forge-flow-helpers';
 import { SearchInput } from './SearchInput';
 
-interface StoryletsListProps {
+interface NarrativeListProps {
   className?: string;
 }
 
-export function StoryletList({ className }: StoryletsListProps) {
+export function NarrativeList({ className }: NarrativeListProps) {
   const [searchQuery, setSearchQuery] = useState('')
   
   // Read from store - memoize the selector result to prevent re-renders
   const allGraphs = useForgeWorkspaceStore(s => s.graphs.byId)
-  const storyletGraphs = useMemo(() => 
-    Object.values(allGraphs).filter(g => g.kind === FORGE_GRAPH_KIND.STORYLET),
+  const narrativeGraphs = useMemo(() => 
+    Object.values(allGraphs).filter(g => g.kind === FORGE_GRAPH_KIND.NARRATIVE),
     [allGraphs]
   )
-  const activeStoryletGraphId = useForgeWorkspaceStore(s => s.activeStoryletGraphId)
+  const activeNarrativeGraphId = useForgeWorkspaceStore(s => s.activeNarrativeGraphId)
   const selectedProjectId = useForgeWorkspaceStore(s => s.selectedProjectId)
   const dataAdapter = useForgeWorkspaceStore(s => s.dataAdapter)
   const setGraph = useForgeWorkspaceStore(s => s.actions.setGraph)
@@ -37,29 +37,29 @@ export function StoryletList({ className }: StoryletsListProps) {
   
   // Filter locally
   const filteredGraphs = useMemo(() => {
-    return storyletGraphs.filter(g => 
+    return narrativeGraphs.filter(g => 
       g.title.toLowerCase().includes(searchQuery.toLowerCase())
     )
-  }, [storyletGraphs, searchQuery])
+  }, [narrativeGraphs, searchQuery])
   
-  // Handle storylet creation
-  const handleCreateStorylet = async () => {
+  // Handle narrative creation
+  const handleCreateNarrative = async () => {
     if (!selectedProjectId || !dataAdapter) {
-      console.warn('Cannot create storylet: no project selected or dataAdapter unavailable')
+      console.warn('Cannot create narrative: no project selected or dataAdapter unavailable')
       return
     }
     
     try {
       const { flow, startNodeId, endNodeIds } = createGraphWithStartEnd({
         projectId: selectedProjectId,
-        kind: FORGE_GRAPH_KIND.STORYLET,
-        title: 'New Storylet'
+        kind: FORGE_GRAPH_KIND.NARRATIVE,
+        title: 'New Narrative'
       })
       
       const createdGraph = await dataAdapter.createGraph({
         projectId: selectedProjectId,
-        kind: FORGE_GRAPH_KIND.STORYLET,
-        title: 'New Storylet',
+        kind: FORGE_GRAPH_KIND.NARRATIVE,
+        title: 'New Narrative',
         flow,
         startNodeId,
         endNodeIds,
@@ -69,18 +69,19 @@ export function StoryletList({ className }: StoryletsListProps) {
       setGraph(String(createdGraph.id), createdGraph)
       
       // Open the new graph
-      workspaceActions.openStoryletGraph(String(createdGraph.id))
+      workspaceActions.openNarrativeGraph(String(createdGraph.id))
     } catch (error) {
-      console.error('Failed to create storylet:', error)
+      console.error('Failed to create narrative:', error)
     }
   }
+  
   return (
     <div className={`flex h-full w-full flex-col ${className ?? ''}`}>
       {/* Compact header */}
       <div className="flex items-center justify-between px-2 py-1.5 border-b border-df-sidebar-border">
         <div className="flex items-center gap-1.5">
-          <Layers size={14} className="text-df-text-tertiary" />
-          <span className="text-xs font-medium text-df-text-secondary">Storylets</span>
+          <BookOpen size={14} className="text-df-text-tertiary" />
+          <span className="text-xs font-medium text-df-text-secondary">Narratives</span>
           {filteredGraphs.length > 0 && (
             <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
               {filteredGraphs.length}
@@ -94,13 +95,13 @@ export function StoryletList({ className }: StoryletsListProps) {
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6"
-                onClick={handleCreateStorylet}
+                onClick={handleCreateNarrative}
               >
                 <Plus size={12} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Create storylet</p>
+              <p>Create narrative</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -119,18 +120,18 @@ export function StoryletList({ className }: StoryletsListProps) {
       <div className="flex-1 overflow-y-auto">
         {filteredGraphs.length === 0 ? (
           <div className="px-3 py-6 text-center text-xs text-df-text-tertiary">
-            {searchQuery ? 'No storylets found' : 'No storylets'}
+            {searchQuery ? 'No narratives found' : 'No narratives'}
           </div>
         ) : (
           <div className="py-1">
             {filteredGraphs.map(graph => {
-              const isSelected = activeStoryletGraphId === String(graph.id);
+              const isSelected = activeNarrativeGraphId === String(graph.id);
               return (
                 <ContextMenu key={graph.id}>
                   <ContextMenuTrigger asChild>
                     <button
                       type="button"
-                      onClick={() => workspaceActions.openStoryletGraph(String(graph.id))}
+                      onClick={() => workspaceActions.openNarrativeGraph(String(graph.id))}
                       className={`w-full px-2 py-1.5 text-left text-xs transition-colors ${
                         isSelected
                           ? 'bg-df-control-active text-df-text-primary border-l-2 border-[var(--color-df-border-active)]'
@@ -138,13 +139,13 @@ export function StoryletList({ className }: StoryletsListProps) {
                       }`}
                     >
                       <div className="flex items-center gap-1.5 truncate">
-                        <Layers size={12} className="shrink-0 text-df-text-tertiary" />
+                        <BookOpen size={12} className="shrink-0 text-df-text-tertiary" />
                         <span className="truncate font-medium">{graph.title ?? String(graph.id)}</span>
                       </div>
                     </button>
                   </ContextMenuTrigger>
                   <ContextMenuContent className="w-48">
-                    <ContextMenuItem onSelect={() => workspaceActions.openStoryletGraph(String(graph.id))}>
+                    <ContextMenuItem onSelect={() => workspaceActions.openNarrativeGraph(String(graph.id))}>
                       <ExternalLink size={14} className="mr-2" />
                       Open
                     </ContextMenuItem>
@@ -157,7 +158,7 @@ export function StoryletList({ className }: StoryletsListProps) {
                     <ContextMenuSeparator />
                     <ContextMenuItem
                       onSelect={async () => {
-                        if (confirm(`Delete storylet "${graph.title}"?`)) {
+                        if (confirm(`Delete narrative "${graph.title}"?`)) {
                           console.log('Delete graph:', graph.id)
                         }
                       }}

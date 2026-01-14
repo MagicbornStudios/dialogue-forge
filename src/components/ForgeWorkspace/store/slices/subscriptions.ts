@@ -41,33 +41,41 @@ export function setupForgeWorkspaceSubscriptions(
       const hasFlagSchema = state.loadedFlagSchemaProjectId === selectedProjectId && state.activeFlagSchema
       const hasGameState = state.loadedGameStateProjectId === selectedProjectId && state.activeGameState
       
-      // Check if storylet graphs are already loaded for this project
+      // Check if graphs are already loaded for this project
+      const existingNarrativeGraphs = Object.values(state.graphs.byId).filter(
+        g => g.kind === FORGE_GRAPH_KIND.NARRATIVE && g.project === selectedProjectId
+      )
+      const hasNarrativeGraphs = existingNarrativeGraphs.length > 0
+      
       const existingStoryletGraphs = Object.values(state.graphs.byId).filter(
         g => g.kind === FORGE_GRAPH_KIND.STORYLET && g.project === selectedProjectId
       )
       const hasStoryletGraphs = existingStoryletGraphs.length > 0
       
       try {
-        // 1. Load project to get narrative graph ID (always needed)
-        const projectRequestKey = `project-${selectedProjectId}`
-        if (!inFlightRequests.has(projectRequestKey)) {
-          inFlightRequests.add(projectRequestKey)
-          try {
-            const project = await dataAdapter.getProject(selectedProjectId)
-            
-            // 2. Load narrative graph if it exists
-            if (project.narrativeGraph) {
-              await state.actions.openGraphInScope(
-                'narrative',
-                String(project.narrativeGraph)
-              )
+        // 1. Load narrative graphs only if not already cached
+        if (!hasNarrativeGraphs) {
+          const narrativeRequestKey = `narratives-${selectedProjectId}`
+          if (!inFlightRequests.has(narrativeRequestKey)) {
+            inFlightRequests.add(narrativeRequestKey)
+            try {
+              const narrativeGraphs = await dataAdapter.listGraphs(selectedProjectId, FORGE_GRAPH_KIND.NARRATIVE)
+              const currentState = domainStore.getState()
+              for (const graph of narrativeGraphs) {
+                currentState.actions.setGraph(String(graph.id), graph)
+              }
+              
+              // Set first narrative as active if none selected
+              if (narrativeGraphs.length > 0 && !currentState.activeNarrativeGraphId) {
+                currentState.actions.setActiveNarrativeGraphId(String(narrativeGraphs[0].id))
+              }
+            } finally {
+              inFlightRequests.delete(narrativeRequestKey)
             }
-          } finally {
-            inFlightRequests.delete(projectRequestKey)
           }
         }
         
-        // 3. Load storylet graphs only if not already cached
+        // 2. Load storylet graphs only if not already cached
         if (!hasStoryletGraphs) {
           const storyletRequestKey = `storylets-${selectedProjectId}`
           if (!inFlightRequests.has(storyletRequestKey)) {
@@ -89,7 +97,7 @@ export function setupForgeWorkspaceSubscriptions(
           }
         }
         
-        // 4. Load flag schema only if not already cached
+        // 3. Load flag schema only if not already cached
         if (!hasFlagSchema) {
           const flagSchemaRequestKey = `flag-schema-${selectedProjectId}`
           if (!inFlightRequests.has(flagSchemaRequestKey)) {
@@ -113,7 +121,7 @@ export function setupForgeWorkspaceSubscriptions(
           }
         }
         
-        // 5. Load game state only if not already cached
+        // 4. Load game state only if not already cached
         if (!hasGameState) {
           const gameStateRequestKey = `game-state-${selectedProjectId}`
           if (!inFlightRequests.has(gameStateRequestKey)) {

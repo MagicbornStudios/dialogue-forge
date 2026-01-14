@@ -27,6 +27,18 @@ export const CHOICE_COLORS = ['#e94560', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e
 
 export type LayoutDirection = 'TB' | 'LR';
 
+export enum Prefixes {
+  CHOICE = 'choice-',
+  BLOCK = 'block-',
+  VISUAL = 'visual-',
+  LINEAR = 'linear-',
+  DEFAULT = 'default-',
+  NEXT = 'next-',
+  SOURCE = 'source-',
+  TARGET = 'target-',
+  SOURCE_HANDLE = 'sourceHandle-',
+}
+
 /**
  * NOTE:
  * Keep this as string-based, not ForgeNodeType-based.
@@ -103,7 +115,7 @@ export function createFlowNode(
 }
 
 export function addChoiceToNodeData(nodeData: ForgeNode): ForgeNode {
-  if (nodeData.type !== 'PLAYER') return nodeData;
+  if (nodeData.type !== FORGE_NODE_TYPE.PLAYER) return nodeData;
   const next: ForgeChoice = {
     id: `c_${Date.now()}`,
     text: 'New choice...',
@@ -120,7 +132,7 @@ export function updateChoiceInNodeData(
   choiceIdx: number,
   updates: Partial<ForgeChoice>
 ): ForgeNode {
-  if (nodeData.type !== 'PLAYER') return nodeData;
+  if (nodeData.type !== FORGE_NODE_TYPE.PLAYER) return nodeData;
   const choices = (nodeData.choices ?? []).slice();
   if (!choices[choiceIdx]) return nodeData;
   choices[choiceIdx] = { ...choices[choiceIdx], ...updates };
@@ -128,7 +140,7 @@ export function updateChoiceInNodeData(
 }
 
 export function removeChoiceFromNodeData(nodeData: ForgeNode, choiceIdx: number): ForgeNode {
-  if (nodeData.type !== 'PLAYER') return nodeData;
+  if (nodeData.type !== FORGE_NODE_TYPE.PLAYER) return nodeData;
   const choices = (nodeData.choices ?? []).filter((_, i) => i !== choiceIdx);
   return { ...nodeData, choices };
 }
@@ -184,16 +196,16 @@ function buildEdgeId(source: string, target: string, sourceHandle?: string | nul
 }
 
 function inferKind(sourceHandle?: string | null): ForgeEdgeKind {
-  if (!sourceHandle || sourceHandle === 'next' || sourceHandle === 'default') return FORGE_EDGE_KIND.FLOW;
-  if (sourceHandle.startsWith('choice-')) return FORGE_EDGE_KIND.CHOICE;
-  if (sourceHandle.startsWith('block-')) return FORGE_EDGE_KIND.CONDITION;
+  if (!sourceHandle || sourceHandle === Prefixes.NEXT || sourceHandle === Prefixes.DEFAULT) return FORGE_EDGE_KIND.FLOW;
+  if (sourceHandle.startsWith(Prefixes.CHOICE)) return FORGE_EDGE_KIND.CHOICE;
+  if (sourceHandle.startsWith(Prefixes.BLOCK)) return FORGE_EDGE_KIND.CONDITION;
   return FORGE_EDGE_KIND.VISUAL;
 }
 
 function inferEdgeType(sourceHandle?: string | null): string {
-  if (!sourceHandle || sourceHandle === 'next' || sourceHandle === 'default') return 'default';
-  if (sourceHandle.startsWith('choice-')) return 'choice';
-  if (sourceHandle.startsWith('block-')) return 'choice';
+  if (!sourceHandle || sourceHandle === Prefixes.NEXT || sourceHandle === Prefixes.DEFAULT) return 'default';
+  if (sourceHandle.startsWith(Prefixes.CHOICE)) return 'choice';
+  if (sourceHandle.startsWith(Prefixes.BLOCK)) return 'choice';
   return 'default';
 }
 
@@ -239,13 +251,13 @@ export function applyConnection(graph: ForgeGraphDoc, connection: Connection): F
     const d = { ...((n.data ?? {}) as ForgeNode), id: source };
 
     // linear “next/default”
-    if (!sourceHandle || sourceHandle === 'next' || sourceHandle === 'default') {
+    if (!sourceHandle || sourceHandle === Prefixes.NEXT || sourceHandle === Prefixes.DEFAULT) {
       d.defaultNextNodeId = target;
       return { ...n, data: d };
     }
 
     // player choice
-    if (sourceHandle.startsWith('choice-')) {
+    if (sourceHandle.startsWith(Prefixes.CHOICE)) {
       const idx = parseInt(sourceHandle.replace('choice-', ''), 10);
       if (!Number.isFinite(idx) || idx < 0) return { ...n, data: d };
       const choices = (d.choices ?? []).slice();
@@ -256,7 +268,7 @@ export function applyConnection(graph: ForgeGraphDoc, connection: Connection): F
     }
 
     // conditional block
-    if (sourceHandle.startsWith('block-')) {
+    if (sourceHandle.startsWith(Prefixes.BLOCK)) {
       const idx = parseInt(sourceHandle.replace('block-', ''), 10);
       if (!Number.isFinite(idx) || idx < 0) return { ...n, data: d };
       const blocks = (d.conditionalBlocks ?? []).slice();
@@ -287,13 +299,13 @@ export function removeEdgeAndSemanticLink(graph: ForgeGraphDoc, edgeId: string):
     const d = { ...((n.data ?? {}) as ForgeNode), id: n.id };
     const h = edge.sourceHandle ?? null;
 
-    if (!h || h === 'next' || h === 'default') {
+    if (!h || h === Prefixes.NEXT || h === Prefixes.DEFAULT) {
       if (d.defaultNextNodeId === edge.target) d.defaultNextNodeId = undefined;
       return { ...n, data: d };
     }
 
-    if (h.startsWith('choice-') && d.choices?.length) {
-      const idx = parseInt(h.replace('choice-', ''), 10);
+    if (h.startsWith(Prefixes.CHOICE) && d.choices?.length) {
+      const idx = parseInt(h.replace(Prefixes.CHOICE, ''), 10);
       if (Number.isFinite(idx) && d.choices[idx]?.nextNodeId === edge.target) {
         const choices = d.choices.slice();
         choices[idx] = { ...choices[idx], nextNodeId: undefined };
@@ -302,8 +314,8 @@ export function removeEdgeAndSemanticLink(graph: ForgeGraphDoc, edgeId: string):
       return { ...n, data: d };
     }
 
-    if (h.startsWith('block-') && d.conditionalBlocks?.length) {
-      const idx = parseInt(h.replace('block-', ''), 10);
+    if (h.startsWith(Prefixes.BLOCK) && d.conditionalBlocks?.length) {
+      const idx = parseInt(h.replace(Prefixes.BLOCK, ''), 10);
       if (Number.isFinite(idx) && d.conditionalBlocks[idx]?.nextNodeId === edge.target) {
         const blocks = d.conditionalBlocks.slice();
         blocks[idx] = { ...blocks[idx], nextNodeId: undefined };
@@ -355,7 +367,7 @@ export function insertNodeBetweenEdge(
   next = applyConnection(next, {
     source: newNodeId,
     target: edge.target,
-    sourceHandle: 'next',
+    sourceHandle: Prefixes.NEXT,
     targetHandle: null,
   });
 
@@ -368,29 +380,29 @@ export function insertNodeBetweenEdge(
  * - otherwise use the source node type palette (matches your NPCEdgeV2 intent)
  */
 export function edgeStrokeColor(edge: ForgeReactFlowEdge, sourceType?: string): string {
-  const h = edge.sourceHandle ?? '';
-  if (h.startsWith('choice-')) {
-    const idx = parseInt(h.replace('choice-', ''), 10);
+  const handle = edge.sourceHandle ?? '';
+  if (handle.startsWith(Prefixes.CHOICE)) {
+    const idx = parseInt(handle.replace(Prefixes.CHOICE, ''), 10);
     return CHOICE_COLORS[(Number.isFinite(idx) ? idx : 0) % CHOICE_COLORS.length];
   }
-  if (h.startsWith('block-')) {
-    const idx = parseInt(h.replace('block-', ''), 10);
+  if (handle.startsWith(Prefixes.BLOCK)) {
+    const idx = parseInt(handle.replace(Prefixes.BLOCK, ''), 10);
     return CHOICE_COLORS[(Number.isFinite(idx) ? idx : 0) % CHOICE_COLORS.length];
   }
 
   // Type palette aligned with edgeColorFor in forge-edge-styles.ts
+  // TODO: use ourthemes and forgenode types
   const typePalette: Record<string, string> = {
-    ACT: '#8b5cf6',
-    CHAPTER: '#06b6d4',
-    PAGE: '#22c55e',
-    PLAYER: '#f59e0b',
-    CHARACTER: '#e94560',
-    CONDITIONAL: '#60a5fa',
-    DETOUR: '#a78bfa',
-    JUMP: '#f472b6',
-    END: '#9ca3af',
-    STORYLET: '#34d399',
-    STORYLET_REF: '#34d399',
+    [FORGE_NODE_TYPE.ACT]: '#8b5cf6',
+    [FORGE_NODE_TYPE.CHAPTER]: '#06b6d4',
+    [FORGE_NODE_TYPE.PAGE]: '#22c55e',
+    [FORGE_NODE_TYPE.PLAYER]: '#f59e0b',
+    [FORGE_NODE_TYPE.CHARACTER]: '#e94560',
+    [FORGE_NODE_TYPE.CONDITIONAL]: '#60a5fa',
+    [FORGE_NODE_TYPE.DETOUR]: '#a78bfa',
+    [FORGE_NODE_TYPE.JUMP]: '#f472b6',
+    [FORGE_NODE_TYPE.END]: '#9ca3af',
+    [FORGE_NODE_TYPE.STORYLET]: '#34d399',
   };
 
   // Use bright colors instead of CSS variables for better visibility
@@ -429,5 +441,73 @@ export function createEmptyForgeGraphDoc(opts: {
     compiledYarn: null,
     updatedAt: now,
     createdAt: now,
+  }
+}
+
+/**
+ * Create a graph with proper start and end nodes.
+ * This ensures all graphs have valid startNodeId and endNodeIds.
+ */
+export function createGraphWithStartEnd(opts: {
+  projectId: number
+  kind: ForgeGraphKind
+  title?: string
+}): {
+  flow: ForgeReactFlowJson
+  startNodeId: string
+  endNodeIds: Array<{ nodeId: string; exitKey?: string }>
+} {
+  const timestamp = Date.now()
+  const startNodeId = `start_${timestamp}`
+  const endNodeId = `end_${timestamp}`
+  
+  // Determine start and end node types based on graph kind
+  const startNodeType = opts.kind === FORGE_GRAPH_KIND.NARRATIVE 
+    ? FORGE_NODE_TYPE.ACT 
+    : FORGE_NODE_TYPE.CHARACTER
+  
+  const endNodeType = opts.kind === FORGE_GRAPH_KIND.NARRATIVE
+    ? FORGE_NODE_TYPE.ACT
+    : FORGE_NODE_TYPE.CHARACTER
+  
+  // Create start node
+  const startNode = createFlowNode(startNodeType, startNodeId, 0, 0)
+  if (opts.kind === FORGE_GRAPH_KIND.NARRATIVE) {
+    startNode.data.label = 'Act 1'
+    startNode.data.content = 'The beginning of your narrative.'
+  } else {
+    startNode.data.label = 'Start'
+    startNode.data.content = 'This is the starting point.'
+    startNode.data.speaker = 'Character'
+  }
+  
+  // Create end node
+  const endNode = createFlowNode(endNodeType, endNodeId, 200, 0)
+  if (opts.kind === FORGE_GRAPH_KIND.NARRATIVE) {
+    endNode.data.label = 'End'
+    endNode.data.content = 'The conclusion of this narrative path.'
+  } else {
+    endNode.data.label = 'End'
+    endNode.data.content = 'This is the ending point.'
+  }
+  
+  // Create edge from start to end
+  const edge: ForgeReactFlowEdge = {
+    id: `edge_${timestamp}`,
+    source: startNodeId,
+    target: endNodeId,
+    type: 'default',
+  }
+  
+  const flow: ForgeReactFlowJson = {
+    nodes: [startNode, endNode],
+    edges: [edge],
+    viewport: { x: 0, y: 0, zoom: 1 },
+  }
+  
+  return {
+    flow,
+    startNodeId,
+    endNodeIds: [{ nodeId: endNodeId }],
   }
 }

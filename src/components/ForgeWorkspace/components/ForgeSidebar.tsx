@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { ToggleGroup, ToggleGroupItem } from '@/src/components/ui/toggle-group';
-import { Layers, Boxes } from 'lucide-react';
+import { Layers, Boxes, BookOpen } from 'lucide-react';
 import { StoryletList } from './StoryletList';
+import { NarrativeList } from './NarrativeList';
 import { NodePalette } from './NodePalette';
 import { useForgeWorkspaceStore } from '../store/forge-workspace-store';
 import { cn } from '@/src/lib/utils';
@@ -13,7 +14,7 @@ interface ForgeSidebarProps {
 }
 
 export function ForgeSidebar({ className }: ForgeSidebarProps) {
-  const [activeTab, setActiveTab] = useState<'storylets' | 'nodes'>('storylets');
+  const [activeTab, setActiveTab] = useState<'narratives' | 'storylets' | 'nodes'>('narratives');
   const focusedEditor = useForgeWorkspaceStore((s) => s.focusedEditor);
 
   return (
@@ -22,16 +23,28 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
         type="single"
         value={activeTab}
         onValueChange={(value) => {
-          if (value) setActiveTab(value as 'storylets' | 'nodes');
+          if (value) setActiveTab(value as 'narratives' | 'storylets' | 'nodes');
         }}
         variant="outline"
         className="w-full rounded-none border-b border-df-sidebar-border bg-transparent h-9 px-1 gap-0"
       >
         <ToggleGroupItem
+          value="narratives"
+          aria-label="Narratives"
+          className={cn(
+            "flex-1 text-sm rounded-none border-r-0 first:rounded-l-md",
+            "data-[state=on]:bg-df-control-active data-[state=on]:text-df-text-primary data-[state=on]:border-b-1 data-[state=on]:border-[var(--color-df-border-active)]",
+            focusedEditor === 'narrative' && "border-l-1 border-l-[var(--color-df-info)]"
+          )}
+        >
+          <BookOpen size={14} className="mr-1.5" />
+          Narratives
+        </ToggleGroupItem>
+        <ToggleGroupItem
           value="storylets"
           aria-label="Storylets"
           className={cn(
-            "flex-1 text-sm rounded-none border-r-0 first:rounded-l-md",
+            "flex-1 text-sm rounded-none border-r-0",
             "data-[state=on]:bg-df-control-active data-[state=on]:text-df-text-primary data-[state=on]:border-b-1 data-[state=on]:border-[var(--color-df-border-active)]",
             focusedEditor === 'storylet' && "border-l-1 border-l-[var(--color-df-edge-choice-1)]"
           )}
@@ -62,6 +75,11 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
           )}
         </ToggleGroupItem>
       </ToggleGroup>
+      {activeTab === 'narratives' && (
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <NarrativeList className="h-full" />
+        </div>
+      )}
       {activeTab === 'storylets' && (
         <div className="flex-1 min-h-0 overflow-hidden">
           <StoryletList className="h-full" />

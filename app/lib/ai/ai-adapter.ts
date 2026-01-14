@@ -220,7 +220,7 @@ const buildEditProposalMessages = (payload: unknown): OpenRouterMessage[] => [
   {
     role: 'system',
     content:
-      'You are an expert narrative editor. Output JSON with { "patch": string, "summary": string }. "patch" must be a JSON string encoding WriterPatchOp[]. Use ops with type values "replace_content", "splice_content", or "replace_blocks". Return ONLY JSON.',
+      'You are an expert narrative editor. Output JSON with { "patch": string, "summary": string }. "patch" must be a JSON string encoding an array of edit operations. Use ops with type values "replace_content", "splice_content", or "replace_blocks". Return ONLY JSON.',
   },
   {
     role: 'user',

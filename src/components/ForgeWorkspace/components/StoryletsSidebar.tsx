@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BookOpen, Info, Search, Plus, ExternalLink, Edit, Trash2 } from 'lucide-react';
+import { Layers, Plus, ExternalLink, Edit, Trash2 } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -7,10 +7,14 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/src/components/ui/context-menu';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/components/ui/tooltip';
 import { useForgeWorkspaceStore } from '../store/forge-workspace-store';
 import { useForgeWorkspaceActions } from '../hooks/useForgeWorkspaceActions';
 import { FORGE_GRAPH_KIND, FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
 import { createEmptyForgeGraphDoc } from '@/src/utils/forge-flow-helpers';
+import { SearchInput } from './SearchInput';
 
 interface StoryletsSidebarProps {
   className?: string;
@@ -91,48 +95,54 @@ export function StoryletsSidebar({ className }: StoryletsSidebarProps) {
     }
   }
   return (
-    <div className={`flex w-[320px] min-w-[280px] flex-col gap-2 ${className ?? ''}`}>
-      <div className="flex items-center justify-between rounded-lg border border-df-node-border bg-df-editor-bg px-2 py-1.5">
-        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-df-text-tertiary">
-          <BookOpen size={12} />
-          Storylets
-          <span title="Manage storylets for the selected project.">
-            <Info size={12} />
-          </span>
+    <div className={`flex h-full w-full flex-col ${className ?? ''}`}>
+      {/* Compact header */}
+      <div className="flex items-center justify-between px-2 py-1.5 border-b border-df-sidebar-border">
+        <div className="flex items-center gap-1.5">
+          <Layers size={14} className="text-df-text-tertiary" />
+          <span className="text-xs font-medium text-df-text-secondary">Storylets</span>
+          {filteredGraphs.length > 0 && (
+            <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+              {filteredGraphs.length}
+            </Badge>
+          )}
         </div>
-        <div className="flex items-center gap-2 text-xs">
-          <button
-            type="button"
-            className="rounded-md px-2 py-1 text-df-text-secondary hover:text-df-text-primary"
-            onClick={handleCreateStorylet}
-            title="Add storylet"
-          >
-            <Plus size={14} />
-          </button>
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={handleCreateStorylet}
+              >
+                <Plus size={12} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Create storylet</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
-      <div className="flex-1 min-h-0 rounded-lg border border-df-node-border bg-df-editor-bg p-2">
-        <div className="flex h-full flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search size={14} className="absolute left-2 top-2.5 text-df-text-tertiary" />
-              <input
-                value={searchQuery}
-                onChange={event => setSearchQuery(event.target.value)}
-                placeholder="Search storylets..."
-                className="w-full rounded-md border border-df-control-border bg-df-control-bg py-2 pl-7 pr-2 text-xs text-df-text-primary"
-              />
-            </div>
-            <button
-              type="button"
-              className="flex items-center justify-center rounded-md border border-df-control-border bg-df-control-bg p-2 text-df-text-secondary hover:text-df-text-primary"
-              onClick={handleCreateStorylet}
-              title="Add storylet"
-            >
-              <Plus size={14} />
-            </button>
+
+      {/* Search */}
+      <div className="px-2 py-1.5 border-b border-df-sidebar-border">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search..."
+        />
+      </div>
+
+      {/* List */}
+      <div className="flex-1 overflow-y-auto">
+        {filteredGraphs.length === 0 ? (
+          <div className="px-3 py-6 text-center text-xs text-df-text-tertiary">
+            {searchQuery ? 'No storylets found' : 'No storylets'}
           </div>
-          <div className="flex-1 overflow-y-auto space-y-2">
+        ) : (
+          <div className="py-1">
             {filteredGraphs.map(graph => {
               const isSelected = activeStoryletGraphId === String(graph.id);
               return (
@@ -141,56 +151,47 @@ export function StoryletsSidebar({ className }: StoryletsSidebarProps) {
                     <button
                       type="button"
                       onClick={() => workspaceActions.openStoryletGraph(String(graph.id))}
-                      className={`w-full rounded-lg border px-3 py-2 text-left text-xs ${
-                        isSelected ? 'border-df-node-selected bg-df-control-active/30 text-df-text-primary' : 'border-df-node-border text-df-text-secondary hover:border-df-node-selected'
+                      className={`w-full px-2 py-1.5 text-left text-xs transition-colors ${
+                        isSelected
+                          ? 'bg-df-control-active text-df-text-primary'
+                          : 'text-df-text-secondary hover:bg-df-control-hover hover:text-df-text-primary'
                       }`}
-                      title="Select storylet"
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="font-semibold">{graph.title ?? String(graph.id)}</div>
-                        <div className="flex items-center gap-1">
-                          <ExternalLink size={14} className="text-df-text-tertiary" />
-                        </div>
+                      <div className="flex items-center gap-1.5 truncate">
+                        <Layers size={12} className="shrink-0 text-df-text-tertiary" />
+                        <span className="truncate font-medium">{graph.title ?? String(graph.id)}</span>
                       </div>
-                      <div className="text-[10px] text-df-text-tertiary">ID: {graph.id}</div>
                     </button>
                   </ContextMenuTrigger>
-                  <ContextMenuContent className="w-56">
+                  <ContextMenuContent className="w-48">
                     <ContextMenuItem onSelect={() => workspaceActions.openStoryletGraph(String(graph.id))}>
-                      <ExternalLink size={14} className="mr-2" /> Open Graph
+                      <ExternalLink size={14} className="mr-2" />
+                      Open
                     </ContextMenuItem>
                     <ContextMenuItem onSelect={() => {
-                      // TODO: Open metadata edit modal
                       console.log('Edit metadata for graph:', graph.id)
                     }}>
-                      <Edit size={14} className="mr-2" /> Edit Metadata
+                      <Edit size={14} className="mr-2" />
+                      Edit
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem
                       onSelect={async () => {
-                        // TODO: Implement delete with confirmation
                         if (confirm(`Delete storylet "${graph.title}"?`)) {
                           console.log('Delete graph:', graph.id)
-                          // await dataAdapter?.deleteGraph?.(graph.id)
-                          // Remove from cache
-                          // setGraph(String(graph.id), ...) // or remove action
                         }
                       }}
                       className="text-destructive focus:text-destructive"
                     >
-                      <Trash2 size={14} className="mr-2" /> Delete
+                      <Trash2 size={14} className="mr-2" />
+                      Delete
                     </ContextMenuItem>
                   </ContextMenuContent>
                 </ContextMenu>
               );
             })}
-            {filteredGraphs.length === 0 && (
-              <div className="rounded-lg border border-df-node-border bg-df-control-bg p-3 text-xs text-df-text-tertiary">
-                {searchQuery ? 'No storylets found.' : 'No storylets. Click + to create one.'}
-              </div>
-            )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

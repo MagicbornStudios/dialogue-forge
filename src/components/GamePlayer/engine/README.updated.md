@@ -33,3 +33,9 @@ The execution strategy is under research. See `docs/` for detailed analysis and 
 2. Make recommendation
 3. Implement chosen approach
 4. Integrate with GamePlayer UI
+
+
+## Visuals (BabylonJS)
+
+Visual presentation is implemented as a **BabylonJS scene runtime** driven by execution events (Scene Cues).  
+See `docs/gameplayer-babylonjs.md` for the VN Stage Template, cue vocabulary, and storylet visual policies.

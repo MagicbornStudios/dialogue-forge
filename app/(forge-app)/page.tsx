@@ -2,9 +2,9 @@
 
 import { ForgeWorkspace } from '@/src/components/ForgeWorkspace/ForgeWorkspace';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
-import { ProjectSwitcher } from '@/components/ProjectSwitcher';
 import { useState } from 'react';
 import { makePayloadForgeAdapter } from '../lib/forge/data-adapter/payload-forge-adapter';
+import { Settings, Code } from 'lucide-react';
 
 // Tell Next.js this page is static (no dynamic params/searchParams)
 export const dynamic = 'force-static';
@@ -14,21 +14,16 @@ export default function DialogueForgeApp() {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null)
 
   return (
-    <div className="w-full h-screen flex flex-col">
-      {/* Project Switcher Header */}
-      <ProjectSwitcher
-        selectedProjectId={selectedProjectId}
-        onProjectChange={setSelectedProjectId}
-      />
-
-      <div className="flex-1 w-full min-h-0">
-        <ForgeWorkspace
-          className="h-full"
-          toolbarActions={<ThemeSwitcher />}
-          dataAdapter={makePayloadForgeAdapter()}
-          selectedProjectId={selectedProjectId}
-        />
-      </div>
-    </div>
+    <ForgeWorkspace
+      className="h-screen"
+      toolbarActions={<ThemeSwitcher />}
+      dataAdapter={makePayloadForgeAdapter()}
+      selectedProjectId={selectedProjectId}
+      onProjectChange={setSelectedProjectId}
+      headerLinks={[
+        { label: 'Admin', href: '/admin', icon: <Settings size={14} /> },
+        { label: 'API', href: '/api/graphql-playground', icon: <Code size={14} /> }
+      ]}
+    />
   );
 }

@@ -45,6 +45,8 @@ import { useForgeWorkspaceStore } from '@/src/components/ForgeWorkspace/store/fo
 import { ForgeEditorActionsProvider, makeForgeEditorActions } from '@/src/components/GraphEditors/hooks/useForgeEditorActions';
 import { NarrativeGraphEditorPaneContextMenu } from './components/NarrativeGraphEditorPaneContextMenu';
 import { FORGE_COMMAND } from '../hooks/forge-commands';
+import { useNodeDrag } from '@/src/components/ForgeWorkspace/hooks/useNodeDrag';
+import { NARRATIVE_FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
 
 const nodeTypes = {
   [FORGE_NODE_TYPE.ACT]: ActNode,
@@ -77,6 +79,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
   
   // View mode state
   const [viewMode, setViewMode] = React.useState<ViewMode>('graph');
+  const { draggedNodeType } = useNodeDrag();
 
   const reactFlow = useReactFlow();
   const { reactFlowWrapperRef } = useReactFlowBehaviors();
@@ -121,8 +124,11 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
   // Create actions from dispatch and provide to children
   const actions = React.useMemo(() => makeForgeEditorActions(shell.dispatch), [shell.dispatch]);
 
-  // Path highlighting
-  const { edgesToSelectedNode, nodeDepths } = useFlowPathHighlighting(shell.selectedNodeId, shell.effectiveGraph);
+  // Path highlighting - only calculate when enabled
+  const { edgesToSelectedNode, nodeDepths } = useFlowPathHighlighting(
+    showPathHighlight ? shell.selectedNodeId : null,
+    shell.effectiveGraph
+  );
 
   // Consume focus requests from workspace
   const pendingFocus = useForgeWorkspaceStore((s) => s.pendingFocusByScope.narrative);
@@ -208,29 +214,29 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
         {/* Toolbar with breadcrumbs and view toggles */}
         <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-df-control-border bg-df-editor-bg flex-shrink-0">
           <GraphBreadcrumbs scope="narrative" />
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <button
               onClick={() => setViewMode('graph')}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                 viewMode === 'graph'
                   ? 'bg-df-control-active text-df-text-primary'
                   : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
               }`}
               title="Graph View"
             >
-              <Network size={14} className="inline mr-1.5" />
+              <Network size={14} className="inline mr-1" />
               Graph
             </button>
             <button
               onClick={() => setViewMode('yarn')}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                 viewMode === 'yarn'
                   ? 'bg-df-control-active text-df-text-primary'
                   : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
               }`}
               title="Yarn View"
             >
-              <FileText size={14} className="inline mr-1.5" />
+              <FileText size={14} className="inline mr-1" />
               Yarn
             </button>
           </div>
@@ -281,6 +287,26 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
             flowX: point.x,
             flowY: point.y,
           });
+        }}
+        onDragOver={(event) => {
+          event.preventDefault();
+          event.dataTransfer.dropEffect = 'move';
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          const nodeType = event.dataTransfer.getData('application/reactflow') as ForgeNodeType;
+          
+          // Validate node type is allowed for narrative graphs
+          if (!nodeType || !Object.values(NARRATIVE_FORGE_NODE_TYPE).includes(nodeType as any)) {
+            return;
+          }
+          
+          const position = reactFlow.screenToFlowPosition({
+            x: event.clientX,
+            y: event.clientY,
+          });
+          
+          actions.createNode(nodeType, position.x, position.y);
         }}
         onEdgesDelete={(deletedEdges) => {
           deletedEdges.forEach((edge) => {

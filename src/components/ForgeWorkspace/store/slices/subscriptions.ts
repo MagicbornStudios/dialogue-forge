@@ -87,15 +87,6 @@ export function setupForgeWorkspaceSubscriptions(
     }
   )
 
-  // Auto-select first project on mount if none selected
-  const initialState = domainStore.getState()
-  if (!initialState.selectedProjectId) {
-    dataAdapter.listProjects().then((projects) => {
-      if (projects.length > 0) {
-        domainStore.getState().actions.setSelectedProjectId(projects[0].id)
-      }
-    }).catch((error) => {
-      console.error('Failed to list projects for auto-selection:', error)
-    })
-  }
+  // Don't auto-select project - wait for user to select one
+  // This prevents loading data on app launch when no project is set
 }

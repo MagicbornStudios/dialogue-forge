@@ -36,6 +36,20 @@ Continue to next node
 
 ### Node Execution Patterns
 
+### Visual Scene Integration (BabylonJS)
+
+Node execution may emit **Scene Cues** that drive the Babylon scene runtime. This is presentation-only and does not affect routing.
+
+**Behavior A (MVP):**
+- CHARACTER nodes: apply `sceneCues` (if any) then display dialogue.
+- PLAYER nodes: evaluate conditions, display choices overlay; scene remains unchanged by default.
+- CONDITIONAL nodes: route only; no visual changes.
+- STORYLET/DETOUR nodes: may switch scene scope depending on storylet visual policy (inherit vs override, restore vs persist).
+
+See: `gameplayer-babylonjs.md` for cue types and storylet enter/exit policies.
+
+
+
 **CHARACTER Node:**
 ```typescript
 function executeCharacterNode(node: ForgeFlowNode, gameState: ForgeGameState) {

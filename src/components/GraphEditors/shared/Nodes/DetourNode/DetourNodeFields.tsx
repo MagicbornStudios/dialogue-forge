@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { ForgeGraphDoc } from '../../../../../types';
 import { NextNodeSelector } from '../../../shared/NodeEditor/components/NextNodeSelector';
-import { ForgeNode, FORGE_GRAPH_KIND } from '@/src/types/forge/forge-graph';
+import { ForgeNode, FORGE_GRAPH_KIND, FORGE_STORYLET_CALL_MODE } from '@/src/types/forge/forge-graph';
 import { useForgeWorkspaceActions } from '@/src/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
 import { useForgeWorkspaceStore } from '@/src/components/ForgeWorkspace/store/forge-workspace-store';
 import { Button } from '@/src/components/ui/button';
@@ -21,6 +21,7 @@ export function DetourNodeFields({
   onFocusNode,
 }: DetourNodeFieldsProps) {
   const workspaceActions = useForgeWorkspaceActions();
+  const pushBreadcrumb = useForgeWorkspaceStore((s) => s.actions.pushBreadcrumb);
   const storyletId = node.storyletCall?.targetGraphId;
   
   // Get available storylet graphs from workspace store
@@ -59,7 +60,18 @@ export function DetourNodeFields({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => workspaceActions.openStoryletGraph(String(storyletId))}
+            onClick={() => {
+              // Push current graph to breadcrumb before opening new one
+              const currentGraphId = graph?.id ? String(graph.id) : null;
+              if (currentGraphId && graph) {
+                pushBreadcrumb({
+                  graphId: currentGraphId,
+                  title: graph.title || `Graph ${currentGraphId}`,
+                  scope: 'storylet',
+                });
+              }
+              workspaceActions.openStoryletGraph(String(storyletId));
+            }}
             className="w-full"
           >
             <ExternalLink size={14} className="mr-2" />
@@ -75,9 +87,14 @@ export function DetourNodeFields({
           onChange={(event) => {
             const newGraphId = event.target.value ? parseInt(event.target.value) : undefined;
             onUpdate({
-              storyletCall: newGraphId ? {
+              storyletCall: newGraphId && node.storyletCall?.mode ? {
                 targetGraphId: newGraphId,
-                mode: node.storyletCall?.mode,
+                mode: node.storyletCall.mode,
+                targetStartNodeId: node.storyletCall?.targetStartNodeId,
+                returnNodeId: node.storyletCall?.returnNodeId,
+              } : newGraphId ? {
+                targetGraphId: newGraphId,
+                mode: FORGE_STORYLET_CALL_MODE.DETOUR_RETURN,
                 targetStartNodeId: node.storyletCall?.targetStartNodeId,
                 returnNodeId: node.storyletCall?.returnNodeId,
               } : undefined,
@@ -99,13 +116,17 @@ export function DetourNodeFields({
         <input
           type="text"
           value={node.storyletCall?.returnNodeId || ''}
-          onChange={(event) => onUpdate({
-            storyletCall: {
-              ...node.storyletCall,
-              returnNodeId: event.target.value || undefined,
-              targetGraphId: node.storyletCall?.targetGraphId,
-            },
-          })}
+          onChange={(event) => {
+            const returnNodeId = event.target.value || undefined;
+            if (node.storyletCall?.targetGraphId) {
+              onUpdate({
+                storyletCall: {
+                  ...node.storyletCall,
+                  returnNodeId,
+                },
+              });
+            }
+          }}
           className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-storylet-selected outline-none"
           placeholder="return_node_id"
         />

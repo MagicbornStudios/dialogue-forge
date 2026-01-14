@@ -1,6 +1,27 @@
 import type { StateCreator } from "zustand"
 import type { ForgeWorkspaceState } from "../forge-workspace-store"
 
+export interface PanelLayoutState {
+  sidebar: {
+    visible: boolean;
+    isDocked: boolean; // Whether panel is in fullscreen docked mode
+  };
+  narrativeEditor: {
+    visible: boolean;
+    isDocked: boolean; // Whether panel is in fullscreen docked mode
+  };
+  storyletEditor: {
+    visible: boolean;
+    isDocked: boolean; // Whether panel is in fullscreen docked mode
+  };
+}
+
+const defaultPanelLayout: PanelLayoutState = {
+  sidebar: { visible: true, isDocked: false },
+  narrativeEditor: { visible: true, isDocked: false },
+  storyletEditor: { visible: true, isDocked: false },
+};
+
 export interface ViewStateSlice {
   graphScope: "narrative" | "storylet"
   storyletFocusId: string | null
@@ -8,6 +29,7 @@ export interface ViewStateSlice {
     narrative?: { graphId: string; nodeId?: string }
     storylet?: { graphId: string; nodeId?: string }
   }
+  panelLayout: PanelLayoutState
 }
 
 export interface ViewStateActions {
@@ -15,6 +37,9 @@ export interface ViewStateActions {
   setStoryletFocusId: (id: string | null) => void
   requestFocus: (scope: "narrative" | "storylet", graphId: string, nodeId?: string) => void
   clearFocus: (scope: "narrative" | "storylet") => void
+  togglePanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor') => void
+  dockPanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor') => void
+  undockPanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor') => void
 }
 
 export function createViewStateSlice(
@@ -25,6 +50,7 @@ export function createViewStateSlice(
     graphScope: "narrative",
     storyletFocusId: null,
     pendingFocusByScope: {},
+    panelLayout: defaultPanelLayout,
     setGraphScope: scope => set({ graphScope: scope }),
     setStoryletFocusId: id => set({ storyletFocusId: id }),
     requestFocus: (scope, graphId, nodeId) => {
@@ -41,6 +67,39 @@ export function createViewStateSlice(
         delete next[scope]
         return { pendingFocusByScope: next }
       })
+    },
+    togglePanel: (panel) => {
+      set((state) => ({
+        panelLayout: {
+          ...state.panelLayout,
+          [panel]: {
+            ...state.panelLayout[panel],
+            visible: !state.panelLayout[panel].visible,
+          },
+        },
+      }))
+    },
+    dockPanel: (panel) => {
+      set((state) => ({
+        panelLayout: {
+          ...state.panelLayout,
+          [panel]: {
+            ...state.panelLayout[panel],
+            isDocked: true,
+          },
+        },
+      }))
+    },
+    undockPanel: (panel) => {
+      set((state) => ({
+        panelLayout: {
+          ...state.panelLayout,
+          [panel]: {
+            ...state.panelLayout[panel],
+            isDocked: false,
+          },
+        },
+      }))
     },
   }
 }

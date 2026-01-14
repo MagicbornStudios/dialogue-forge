@@ -1,6 +1,7 @@
 import React from 'react';
-import { Flag, HelpCircle, Play } from 'lucide-react';
+import { Flag, HelpCircle, Play, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
+import { useForgeWorkspaceStore } from '../store/forge-workspace-store';
 
 interface ForgeWorkspaceToolbarProps {
   onPlayClick: () => void;
@@ -22,6 +23,9 @@ export function ForgeWorkspaceToolbar({
   counts,
   toolbarActions,
 }: ForgeWorkspaceToolbarProps) {
+  const panelLayout = useForgeWorkspaceStore((s) => s.panelLayout);
+  const togglePanel = useForgeWorkspaceStore((s) => s.actions.togglePanel);
+
   return (
     <div className="flex items-center justify-between border-b border-df-sidebar-border bg-df-base/80 px-3 py-2">
       <div className="flex items-center gap-2">
@@ -33,6 +37,34 @@ export function ForgeWorkspaceToolbar({
         </Button>
         <Button type="button" variant="outline" size="icon" onClick={onGuideClick} title="Open guide">
           <HelpCircle size={16} />
+        </Button>
+        <div className="h-4 w-px bg-df-control-border mx-1" />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => togglePanel('sidebar')}
+          title={panelLayout.sidebar.visible ? 'Hide sidebar' : 'Show sidebar'}
+        >
+          {panelLayout.sidebar.visible ? <Eye size={16} /> : <EyeOff size={16} />}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => togglePanel('narrativeEditor')}
+          title={panelLayout.narrativeEditor.visible ? 'Hide narrative editor' : 'Show narrative editor'}
+        >
+          {panelLayout.narrativeEditor.visible ? <Eye size={16} /> : <EyeOff size={16} />}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => togglePanel('storyletEditor')}
+          title={panelLayout.storyletEditor.visible ? 'Hide storylet editor' : 'Show storylet editor'}
+        >
+          {panelLayout.storyletEditor.visible ? <Eye size={16} /> : <EyeOff size={16} />}
         </Button>
       </div>
       <div className="text-[11px] text-df-text-tertiary">

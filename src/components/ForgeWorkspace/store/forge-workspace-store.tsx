@@ -6,6 +6,7 @@ import { createStore } from "zustand/vanilla"
 import { useStore } from "zustand"
 import { devtools } from "zustand/middleware"
 import { immer } from "zustand/middleware/immer"
+import { persist, createJSONStorage } from "zustand/middleware"
 import { FORGE_GRAPH_KIND, type ForgeGraphDoc } from "@/src/types"
 import type { ForgeGameState } from "@/src/types/forge-game-state"
 import type { FlagSchema } from "@/src/types/flags"
@@ -39,6 +40,7 @@ export interface ForgeWorkspaceState {
   graphScope: ReturnType<typeof createViewStateSlice>["graphScope"]
   storyletFocusId: ReturnType<typeof createViewStateSlice>["storyletFocusId"]
   pendingFocusByScope: ReturnType<typeof createViewStateSlice>["pendingFocusByScope"]
+  panelLayout: ReturnType<typeof createViewStateSlice>["panelLayout"]
 
   // Project slice
   selectedProjectId: ReturnType<typeof createProjectSlice>["selectedProjectId"]
@@ -52,7 +54,12 @@ export interface ForgeWorkspaceState {
     setGraphStatus: ReturnType<typeof createGraphSlice>["setGraphStatus"]
     setActiveNarrativeGraphId: ReturnType<typeof createGraphSlice>["setActiveNarrativeGraphId"]
     setActiveStoryletGraphId: ReturnType<typeof createGraphSlice>["setActiveStoryletGraphId"]
-    ensureGraph: ReturnType<typeof createGraphSlice>["ensureGraph"]
+    ensureGraph: (
+      graphId: string,
+      reason: GraphChangeReason,
+      scope: GraphScope,
+      providedResolver?: (id: string) => Promise<ForgeGraphDoc>
+    ) => Promise<void>
     openGraphInScope: ReturnType<typeof createGraphSlice>["openGraphInScope"]
     pushBreadcrumb: ReturnType<typeof createGraphSlice>["pushBreadcrumb"]
     popBreadcrumb: ReturnType<typeof createGraphSlice>["popBreadcrumb"]
@@ -70,6 +77,9 @@ export interface ForgeWorkspaceState {
     setStoryletFocusId: ReturnType<typeof createViewStateSlice>["setStoryletFocusId"]
     requestFocus: ReturnType<typeof createViewStateSlice>["requestFocus"]
     clearFocus: ReturnType<typeof createViewStateSlice>["clearFocus"]
+    togglePanel: ReturnType<typeof createViewStateSlice>["togglePanel"]
+    dockPanel: ReturnType<typeof createViewStateSlice>["dockPanel"]
+    undockPanel: ReturnType<typeof createViewStateSlice>["undockPanel"]
     
     // Project actions
     setSelectedProjectId: ReturnType<typeof createProjectSlice>["setSelectedProjectId"]
@@ -136,8 +146,9 @@ export function createForgeWorkspaceStore(
 
   return createStore<ForgeWorkspaceState>()(
     devtools(
-      immer(
-        (set, get) => {
+      persist(
+        immer(
+          (set, get) => {
         // Create resolver with get function (will have access to state once store is created)
         const graphResolver = createGraphResolver(get, dataAdapter)
         const finalResolver = resolveGraph ?? graphResolver
@@ -196,8 +207,9 @@ export function createForgeWorkspaceStore(
             })
           )
 
-          // Call the original ensureGraph
-          await graphSlice.ensureGraph(graphId, scope, providedResolver)
+          // Call the original ensureGraph - convert scope to reason string
+          const reasonStr = scope === GRAPH_SCOPE.NARRATIVE ? 'narrative' : 'storylet'
+          await graphSlice.ensureGraph(graphId, reasonStr, providedResolver)
         }
 
         return {
@@ -230,12 +242,27 @@ export function createForgeWorkspaceStore(
             setStoryletFocusId: viewStateSlice.setStoryletFocusId,
             requestFocus: viewStateSlice.requestFocus,
             clearFocus: viewStateSlice.clearFocus,
+            togglePanel: viewStateSlice.togglePanel,
+            dockPanel: viewStateSlice.dockPanel,
+            undockPanel: viewStateSlice.undockPanel,
             
             // Project actions
             setSelectedProjectId: projectSlice.setSelectedProjectId,
           },
         }
         }),
+        {
+          name: 'forge-workspace-panel-layout',
+          storage: createJSONStorage(() => localStorage),
+          partialize: (state) => ({
+            panelLayout: {
+              sidebar: { visible: state.panelLayout.sidebar.visible, isDocked: false },
+              narrativeEditor: { visible: state.panelLayout.narrativeEditor.visible, isDocked: false },
+              storyletEditor: { visible: state.panelLayout.storyletEditor.visible, isDocked: false },
+            },
+          }),
+        }
+      ),
       { name: "ForgeWorkspaceStore" }
     )
   )

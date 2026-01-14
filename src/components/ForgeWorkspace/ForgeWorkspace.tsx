@@ -1,16 +1,15 @@
 // src/components/ForgeWorkspace/ForgeWorkspace.tsx
-import React, { useRef, useCallback, useEffect } from 'react';
+import React, { useRef, useCallback, useEffect, useState, useMemo } from 'react';
 import type { ForgeGraphDoc } from '../../types';
 import type { ForgeGameState } from '../../types/forge-game-state';
 import type { ForgeCharacter } from '../../types/characters';
 import type { FlagSchema } from '../../types/flags';
 
-import { GuidePanel } from '../shared/GuidePanel';
-import { ForgeWorkspaceToolbar } from './components/ForgeWorkspaceToolbar';
+import { ForgeWorkspaceMenuBar } from './components/ForgeWorkspaceMenuBar';
 import { ForgeNarrativeGraphEditor } from '../GraphEditors/ForgeNarrativeGraphEditor/ForgeNarrativeGraphEditor';
 import { ForgeStoryletGraphEditor } from '../GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditor';
-import { StoryletsSidebar } from './components/StoryletsSidebar';
-import { ResizablePanel } from './components/ResizablePanel';
+import { ForgeSidebar } from './components/ForgeSidebar';
+import { NodeDragProvider } from './hooks/useNodeDrag';
 
 import {
   CreateForgeWorkspaceStoreOptions,
@@ -23,6 +22,13 @@ import {
 import { setupForgeWorkspaceSubscriptions } from './store/slices/subscriptions';
 import type { ForgeEvent } from '@/src/components/forge/events/events';
 import { ForgeDataAdapter } from '../forge/forge-data-adapter/forge-data-adapter';
+
+export interface HeaderLink {
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+  target?: string;
+}
 
 interface ForgeWorkspaceProps {
   // Initial graphs (host-provided)
@@ -47,6 +53,10 @@ interface ForgeWorkspaceProps {
 
   // Project selection sync
   selectedProjectId?: number | null;
+  onProjectChange?: (projectId: number | null) => void;
+
+  // Optional header links (Admin, API, etc.)
+  headerLinks?: HeaderLink[];
 }
 
 export function ForgeWorkspace({
@@ -61,6 +71,8 @@ export function ForgeWorkspace({
   resolveGraph,
   dataAdapter,
   selectedProjectId,
+  onProjectChange,
+  headerLinks,
 }: ForgeWorkspaceProps) {
   const eventSinkRef = useRef<EventSink>({
     emit: (event) => {
@@ -90,12 +102,15 @@ export function ForgeWorkspace({
 
   return (
     <ForgeWorkspaceStoreProvider store={storeRef.current}>
-      <ProjectSync selectedProjectId={selectedProjectId} />
-      <ForgeWorkspaceContent
-        characters={initialCharacters}
-        className={className}
-        toolbarActions={toolbarActions}
-      />
+      <NodeDragProvider>
+        <ProjectSync selectedProjectId={selectedProjectId} />
+        <ForgeWorkspaceContent
+          characters={initialCharacters}
+          className={className}
+          toolbarActions={toolbarActions}
+          headerLinks={headerLinks}
+        />
+      </NodeDragProvider>
     </ForgeWorkspaceStoreProvider>
   );
 }
@@ -110,11 +125,14 @@ function ProjectSync({ selectedProjectId }: { selectedProjectId?: number | null 
   return null;
 }
 
+type PanelId = 'sidebar' | 'narrative-editor' | 'storylet-editor';
+
 function ForgeWorkspaceContent({
   characters,
   className = '',
   toolbarActions,
-}: Pick<ForgeWorkspaceProps, 'characters' | 'className' | 'toolbarActions'>) {
+  headerLinks,
+}: Pick<ForgeWorkspaceProps, 'characters' | 'className' | 'toolbarActions' | 'headerLinks'>) {
 
   // Get active graph IDs and derive graphs from cache
   const activeNarrativeGraphId = useForgeWorkspaceStore((s) => s.activeNarrativeGraphId);
@@ -130,8 +148,41 @@ function ForgeWorkspaceContent({
   );
 
   const setGraph = useForgeWorkspaceStore((s) => s.actions.setGraph);
-  const setActiveNarrativeGraphId = useForgeWorkspaceStore((s) => s.actions.setActiveNarrativeGraphId);
-  const setActiveStoryletGraphId = useForgeWorkspaceStore((s) => s.actions.setActiveStoryletGraphId);
+  
+  // Panel layout state removed - using fixed layout
+
+  // Panel visibility state - fix SSR
+  const [panelVisibility, setPanelVisibility] = useState<Record<PanelId, boolean>>({
+    sidebar: true,
+    'narrative-editor': true,
+    'storylet-editor': true,
+  });
+
+  // Hydrate from localStorage after mount (SSR-safe)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedVisibility = localStorage.getItem('forge-panel-visibility');
+      if (savedVisibility) {
+        try {
+          setPanelVisibility(JSON.parse(savedVisibility));
+        } catch (e) {
+          // Invalid JSON, use defaults
+        }
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('forge-panel-visibility', JSON.stringify(panelVisibility));
+    }
+  }, [panelVisibility]);
+
+
+  // Toggle panel visibility - use conditional rendering
+  const togglePanel = useCallback((panelId: PanelId) => {
+    setPanelVisibility(prev => ({ ...prev, [panelId]: !prev[panelId] }));
+  }, []);
 
   // Get dataAdapter from workspace store context (we'll need to pass it through)
   // For now, we'll handle default graph creation in a useEffect
@@ -151,68 +202,88 @@ function ForgeWorkspaceContent({
     [setGraph]
   );
 
+  // Panel content components
+  const SidebarPanel = () => (
+    <div className="h-full w-full flex flex-col">
+      <ForgeSidebar className="flex-1 min-h-0" />
+    </div>
+  );
+
+  const NarrativeEditorPanel = () => (
+    narrativeGraph ? (
+      <div className="h-full w-full flex flex-col">
+        <ForgeNarrativeGraphEditor 
+          graph={narrativeGraph} 
+          onChange={onNarrativeGraphChange} 
+          className="h-full w-full" 
+        />
+      </div>
+    ) : (
+      <div className="h-full w-full flex items-center justify-center text-df-text-secondary text-sm">
+        No narrative graph loaded
+      </div>
+    )
+  );
+
+  const StoryletEditorPanel = () => (
+    storyletGraph ? (
+      <div className="h-full w-full flex flex-col">
+        <ForgeStoryletGraphEditor
+          graph={storyletGraph}
+          onChange={onStoryletGraphChange}
+          flagSchema={activeFlagSchema}
+          gameState={activeGameState}
+          characters={characters}
+          className="h-full w-full"
+        />
+      </div>
+    ) : (
+      <div className="h-full w-full flex items-center justify-center text-df-text-secondary text-sm">
+        No storylet graph loaded
+      </div>
+    )
+  );
+
+  // Render layout - fixed layout with flexbox (no resizing)
+  // Narrative graph on top, storylet graph on bottom, sidebar on left
+  const renderLayout = () => {
+    return (
+      <div className="flex h-full w-full">
+        {panelVisibility.sidebar && (
+          <div className="w-[280px] border-r border-df-sidebar-border flex-shrink-0">
+            <SidebarPanel />
+          </div>
+        )}
+        <div className="flex-1 flex flex-col min-w-0">
+          {panelVisibility['narrative-editor'] && (
+            <div className="flex-1 border-b border-df-sidebar-border min-h-0">
+              <NarrativeEditorPanel />
+            </div>
+          )}
+          {panelVisibility['storylet-editor'] && (
+            <div className="flex-1 min-h-0">
+              <StoryletEditorPanel />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`flex h-full w-full flex-col ${className}`}>
-      <ForgeWorkspaceToolbar
+      <ForgeWorkspaceMenuBar
         counts={{ actCount: 0, chapterCount: 0, pageCount: 0, characterCount: Object.keys(characters ?? {}).length }}
         toolbarActions={toolbarActions}
         onGuideClick={() => { }}
         onPlayClick={() => { }}
         onFlagClick={() => { }}
+        panelVisibility={panelVisibility}
+        onTogglePanel={togglePanel}
+        headerLinks={headerLinks}
       />
 
-      <div className="flex min-h-0 flex-1 gap-2 p-2">
-        {/* Storylets Sidebar */}
-        <StoryletsSidebar />
-
-        {/* Main editor area */}
-        <div className="flex min-h-0 flex-1 flex-col gap-2">
-          {narrativeGraph ? (
-            <ResizablePanel
-              defaultSize={40}
-              minSize={20}
-              maxSize={80}
-              direction="vertical"
-              title="Narrative Graph"
-              className="rounded-lg border border-df-node-border bg-df-editor-bg"
-            >
-              <ForgeNarrativeGraphEditor 
-                graph={narrativeGraph} 
-                onChange={onNarrativeGraphChange} 
-                className="h-full" 
-              />
-            </ResizablePanel>
-          ) : (
-            <div className="rounded-lg border border-df-node-border bg-df-editor-bg p-3 text-sm text-df-text-secondary">
-              No narrative graph loaded.
-            </div>
-          )}
-
-          {storyletGraph ? (
-            <ResizablePanel
-              defaultSize={60}
-              minSize={20}
-              maxSize={80}
-              direction="vertical"
-              title="Storylet Graph"
-              className="flex-1 rounded-lg border border-df-node-border bg-df-editor-bg"
-            >
-              <ForgeStoryletGraphEditor
-                graph={storyletGraph}
-                onChange={onStoryletGraphChange}
-                flagSchema={activeFlagSchema}
-                gameState={activeGameState}
-                characters={characters}
-                className="h-full"
-              />
-            </ResizablePanel>
-          ) : (
-            <div className="rounded-lg border border-df-node-border bg-df-editor-bg p-3 text-sm text-df-text-secondary">
-              No storylet graph loaded.
-            </div>
-          )}
-        </div>
-      </div>
+      {renderLayout()}
     </div>
   );
 }

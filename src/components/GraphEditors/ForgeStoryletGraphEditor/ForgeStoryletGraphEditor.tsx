@@ -64,7 +64,6 @@ import type {
   ForgeNodeType,
   ForgeReactFlowNode,
 } from '@/src/types/forge/forge-graph';
-import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
 
 import {
   useForgeFlowEditorShell,
@@ -79,6 +78,7 @@ import {
 } from '@/src/components/GraphEditors/hooks/useForgeEditorSession';
 
 import { useForgeWorkspaceStore } from '@/src/components/ForgeWorkspace/store/forge-workspace-store';
+import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
 
 import {
   ForgeEditorActionsProvider,
@@ -194,9 +194,9 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
   // Actions from dispatch (node/edge components consume this)
   const actions = React.useMemo(() => makeForgeEditorActions(shell.dispatch), [shell.dispatch]);
 
-  // Path highlighting
+  // Path highlighting - only calculate when enabled
   const { edgesToSelectedNode, nodeDepths } = useFlowPathHighlighting(
-    shell.selectedNodeId,
+    showPathHighlight ? shell.selectedNodeId : null,
     shell.effectiveGraph
   );
 
@@ -344,41 +344,41 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
         {/* Toolbar with breadcrumbs and view toggles */}
         <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-df-control-border bg-df-editor-bg flex-shrink-0">
           <GraphBreadcrumbs scope="storylet" />
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <button
               onClick={() => setViewMode('graph')}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                 viewMode === 'graph'
                   ? 'bg-df-control-active text-df-text-primary'
                   : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
               }`}
               title="Graph View"
             >
-              <Network size={14} className="inline mr-1.5" />
+              <Network size={14} className="inline mr-1" />
               Graph
             </button>
             <button
               onClick={() => setViewMode('yarn')}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                 viewMode === 'yarn'
                   ? 'bg-df-control-active text-df-text-primary'
                   : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
               }`}
               title="Yarn View"
             >
-              <FileText size={14} className="inline mr-1.5" />
+              <FileText size={14} className="inline mr-1" />
               Yarn
             </button>
             <button
               onClick={() => setViewMode('play')}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                 viewMode === 'play'
                   ? 'bg-df-control-active text-df-text-primary'
                   : 'bg-df-control-bg text-df-text-secondary hover:bg-df-control-hover'
               }`}
               title="Play View"
             >
-              <Play size={14} className="inline mr-1.5" />
+              <Play size={14} className="inline mr-1" />
               Play
             </button>
           </div>
@@ -405,6 +405,34 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
               onNodeDoubleClick={shell.onNodeDoubleClick}
               onPaneContextMenu={shell.onPaneContextMenu}
               onPaneClick={shell.onPaneClick}
+              onDragOver={(event) => {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                const nodeType = event.dataTransfer.getData('application/reactflow') as ForgeNodeType;
+                
+                // Validate node type is allowed for storylet graphs
+                const allowedTypes = [
+                  FORGE_NODE_TYPE.CHARACTER,
+                  FORGE_NODE_TYPE.PLAYER,
+                  FORGE_NODE_TYPE.CONDITIONAL,
+                  FORGE_NODE_TYPE.STORYLET,
+                  FORGE_NODE_TYPE.DETOUR,
+                ];
+                
+                if (!nodeType || !allowedTypes.includes(nodeType)) {
+                  return;
+                }
+                
+                const position = reactFlow.screenToFlowPosition({
+                  x: event.clientX,
+                  y: event.clientY,
+                });
+                
+                actions.createNode(nodeType, position.x, position.y);
+              }}
               fitView
               className="bg-df-canvas-bg"
               style={{

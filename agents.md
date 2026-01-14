@@ -349,6 +349,9 @@ The Next.js app runs from the root directory. Configure Vercel as follows:
 3. **Type Safety**: Leverage TypeScript types and constants
 4. **Constants First**: Check `src/types/constants.ts` before adding new string values
 5. **Component Naming**: V2 components use `V2` suffix (e.g., `NPCNodeV2`)
+6. **Cross-platform paths**: Do not create files or directories with `:` in the name.
+   Windows Git clients cannot checkout paths containing colons, so use nested segments
+   or `-` in route folder names instead (e.g., `edits-propose`, `steps/[stepId]/apply`).
 
 ## Quick Reference
 

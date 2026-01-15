@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* Import dialogue-forge theme */
-@import './theme.css';
+@import './themes.css';
 @import './scrollbar.css';
 
 /* Source paths for Tailwind content detection */
@@ -104,42 +104,8 @@
   --color-ring: var(--ring);
 }
 
-:root {
-  /* Base shadcn/ui CSS variables (mapped to DF theme) */
-  --background: var(--color-df-base);
-  --foreground: var(--color-df-text-primary);
-
-  --card: var(--color-df-surface);
-  --card-foreground: var(--color-df-text-primary);
-
-  --popover: var(--color-df-elevated);
-  --popover-foreground: var(--color-df-text-primary);
-
-  --primary: var(--color-df-node-selected);
-  --primary-foreground: var(--color-df-text-primary);
-
-  --secondary: var(--color-df-control-bg);
-  --secondary-foreground: var(--color-df-text-primary);
-
-  --muted: var(--color-df-control-bg);
-  --muted-foreground: var(--color-df-text-tertiary);
-
-  --accent: var(--color-df-control-hover);
-  --accent-foreground: var(--color-df-text-primary);
-
-  --destructive: var(--color-df-error);
-  --destructive-foreground: var(--color-df-text-primary);
-
-  --border: var(--color-df-control-border);
-  --input: var(--color-df-control-border);
-  --ring: var(--color-df-node-selected);
-
-  --radius: 0.6rem;
-}
-
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: system-ui, -apple-system, sans-serif;
 }
-

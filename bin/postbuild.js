@@ -31,19 +31,19 @@ function verifyCssPaths() {
   const checks = [
     {
       filePath: path.join(__dirname, '..', 'dist', 'index.js'),
-      cssImports: ['./styles/scrollbar.css', './styles/theme.css']
+      cssImports: ['./styles/scrollbar.css', './styles/themes.css']
     },
     {
       filePath: path.join(__dirname, '..', 'dist', 'index.d.ts'),
-      cssImports: ['./styles/scrollbar.css', './styles/theme.css']
+      cssImports: ['./styles/scrollbar.css', './styles/themes.css']
     },
     {
       filePath: path.join(__dirname, '..', 'dist', 'esm', 'index.js'),
-      cssImports: ['../styles/scrollbar.css', '../styles/theme.css']
+      cssImports: ['../styles/scrollbar.css', '../styles/themes.css']
     },
     {
       filePath: path.join(__dirname, '..', 'dist', 'esm', 'index.d.ts'),
-      cssImports: ['../styles/scrollbar.css', '../styles/theme.css']
+      cssImports: ['../styles/scrollbar.css', '../styles/themes.css']
     }
   ];
 

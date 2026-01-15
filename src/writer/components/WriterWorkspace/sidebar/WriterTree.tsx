@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Book, BookOpen, FileText } from 'lucide-react';
-import { useWriterWorkspaceStore } from '@/writer/components/store/writer-workspace-store';
+import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 import { WriterTreeRow } from './WriterTreeRow';
 
 interface WriterTreeProps {

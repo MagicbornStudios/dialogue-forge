@@ -26,7 +26,7 @@ Once the extension is installed:
 You'll see two stores in the DevTools:
 
 1. **ForgeUIStore** - UI state (view modes, tabs, modals, selection)
-2. **NarrativeWorkspaceStore** - Domain state (thread, dialogues, game state)
+2. **NarrativeWorkspaceStore** - Domain state (dialogues, game state)
 
 ## Features
 

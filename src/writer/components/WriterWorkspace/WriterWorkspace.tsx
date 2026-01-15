@@ -5,7 +5,7 @@ import {
   WriterWorkspaceStoreProvider,
   createWriterWorkspaceStore,
   useWriterWorkspaceStore,
-} from '@/writer/components/store/writer-workspace-store';
+} from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 import { WriterTree } from '@/writer/components/WriterWorkspace/sidebar/WriterTree';
 import { WriterLayout } from '@/writer/components/WriterWorkspace/layout/WriterLayout';
 import { WriterEditorPane } from '@/writer/components/WriterWorkspace/editor/WriterEditorPane';

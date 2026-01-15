@@ -10,7 +10,6 @@ export const PAYLOAD_COLLECTIONS = {
   MEDIA: 'media',
   CHARACTERS: 'characters',
   DIALOGUES: 'dialogues',
-  THREADS: 'threads',
   ACTS: 'acts',
   CHAPTERS: 'chapters',
   PAGES: 'pages',

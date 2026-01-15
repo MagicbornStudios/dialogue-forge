@@ -15,7 +15,7 @@ simulator** intended for narrative/game teams. It provides:
   between the editor and external tools.
 - A **flag system** for gameplay state, with schema-driven validation and
   runtime updates.
-- A **narrative layer** (threads/acts/chapters/pages/storylets) to organize
+- A **narrative layer** (acts/chapters/pages/storylets) to organize
   dialogue nodes into higher-level story structures.
 - A **demo application** (Next.js) that exercises the editor and players.
 
@@ -30,7 +30,7 @@ The **primary data structures** are defined in `src/types`:
 
 - `DialogueTree` and `DialogueNode` represent the graph-based dialogue content.
 - `FlagSchema` and flag types define validation and runtime flag behavior.
-- Narrative types (`StoryThread`, `NarrativeAct`, `NarrativeChapter`,
+- Narrative types (`NarrativeAct`, `NarrativeChapter`,
   `NarrativePage`, `Storylet`, `StoryletPool`) model the story structure that
   wraps dialogue graphs.
 
@@ -65,7 +65,7 @@ The narrative toolset is layered on top of the dialogue editor:
 
 - `NarrativeWorkspace` manages the overall story structure and embeds
   `DialogueGraphEditor`.
-- `NarrativeGraphView` renders narrative thread/act/chapter/page structures.
+- `NarrativeGraphView` renders narrative act/chapter/page structures.
 - Narrative utilities in `src/utils/narrative-*` convert between narrative
   structures and graph data for visualization.
 

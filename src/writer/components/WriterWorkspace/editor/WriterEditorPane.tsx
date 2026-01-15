@@ -5,7 +5,7 @@ import {
   WRITER_AI_PROPOSAL_STATUS,
   WRITER_SAVE_STATUS,
   WriterWorkspaceState,
-} from '@/writer/components/store/writer-workspace-store';
+} from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 import { applyWriterPatchOps } from '@/writer/lib/editor/patches';
 import { LexicalEditor } from '@/writer/components/WriterWorkspace/editor/LexicalEditor';
 import { AutosavePlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/AutosavePlugin';

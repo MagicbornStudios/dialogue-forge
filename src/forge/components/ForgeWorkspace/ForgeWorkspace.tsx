@@ -8,7 +8,7 @@ import type { FlagSchema } from '@/forge/types/flags';
 import { ForgeWorkspaceMenuBar } from '@/forge/components/ForgeWorkspace/components/ForgeWorkspaceMenuBar';
 import { ProjectSync } from '@/forge/components/ForgeWorkspace/components/ProjectSync';
 import { ForgeWorkspaceLayout } from '@/forge/components/ForgeWorkspace/components/ForgeWorkspaceLayout';
-import { ForgeWorkspaceModalsRenderer } from '@/forge/components/ForgeWorkspace/components/ForgeWorkspaceModals';
+import { ForgeWorkspaceModalsRenderer } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeWorkspaceModals';
 import { NodeDragProvider } from '@/forge/components/ForgeWorkspace/hooks/useNodeDrag';
 
 import {

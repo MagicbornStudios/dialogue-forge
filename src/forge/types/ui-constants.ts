@@ -43,7 +43,7 @@ export const NARRATIVE_NODE_TYPE_LABELS: Record<NarrativeForgeNodeType, string> 
 
 /**
  * Available narrative node types by context
- * Note: Start node (formerly "thread") can connect to ACT nodes
+ * Note: Start node can connect to ACT nodes
  */
 export const AVAILABLE_NARRATIVE_NODE_TYPES = {
   /** Node types available from start node connections */

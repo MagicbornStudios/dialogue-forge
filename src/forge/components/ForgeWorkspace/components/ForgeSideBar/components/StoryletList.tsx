@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { useForgeWorkspaceActions } from '@/forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
 import { FORGE_GRAPH_KIND } from '@/forge/types/forge-graph';
-import { createGraphWithStartEnd } from '@/forge/components/GraphEditors/utils/forge-flow-helpers';
+import { createGraphWithStartEnd } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/forge-flow-helpers';
 import { SearchInput } from '@/src/shared/ui/SearchInput';
 
 interface StoryletsListProps {

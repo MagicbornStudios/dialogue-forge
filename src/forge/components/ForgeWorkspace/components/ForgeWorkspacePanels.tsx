@@ -4,8 +4,8 @@ import type { ForgeGameState } from '@/forge/types/forge-game-state';
 import type { ForgeCharacter } from '@/forge/types/characters';
 import type { FlagSchema } from '@/forge/types/flags';
 import { ForgeSidebar } from './ForgeSideBar/ForgeSidebar';
-import { ForgeNarrativeGraphEditor } from '@/forge/components/GraphEditors/ForgeNarrativeGraphEditor/ForgeNarrativeGraphEditor';
-import { ForgeStoryletGraphEditor } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditor';
+import { ForgeNarrativeGraphEditor } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/ForgeNarrativeGraphEditor';
+import { ForgeStoryletGraphEditor } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditor';
 
 interface SidebarPanelProps {
   className?: string;

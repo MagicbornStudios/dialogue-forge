@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import {
   useWriterWorkspaceStore,
   WRITER_SAVE_STATUS,
-} from '@/writer/components/store/writer-workspace-store';
+} from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 
 const DEFAULT_AUTOSAVE_DELAY_MS = 1000;
 

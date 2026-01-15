@@ -38,7 +38,6 @@ The GraphEditors architecture is **well-structured with clear separation** betwe
 | `ActNode` | `ForgeNarrativeGraphEditor/components/ActNode/` | Narrative act container |
 | `ChapterNode` | `ForgeNarrativeGraphEditor/components/ChapterNode/` | Chapter organization |
 | `PageNode` | `ForgeNarrativeGraphEditor/components/PageNode/` | Content pages |
-| `ThreadNode` | `ForgeNarrativeGraphEditor/components/ThreadNode/` | Narrative threads |
 | `NarrativeGraphEditorPaneContextMenu` | `ForgeNarrativeGraphEditor/components/` | Narrative-specific context menu |
 
 ### Storylet-Exclusive Components

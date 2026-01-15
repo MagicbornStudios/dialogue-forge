@@ -121,7 +121,7 @@ const gameFlags = {
 ## Features
 
 - **Visual Node Editor** - Drag nodes, connect edges, right-click menus
-- **Narrative Workspace** - Organize dialogue into story threads, acts, chapters, and storylets
+- **Narrative Workspace** - Organize dialogue into, acts, chapters, and storylets
 - **Yarn Spinner Import/Export** - Work with `.yarn` files
 - **Flag System** - Reference game flags with autocomplete dropdown
 - **Simulation Mode** - Test dialogues with current game state

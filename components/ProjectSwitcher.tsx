@@ -123,7 +123,7 @@ export function ProjectSwitcher({ selectedProjectId, onProjectChange }: ProjectS
           <DialogHeader>
             <DialogTitle>Create New Project</DialogTitle>
             <DialogDescription>
-              Create a new project to organize your dialogues, threads, and narrative content.
+              Create a new project to organize your dialogues, and narrative content.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

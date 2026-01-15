@@ -4,9 +4,10 @@ import type { ForgeGameState } from '@/forge/types/forge-game-state';
 import type { ForgeCharacter } from '@/forge/types/characters';
 import type { FlagSchema } from '@/forge/types/flags';
 import { ForgePlayModal } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgePlayModal';
+import { ForgeYarnModal } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeYarnModal';
 import { GuidePanel } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GuidePanel';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
-import { ForgeFlagManagerModal } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/components/ForgeFlagManagerModal/ForgeFlagManagerModal';
+import { ForgeFlagManagerModal } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagManagerModal';
 interface ForgeWorkspaceModalsProps {
   narrativeGraph: ForgeGraphDoc | null;
   storyletGraph: ForgeGraphDoc | null;
@@ -29,19 +30,26 @@ export function ForgeWorkspaceModalsRenderer({
   onUpdateGameState,
 }: ForgeWorkspaceModalsRendererProps) {
   const modalState = useForgeWorkspaceStore((s) => s.modalState);
-  const openPlayModal = useForgeWorkspaceStore((s) => s.actions.openPlayModal);
   const closePlayModal = useForgeWorkspaceStore((s) => s.actions.closePlayModal);
-  const openFlagModal = useForgeWorkspaceStore((s) => s.actions.openFlagModal);
+  const closeYarnModal = useForgeWorkspaceStore((s) => s.actions.closeYarnModal);
   const closeFlagModal = useForgeWorkspaceStore((s) => s.actions.closeFlagModal);
-  const openGuide = useForgeWorkspaceStore((s) => s.actions.openGuide);
   const closeGuide = useForgeWorkspaceStore((s) => s.actions.closeGuide);
-  // Determine which graph to use for play modal (prefer narrative, fallback to storylet)
+  
+  // Determine which graph to use for modals (prefer narrative, fallback to storylet)
   const playGraph = narrativeGraph ?? storyletGraph;
   const playTitle = narrativeGraph ? 'Narrative' : storyletGraph ? 'Storylet' : '';
   const playSubtitle = playGraph?.title ?? '';
 
-  // Determine which graph to use for flag manager (prefer narrative, fallback to storylet)
+  const yarnGraph = narrativeGraph ?? storyletGraph;
   const flagGraph = narrativeGraph ?? storyletGraph;
+  
+  // Get graph change handler from workspace if available
+  const setGraph = useForgeWorkspaceStore((s) => s.actions.setGraph);
+  const handleGraphChange = (updatedGraph: typeof narrativeGraph) => {
+    if (updatedGraph) {
+      setGraph(String(updatedGraph.id), updatedGraph);
+    }
+  };
 
   return (
     <>
@@ -54,6 +62,15 @@ export function ForgeWorkspaceModalsRenderer({
           gameStateFlags={gameState?.flags}
           title={playTitle}
           subtitle={playSubtitle}
+        />
+      )}
+      
+      {yarnGraph && (
+        <ForgeYarnModal
+          isOpen={modalState.isYarnModalOpen}
+          onClose={closeYarnModal}
+          graph={yarnGraph}
+          onGraphChange={handleGraphChange}
         />
       )}
       

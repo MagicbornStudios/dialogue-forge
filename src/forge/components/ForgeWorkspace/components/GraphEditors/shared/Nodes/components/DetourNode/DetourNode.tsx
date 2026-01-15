@@ -1,7 +1,7 @@
 import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { CornerDownRight, Hash, ArrowLeftCircle, Edit3, Trash2 } from 'lucide-react';
-import type { LayoutDirection } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/layout/types';
+import type { LayoutDirection } from '@/forge/lib/utils/layout/types';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -9,7 +9,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/shared/ui/context-menu';
-import { useForgeEditorActions } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorActions';
+import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import type { ForgeNode } from '@/forge/types/forge-graph';
 
 interface DetourNodeData {

@@ -7,9 +7,9 @@ import { ConditionAutocomplete } from '@/forge/components/ForgeWorkspace/compone
 import { FlagSelector } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/FlagSelector';
 import { EdgeIcon } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/EdgeIcon';
 import { User, GitBranch } from 'lucide-react';
-import { validateCondition, parseCondition } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/condition-utils';
-import { CHOICE_COLORS } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/forge-flow-helpers';
-import { useForgeEditorActions } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorActions';
+import { validateCondition, parseCondition } from '@/forge/lib/yarn-converter/utils/condition-utils';
+import { CHOICE_COLORS } from '@/forge/lib/utils/forge-flow-helpers';
+import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 
 interface PlayerNodeFieldsProps {
   node: ForgeNode;

@@ -5,7 +5,7 @@ import { ForgeCharacter } from '@/forge/types/characters';
 import { CharacterSelector } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/CharacterSelector';
 import { ConditionAutocomplete } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ConditionAutocomplete';
 import { X, User, Maximize2 } from 'lucide-react';
-import { validateCondition, parseCondition } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/condition-utils';
+import { validateCondition, parseCondition } from '@/forge/lib/yarn-converter/utils/condition-utils';
 import { ForgeNode, FORGE_CONDITIONAL_BLOCK_TYPE } from '@/forge/types/forge-graph';
 
 interface ConditionalNodeFieldsProps {

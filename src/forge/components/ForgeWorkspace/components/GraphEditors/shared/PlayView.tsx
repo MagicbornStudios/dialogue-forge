@@ -3,9 +3,9 @@ import { ForgeGraphDoc } from '@/forge/types/forge-graph';
 import { FLAG_TYPE } from '@/forge/types/constants';
 import { FlagSchema } from '@/forge/types/flags';
 import { DialogueResult, ForgeFlagState, ForgeGameFlagState } from '@/forge/types/forge-game-state';
-import { GamePlayer } from '@/forge/components/ForgeWorkspace/components/GamePlayer/components/GamePlayer';
-import { flagTypeColors } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/components/ForgeFlagManagerModal/FlagManager/utils/flag-constants';
-import { initializeFlags } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/components/ForgeFlagManagerModal/FlagManager/utils/flag-manager';
+import { GamePlayer } from '@/forge/components/ForgeWorkspace/components/GamePlayer/GamePlayer';
+import { flagTypeColors } from '@/forge/lib/flag-manager/utils/flag-constants';
+import { initializeFlags } from '@/forge/lib/flag-manager/utils/flag-manager';
 
 interface PlayViewProps {
   graph: ForgeGraphDoc;

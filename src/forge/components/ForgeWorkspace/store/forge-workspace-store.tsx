@@ -87,6 +87,8 @@ export interface ForgeWorkspaceState {
     setFocusedEditor: ReturnType<typeof createViewStateSlice>["setFocusedEditor"]
     openPlayModal: ReturnType<typeof createViewStateSlice>["openPlayModal"]
     closePlayModal: ReturnType<typeof createViewStateSlice>["closePlayModal"]
+    openYarnModal: ReturnType<typeof createViewStateSlice>["openYarnModal"]
+    closeYarnModal: ReturnType<typeof createViewStateSlice>["closeYarnModal"]
     openFlagModal: ReturnType<typeof createViewStateSlice>["openFlagModal"]
     closeFlagModal: ReturnType<typeof createViewStateSlice>["closeFlagModal"]
     openGuide: ReturnType<typeof createViewStateSlice>["openGuide"]
@@ -259,6 +261,8 @@ export function createForgeWorkspaceStore(
             setFocusedEditor: viewStateSlice.setFocusedEditor,
             openPlayModal: viewStateSlice.openPlayModal,
             closePlayModal: viewStateSlice.closePlayModal,
+            openYarnModal: viewStateSlice.openYarnModal,
+            closeYarnModal: viewStateSlice.closeYarnModal,
             openFlagModal: viewStateSlice.openFlagModal,
             closeFlagModal: viewStateSlice.closeFlagModal,
             openGuide: viewStateSlice.openGuide,

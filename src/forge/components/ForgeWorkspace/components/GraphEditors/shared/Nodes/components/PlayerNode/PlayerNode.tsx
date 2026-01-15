@@ -4,7 +4,7 @@ import { ForgeChoice   } from '@/forge/types/forge-graph';
 import { ForgeCharacter } from '@/forge/types/characters';
 import { GitBranch, Play, Flag, Hash, Edit3, Plus, Trash2 } from 'lucide-react';
 import { FlagSchema } from '@/forge/types/flags';
-import { LayoutDirection } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/layout/types';
+import { LayoutDirection } from '@/forge/lib/utils/layout/types';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -13,8 +13,8 @@ import {
   ContextMenuTrigger,
 } from '@/shared/ui/context-menu';
 import { ForgeNode } from '@/forge/types/forge-graph';
-import { getFlagColorClass } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/flag-styles';
-import { useForgeEditorActions } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorActions';
+import { getFlagColorClass } from '@/forge/lib/utils/flag-styles';
+import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 
 interface PlayerNodeData {
   node: ForgeNode;

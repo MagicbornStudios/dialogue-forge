@@ -2,7 +2,7 @@ import {
   WRITER_PATCH_OP,
   type WriterDocSnapshot,
   type WriterPatchOp,
-} from '@/ai/aiadapter/domains/writer/writer-ai-types';
+} from '@/writer/types/writer-ai-types';
 
 type WriterBlockRecord = Record<string, unknown> & {
   id?: string;

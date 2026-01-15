@@ -2,7 +2,7 @@ import React from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { Hash, BookOpen, Flag, Play, Edit3, Trash2, ExternalLink } from 'lucide-react';
 import type { FlagSchema } from '@/forge/types/flags';
-import type { LayoutDirection } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/layout/types';
+import type { LayoutDirection } from '@/forge/lib/utils/layout/types';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -12,8 +12,8 @@ import {
 } from '@/shared/ui/context-menu';
 
 import type { ForgeNode } from '@/forge/types/forge-graph';
-import { getFlagColorClass } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/flag-styles';
-import { useForgeEditorActions } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorActions';
+import { getFlagColorClass } from '@/forge/lib/utils/flag-styles';
+import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { useForgeWorkspaceActions } from '@/forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
 
 interface StoryletNodeData {

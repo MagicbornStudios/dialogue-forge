@@ -16,7 +16,7 @@ export interface ConfigActions {
 export function createConfigSlice(
   set: Parameters<StateCreator<AiWorkspaceState, [], [], AiWorkspaceState>>[0],
   get: Parameters<StateCreator<AiWorkspaceState, [], [], AiWorkspaceState>>[1],
-  dataAdapter?: import('@/ai/adapters/ai-data-adapter').AiDataAdapter
+  dataAdapter?: import('@/ai/adapters/types/ai-data-adapter').AiDataAdapter
 ): ConfigSlice & ConfigActions {
   return {
     apiKey: null,

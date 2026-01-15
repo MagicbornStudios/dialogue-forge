@@ -13,6 +13,7 @@ import { createContentSlice } from './slices/content.slice';
 import { createEditorSlice } from './slices/editor.slice';
 import { createAiSlice } from './slices/ai.slice';
 import { createNavigationSlice } from './slices/navigation.slice';
+import { createViewStateSlice } from './slices/viewState.slice';
 import type { EventSink } from '@/writer/events/writer-events';
 import { createEvent, WRITER_EVENT_TYPE } from '@/writer/events/events';
 import type {
@@ -27,7 +28,7 @@ import {
 } from './writer-workspace-types';
 
 // Re-export types for convenience
-export type { WriterDocSnapshot, WriterPatchOp, WriterSelectionSnapshot } from '@/ai/aiadapter/domains/writer/writer-ai-types';
+export type { WriterDocSnapshot, WriterPatchOp, WriterSelectionSnapshot } from '@/writer/types/writer-ai-types';
 export type {
   WriterDraftState,
   WriterSaveStatus,
@@ -48,19 +49,23 @@ export interface WriterWorkspaceState {
   editorError: string | null;
 
   // AI slice
-  aiPreview: import('@/ai/aiadapter/domains/writer/writer-ai-types').WriterPatchOp[] | null;
+  aiPreview: import('@/writer/types/writer-ai-types').WriterPatchOp[] | null;
   aiPreviewMeta: WriterAiPreviewMeta | null;
   aiProposalStatus: WriterAiProposalStatus;
   aiError: string | null;
-  aiSelection: import('@/ai/aiadapter/domains/writer/writer-ai-types').WriterSelectionSnapshot | null;
-  aiSnapshot: import('@/ai/aiadapter/domains/writer/writer-ai-types').WriterDocSnapshot | null;
-  aiUndoSnapshot: import('@/ai/aiadapter/domains/writer/writer-ai-types').WriterDocSnapshot | null;
+  aiSelection: import('@/writer/types/writer-ai-types').WriterSelectionSnapshot | null;
+  aiSnapshot: import('@/writer/types/writer-ai-types').WriterDocSnapshot | null;
+  aiUndoSnapshot: import('@/writer/types/writer-ai-types').WriterDocSnapshot | null;
 
   // Navigation slice
   activePageId: number | null;
   expandedActIds: Set<number>;
   expandedChapterIds: Set<number>;
   navigationError: string | null;
+
+  // View state slice
+  modalState: ReturnType<typeof createViewStateSlice>['modalState'];
+  panelLayout: ReturnType<typeof createViewStateSlice>['panelLayout'];
 
   // Data adapter
   dataAdapter?: WriterDataAdapter;
@@ -81,7 +86,7 @@ export interface WriterWorkspaceState {
     setEditorError: (error: string | null) => void;
 
     // AI actions
-    setAiSelection: (selection: import('@/ai/aiadapter/domains/writer/writer-ai-types').WriterSelectionSnapshot | null) => void;
+    setAiSelection: (selection: import('@/writer/types/writer-ai-types').WriterSelectionSnapshot | null) => void;
     proposeAiEdits: () => Promise<void>;
     applyAiEdits: () => void;
     revertAiDraft: () => void;
@@ -121,6 +126,7 @@ export function createWriterWorkspaceStore(
         const editorSlice = createEditorSlice(set, get, initialPages);
         const aiSlice = createAiSlice(set, get);
         const navigationSlice = createNavigationSlice(set, get, initialActivePageId);
+        const viewStateSlice = createViewStateSlice(set, get);
 
         // Wrap actions to emit events
         const setPagesWithEvents = (pages: ForgePage[]) => {
@@ -165,6 +171,7 @@ export function createWriterWorkspaceStore(
           ...editorSlice,
           ...aiSlice,
           ...navigationSlice,
+          ...viewStateSlice,
           dataAdapter,
           actions: {
             // Content actions
@@ -207,6 +214,17 @@ export function createWriterWorkspaceStore(
             toggleActExpanded: navigationSlice.toggleActExpanded,
             toggleChapterExpanded: navigationSlice.toggleChapterExpanded,
             setNavigationError: navigationSlice.setNavigationError,
+
+            // View state actions
+            openYarnModal: viewStateSlice.openYarnModal,
+            closeYarnModal: viewStateSlice.closeYarnModal,
+            openPlayModal: viewStateSlice.openPlayModal,
+            closePlayModal: viewStateSlice.closePlayModal,
+            openSettingsModal: viewStateSlice.openSettingsModal,
+            closeSettingsModal: viewStateSlice.closeSettingsModal,
+            togglePanel: viewStateSlice.togglePanel,
+            dockPanel: viewStateSlice.dockPanel,
+            undockPanel: viewStateSlice.undockPanel,
           },
         };
       }),

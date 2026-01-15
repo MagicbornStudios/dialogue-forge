@@ -1,7 +1,7 @@
 import React from 'react';
 import { Panel } from 'reactflow';
 import { Layout, ArrowDown, ArrowRight, Magnet, Sparkles, Undo2, Flag, Home } from 'lucide-react';
-import { LayoutDirection } from '../utils/layout/types';
+import { LayoutDirection } from '../../../../../lib/utils/layout/types';
 
 interface GraphLayoutControlsProps {
   autoOrganize: boolean;

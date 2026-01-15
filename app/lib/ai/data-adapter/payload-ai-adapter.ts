@@ -1,4 +1,4 @@
-import type { AiDataAdapter } from '@/ai/adapters/ai-data-adapter';
+import type { AiDataAdapter } from '@/ai/adapters/types/ai-data-adapter';
 
 export function makePayloadAiAdapter(): AiDataAdapter {
   return {

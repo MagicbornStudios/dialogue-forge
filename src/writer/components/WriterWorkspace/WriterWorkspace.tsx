@@ -12,6 +12,7 @@ import { setupWriterWorkspaceSubscriptions } from '@/writer/components/WriterWor
 import { WriterTree } from '@/writer/components/WriterWorkspace/sidebar/WriterTree';
 import { WriterLayout } from '@/writer/components/WriterWorkspace/layout/WriterLayout';
 import { WriterEditorPane } from '@/writer/components/WriterWorkspace/editor/WriterEditorPane';
+import { WriterWorkspaceModalsRenderer } from '@/writer/components/WriterWorkspace/modals/WriterWorkspaceModals';
 
 interface WriterWorkspaceProps {
   acts?: ForgeAct[];
@@ -89,6 +90,8 @@ function WriterWorkspaceContent({
   onActivePageChange,
 }: Pick<WriterWorkspaceProps, 'className' | 'onActivePageChange'>) {
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
+  const pages = useWriterWorkspaceStore((state) => state.pages);
+  const activePage = activePageId ? pages.find((p) => p.id === activePageId) ?? null : null;
 
   useEffect(() => {
     if (onActivePageChange) {
@@ -97,11 +100,14 @@ function WriterWorkspaceContent({
   }, [activePageId, onActivePageChange]);
 
   return (
-    <div className={`flex h-full w-full flex-col ${className}`}>
-      <WriterLayout
-        sidebar={<WriterTree />}
-        editor={<WriterEditorPane />}
-      />
-    </div>
+    <>
+      <div className={`flex h-full w-full flex-col ${className}`}>
+        <WriterLayout
+          sidebar={<WriterTree />}
+          editor={<WriterEditorPane />}
+        />
+      </div>
+      <WriterWorkspaceModalsRenderer activePage={activePage} />
+    </>
   );
 }

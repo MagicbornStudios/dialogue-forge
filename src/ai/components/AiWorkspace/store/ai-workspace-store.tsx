@@ -7,7 +7,7 @@ import type { StoreApi } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { AiDataAdapter } from '@/ai/adapters/ai-data-adapter';
+import type { AiDataAdapter } from '@/ai/adapters/types/ai-data-adapter';
 import { createConfigSlice } from './slices/config.slice';
 import { createRequestsSlice, type AiRequest } from './slices/requests.slice';
 import { createResponsesSlice, type AiResponse } from './slices/responses.slice';

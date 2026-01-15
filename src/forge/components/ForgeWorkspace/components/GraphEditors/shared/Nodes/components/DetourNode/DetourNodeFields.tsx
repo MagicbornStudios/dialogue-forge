@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { ForgeGraphDoc } from '@/forge/types/forge-graph';
-import { NextNodeSelector } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/components/NextNodeSelector';
+import { NextNodeSelector } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NextNodeSelector';
 import { ForgeNode, FORGE_GRAPH_KIND, FORGE_STORYLET_CALL_MODE } from '@/forge/types/forge-graph';
 import { useForgeWorkspaceActions } from '@/forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';

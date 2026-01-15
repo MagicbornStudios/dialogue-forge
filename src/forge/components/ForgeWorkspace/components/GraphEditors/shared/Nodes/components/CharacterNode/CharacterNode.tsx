@@ -14,7 +14,7 @@ import { Handle, Position, NodeProps } from 'reactflow';
 import { ForgeCharacter } from '@/forge/types/characters';
 import { MessageSquare, Play, Flag, Hash, Edit3, Plus, Trash2 } from 'lucide-react';
 import { FlagSchema } from '@/forge/types/flags';
-import { LayoutDirection } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/layout/types'
+import { LayoutDirection } from '@/forge/lib/utils/layout/types'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -23,7 +23,7 @@ import {
   ContextMenuTrigger,
 } from '@/src/shared/ui/context-menu';
 import { ForgeNode, FORGE_CONDITIONAL_BLOCK_TYPE } from '@/forge/types/forge-graph';
-import { ShellNodeData } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeFlowEditorShell';
+import { ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
 
 // ============================================================================
 // Types
@@ -39,8 +39,8 @@ interface CharacterNodeData extends ShellNodeData{
 // Styles
 // ============================================================================
 
-import { getFlagColorClass } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/flag-styles';
-import { useForgeEditorActions } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorActions';
+import { getFlagColorClass } from '@/forge/lib/utils/flag-styles';
+import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 
 // ============================================================================
 // Component

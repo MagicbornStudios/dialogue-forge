@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { FlagSchema, FlagType } from '@/forge/types/flags';
-import { flagTypeIcons, flagTypeLabels } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/components/ForgeFlagManagerModal/FlagManager/utils/flag-constants';
-import { flagTypeColors } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/components/ForgeFlagManagerModal/FlagManager/utils/flag-constants';
+import { flagTypeIcons, flagTypeLabels } from '@/forge/lib/flag-manager/utils/flag-constants';
+import { flagTypeColors } from '@/forge/lib/flag-manager/utils/flag-constants';
 import { CONDITION_OPERATOR_SYMBOLS } from '@/forge/types/constants';
 import { DOM_EVENT_TYPE, KEYBOARD_KEY } from '@/shared/types';
 import { Input } from '@/shared/ui/input';

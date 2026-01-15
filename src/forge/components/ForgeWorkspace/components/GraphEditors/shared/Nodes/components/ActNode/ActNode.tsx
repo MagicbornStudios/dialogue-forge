@@ -8,8 +8,8 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/shared/ui/context-menu';
-import type { ShellNodeData } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeFlowEditorShell';
-import { useForgeEditorActions } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorActions';
+import type { ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
+import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 
 export function ActNode({ data, selected, id }: NodeProps<ShellNodeData>) {
   const { node, ui = {} } = data;

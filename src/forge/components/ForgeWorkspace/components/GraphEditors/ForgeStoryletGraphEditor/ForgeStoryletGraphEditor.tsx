@@ -21,19 +21,19 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 
 import type { ForgeGameFlagState } from '@/forge/types/forge-game-state';
-import { useFlowPathHighlighting } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useFlowPathHighlighting';
+import { useFlowPathHighlighting } from '@/forge/lib/graph-editor/hooks/useFlowPathHighlighting';
 
 import {
   edgeStrokeColor,
   type LayoutDirection,
-} from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/forge-flow-helpers';
+} from '@/forge/lib/utils/forge-flow-helpers';
 
 
 import { NodeEditor } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditor';
 import { GraphLeftToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLeftToolbar';
 import { GraphLayoutControls } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls';
 import { GraphMiniMap } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphMiniMap';
-import { ForgeStoryletGraphEditorPaneContextMenu } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeStoryletGraphEditor/components/ForgeStoryletGraphEditorPaneContextMenu';
+import { ForgeStoryletGraphEditorPaneContextMenu } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditorPaneContextMenu';
 
 import { CharacterNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/CharacterNode/CharacterNode';
 import { PlayerNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PlayerNode/PlayerNode';
@@ -42,10 +42,8 @@ import { StoryletNode } from '@/forge/components/ForgeWorkspace/components/Graph
 import { ChoiceEdge } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PlayerNode/ChoiceEdge';
 import { ForgeEdge } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Edges/ForgeEdge';
 import { DetourNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode';
-import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/components/ForgeGraphBreadcrumbs';
-import { YarnView } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/YarnView';
-import { PlayView } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/PlayView';
-import { Network, FileText, Play, Focus } from 'lucide-react';
+import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/ForgeGraphBreadcrumbs';
+import { Network, Focus, FileText, Play } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 import { cn } from '@/shared/lib/utils';
 
@@ -69,14 +67,14 @@ import type {
 import {
   useForgeFlowEditorShell,
   type ShellNodeData,
-} from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeFlowEditorShell';
+} from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
 
 import {
   createForgeEditorSessionStore,
   ForgeEditorSessionProvider,
   useForgeEditorSession,
   useForgeEditorSessionStore,
-} from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorSession';
+} from '@/forge/lib/graph-editor/hooks/useForgeEditorSession';
 
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
@@ -84,7 +82,7 @@ import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import {
   ForgeEditorActionsProvider,
   makeForgeEditorActions,
-} from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorActions';
+} from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 
 const nodeTypes = {
   CHARACTER: CharacterNode,
@@ -127,7 +125,6 @@ export interface ForgeStoryletGraphEditorProps {
   gameStateFlags?: ForgeGameFlagState; // Legacy prop, use gameState instead
 }
 
-type ViewMode = 'graph' | 'yarn' | 'play';
 
 function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) {
   const {
@@ -143,8 +140,9 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
   // Use gameState.flags if available, fallback to gameStateFlags for backward compatibility
   const resolvedGameStateFlags = gameState?.flags || gameStateFlags;
   
-  // View mode state
-  const [viewMode, setViewMode] = React.useState<ViewMode>('graph');
+  // Modal actions from workspace
+  const openYarnModal = useForgeWorkspaceStore((s) => s.actions.openYarnModal);
+  const openPlayModal = useForgeWorkspaceStore((s) => s.actions.openPlayModal);
 
   const reactFlow = useReactFlow();
 
@@ -372,30 +370,26 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
               <Focus size={14} style={{ color: 'var(--color-df-edge-choice-1)' }} />
             )}
           </div>
-          <ToggleGroup
-            type="single"
-            value={viewMode}
-            onValueChange={(value) => {
-              if (value) setViewMode(value as ViewMode);
-            }}
-            variant="outline"
-            className="gap-0"
-          >
-            <ToggleGroupItem value="graph" aria-label="Graph view" className="rounded-none border-r-0 first:rounded-l-md last:rounded-r-md last:border-r">
-              <Network className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="yarn" aria-label="Yarn view" className="rounded-none border-r-0">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={openYarnModal}
+              className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-1.5 text-xs text-df-text-secondary hover:text-df-text-primary transition"
+              title="View Yarn"
+            >
               <FileText className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="play" aria-label="Play view" className="rounded-none border-r-0 last:rounded-r-md last:border-r">
+            </button>
+            <button
+              onClick={openPlayModal}
+              className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-1.5 text-xs text-df-text-secondary hover:text-df-text-primary transition"
+              title="Play"
+            >
               <Play className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
+            </button>
+          </div>
         </div>
         
-        {/* View content */}
-        {viewMode === 'graph' && (
-          <div className="flex-1 flex overflow-hidden">
+        {/* Graph editor */}
+        <div className="flex-1 flex overflow-hidden">
             <div className="flex-1 relative w-full h-full" ref={shell.reactFlowWrapperRef} style={{ minHeight: 0 }}>
             <ReactFlow
               nodes={nodesWithMeta}
@@ -603,34 +597,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
               }}
             />
           )}
-          </div>
-        )}
-        
-        {viewMode === 'yarn' && (
-          <div className="flex-1 min-h-0">
-            <YarnView
-                graph={shell.effectiveGraph as ForgeGraphDoc}
-              onExport={() => {
-                // Export functionality can be added here
-                console.log('Export Yarn');
-              }}
-              onChange={(updatedGraph) => {
-                onChange(updatedGraph);
-              }}
-            />
-          </div>
-        )}
-        
-        {viewMode === 'play' && (
-          <div className="flex-1 min-h-0">
-            <PlayView
-              graph={shell.effectiveGraph as ForgeGraphDoc}
-              startNodeId={shell.effectiveGraph.startNodeId}
-              flagSchema={flagSchema}
-              gameStateFlags={resolvedGameStateFlags}
-            />
-          </div>
-        )}
+        </div>
       </div>
     </ForgeEditorActionsProvider>
   );

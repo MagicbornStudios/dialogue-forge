@@ -53,6 +53,8 @@ export interface WriterWorkspaceState {
   expandedActIds: Set<number>;
   expandedChapterIds: Set<number>;
   navigationError: string | null;
+  modalState: unknown;
+  panelLayout: unknown;
   dataAdapter?: unknown;
   actions: Record<string, unknown>;
 }

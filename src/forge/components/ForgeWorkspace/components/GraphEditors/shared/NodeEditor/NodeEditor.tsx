@@ -2,14 +2,14 @@ import React from 'react';
 import { ForgeGraphDoc, ForgeNode, ForgeStoryletCall } from '@/forge/types/forge-graph';
 import { FlagSchema } from '@/forge/types/flags';
 import { ForgeCharacter } from '@/forge/types/characters';
-import { useConditionInputs } from './hooks/useConditionInputs';
-import { useChoices } from './hooks/useChoices';
-import { getNodeTypeBorderColor } from './utils/nodeTypeHelpers';
-import { NodeEditorStyles } from './components/NodeEditorStyles';
-import { NodeEditorHeader } from './components/NodeEditorHeader';
-import { NodeEditorIdField } from './components/NodeEditorIdField';
-import { NodeEditorFields } from './components/NodeEditorFields';
-import { NodeEditorSetFlagsField } from './components/NodeEditorSetFlagsField';
+import { useConditionInputs } from '../../../../../../lib/node-editor/hooks/useConditionInputs';
+import { useChoices } from '../../../../../../lib/node-editor/hooks/useChoices';
+import { getNodeTypeBorderColor } from '../../../../../../lib/node-editor/utils/nodeTypeHelpers';
+import { NodeEditorStyles } from './NodeEditorStyles';
+import { NodeEditorHeader } from './NodeEditorHeader';
+import { NodeEditorIdField } from './NodeEditorIdField';
+import { NodeEditorFields } from './NodeEditorFields';
+import { NodeEditorSetFlagsField } from './NodeEditorSetFlagsField';
 
 interface NodeEditorProps {
   node: ForgeNode;

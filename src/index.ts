@@ -34,5 +34,5 @@ export {
 // Export utilities
 export { exportToYarn, importFromYarn } from '@/forge/lib/yarn-converter';
 export { initializeFlags, mergeFlagUpdates, validateFlags, getFlagValue } from '@/forge/components/shared/ForgeFlagManagerModal/FlagManager/utils/flag-manager';
-export * from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/forge-flow-helpers';
+export * from '@/forge/lib/utils/forge-flow-helpers';
 // narrative-helpers and narrative-converter removed - use ForgeGraphDoc flow-first paradigm

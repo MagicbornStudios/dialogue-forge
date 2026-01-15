@@ -16,10 +16,10 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-import { useFlowPathHighlighting } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useFlowPathHighlighting';
-import { type LayoutDirection } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/forge-flow-helpers';
+import { useFlowPathHighlighting } from '@/forge/lib/graph-editor/hooks/useFlowPathHighlighting';
+import { type LayoutDirection } from '@/forge/lib/utils/forge-flow-helpers';
 
-import { applyLayout } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/layout/layout';
+import { applyLayout } from '@/forge/lib/utils/layout/layout';
 import { GraphMiniMap } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphMiniMap';
 
 import { ActNode } from '../shared/Nodes/components/ActNode/ActNode';
@@ -27,7 +27,6 @@ import { ChapterNode } from '@/forge/components/ForgeWorkspace/components/GraphE
 import { PageNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PageNode/PageNode';
 import { DetourNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode';
 import { ForgeEdge } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Edges/ForgeEdge';
-import { YarnView } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/YarnView';
 import { Network, FileText, Focus } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 import { cn } from '@/shared/lib/utils';
@@ -35,15 +34,15 @@ import { cn } from '@/shared/lib/utils';
 import type { ForgeGraphDoc, ForgeNode, ForgeNodeType, ForgeReactFlowNode } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 
-import { useForgeFlowEditorShell, type ShellNodeData } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeFlowEditorShell';
-import { createForgeEditorSessionStore, ForgeEditorSessionProvider, useForgeEditorSession, useForgeEditorSessionStore } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorSession';
+import { useForgeFlowEditorShell, type ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
+import { createForgeEditorSessionStore, ForgeEditorSessionProvider, useForgeEditorSession, useForgeEditorSessionStore } from '@/forge/lib/graph-editor/hooks/useForgeEditorSession';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
-import { ForgeEditorActionsProvider, makeForgeEditorActions } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorActions';
-import { NarrativeGraphEditorPaneContextMenu } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/components/NarrativeGraphEditorPaneContextMenu';
-import { FORGE_COMMAND } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/forge-commands';
+import { ForgeEditorActionsProvider, makeForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
+import { NarrativeGraphEditorPaneContextMenu } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/NarrativeGraphEditorPaneContextMenu';
+import { FORGE_COMMAND } from '@/forge/lib/graph-editor/hooks/forge-commands';
 import { useNodeDrag } from '@/forge/components/ForgeWorkspace/hooks/useNodeDrag';
 import { NARRATIVE_FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
-import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/components/ForgeGraphBreadcrumbs';
+import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/ForgeGraphBreadcrumbs';
 import { ConditionalNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNode';
 import { GraphLeftToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLeftToolbar';
 import { GraphLayoutControls } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls';
@@ -67,7 +66,6 @@ export interface ForgeNarrativeGraphEditorProps {
   className?: string;
 }
 
-type ViewMode = 'graph' | 'yarn';
 
 function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps) {
   const {
@@ -76,8 +74,8 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     className = '',
   } = props;
   
-  // View mode state
-  const [viewMode, setViewMode] = React.useState<ViewMode>('graph');
+  // Modal actions from workspace
+  const openYarnModal = useForgeWorkspaceStore((s) => s.actions.openYarnModal);
   const { draggedNodeType } = useNodeDrag();
 
   const reactFlow = useReactFlow();
@@ -235,27 +233,17 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
               <Focus size={14} style={{ color: 'var(--color-df-info)' }} />
             )}
           </div>
-          <ToggleGroup
-            type="single"
-            value={viewMode}
-            onValueChange={(value) => {
-              if (value) setViewMode(value as ViewMode);
-            }}
-            variant="outline"
-            className="gap-0"
+          <button
+            onClick={openYarnModal}
+            className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-1.5 text-xs text-df-text-secondary hover:text-df-text-primary transition"
+            title="View Yarn"
           >
-            <ToggleGroupItem value="graph" aria-label="Graph view" className="rounded-none border-r-0 first:rounded-l-md last:rounded-r-md last:border-r">
-              <Network className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="yarn" aria-label="Yarn view" className="rounded-none border-r-0 last:rounded-r-md last:border-r">
-              <FileText className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
+            <FileText className="h-4 w-4" />
+          </button>
         </div>
         
-        {/* View content */}
-        {viewMode === 'graph' && (
-          <div className="flex-1 min-h-0" ref={shell.reactFlowWrapperRef}>
+        {/* Graph editor */}
+        <div className="flex-1 min-h-0" ref={shell.reactFlowWrapperRef}>
             <ReactFlow
         nodes={nodesWithMeta}
         edges={edgesWithMeta}
@@ -362,21 +350,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
         {/* For now, we'll skip it and add it in a follow-up if needed */}
             </ReactFlow>
           </div>
-        )}
-        
-        {viewMode === 'yarn' && graph && (
-          <div className="flex-1 min-h-0">
-            <YarnView
-              graph={graph as ForgeGraphDoc}
-              onExport={() => {
-                console.log('Export Yarn');
-              }}
-              onChange={(updatedGraph) => {
-                onChange(updatedGraph);
-              }}
-            />
-          </div>
-        )}
+        </div>
       </div>
     </ForgeEditorActionsProvider>
   );

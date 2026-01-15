@@ -3,7 +3,7 @@ import { ForgeGraphDoc } from '@/forge/types/forge-graph';
 import { ForgeCharacter } from '@/forge/types/characters';
 import { CharacterSelector } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/CharacterSelector';
 import { User } from 'lucide-react';
-import { NextNodeSelector } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/components/NextNodeSelector';
+import { NextNodeSelector } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NextNodeSelector';
 import { ForgeNode } from '@/forge/types/forge-graph';
 
 interface CharacterNodeFieldsProps {

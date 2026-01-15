@@ -3,7 +3,7 @@ import type {
   WriterDocSnapshot,
   WriterPatchOp,
   WriterSelectionSnapshot,
-} from '@/ai/aiadapter/domains/writer/writer-ai-types';
+} from '@/writer/types/writer-ai-types';
 import type { WriterWorkspaceState, WriterAiPreviewMeta, WriterAiProposalStatus } from '../writer-workspace-types';
 import { WRITER_AI_PROPOSAL_STATUS } from '../writer-workspace-types';
 import { applyWriterPatchOps } from '@/writer/lib/editor/patches';

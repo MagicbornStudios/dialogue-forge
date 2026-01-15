@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BaseEdge, EdgeProps, getSmoothStepPath, getBezierPath, Position } from 'reactflow';
 import type { ForgeReactFlowEdge, ForgeReactFlowNode, ForgeNodeType } from '@/forge/types/forge-graph';
-import { edgeColorFor } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/forge-edge-styles';
+import { edgeColorFor } from '@/forge/lib/utils/forge-edge-styles';
 import { EdgePulseAnimation, LoopIndicator, LoopArrowMarker } from '../Nodes/components/shared/EdgeSVGElements';
 import {
   ContextMenu,
@@ -10,7 +10,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/shared/ui/context-menu';
-import { useForgeEditorActions } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorActions';
+import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 
 interface EdgeContextMenuData {
   insertElementTypes?: Array<{ type: ForgeNodeType; label: string }>; // Data only, not callback

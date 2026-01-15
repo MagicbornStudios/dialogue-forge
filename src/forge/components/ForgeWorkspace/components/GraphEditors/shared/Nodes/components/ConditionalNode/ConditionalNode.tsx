@@ -5,7 +5,7 @@ import { CONDITION_VALUE_TYPE, FORGE_CONDITIONAL_BLOCK_TYPE } from '@/forge/type
 import { GitBranch, Play, Flag, Hash, Code, Edit3, Trash2, Plus } from 'lucide-react';
 import { FlagSchema } from '@/forge/types/flags';
 import { ForgeCharacter } from '@/forge/types/characters';
-import { LayoutDirection } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/layout/types';
+import { LayoutDirection } from '@/forge/lib/utils/layout/types';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -13,8 +13,8 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/shared/ui/context-menu';
-import { getFlagColorClass } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/flag-styles';
-import { useForgeEditorActions } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorActions';
+import { getFlagColorClass } from '@/forge/lib/utils/flag-styles';
+import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { CONDITION_OPERATOR } from '@/forge/types/constants';
 import { CONDITION_OPERATOR_SYMBOLS } from '@/forge/types/constants';
 import { formatCondition } from '@/forge/lib/yarn-converter/utils/condition-formatter';

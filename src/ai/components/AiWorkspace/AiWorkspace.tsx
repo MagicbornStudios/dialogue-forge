@@ -1,6 +1,6 @@
 // src/components/AiWorkspace/AiWorkspace.tsx
 import React, { useRef } from 'react';
-import type { AiDataAdapter } from '@/ai/adapters/ai-data-adapter';
+import type { AiDataAdapter } from '@/ai/adapters/types/ai-data-adapter';
 import {
   AiWorkspaceStoreProvider,
   createAiWorkspaceStore,

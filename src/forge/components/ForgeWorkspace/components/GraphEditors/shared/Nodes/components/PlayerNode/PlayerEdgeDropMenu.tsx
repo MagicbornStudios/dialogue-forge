@@ -2,8 +2,8 @@ import React from 'react';
 import { ForgeNodeType, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE_LABELS } from '@/forge/types/ui-constants';
 import { ContextMenuBase, ContextMenuButton } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ContextMenuBase';
-import { useForgeEditorActions } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorActions';
-import { useForgeEditorSessionStore } from '@/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorSession';
+import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
+import { useForgeEditorSessionStore } from '@/forge/lib/graph-editor/hooks/useForgeEditorSession';
 
 interface PlayerEdgeDropMenuProps {
   screenX: number;

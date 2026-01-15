@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Panel } from 'reactflow';
 import { Grid3x3, Map as MapIcon, Settings, BookOpen } from 'lucide-react';
-import { listLayouts } from '../utils/layout/layout';
-import { ANIMATION_CONSTANTS } from '../utils/constants';
+import { listLayouts } from '../../../../../lib/utils/layout/layout';
+import { ANIMATION_CONSTANTS } from '../../../../../lib/utils/constants';
 
 interface GraphLeftToolbarProps {
   layoutStrategy: string;

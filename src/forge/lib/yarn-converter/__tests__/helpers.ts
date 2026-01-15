@@ -8,7 +8,7 @@
 import type { ForgeGraphDoc, ForgeReactFlowNode, ForgeNode, ForgeNodeType, ForgeConditionalBlock } from '@/forge/types/forge-graph';
 import type { YarnConverterContext } from '../types';
 import { FORGE_NODE_TYPE, FORGE_GRAPH_KIND } from '@/forge/types/forge-graph';
-import { createEmptyForgeGraphDoc } from '@/forge/components/ForgeWorkspace/components/GraphEditors/utils/forge-flow-helpers';
+import { createEmptyForgeGraphDoc } from '@/forge/lib/utils/forge-flow-helpers';
 
 /**
  * Create a mock ForgeFlowNode for testing

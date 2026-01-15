@@ -20,15 +20,12 @@ import { useFlowPathHighlighting } from '@/forge/components/GraphEditors/hooks/u
 import { type LayoutDirection } from '@/forge/components/GraphEditors/utils/forge-flow-helpers';
 
 import { applyLayout } from '@/forge/components/GraphEditors/utils/layout/layout';
-import { GraphLeftToolbar } from '@/forge/components/GraphEditors/shared/GraphLeftToolbar';
-import { GraphLayoutControls } from '@/forge/components/GraphEditors/shared/GraphLayoutControls';
 import { GraphMiniMap } from '@/forge/components/GraphEditors/shared/GraphMiniMap';
 
 import { ActNode } from './components/ActNode/ActNode';
 import { ChapterNode } from './components/ChapterNode/ChapterNode';
 import { PageNode } from './components/PageNode/PageNode';
-import { ConditionalNodeV2 } from '@/forge/components/GraphEditors/shared/Nodes/ConditionalNode/ConditionalNodeV2';
-import { DetourNode } from '@/forge/components/GraphEditors/shared/Nodes/DetourNode';
+import { DetourNode } from '@/forge/components/GraphEditors/shared/Nodes/components/DetourNode';
 import { ForgeEdge } from '@/forge/components/GraphEditors/shared/Edges/ForgeEdge';
 import { YarnView } from '@/forge/components/GraphEditors/shared/YarnView';
 import { Network, FileText, Focus } from 'lucide-react';
@@ -47,12 +44,15 @@ import { FORGE_COMMAND } from '@/forge/components/GraphEditors/hooks/forge-comma
 import { useNodeDrag } from '@/forge/components/ForgeWorkspace/hooks/useNodeDrag';
 import { NARRATIVE_FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/components/ForgeGraphBreadcrumbs';
+import { ConditionalNode } from '@/forge/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNode';
+import { GraphLeftToolbar } from '@/forge/components/GraphEditors/shared/GraphLeftToolbar';
+import { GraphLayoutControls } from '@/forge/components/GraphEditors/shared/GraphLayoutControls';
 
 const nodeTypes = {
   [FORGE_NODE_TYPE.ACT]: ActNode,
   [FORGE_NODE_TYPE.CHAPTER]: ChapterNode,
   [FORGE_NODE_TYPE.PAGE]: PageNode,
-  [FORGE_NODE_TYPE.CONDITIONAL]: ConditionalNodeV2,
+  [FORGE_NODE_TYPE.CONDITIONAL]: ConditionalNode,
   [FORGE_NODE_TYPE.DETOUR]: DetourNode,
   // ThreadNode is a special "start" node - we'll use a custom type for it
   START: ActNode,

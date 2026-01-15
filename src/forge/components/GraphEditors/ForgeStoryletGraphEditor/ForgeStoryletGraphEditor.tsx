@@ -36,12 +36,12 @@ import { GraphMiniMap } from '@/forge/components/GraphEditors/shared/GraphMiniMa
 import { ForgeStoryletGraphEditorPaneContextMenu } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/components/ForgeStoryletGraphEditorPaneContextMenu';
 
 import { CharacterNode } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/components/CharacterNode/CharacterNode';
-import { PlayerNodeV2 } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/components/PlayerNode/PlayerNodeV2';
-import { ConditionalNodeV2 } from '@/forge/components/GraphEditors/shared/Nodes/ConditionalNode/ConditionalNodeV2';
+import { PlayerNode } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/components/PlayerNode/PlayerNode';
+import { ConditionalNode } from '@/forge/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNode';
 import { StoryletNode } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/components/StoryletNode/StoryletNode';
-import { ChoiceEdgeV2 } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/components/PlayerNode/ChoiceEdgeV2';
+import { ChoiceEdge } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/components/PlayerNode/ChoiceEdge';
 import { ForgeEdge } from '@/forge/components/GraphEditors/shared/Edges/ForgeEdge';
-import { DetourNode } from '@/forge/components/GraphEditors/shared/Nodes/DetourNode';
+import { DetourNode } from '@/forge/components/GraphEditors/shared/Nodes/components/DetourNode';
 import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/components/ForgeGraphBreadcrumbs';
 import { YarnView } from '@/forge/components/GraphEditors/shared/YarnView';
 import { PlayView } from '@/forge/components/GraphEditors/shared/PlayView';
@@ -52,7 +52,7 @@ import { cn } from '@/shared/lib/utils';
 // EdgeDropMenu components
 import { CharacterEdgeDropMenu } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/components/CharacterNode/CharacterEdgeDropMenu';
 import { PlayerEdgeDropMenu } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/components/PlayerNode/PlayerEdgeDropMenu';
-import { ConditionalEdgeDropMenu } from '@/forge/components/GraphEditors/shared/Nodes/ConditionalNode/ConditionalEdgeDropMenu';
+import { ConditionalEdgeDropMenu } from '@/forge/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalEdgeDropMenu';
 import { StoryletEdgeDropMenu } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/components/StoryletNode/StoryletEdgeDropMenu';
 
 import type { FlagSchema } from '@/forge/types/flags';
@@ -88,14 +88,14 @@ import {
 
 const nodeTypes = {
   CHARACTER: CharacterNode,
-  PLAYER: PlayerNodeV2,
-  CONDITIONAL: ConditionalNodeV2,
+  PLAYER: PlayerNode,
+  CONDITIONAL: ConditionalNode,
   STORYLET_REF: StoryletNode,
   DETOUR: DetourNode,
 } as const;
 
 const edgeTypes = {
-  choice: ChoiceEdgeV2,
+  choice: ChoiceEdge,
   default: ForgeEdge,
 } as const;
 

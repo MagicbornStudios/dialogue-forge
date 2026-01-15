@@ -12,7 +12,7 @@ import {
   type WriterPatchOp,
   type WriterSelectionSnapshot,
 } from '@/ai/aiadapter/domains/writer/writer-ai-types';
-import { applyWriterPatchOps } from '@/writer/stores/writer-patches';
+import { applyWriterPatchOps } from '@/writer/lib/editor/patches';
 
 export interface WriterWorkspaceState {
   acts: ForgeAct[];

@@ -35,7 +35,7 @@ interface ConditionalNodeData {
 // Color scheme for conditional block edges
 const CONDITIONAL_COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b'];
 
-export function ConditionalNodeV2({ data, selected }: NodeProps<ConditionalNodeData>) {
+export function ConditionalNode({ data, selected }: NodeProps<ConditionalNodeData>) {
   const { node, flagSchema, characters = {}, ui = {}, layoutDirection = 'TB' } = data;
   const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
   const blocks = node.conditionalBlocks || [];

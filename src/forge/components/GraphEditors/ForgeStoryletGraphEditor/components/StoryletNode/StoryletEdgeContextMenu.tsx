@@ -1,7 +1,7 @@
 import React from 'react';
 import { ForgeNodeType } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE_LABELS } from '@/forge/types/ui-constants';
-import { ContextMenuBase, ContextMenuButton } from '@/forge/components/GraphEditors/shared/ContextMenuBase';
+import { ContextMenuBase, ContextMenuButton } from '@/forge/components/GraphEditors/shared/Nodes/components/ContextMenuBase';
 
 // Storylet nodes can connect to Player or Conditional nodes (same as NPC)
 const availableNodeTypes: ForgeNodeType[] = ['PLAYER', 'CONDITIONAL'];

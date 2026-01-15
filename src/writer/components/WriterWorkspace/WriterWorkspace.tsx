@@ -1,14 +1,14 @@
 // src/components/WriterWorkspace/WriterWorkspace.tsx
 import React, { useRef, useEffect } from 'react';
-import type { ForgeAct, ForgeChapter, ForgePage } from '../../types/narrative';
+import type { ForgeAct, ForgeChapter, ForgePage } from '@/forge/types/narrative';
 import {
   WriterWorkspaceStoreProvider,
   createWriterWorkspaceStore,
   useWriterWorkspaceStore,
-} from './store/writer-workspace-store';
-import { WriterLayout } from './layout/WriterLayout';
-import { WriterTree } from './sidebar/WriterTree';
-import { WriterEditorPane } from './editor/WriterEditorPane';
+} from '@/writer/components/store/writer-workspace-store';
+import { WriterTree } from '@/writer/components/WriterWorkspace/sidebar/WriterTree';
+import { WriterLayout } from '@/writer/components/WriterWorkspace/layout/WriterLayout';
+import { WriterEditorPane } from '@/writer/components/WriterWorkspace/editor/WriterEditorPane';
 
 interface WriterWorkspaceProps {
   acts?: ForgeAct[];

@@ -3,7 +3,7 @@ import { ForgeGraphDoc } from '@/forge/types/forge-graph';
 import { FlagSchema } from '@/forge/types/flags';
 import { ForgeCharacter } from '@/forge/types/characters';
 import { CharacterSelector } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/components/CharacterSelector';
-import { ConditionAutocomplete } from '../../ConditionAutocomplete';
+import { ConditionAutocomplete } from '../components/ConditionAutocomplete';
 import { X, User, Maximize2 } from 'lucide-react';
 import { validateCondition, parseCondition } from '@/forge/components/GraphEditors/utils/condition-utils';
 import { ForgeNode, FORGE_CONDITIONAL_BLOCK_TYPE } from '@/forge/types/forge-graph';

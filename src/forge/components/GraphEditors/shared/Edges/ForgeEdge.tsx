@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BaseEdge, EdgeProps, getSmoothStepPath, getBezierPath, Position } from 'reactflow';
 import type { ForgeReactFlowEdge, ForgeReactFlowNode, ForgeNodeType } from '@/forge/types/forge-graph';
 import { edgeColorFor } from '@/forge/components/GraphEditors/utils/forge-edge-styles';
-import { EdgePulseAnimation, LoopIndicator, LoopArrowMarker } from '../EdgeSVGElements';
+import { EdgePulseAnimation, LoopIndicator, LoopArrowMarker } from '../Nodes/components/EdgeSVGElements';
 import {
   ContextMenu,
   ContextMenuContent,

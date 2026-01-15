@@ -7,9 +7,9 @@ import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical';
-import { writerNodes } from '@/writer/components/editor/lexical/nodes';
-import { ToolbarPlugin } from '@/writer/components/editor/lexical/plugins/ToolbarPlugin';
-import { writerTheme } from '@/writer/components/editor/lexical/theme';
+import { writerNodes } from '@/writer/components/WriterWorkspace/editor/lexical/nodes';
+import { ToolbarPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/ToolbarPlugin';
+import { writerTheme } from '@/writer/components/WriterWorkspace/editor/lexical/theme';
 
 interface LexicalEditorProps {
   value?: string;

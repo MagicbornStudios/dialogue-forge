@@ -4,12 +4,12 @@ import {
   useWriterWorkspaceStore,
   WRITER_AI_PROPOSAL_STATUS,
   WRITER_SAVE_STATUS,
-} from '../store/writer-workspace-store';
-import { applyWriterPatchOps } from '@/writer/stores/writer-patches';
-import { LexicalEditor } from '@/writer/components/editor/LexicalEditor';
-import { AutosavePlugin } from '@/writer/components/editor/lexical/plugins/AutosavePlugin';
+  WriterWorkspaceState,
+} from '@/writer/components/store/writer-workspace-store';
+import { applyWriterPatchOps } from '@/writer/lib/editor/patches';
+import { LexicalEditor } from '@/writer/components/WriterWorkspace/editor/LexicalEditor';
+import { AutosavePlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/AutosavePlugin';
 import { DOM_EVENT_TYPE } from '@/shared/types';
-import { WriterWorkspaceState } from '@/writer/components/store/writer-workspace-store';
 
 interface WriterEditorPaneProps {
   className?: string;

@@ -32,7 +32,7 @@ interface PlayerNodeData {
 // Color scheme for choice edges (same as current implementation)
 const CHOICE_COLORS = ['#e94560', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b'];
 
-export function PlayerNodeV2({ data, selected }: NodeProps<PlayerNodeData>) {
+export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
   const { node, flagSchema, characters = {}, ui = {}, layoutDirection = 'TB' } = data;
   const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
   const choices = node.choices || [];

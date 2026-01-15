@@ -3,9 +3,9 @@ import { ForgeGraphDoc, ForgeChoice, ForgeNode } from '@/forge/types/forge-graph
 import { FlagSchema } from '@/forge/types/flags';
 import { ForgeCharacter } from '@/forge/types/characters';
 import { CharacterSelector } from '../CharacterSelector';
-import { ConditionAutocomplete } from '@/forge/components/GraphEditors/shared/ConditionAutocomplete';
+import { ConditionAutocomplete } from '@/forge/components/GraphEditors/shared/Nodes/components/ConditionAutocomplete';
 import { FlagSelector } from '@/forge/components/GraphEditors/shared/FlagSelector';
-import { EdgeIcon } from '@/forge/components/GraphEditors/shared/EdgeIcon';
+import { EdgeIcon } from '@/forge/components/GraphEditors/shared/Nodes/components/EdgeIcon';
 import { User, GitBranch } from 'lucide-react';
 import { validateCondition, parseCondition } from '@/forge/components/GraphEditors/utils/condition-utils';
 import { CHOICE_COLORS } from '@/forge/components/GraphEditors/utils/forge-flow-helpers';

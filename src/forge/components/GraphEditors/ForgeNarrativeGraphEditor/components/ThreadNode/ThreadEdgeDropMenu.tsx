@@ -1,7 +1,7 @@
 import React from 'react';
 import { ForgeNodeType, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE_LABELS } from '@/forge/types/ui-constants';
-import { ContextMenuBase, ContextMenuButton } from '@/forge/components/GraphEditors/shared/ContextMenuBase';
+import { ContextMenuBase, ContextMenuButton } from '@/forge/components/GraphEditors/shared/Nodes/components/ContextMenuBase';
 import { useForgeEditorActions } from '@/forge/components/GraphEditors/hooks/useForgeEditorActions';
 import { useForgeEditorSessionStore } from '@/forge/components/GraphEditors/hooks/useForgeEditorSession';
 

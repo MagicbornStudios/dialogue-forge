@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BaseEdge, EdgeProps, getSmoothStepPath, getBezierPath, Position } from 'reactflow';
 import type { ForgeReactFlowEdge, ForgeReactFlowNode } from '@/forge/types/forge-graph';
 import { edgeColorFor } from '@/forge/components/GraphEditors/utils/forge-edge-styles';
-import { EdgePulseAnimation, LoopIndicator } from '@/forge/components/GraphEditors/shared/EdgeSVGElements';
+import { EdgePulseAnimation, LoopIndicator } from '@/forge/components/GraphEditors/shared/Nodes/components/EdgeSVGElements';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -22,7 +22,7 @@ interface ChoiceEdgeData {
   sourceNode?: ForgeReactFlowNode;
 }
 
-export function ChoiceEdgeV2({
+export function ChoiceEdge({
   id,
   sourceX,
   sourceY,

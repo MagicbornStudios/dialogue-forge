@@ -1,6 +1,6 @@
 import React from 'react';
 import { ForgeGraphDoc } from '../../../../../types';
-import { EdgeIcon } from '../../EdgeIcon';
+import { EdgeIcon } from '../../Nodes/components/EdgeIcon';
 
 interface NextNodeSelectorProps {
   nodeId: string;

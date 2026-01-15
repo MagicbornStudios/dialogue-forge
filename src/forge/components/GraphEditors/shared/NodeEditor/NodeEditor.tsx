@@ -12,7 +12,7 @@ import { StoryletNodeFields } from '@/forge/components/GraphEditors/ForgeStoryle
 
 import { ConditionalNodeFields } from '@/forge/components/GraphEditors/shared/Nodes/ConditionalNode/ConditionalNodeFields';
 import { PlayerNodeFields } from '@/forge/components/GraphEditors/ForgeStoryletGraphEditor/components/PlayerNode/PlayerNodeFields';
-import { DetourNodeFields } from '@/forge/components/GraphEditors/shared/Nodes/DetourNode/DetourNodeFields';
+import { DetourNodeFields } from '@/forge/components/GraphEditors/shared/Nodes/components/DetourNode/DetourNodeFields';
 import { ForgeNode, ForgeStoryletCall, ForgeNodeType, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 
 interface NodeEditorProps {

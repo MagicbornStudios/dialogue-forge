@@ -1,5 +1,5 @@
 import { PayloadSDK } from '@payloadcms/sdk';
-import type { WriterDataAdapter, WriterActDoc, WriterChapterDoc, WriterPageDoc } from '@/src/lib/writer/data-adapter/writer-adapter';
+import type { WriterDataAdapter, WriterActDoc, WriterChapterDoc, WriterPageDoc } from '@/writer/lib/data-adapter/writer-adapter';
 import type { Act, Chapter, Page } from '@/app/payload-types';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
 

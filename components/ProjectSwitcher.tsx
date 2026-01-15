@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, ChevronDown } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,13 +10,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
+} from '@/shared/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/src/components/ui/dropdown-menu';
+} from '@/shared/ui/dropdown-menu';
 import { useProjects, useCreateProject, type ProjectDocument } from '@/app/lib/forge/queries';
 
 interface ProjectSwitcherProps {

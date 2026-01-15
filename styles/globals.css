@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 /* Import dialogue-forge theme */
-@import '../src/styles/theme.css';
-@import '../src/styles/scrollbar.css';
+@import './theme.css';
+@import './scrollbar.css';
 
 /* Source paths for Tailwind content detection */
 @source "./app/**/*.{js,ts,jsx,tsx,mdx}";

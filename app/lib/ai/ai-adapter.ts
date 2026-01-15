@@ -1,13 +1,13 @@
 import 'server-only';
 
-import { createOpenRouterAdapter } from '@/src/lib/aiadapter/openrouter/openrouter-adapter';
-import { getOpenRouterConfig } from '@/src/lib/aiadapter/openrouter/config';
+import { createOpenRouterAdapter } from '@/ai/aiadapter/openrouter/openrouter-adapter';
+import { getOpenRouterConfig } from '@/ai/aiadapter/openrouter/config';
 import type {
   AiAdapter,
   AiFailureResponse,
   AiResponse,
   AiStreamResponse,
-} from '@/src/lib/aiadapter/types';
+} from '@/ai/aiadapter/types';
 
 export type {
   AiAdapter,
@@ -22,7 +22,7 @@ export type {
   AiResponse,
   AiStreamResponse,
   AiSuccessResponse,
-} from '@/src/lib/aiadapter/types';
+} from '@/ai/aiadapter/types';
 
 const DEFAULT_STREAM_HEADERS: HeadersInit = {
   'Content-Type': 'text/event-stream',

@@ -1,12 +1,12 @@
 // src/forge/adapter/payload-forge-adapter.ts
 import { PayloadSDK } from '@payloadcms/sdk';
-import type { ForgeDataAdapter, ForgeProjectSummary, ForgeFlagSchema } from '@/src/components/forge/forge-data-adapter/forge-data-adapter';
+import type { ForgeDataAdapter, ForgeProjectSummary, ForgeFlagSchema } from '@/forge/adapters/forge-data-adapter';
 import type { ForgeGraphDoc, ForgeReactFlowJson, ForgeGraphKind } from '@/src/types/forge/forge-graph';
 import type { Project, Character, FlagSchema, ForgeGraph, Act, GameState } from '@/app/payload-types';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
-import { ForgeAct } from '@/src/types/narrative';
-import { ForgeFlagState, ForgeGameState } from '@/src/types/forge-game-state';
-import type { ForgeCharacter } from '@/src/types/characters';
+import { ForgeAct } from '@/forge/types/narrative';
+import { ForgeFlagState, ForgeGameState } from '@/forge/types/forge-game-state';
+import type { ForgeCharacter } from '@/forge/types/characters';
 
 /**
  * Helper to extract narrativeGraph ID from Project

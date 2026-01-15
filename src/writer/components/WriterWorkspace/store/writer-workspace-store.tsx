@@ -6,40 +6,91 @@ import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
 import type { ForgeAct, ForgeChapter, ForgePage } from '@/forge/types/narrative';
+import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
+import { createContentSlice } from './slices/content.slice';
+import { createEditorSlice } from './slices/editor.slice';
+import { createAiSlice } from './slices/ai.slice';
+import { createNavigationSlice } from './slices/navigation.slice';
+import type { EventSink } from '@/writer/events/writer-events';
+import { createEvent, WRITER_EVENT_TYPE } from '@/writer/events/events';
+import type {
+  WriterDraftState,
+  WriterSaveStatus,
+  WriterAiProposalStatus,
+  WriterAiPreviewMeta,
+} from './writer-workspace-types';
 import {
-  type WriterDocSnapshot,
-  type WriterPatchOp,
-  type WriterSelectionSnapshot,
-} from '@/ai/aiadapter/domains/writer/writer-ai-types';
-import { applyWriterPatchOps } from '@/writer/lib/editor/patches';
+  WRITER_SAVE_STATUS,
+  WRITER_AI_PROPOSAL_STATUS,
+} from './writer-workspace-types';
+
+// Re-export types for convenience
+export type { WriterDocSnapshot, WriterPatchOp, WriterSelectionSnapshot } from '@/ai/aiadapter/domains/writer/writer-ai-types';
+export type {
+  WriterDraftState,
+  WriterSaveStatus,
+  WriterAiProposalStatus,
+  WriterAiPreviewMeta,
+} from './writer-workspace-types';
+export { WRITER_SAVE_STATUS, WRITER_AI_PROPOSAL_STATUS } from './writer-workspace-types';
 
 export interface WriterWorkspaceState {
+  // Content slice
   acts: ForgeAct[];
   chapters: ForgeChapter[];
   pages: ForgePage[];
-  activePageId: number | null;
+  contentError: string | null;
+
+  // Editor slice
   drafts: Record<number, WriterDraftState>;
-  aiPreview: WriterPatchOp[] | null;
+  editorError: string | null;
+
+  // AI slice
+  aiPreview: import('@/ai/aiadapter/domains/writer/writer-ai-types').WriterPatchOp[] | null;
   aiPreviewMeta: WriterAiPreviewMeta | null;
   aiProposalStatus: WriterAiProposalStatus;
   aiError: string | null;
-  aiSelection: WriterSelectionSnapshot | null;
-  aiSnapshot: WriterDocSnapshot | null;
-  aiUndoSnapshot: WriterDocSnapshot | null;
+  aiSelection: import('@/ai/aiadapter/domains/writer/writer-ai-types').WriterSelectionSnapshot | null;
+  aiSnapshot: import('@/ai/aiadapter/domains/writer/writer-ai-types').WriterDocSnapshot | null;
+  aiUndoSnapshot: import('@/ai/aiadapter/domains/writer/writer-ai-types').WriterDocSnapshot | null;
+
+  // Navigation slice
+  activePageId: number | null;
+  expandedActIds: Set<number>;
+  expandedChapterIds: Set<number>;
+  navigationError: string | null;
+
+  // Data adapter
+  dataAdapter?: WriterDataAdapter;
+
   actions: {
+    // Content actions
     setActs: (acts: ForgeAct[]) => void;
     setChapters: (chapters: ForgeChapter[]) => void;
     setPages: (pages: ForgePage[]) => void;
-    setActivePageId: (pageId: number | null) => void;
     updatePage: (pageId: number, patch: Partial<ForgePage>) => void;
+    setContentError: (error: string | null) => void;
+
+    // Editor actions
     setDraftTitle: (pageId: number, title: string) => void;
     setDraftContent: (pageId: number, content: string) => void;
     saveNow: (pageId?: number) => Promise<void>;
-    setAiSelection: (selection: WriterSelectionSnapshot | null) => void;
+    createDraftForPage: (page: ForgePage) => void;
+    setEditorError: (error: string | null) => void;
+
+    // AI actions
+    setAiSelection: (selection: import('@/ai/aiadapter/domains/writer/writer-ai-types').WriterSelectionSnapshot | null) => void;
     proposeAiEdits: () => Promise<void>;
     applyAiEdits: () => void;
     revertAiDraft: () => void;
+
+    // Navigation actions
+    setActivePageId: (pageId: number | null) => void;
+    toggleActExpanded: (actId: number) => void;
+    toggleChapterExpanded: (chapterId: number) => void;
+    setNavigationError: (error: string | null) => void;
   };
 }
 
@@ -48,393 +99,119 @@ export interface CreateWriterWorkspaceStoreOptions {
   initialChapters?: ForgeChapter[];
   initialPages?: ForgePage[];
   initialActivePageId?: number | null;
+  dataAdapter?: WriterDataAdapter;
 }
 
-export const WRITER_SAVE_STATUS = {
-  DIRTY: 'dirty',
-  SAVING: 'saving',
-  SAVED: 'saved',
-  ERROR: 'error',
-} as const;
-
-export type WriterSaveStatus =
-  (typeof WRITER_SAVE_STATUS)[keyof typeof WRITER_SAVE_STATUS];
-
-export type WriterDraftState = {
-  title: string;
-  content: string;
-  status: WriterSaveStatus;
-  error: string | null;
-  revision: number;
-};
-
-export const WRITER_AI_PROPOSAL_STATUS = {
-  IDLE: 'idle',
-  LOADING: 'loading',
-  READY: 'ready',
-  ERROR: 'error',
-} as const;
-
-export type WriterAiProposalStatus =
-  (typeof WRITER_AI_PROPOSAL_STATUS)[keyof typeof WRITER_AI_PROPOSAL_STATUS];
-
-export type WriterAiPreviewMeta = {
-  summary: string;
-  rationale: string;
-  risk: string;
-};
-
-const createDraftFromPage = (page: ForgePage): WriterDraftState => ({
-  title: page.title,
-  content: page.bookBody ?? '',
-  status: WRITER_SAVE_STATUS.SAVED,
-  error: null,
-  revision: 0,
-});
-
-const createSnapshotFromPage = (
-  page: ForgePage,
-  draft?: WriterDraftState
-): WriterDocSnapshot => ({
-  title: draft?.title ?? page.title,
-  content: draft?.content ?? page.bookBody ?? '',
-});
-
-export function createWriterWorkspaceStore(options: CreateWriterWorkspaceStoreOptions) {
+export function createWriterWorkspaceStore(
+  options: CreateWriterWorkspaceStoreOptions,
+  eventSink: EventSink
+) {
   const {
     initialActs = [],
     initialChapters = [],
     initialPages = [],
     initialActivePageId = null,
+    dataAdapter,
   } = options;
 
   return createStore<WriterWorkspaceState>()(
-    devtools((set, get) => ({
-      acts: initialActs,
-      chapters: initialChapters,
-      pages: initialPages,
-      activePageId: initialActivePageId,
-      drafts: Object.fromEntries(
-        initialPages.map((page) => [page.id, createDraftFromPage(page)])
-      ),
-      aiPreview: null,
-      aiPreviewMeta: null,
-      aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.IDLE,
-      aiError: null,
-      aiSelection: null,
-      aiSnapshot: null,
-      aiUndoSnapshot: null,
-      actions: {
-        setActs: (acts) => set({ acts }),
-        setChapters: (chapters) => set({ chapters }),
-        setPages: (pages) =>
-          set((state) => {
-            const nextDrafts = { ...state.drafts };
-            pages.forEach((page) => {
-              if (!nextDrafts[page.id]) {
-                nextDrafts[page.id] = createDraftFromPage(page);
-              }
-            });
-            return { pages, drafts: nextDrafts };
-          }),
-        setActivePageId: (pageId) =>
-          set((state) => {
-            if (!pageId) {
-              return { activePageId: pageId };
+    devtools(
+      immer((set, get) => {
+        const contentSlice = createContentSlice(set, get, initialActs, initialChapters, initialPages);
+        const editorSlice = createEditorSlice(set, get, initialPages);
+        const aiSlice = createAiSlice(set, get);
+        const navigationSlice = createNavigationSlice(set, get, initialActivePageId);
+
+        // Wrap actions to emit events
+        const setPagesWithEvents = (pages: ForgePage[]) => {
+          contentSlice.setPages(pages);
+          // Create drafts for new pages
+          pages.forEach((page) => {
+            if (!get().drafts[page.id]) {
+              editorSlice.createDraftForPage(page);
             }
-            if (state.drafts[pageId]) {
-              return { activePageId: pageId };
-            }
-            const page = state.pages.find((entry) => entry.id === pageId);
-            if (!page) {
-              return { activePageId: pageId };
-            }
-            return {
-              activePageId: pageId,
-              drafts: {
-                ...state.drafts,
-                [pageId]: createDraftFromPage(page),
-              },
-            };
-          }),
-        updatePage: (pageId, patch) =>
-          set((state) => ({
-            pages: state.pages.map((page) =>
-              page.id === pageId ? { ...page, ...patch } : page
-            ),
-          })),
-        setDraftTitle: (pageId, title) =>
-          set((state) => {
-            const draft = state.drafts[pageId];
-            if (!draft) {
-              const page = state.pages.find((entry) => entry.id === pageId);
-              if (!page) {
-                return state;
-              }
-              return {
-                drafts: {
-                  ...state.drafts,
-                  [pageId]: {
-                    ...createDraftFromPage(page),
-                    title,
-                    status: WRITER_SAVE_STATUS.DIRTY,
-                    revision: 1,
-                  },
-                },
-              };
-            }
-            return {
-              drafts: {
-                ...state.drafts,
-                [pageId]: {
-                  ...draft,
-                  title,
-                  status: WRITER_SAVE_STATUS.DIRTY,
-                  error: null,
-                  revision: draft.revision + 1,
-                },
-              },
-            };
-          }),
-        setDraftContent: (pageId, content) =>
-          set((state) => {
-            const draft = state.drafts[pageId];
-            if (!draft) {
-              const page = state.pages.find((entry) => entry.id === pageId);
-              if (!page) {
-                return state;
-              }
-              return {
-                drafts: {
-                  ...state.drafts,
-                  [pageId]: {
-                    ...createDraftFromPage(page),
-                    content,
-                    status: WRITER_SAVE_STATUS.DIRTY,
-                    revision: 1,
-                  },
-                },
-              };
-            }
-            return {
-              drafts: {
-                ...state.drafts,
-                [pageId]: {
-                  ...draft,
-                  content,
-                  status: WRITER_SAVE_STATUS.DIRTY,
-                  error: null,
-                  revision: draft.revision + 1,
-                },
-              },
-            };
-          }),
-        saveNow: async (pageId) => {
+          });
+          eventSink.emit(
+            createEvent(WRITER_EVENT_TYPE.CONTENT_CHANGE, { pages }, 'USER_ACTION')
+          );
+        };
+
+        const setActivePageIdWithEvents = (pageId: number | null) => {
+          navigationSlice.setActivePageId(pageId);
+          eventSink.emit(
+            createEvent(WRITER_EVENT_TYPE.NAVIGATION, { pageId }, 'USER_ACTION')
+          );
+        };
+
+        const saveNowWithEvents = async (pageId?: number) => {
+          await editorSlice.saveNow(pageId);
           const targetId = pageId ?? get().activePageId;
-          if (!targetId) {
-            return;
-          }
-          const startingRevision = get().drafts[targetId]?.revision ?? 0;
-          set((state) => {
-            const draft = state.drafts[targetId];
-            if (!draft || draft.status === WRITER_SAVE_STATUS.SAVING) {
-              return state;
-            }
-            return {
-              drafts: {
-                ...state.drafts,
-                [targetId]: {
-                  ...draft,
-                  status: WRITER_SAVE_STATUS.SAVING,
-                  error: null,
-                },
-              },
-            };
-          });
-          await Promise.resolve();
-          set((state) => {
-            const draft = state.drafts[targetId];
-            if (!draft) {
-              return state;
-            }
-            if (draft.revision !== startingRevision) {
-              return {
-                drafts: {
-                  ...state.drafts,
-                  [targetId]: {
-                    ...draft,
-                    status: WRITER_SAVE_STATUS.DIRTY,
-                  },
-                },
-              };
-            }
-            const nextPages = state.pages.map((page) =>
-              page.id === targetId
-                ? { ...page, title: draft.title, bookBody: draft.content }
-                : page
+          if (targetId) {
+            eventSink.emit(
+              createEvent(WRITER_EVENT_TYPE.SAVE, { pageId: targetId }, 'USER_ACTION')
             );
-            return {
-              pages: nextPages,
-              drafts: {
-                ...state.drafts,
-                [targetId]: {
-                  ...draft,
-                  status: WRITER_SAVE_STATUS.SAVED,
-                  error: null,
-                },
-              },
-            };
-          });
-        },
-        setAiSelection: (selection) => {
-          set({ aiSelection: selection });
-        },
-        proposeAiEdits: async () => {
-          const state = get();
-          const targetId = state.activePageId;
-          if (!targetId) {
-            return;
           }
-          const page = state.pages.find((entry) => entry.id === targetId);
-          if (!page) {
-            return;
-          }
-          const draft = state.drafts[targetId] ?? createDraftFromPage(page);
-          const snapshot = state.aiSnapshot ?? createSnapshotFromPage(page, draft);
+        };
 
-          set({
-            aiPreview: null,
-            aiPreviewMeta: null,
-            aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.LOADING,
-            aiError: null,
-            aiSnapshot: snapshot,
-            aiUndoSnapshot: null,
-          });
+        const applyAiEditsWithEvents = () => {
+          aiSlice.applyAiEdits();
+          eventSink.emit(
+            createEvent(WRITER_EVENT_TYPE.AI_EDIT, { action: 'apply' }, 'USER_ACTION')
+          );
+        };
 
-          try {
-            const response = await fetch('/api/ai/writer/edits/propose', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                pageId: targetId,
-                selection: state.aiSelection,
-                snapshot,
-              }),
-            });
-
-            if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(
-                errorText || 'Unable to propose AI edits for this page.'
+        return {
+          ...contentSlice,
+          ...editorSlice,
+          ...aiSlice,
+          ...navigationSlice,
+          dataAdapter,
+          actions: {
+            // Content actions
+            setActs: (acts) => {
+              contentSlice.setActs(acts);
+              eventSink.emit(
+                createEvent(WRITER_EVENT_TYPE.CONTENT_CHANGE, { acts }, 'USER_ACTION')
               );
-            }
-
-            const data: unknown = await response.json();
-            const parsed = data as {
-              ok: boolean;
-              data?: {
-                patch?: string;
-                summary?: string;
-              };
-              error?: {
-                message?: string;
-              };
-            };
-
-            if (!parsed.ok) {
-              throw new Error(
-                parsed.error?.message || 'Unable to propose AI edits for this page.'
+            },
+            setChapters: (chapters) => {
+              contentSlice.setChapters(chapters);
+              eventSink.emit(
+                createEvent(WRITER_EVENT_TYPE.CONTENT_CHANGE, { chapters }, 'USER_ACTION')
               );
-            }
+            },
+            setPages: setPagesWithEvents,
+            updatePage: (pageId, patch) => {
+              contentSlice.updatePage(pageId, patch);
+              eventSink.emit(
+                createEvent(WRITER_EVENT_TYPE.CONTENT_CHANGE, { pageId, patch }, 'USER_ACTION')
+              );
+            },
+            setContentError: contentSlice.setContentError,
 
-            const patchRaw = parsed.data?.patch;
-            if (!patchRaw) {
-              throw new Error('AI edit proposal missing patch data.');
-            }
+            // Editor actions
+            setDraftTitle: editorSlice.setDraftTitle,
+            setDraftContent: editorSlice.setDraftContent,
+            saveNow: saveNowWithEvents,
+            createDraftForPage: editorSlice.createDraftForPage,
+            setEditorError: editorSlice.setEditorError,
 
-            const ops = JSON.parse(patchRaw) as WriterPatchOp[];
-            if (!Array.isArray(ops)) {
-              throw new Error('AI edit proposal patch is invalid.');
-            }
+            // AI actions
+            setAiSelection: aiSlice.setAiSelection,
+            proposeAiEdits: aiSlice.proposeAiEdits,
+            applyAiEdits: applyAiEditsWithEvents,
+            revertAiDraft: aiSlice.revertAiDraft,
 
-            set({
-              aiPreview: ops,
-              aiPreviewMeta: {
-                summary: parsed.data?.summary ?? 'AI rewrite preview',
-                rationale:
-                  'Suggested edits to improve clarity and flow while preserving intent.',
-                risk:
-                  'Review to ensure names, tone, and facts remain accurate.',
-              },
-              aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.READY,
-              aiError: null,
-              aiSnapshot: snapshot,
-            });
-          } catch (error) {
-            const message =
-              error instanceof Error
-                ? error.message
-                : 'Unable to propose AI edits.';
-            set({
-              aiPreview: null,
-              aiPreviewMeta: null,
-              aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.ERROR,
-              aiError: message,
-            });
-          }
-        },
-        applyAiEdits: () => {
-          const state = get();
-          const targetId = state.activePageId;
-          if (!targetId || !state.aiPreview || state.aiPreview.length === 0) {
-            return;
-          }
-          const page = state.pages.find((entry) => entry.id === targetId);
-          if (!page) {
-            return;
-          }
-          const draft = state.drafts[targetId] ?? createDraftFromPage(page);
-          const snapshot = state.aiSnapshot ?? createSnapshotFromPage(page, draft);
-          const nextSnapshot = applyWriterPatchOps(snapshot, state.aiPreview);
-
-          set({
-            aiPreview: null,
-            aiPreviewMeta: null,
-            aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.IDLE,
-            aiError: null,
-            aiSnapshot: nextSnapshot,
-            aiUndoSnapshot: snapshot,
-          });
-
-          get().actions.setDraftContent(targetId, nextSnapshot.content ?? '');
-          if (typeof nextSnapshot.title === 'string') {
-            get().actions.setDraftTitle(targetId, nextSnapshot.title);
-          }
-        },
-        revertAiDraft: () => {
-          const state = get();
-          const targetId = state.activePageId;
-          const undoSnapshot = state.aiUndoSnapshot;
-          if (!targetId || !undoSnapshot) {
-            return;
-          }
-
-          set({
-            aiUndoSnapshot: null,
-            aiSnapshot: undoSnapshot,
-            aiPreview: null,
-            aiPreviewMeta: null,
-            aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.IDLE,
-            aiError: null,
-          });
-
-          get().actions.setDraftContent(targetId, undoSnapshot.content ?? '');
-          if (typeof undoSnapshot.title === 'string') {
-            get().actions.setDraftTitle(targetId, undoSnapshot.title);
-          }
-        },
-      },
-    }))
+            // Navigation actions
+            setActivePageId: setActivePageIdWithEvents,
+            toggleActExpanded: navigationSlice.toggleActExpanded,
+            toggleChapterExpanded: navigationSlice.toggleChapterExpanded,
+            setNavigationError: navigationSlice.setNavigationError,
+          },
+        };
+      }),
+      { name: 'WriterWorkspaceStore' }
+    )
   );
 }
 

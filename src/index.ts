@@ -13,7 +13,7 @@ export { CharacterSelector } from '@/forge/components/ForgeWorkspace/components/
 
 // Export styles
 import './styles/scrollbar.css';
-import './styles/theme.css';
+import './styles/themes.css';
 
 // Export all types
 export * from '@/forge/types/forge-graph';

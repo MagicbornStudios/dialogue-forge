@@ -4,7 +4,7 @@
  * Comprehensive tests for export, import, and round-trip conversion
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ConditionalHandler } from '../handlers/conditional-handler';
 import { YarnTextBuilder } from '../builders/yarn-text-builder';
 import {
@@ -12,8 +12,9 @@ import {
   parseYarnNode,
   createSimpleConditionalNode,
 } from './helpers';
-import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
-import { CONDITION_OPERATOR, CONDITION_BLOCK_TYPE } from '@/forge/types/constants';
+import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
+import { CONDITION_OPERATOR } from '@/forge/types/constants';
+import { CONDITION_BLOCK_TYPE } from '@/forge/lib/yarn-converter';
 
 describe('ConditionalHandler', () => {
   let handler: ConditionalHandler;

@@ -24,7 +24,6 @@ import { GraphLeftToolbar } from '@/forge/components/GraphEditors/shared/GraphLe
 import { GraphLayoutControls } from '@/forge/components/GraphEditors/shared/GraphLayoutControls';
 import { GraphMiniMap } from '@/forge/components/GraphEditors/shared/GraphMiniMap';
 
-import { ThreadNode } from './components/ThreadNode/ThreadNode';
 import { ActNode } from './components/ActNode/ActNode';
 import { ChapterNode } from './components/ChapterNode/ChapterNode';
 import { PageNode } from './components/PageNode/PageNode';
@@ -43,8 +42,8 @@ import { useForgeFlowEditorShell, type ShellNodeData } from '@/forge/components/
 import { createForgeEditorSessionStore, ForgeEditorSessionProvider, useForgeEditorSession, useForgeEditorSessionStore } from '@/forge/components/GraphEditors/hooks/useForgeEditorSession';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { ForgeEditorActionsProvider, makeForgeEditorActions } from '@/forge/components/GraphEditors/hooks/useForgeEditorActions';
-import { NarrativeGraphEditorPaneContextMenu } from './components/NarrativeGraphEditorPaneContextMenu';
-import { FORGE_COMMAND } from '../hooks/forge-commands';
+import { NarrativeGraphEditorPaneContextMenu } from '@/forge/components/GraphEditors/ForgeNarrativeGraphEditor/components/NarrativeGraphEditorPaneContextMenu';
+import { FORGE_COMMAND } from '@/forge/components/GraphEditors/hooks/forge-commands';
 import { useNodeDrag } from '@/forge/components/ForgeWorkspace/hooks/useNodeDrag';
 import { NARRATIVE_FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/components/ForgeGraphBreadcrumbs';
@@ -56,7 +55,7 @@ const nodeTypes = {
   [FORGE_NODE_TYPE.CONDITIONAL]: ConditionalNodeV2,
   [FORGE_NODE_TYPE.DETOUR]: DetourNode,
   // ThreadNode is a special "start" node - we'll use a custom type for it
-  START: ThreadNode,
+  START: ActNode,
 } as const;
 
 const edgeTypes = {

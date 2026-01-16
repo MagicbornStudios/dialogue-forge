@@ -24,8 +24,14 @@ export function ContextMenuBase({
   className = '',
   onClose,
 }: ContextMenuBaseProps) {
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose?.();
+    }
+  };
+
   return (
-    <ContextMenu open onOpenChange={(open) => { if (!open) onClose?.(); }}>
+    <ContextMenu onOpenChange={handleOpenChange}>
       <ContextMenuContent
         className={cn(
           'bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-lg p-1 min-w-[150px]',

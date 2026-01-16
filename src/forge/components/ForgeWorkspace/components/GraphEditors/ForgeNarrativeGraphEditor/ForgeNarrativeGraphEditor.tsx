@@ -37,7 +37,7 @@ import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { useForgeFlowEditorShell, type ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
 import { createForgeEditorSessionStore, ForgeEditorSessionProvider, useForgeEditorSession, useForgeEditorSessionStore } from '@/forge/lib/graph-editor/hooks/useForgeEditorSession';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
-import { ForgeEditorActionsProvider, makeForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
+import { ForgeEditorActionsProvider, makeForgeEditorActions, useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { useForgeGraphEditorActions } from '@/forge/copilotkit';
 import { NarrativeGraphEditorPaneContextMenu } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/NarrativeGraphEditorPaneContextMenu';
 import { FORGE_COMMAND } from '@/forge/lib/graph-editor/hooks/forge-commands';
@@ -141,9 +141,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
   // Create actions from dispatch and provide to children
   const actions = React.useMemo(() => makeForgeEditorActions(shell.dispatch), [shell.dispatch]);
 
-  // Register CopilotKit editor actions
-  useForgeGraphEditorActions();
-
   // Path highlighting - only calculate when enabled
   const { edgesToSelectedNode, nodeDepths } = useFlowPathHighlighting(
     showPathHighlight ? shell.selectedNodeId : null,
@@ -230,13 +227,89 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
 
   return (
     <ForgeEditorActionsProvider actions={actions}>
-      <div 
-        className={cn(
-          "h-full w-full flex flex-col bg-[#0b0b14]",
-          className
-        )}
-        onClick={handleClick}
-      >
+      <ForgeNarrativeGraphEditorContent
+        graph={graph}
+        shell={shell}
+        reactFlow={reactFlow}
+        nodesWithMeta={nodesWithMeta}
+        edgesWithMeta={edgesWithMeta}
+        layoutDirection={layoutDirection}
+        showPathHighlight={showPathHighlight}
+        showBackEdges={showBackEdges}
+        showMiniMap={showMiniMap}
+        autoOrganize={autoOrganize}
+        isFocused={isFocused}
+        openYarnModal={openYarnModal}
+        handleClick={handleClick}
+        handleAutoLayout={handleAutoLayout}
+        setLayoutDirection={setLayoutDirection}
+        setAutoOrganize={setAutoOrganize}
+        setShowPathHighlight={setShowPathHighlight}
+        setShowBackEdges={setShowBackEdges}
+        setShowMiniMap={setShowMiniMap}
+        className={className}
+      />
+    </ForgeEditorActionsProvider>
+  );
+}
+
+// Content component that uses the editor actions hook (must be inside provider)
+function ForgeNarrativeGraphEditorContent({
+  graph,
+  shell,
+  reactFlow,
+  nodesWithMeta,
+  edgesWithMeta,
+  layoutDirection,
+  showPathHighlight,
+  showBackEdges,
+  showMiniMap,
+  autoOrganize,
+  isFocused,
+  openYarnModal,
+  handleClick,
+  handleAutoLayout,
+  setLayoutDirection,
+  setAutoOrganize,
+  setShowPathHighlight,
+  setShowBackEdges,
+  setShowMiniMap,
+  className,
+}: {
+  graph: ForgeGraphDoc | null;
+  shell: ReturnType<typeof useForgeFlowEditorShell>;
+  reactFlow: ReturnType<typeof useReactFlow>;
+  nodesWithMeta: any[];
+  edgesWithMeta: any[];
+  layoutDirection: LayoutDirection;
+  showPathHighlight: boolean;
+  showBackEdges: boolean;
+  showMiniMap: boolean;
+  autoOrganize: boolean;
+  isFocused: boolean;
+  openYarnModal: () => void;
+  handleClick: () => void;
+  handleAutoLayout: (direction?: LayoutDirection) => void;
+  setLayoutDirection: (dir: LayoutDirection) => void;
+  setAutoOrganize: (value: boolean) => void;
+  setShowPathHighlight: (value: boolean) => void;
+  setShowBackEdges: (value: boolean) => void;
+  setShowMiniMap: (value: boolean) => void;
+  className: string;
+}) {
+  // Register CopilotKit editor actions (must be inside provider)
+  useForgeGraphEditorActions();
+  
+  const actions = useForgeEditorActions();
+
+  return (
+    <div 
+      className={cn(
+        "h-full w-full flex flex-col bg-[#0b0b14]",
+        className
+      )}
+      onClick={handleClick}
+    >
         {/* Toolbar with breadcrumbs and view toggles */}
         <div className={cn(
           "flex items-center justify-between gap-2 px-3 py-2 border-t-1 bg-df-editor-bg flex-shrink-0 transition-colors",
@@ -366,7 +439,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
             </ReactFlow>
           </div>
         </div>
-    </ForgeEditorActionsProvider>
   );
 }
 

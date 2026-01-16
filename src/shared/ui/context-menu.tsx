@@ -6,7 +6,9 @@ import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@/shared/lib/utils"
 
-const ContextMenu = ContextMenuPrimitive.Root
+const ContextMenu = ContextMenuPrimitive.Root as React.ComponentType<
+  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Root>
+>
 
 const ContextMenuTrigger = ContextMenuPrimitive.Trigger
 

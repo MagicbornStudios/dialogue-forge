@@ -82,6 +82,7 @@ import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import {
   ForgeEditorActionsProvider,
   makeForgeEditorActions,
+  useForgeEditorActions,
 } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { useForgeGraphEditorActions } from '@/forge/copilotkit';
 
@@ -212,9 +213,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
   // Actions from dispatch (node/edge components consume this)
   const actions = React.useMemo(() => makeForgeEditorActions(shell.dispatch), [shell.dispatch]);
-
-  // Register CopilotKit editor actions
-  useForgeGraphEditorActions();
 
   // Path highlighting - only calculate when enabled
   const { edgesToSelectedNode, nodeDepths } = useFlowPathHighlighting(
@@ -367,13 +365,95 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
   return (
     <ForgeEditorActionsProvider actions={actions}>
-      <div 
-        className={cn(
-          "dialogue-graph-editor w-full h-full flex flex-col",
-          className
-        )}
-        onClick={handleClick}
-      >
+      <ForgeStoryletGraphEditorContent
+        graph={graph}
+        shell={shell}
+        reactFlow={reactFlow}
+        nodesWithMeta={nodesWithMeta}
+        edgesWithMeta={edgesWithMeta}
+        layoutDirection={layoutDirection}
+        showPathHighlight={showPathHighlight}
+        showBackEdges={showBackEdges}
+        showMiniMap={showMiniMap}
+        autoOrganize={autoOrganize}
+        isFocused={isFocused}
+        openYarnModal={openYarnModal}
+        openPlayModal={openPlayModal}
+        handleClick={handleClick}
+        setLayoutDirection={setLayoutDirection}
+        setAutoOrganize={setAutoOrganize}
+        setShowPathHighlight={setShowPathHighlight}
+        setShowBackEdges={setShowBackEdges}
+        setShowMiniMap={setShowMiniMap}
+        flagSchema={flagSchema}
+        characters={characters}
+        className={className}
+      />
+    </ForgeEditorActionsProvider>
+  );
+}
+
+// Content component that uses the editor actions hook (must be inside provider)
+function ForgeStoryletGraphEditorContent({
+  graph,
+  shell,
+  reactFlow,
+  nodesWithMeta,
+  edgesWithMeta,
+  layoutDirection,
+  showPathHighlight,
+  showBackEdges,
+  showMiniMap,
+  autoOrganize,
+  isFocused,
+  openYarnModal,
+  openPlayModal,
+  handleClick,
+  setLayoutDirection,
+  setAutoOrganize,
+  setShowPathHighlight,
+  setShowBackEdges,
+  setShowMiniMap,
+  flagSchema,
+  characters,
+  className,
+}: {
+  graph: ForgeGraphDoc | null;
+  shell: ReturnType<typeof useForgeFlowEditorShell>;
+  reactFlow: ReturnType<typeof useReactFlow>;
+  nodesWithMeta: any[];
+  edgesWithMeta: any[];
+  layoutDirection: LayoutDirection;
+  showPathHighlight: boolean;
+  showBackEdges: boolean;
+  showMiniMap: boolean;
+  autoOrganize: boolean;
+  isFocused: boolean;
+  openYarnModal: () => void;
+  openPlayModal: () => void;
+  handleClick: () => void;
+  setLayoutDirection: (dir: LayoutDirection) => void;
+  setAutoOrganize: (value: boolean) => void;
+  setShowPathHighlight: (value: boolean) => void;
+  setShowBackEdges: (value: boolean) => void;
+  setShowMiniMap: (value: boolean) => void;
+  flagSchema?: FlagSchema;
+  characters?: Record<string, ForgeCharacter>;
+  className: string;
+}) {
+  // Register CopilotKit editor actions (must be inside provider)
+  useForgeGraphEditorActions();
+  
+  const actions = useForgeEditorActions();
+
+  return (
+    <div 
+      className={cn(
+        "dialogue-graph-editor w-full h-full flex flex-col",
+        className
+      )}
+      onClick={handleClick}
+    >
         {/* Toolbar with breadcrumbs and view toggles */}
         <div className={cn(
           "flex items-center justify-between gap-2 px-3 py-2 border-t-1 bg-df-editor-bg flex-shrink-0 transition-colors",
@@ -614,7 +694,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
           )}
         </div>
       </div>
-    </ForgeEditorActionsProvider>
   );
 }
 

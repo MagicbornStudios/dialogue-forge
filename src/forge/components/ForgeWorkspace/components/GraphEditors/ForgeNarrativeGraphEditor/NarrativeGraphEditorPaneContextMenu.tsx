@@ -31,8 +31,14 @@ export function NarrativeGraphEditorPaneContextMenu({
   onAddNode,
   onClose,
 }: NarrativeGraphEditorPaneContextMenuProps) {
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+    }
+  };
+
   return (
-    <ContextMenu open onOpenChange={(open) => { if (!open) onClose(); }}>
+    <ContextMenu onOpenChange={handleOpenChange}>
       <ContextMenuContent
         className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-lg p-1 min-w-[150px]"
         style={{ position: 'fixed', left: x, top: y, zIndex: 50 }}

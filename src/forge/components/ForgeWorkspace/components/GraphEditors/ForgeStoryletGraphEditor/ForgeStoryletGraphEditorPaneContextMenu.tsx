@@ -1,5 +1,5 @@
 import React from 'react';
-import { FORGE_NODE_TYPE, type ForgeNodeType } from '@/src/types/forge/forge-graph';
+import { FORGE_NODE_TYPE, type ForgeNodeType } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE_LABELS } from '@/forge/types/ui-constants';
 import {
   ContextMenu,
@@ -31,8 +31,14 @@ export function ForgeStoryletGraphEditorPaneContextMenu({
   onAddNode,
   onClose,
 }: ForgeStoryletGraphEditorPaneContextMenuProps) {
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+    }
+  };
+
   return (
-    <ContextMenu open onOpenChange={(open) => { if (!open) onClose(); }}>
+    <ContextMenu onOpenChange={handleOpenChange}>
       <ContextMenuContent
         className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-lg p-1 min-w-[150px]"
         style={{ position: 'fixed', left: x, top: y, zIndex: 50 }}

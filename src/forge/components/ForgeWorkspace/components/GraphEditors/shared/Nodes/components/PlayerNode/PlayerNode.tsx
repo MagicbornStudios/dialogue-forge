@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
 import { ForgeChoice, ForgeNode, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { ForgeCharacter } from '@/forge/types/characters';
@@ -28,13 +28,34 @@ interface PlayerNodeData {
   layoutDirection?: LayoutDirection;
 }
 
-export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
+export const PlayerNode = React.memo(function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
   const { node, flagSchema, characters = {}, ui = {}, layoutDirection = 'TB' } = data;
   const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
-  const choices = node.choices || [];
+  const choices = useMemo(() => node.choices ?? [], [node.choices]);
+  const choiceHandleStyle = useMemo(() => ({
+    top: '50%',
+    transform: 'translateY(-50%)',
+    right: '-6px',
+  }), []);
   
   // Use actions instead of callbacks
   const actions = useForgeEditorActions();
+  const handleEdit = useCallback(() => {
+    if (node.id) actions.openNodeEditor(node.id);
+  }, [actions, node.id]);
+  const handleAddChoice = useCallback(() => {
+    if (!node.id) return;
+    const newChoice = {
+      id: `c_${Date.now()}`,
+      text: `Choice ${(node.choices?.length ?? 0) + 1}`,
+      nextNodeId: undefined,
+    };
+    const updatedChoices = [...(node.choices || []), newChoice];
+    actions.patchNode(node.id, { choices: updatedChoices });
+  }, [actions, node.choices, node.id]);
+  const handleDelete = useCallback(() => {
+    if (node.id) actions.deleteNode(node.id);
+  }, [actions, node.id]);
 
   // Get character if characterId is set
   const character = node.characterId ? characters[node.characterId] : undefined;
@@ -197,11 +218,7 @@ export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
                   position={Position.Right}
                   id={`choice-${idx}`}
                   data-choice-index={idx % 5}
-                  style={{ 
-                    top: `50%`,
-                    transform: `translateY(-50%)`,
-                    right: '-6px',
-                  }}
+                  style={choiceHandleStyle}
                   className="forge-choice-handle !w-3 !h-3 !rounded-full"
                 />
               </div>
@@ -221,21 +238,11 @@ export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={() => node.id && actions.openNodeEditor(node.id)}>
+        <ContextMenuItem onSelect={handleEdit}>
           <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
         </ContextMenuItem>
         {node.id && (
-          <ContextMenuItem onSelect={() => {
-            if (!node.id) return;
-            // Add a new choice to the node
-            const newChoice = {
-              id: `c_${Date.now()}`,
-              text: `Choice ${(node.choices?.length ?? 0) + 1}`,
-              nextNodeId: undefined,
-            };
-            const updatedChoices = [...(node.choices || []), newChoice];
-            actions.patchNode(node.id, { choices: updatedChoices });
-          }}>
+          <ContextMenuItem onSelect={handleAddChoice}>
             <Plus size={14} className="mr-2 text-df-player-selected" /> Add Choice
           </ContextMenuItem>
         )}
@@ -243,7 +250,7 @@ export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
           <>
             <ContextMenuSeparator />
             <ContextMenuItem 
-              onSelect={() => node.id && actions.deleteNode(node.id)}
+              onSelect={handleDelete}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 size={14} className="mr-2" /> Delete
@@ -253,4 +260,6 @@ export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
       </ContextMenuContent>
     </ContextMenu>
   );
-}
+});
+
+PlayerNode.displayName = 'PlayerNode';

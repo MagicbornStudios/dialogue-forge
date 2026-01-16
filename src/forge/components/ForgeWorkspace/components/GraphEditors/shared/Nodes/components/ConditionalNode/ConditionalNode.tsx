@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
 import type { ForgeCondition, ForgeConditionalBlock, ForgeNode } from '@/forge/types/forge-graph';
 import { FORGE_CONDITIONAL_BLOCK_TYPE, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
@@ -32,13 +32,35 @@ interface ConditionalNodeData {
   layoutDirection?: LayoutDirection;
 }
 
-export function ConditionalNode({ data, selected }: NodeProps<ConditionalNodeData>) {
+export const ConditionalNode = React.memo(function ConditionalNode({ data, selected }: NodeProps<ConditionalNodeData>) {
   const { node, flagSchema, characters = {}, ui = {}, layoutDirection = 'TB' } = data;
   const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
-  const blocks = node.conditionalBlocks || [];
+  const blocks = useMemo(() => node.conditionalBlocks ?? [], [node.conditionalBlocks]);
+  const setFlags = useMemo(() => node.setFlags ?? [], [node.setFlags]);
 
   // Use actions instead of callbacks
   const actions = useForgeEditorActions();
+  const handleEdit = useCallback(() => {
+    if (node.id) actions.openNodeEditor(node.id);
+  }, [actions, node.id]);
+  const handleDelete = useCallback(() => {
+    if (node.id) actions.deleteNode(node.id);
+  }, [actions, node.id]);
+  const handleAddBlock = useCallback(() => {
+    if (!node.id) return;
+    const currentBlocks = node.conditionalBlocks || [];
+    const newBlock = {
+      id: `block_${Date.now()}`,
+      type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
+      condition: [],
+      content: '',
+      speaker: undefined,
+    };
+    actions.patchNode(node.id, {
+      conditionalBlocks: [...currentBlocks, newBlock],
+    });
+    actions.openNodeEditor(node.id);
+  }, [actions, node.conditionalBlocks, node.id]);
   const updateNodeInternals = useUpdateNodeInternals();
   const headerRef = useRef<HTMLDivElement>(null);
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -205,9 +227,9 @@ export function ConditionalNode({ data, selected }: NodeProps<ConditionalNodeDat
           </div>
 
           {/* Flag indicators */}
-          {node.setFlags && node.setFlags.length > 0 && (
+          {setFlags.length > 0 && (
             <div className="px-4 py-2 border-t border-df-control-border flex flex-wrap gap-1">
-              {node.setFlags.map(flagId => {
+              {setFlags.map(flagId => {
                 const flag = flagSchema?.flags.find(f => f.id === flagId);
                 const flagType = flag?.type || 'dialogue';
                 const colorClass = getFlagColorClass(flagType);
@@ -223,14 +245,14 @@ export function ConditionalNode({ data, selected }: NodeProps<ConditionalNodeDat
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={() => node.id && actions.openNodeEditor(node.id)}>
+        <ContextMenuItem onSelect={handleEdit}>
           <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
         </ContextMenuItem>
         {!isStartNode && node.id && (
           <>
             <ContextMenuSeparator />
             <ContextMenuItem
-              onSelect={() => node.id && actions.deleteNode(node.id)}
+              onSelect={handleDelete}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 size={14} className="mr-2" /> Delete
@@ -238,24 +260,12 @@ export function ConditionalNode({ data, selected }: NodeProps<ConditionalNodeDat
           </>
         )}
         <ContextMenuSeparator />
-        <ContextMenuItem onSelect={() => {
-          if (!node.id) return;
-          const currentBlocks = node.conditionalBlocks || [];
-          const newBlock = {
-            id: `block_${Date.now()}`,
-            type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
-            condition: [],
-            content: '',
-            speaker: undefined,
-          };
-          actions.patchNode(node.id, {
-            conditionalBlocks: [...currentBlocks, newBlock],
-          });
-          actions.openNodeEditor(node.id);
-        }}>
+        <ContextMenuItem onSelect={handleAddBlock}>
           <Plus size={14} className="mr-2 text-df-npc-selected" /> Add Conditional Block
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   );
-}
+});
+
+ConditionalNode.displayName = 'ConditionalNode';

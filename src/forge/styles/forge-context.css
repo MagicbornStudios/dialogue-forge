@@ -1,0 +1,82 @@
+:root {
+  --context-accent: var(--color-df-border-hover);
+  --context-glow: color-mix(in oklab, var(--context-accent) 35%, transparent);
+  --context-ring: color-mix(in oklab, var(--context-accent) 60%, transparent);
+}
+
+[data-domain] {
+  --context-glow: color-mix(in oklab, var(--context-accent) 35%, transparent);
+  --context-ring: color-mix(in oklab, var(--context-accent) 60%, transparent);
+}
+
+[data-domain][data-focused="false"] {
+  --context-accent: var(--color-df-border-hover);
+}
+
+[data-domain="forge"] {
+  --context-accent: var(--color-df-info);
+}
+
+[data-domain="forge"][data-editor-scope="storylet"] {
+  --context-accent: var(--color-df-edge-choice-1);
+}
+
+[data-domain="forge"][data-context-node-type="ACT"] {
+  --context-accent: var(--node-act-accent);
+}
+
+[data-domain="forge"][data-context-node-type="CHAPTER"] {
+  --context-accent: var(--node-chapter-accent);
+}
+
+[data-domain="forge"][data-context-node-type="PAGE"] {
+  --context-accent: var(--node-page-accent);
+}
+
+[data-domain="forge"][data-context-node-type="CHARACTER"] {
+  --context-accent: var(--node-npc-accent);
+}
+
+[data-domain="forge"][data-context-node-type="PLAYER"] {
+  --context-accent: var(--node-player-accent);
+}
+
+[data-domain="forge"][data-context-node-type="CONDITIONAL"] {
+  --context-accent: var(--node-conditional-accent);
+}
+
+[data-domain="forge"][data-context-node-type="STORYLET"] {
+  --context-accent: var(--node-storylet-accent);
+}
+
+[data-domain="forge"][data-context-node-type="DETOUR"] {
+  --context-accent: var(--node-detour-accent);
+}
+
+[data-domain="forge"][data-context-node-type="JUMP"] {
+  --context-accent: var(--color-df-warning);
+}
+
+[data-domain="forge"][data-context-node-type="END"] {
+  --context-accent: var(--color-df-text-tertiary);
+}
+
+[data-domain="writer"] {
+  --context-accent: var(--color-df-warning);
+}
+
+[data-domain="writer"][data-context-node-type="PAGE"] {
+  --context-accent: var(--node-page-accent);
+}
+
+[data-domain="ai"] {
+  --context-accent: var(--color-df-info);
+}
+
+[data-domain="ai"][data-context-node-type="request"] {
+  --context-accent: var(--color-df-info);
+}
+
+[data-domain="ai"][data-context-node-type="response"] {
+  --context-accent: var(--color-df-success);
+}

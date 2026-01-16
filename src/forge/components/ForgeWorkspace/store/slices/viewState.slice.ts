@@ -1,5 +1,6 @@
 import type { StateCreator } from "zustand"
 import type { ForgeWorkspaceState } from "../forge-workspace-store"
+import type { ForgeNodeType } from "@/forge/types/forge-graph"
 
 export interface PanelLayoutState {
   sidebar: {
@@ -43,6 +44,10 @@ export interface ViewStateSlice {
     narrative?: { graphId: string; nodeId?: string }
     storylet?: { graphId: string; nodeId?: string }
   }
+  contextNodeTypeByScope: {
+    narrative: ForgeNodeType | null
+    storylet: ForgeNodeType | null
+  }
   panelLayout: PanelLayoutState
   focusedEditor: "narrative" | "storylet" | null
   modalState: ModalState
@@ -53,6 +58,7 @@ export interface ViewStateActions {
   setStoryletFocusId: (id: string | null) => void
   requestFocus: (scope: "narrative" | "storylet", graphId: string, nodeId?: string) => void
   clearFocus: (scope: "narrative" | "storylet") => void
+  setContextNodeType: (scope: "narrative" | "storylet", nodeType: ForgeNodeType | null) => void
   togglePanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor') => void
   dockPanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor') => void
   undockPanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor') => void
@@ -75,6 +81,10 @@ export function createViewStateSlice(
     graphScope: "narrative",
     storyletFocusId: null,
     pendingFocusByScope: {},
+    contextNodeTypeByScope: {
+      narrative: null,
+      storylet: null,
+    },
     panelLayout: defaultPanelLayout,
     focusedEditor: null,
     modalState: defaultModalState,
@@ -94,6 +104,14 @@ export function createViewStateSlice(
         delete next[scope]
         return { pendingFocusByScope: next }
       })
+    },
+    setContextNodeType: (scope, nodeType) => {
+      set((state) => ({
+        contextNodeTypeByScope: {
+          ...state.contextNodeTypeByScope,
+          [scope]: nodeType,
+        },
+      }))
     },
     togglePanel: (panel) => {
       set((state) => ({

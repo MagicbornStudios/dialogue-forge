@@ -4,6 +4,7 @@ import type { ForgeGameState } from '@/forge/types/forge-game-state';
 import type { ForgeCharacter } from '@/forge/types/characters';
 import type { FlagSchema } from '@/forge/types/flags';
 import { SidebarPanel, NarrativeEditorPanel, StoryletEditorPanel } from './ForgeWorkspacePanels';
+import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 
 type PanelId = 'sidebar' | 'narrative-editor' | 'storylet-editor';
 
@@ -28,8 +29,22 @@ export function ForgeWorkspaceLayout({
   onNarrativeGraphChange,
   onStoryletGraphChange,
 }: ForgeWorkspaceLayoutProps) {
+  const focusedEditor = useForgeWorkspaceStore((s) => s.focusedEditor);
+  const graphScope = useForgeWorkspaceStore((s) => s.graphScope);
+  const contextNodeTypeByScope = useForgeWorkspaceStore((s) => s.contextNodeTypeByScope);
+
+  const resolvedScope = focusedEditor ?? graphScope;
+  const contextNodeType = contextNodeTypeByScope[resolvedScope];
+  const isFocused = Boolean(focusedEditor);
+
   return (
-    <div className="flex h-full w-full">
+    <div
+      className="flex h-full w-full"
+      data-domain="forge"
+      data-editor-scope={resolvedScope}
+      data-context-node-type={contextNodeType ?? undefined}
+      data-focused={isFocused ? 'true' : 'false'}
+    >
       {panelVisibility.sidebar && (
         <div className="w-[280px] border-r border-df-sidebar-border flex-shrink-0 relative group">
           <div className="absolute inset-y-0 right-0 w-[1px] bg-[var(--color-df-border-hover)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />

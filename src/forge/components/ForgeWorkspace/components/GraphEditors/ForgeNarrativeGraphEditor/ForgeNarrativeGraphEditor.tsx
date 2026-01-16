@@ -127,6 +127,17 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     sessionStore,
   });
 
+  const setContextNodeType = useForgeWorkspaceStore((s) => s.actions.setContextNodeType);
+  const selectedNodeType = shell.selectedNode?.type ?? null;
+
+  React.useEffect(() => {
+    setContextNodeType('narrative', selectedNodeType);
+  }, [selectedNodeType, setContextNodeType]);
+
+  React.useEffect(() => {
+    return () => setContextNodeType('narrative', null);
+  }, [setContextNodeType]);
+
   // Create actions from dispatch and provide to children
   const actions = React.useMemo(() => makeForgeEditorActions(shell.dispatch), [shell.dispatch]);
 

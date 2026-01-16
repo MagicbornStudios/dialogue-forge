@@ -22,10 +22,13 @@ export function SidebarPanel({ className }: SidebarPanelProps) {
 interface NarrativeEditorPanelProps {
   graph: ForgeGraphDoc | null;
   onChange: (graph: ForgeGraphDoc) => void;
+  flagSchema?: FlagSchema;
+  gameState?: ForgeGameState;
+  characters?: Record<string, ForgeCharacter>;
   className?: string;
 }
 
-export function NarrativeEditorPanel({ graph, onChange, className }: NarrativeEditorPanelProps) {
+export function NarrativeEditorPanel({ graph, onChange, flagSchema, gameState, characters, className }: NarrativeEditorPanelProps) {
   if (!graph) {
     return (
       <div className={`h-full w-full flex items-center justify-center text-df-text-secondary text-sm ${className ?? ''}`}>
@@ -39,6 +42,9 @@ export function NarrativeEditorPanel({ graph, onChange, className }: NarrativeEd
       <ForgeNarrativeGraphEditor 
         graph={graph} 
         onChange={onChange} 
+        flagSchema={flagSchema}
+        gameState={gameState}
+        characters={characters}
         className="h-full w-full" 
       />
     </div>

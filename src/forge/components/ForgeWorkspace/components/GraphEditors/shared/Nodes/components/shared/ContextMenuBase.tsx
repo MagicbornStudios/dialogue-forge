@@ -1,4 +1,11 @@
 import React from 'react';
+import { cn } from '@/shared/lib/utils';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+} from '@/shared/ui/context-menu';
 
 interface ContextMenuBaseProps {
   x: number;
@@ -6,20 +13,35 @@ interface ContextMenuBaseProps {
   title?: string;
   children: React.ReactNode;
   className?: string;
+  onClose?: () => void;
 }
 
-export function ContextMenuBase({ x, y, title, children, className = '' }: ContextMenuBaseProps) {
+export function ContextMenuBase({
+  x,
+  y,
+  title,
+  children,
+  className = '',
+  onClose,
+}: ContextMenuBaseProps) {
   return (
-    <div className="fixed z-50" style={{ left: x, top: y }}>
-      <div className={`bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-lg p-1 min-w-[150px] ${className}`}>
+    <ContextMenu open onOpenChange={(open) => { if (!open) onClose?.(); }}>
+      <ContextMenuContent
+        className={cn(
+          'bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-lg p-1 min-w-[150px]',
+          className
+        )}
+        style={{ position: 'fixed', left: x, top: y, zIndex: 50 }}
+        onCloseAutoFocus={(event) => event.preventDefault()}
+      >
         {title && (
-          <div className="px-3 py-1 text-[10px] text-df-text-secondary uppercase border-b border-df-sidebar-border">
+          <ContextMenuLabel className="px-3 py-1 text-[10px] text-df-text-secondary uppercase border-b border-df-sidebar-border">
             {title}
-          </div>
+          </ContextMenuLabel>
         )}
         {children}
-      </div>
-    </div>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 
@@ -35,8 +57,8 @@ export function ContextMenuButton({ onClick, children, variant = 'primary' }: Co
     : 'w-full text-left px-3 py-2 text-sm text-df-text-secondary hover:bg-df-elevated rounded';
   
   return (
-    <button onClick={onClick} className={className}>
+    <ContextMenuItem onSelect={onClick} className={className}>
       {children}
-    </button>
+    </ContextMenuItem>
   );
 }

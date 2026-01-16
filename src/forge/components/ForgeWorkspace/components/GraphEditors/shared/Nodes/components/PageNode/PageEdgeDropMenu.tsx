@@ -47,7 +47,7 @@ export function PageEdgeDropMenu({
   };
 
   return (
-    <ContextMenuBase x={x} y={y} title="Create Node">
+    <ContextMenuBase x={x} y={y} title="Create Node" onClose={onClose}>
       {availableNodeTypes.map(type => (
         <ContextMenuButton
           key={type}

@@ -26,7 +26,7 @@ export function StoryletEdgeContextMenu({
   onClose,
 }: StoryletEdgeContextMenuProps) {
   return (
-    <ContextMenuBase x={x} y={y} title="Insert Node">
+    <ContextMenuBase x={x} y={y} title="Insert Node" onClose={onClose}>
       {availableNodeTypes.map(type => (
         <ContextMenuButton
           key={type}

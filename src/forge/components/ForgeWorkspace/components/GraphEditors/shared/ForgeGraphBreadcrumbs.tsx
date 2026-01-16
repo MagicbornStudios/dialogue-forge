@@ -11,8 +11,18 @@ export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
   const breadcrumbHistory = useForgeWorkspaceStore((s) => s.breadcrumbHistoryByScope[scope]);
   const navigateToBreadcrumb = useForgeWorkspaceStore((s) => s.actions.navigateToBreadcrumb);
   const clearBreadcrumbs = useForgeWorkspaceStore((s) => s.actions.clearBreadcrumbs);
+  
+  // Get current active graph to show its name
+  const activeGraphId = scope === 'narrative' 
+    ? useForgeWorkspaceStore((s) => s.activeNarrativeGraphId)
+    : useForgeWorkspaceStore((s) => s.activeStoryletGraphId);
+  const currentGraph = activeGraphId 
+    ? useForgeWorkspaceStore((s) => s.graphs.byId[activeGraphId] ?? null)
+    : null;
+  
+  const currentGraphTitle = currentGraph?.title || 'Untitled Graph';
 
-  // Always show home icon, even when no breadcrumbs exist
+  // Always show home icon and current graph name, even when no breadcrumbs exist
   if (breadcrumbHistory.length === 0) {
     return (
       <div className="flex items-center gap-1 text-xs text-df-text-secondary">
@@ -23,6 +33,10 @@ export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
         >
           <Home size={14} />
         </button>
+        <ChevronRight size={14} className="text-df-text-tertiary" />
+        <span className="px-2 py-1 text-df-text-primary font-medium">
+          {currentGraphTitle}
+        </span>
       </div>
     );
   }

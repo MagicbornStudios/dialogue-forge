@@ -341,3 +341,13 @@ export function useForgeWorkspaceStore<T>(
   }
   return useStore(store, selector)
 }
+
+export function useForgeWorkspaceStoreInstance(): ForgeWorkspaceStore {
+  const store = useContext(ForgeWorkspaceStoreContext)
+  if (!store) {
+    throw new Error(
+      "useForgeWorkspaceStoreInstance must be used within ForgeWorkspaceStoreProvider"
+    )
+  }
+  return store
+}

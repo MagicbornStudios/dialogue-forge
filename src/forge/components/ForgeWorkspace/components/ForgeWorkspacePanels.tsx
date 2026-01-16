@@ -29,14 +29,7 @@ interface NarrativeEditorPanelProps {
 }
 
 export function NarrativeEditorPanel({ graph, onChange, flagSchema, gameState, characters, className }: NarrativeEditorPanelProps) {
-  if (!graph) {
-    return (
-      <div className={`h-full w-full flex items-center justify-center text-df-text-secondary text-sm ${className ?? ''}`}>
-        No narrative graph loaded
-      </div>
-    );
-  }
-
+  // Always render the editor, even if graph is null (will show blank state)
   return (
     <div className={`h-full w-full flex flex-col ${className ?? ''}`}>
       <ForgeNarrativeGraphEditor 
@@ -68,14 +61,7 @@ export function StoryletEditorPanel({
   characters,
   className 
 }: StoryletEditorPanelProps) {
-  if (!graph) {
-    return (
-      <div className={`h-full w-full flex items-center justify-center text-df-text-secondary text-sm ${className ?? ''}`}>
-        No storylet graph loaded
-      </div>
-    );
-  }
-
+  // Always render the editor, even if graph is null (will show blank state)
   return (
     <div className={`h-full w-full flex flex-col ${className ?? ''}`}>
       <ForgeStoryletGraphEditor

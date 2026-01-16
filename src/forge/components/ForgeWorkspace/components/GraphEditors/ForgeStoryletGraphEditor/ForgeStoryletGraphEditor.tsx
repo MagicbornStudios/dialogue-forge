@@ -43,6 +43,7 @@ import { ChoiceEdge } from '@/forge/components/ForgeWorkspace/components/GraphEd
 import { ForgeEdge } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Edges/ForgeEdge';
 import { DetourNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode';
 import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/ForgeGraphBreadcrumbs';
+import { GraphEditorToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorToolbar';
 import { Network, Focus, FileText, Play } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 import { cn } from '@/shared/lib/utils';
@@ -209,9 +210,22 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     [sessionStore]
   );
 
-  // Shell is still the only “graph mutation” boundary.
+  // Create a default empty graph if none exists, with correct kind for storylet
+  const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
+  const effectiveGraph = React.useMemo(() => {
+    if (graph) return graph;
+    const { createEmptyForgeGraphDoc } = require('@/forge/lib/utils/forge-flow-helpers');
+    const { FORGE_GRAPH_KIND } = require('@/forge/types/forge-graph');
+    return createEmptyForgeGraphDoc({
+      projectId: selectedProjectId || 0,
+      kind: FORGE_GRAPH_KIND.STORYLET,
+      title: 'Untitled Storylet',
+    });
+  }, [graph, selectedProjectId]);
+
+  // Shell is still the only "graph mutation" boundary.
   const shell = useForgeFlowEditorShell({
-    graph,
+    graph: effectiveGraph,
     onChange,
     reactFlow,
     sessionStore,
@@ -487,6 +501,34 @@ function ForgeStoryletGraphEditorContent({
             )}
           </div>
           <div className="flex items-center gap-2">
+            <GraphEditorToolbar 
+              scope="storylet" 
+              onCreateNew={async () => {
+                const store = useForgeWorkspaceStore.getState();
+                const dataAdapter = store.dataAdapter;
+                const selectedProjectId = store.selectedProjectId;
+                if (!dataAdapter || !selectedProjectId) return;
+                
+                const { createGraphWithStartEnd } = await import('@/forge/lib/utils/forge-flow-helpers');
+                const { FORGE_GRAPH_KIND } = await import('@/forge/types/forge-graph');
+                const { flow, startNodeId, endNodeIds } = createGraphWithStartEnd({
+                  projectId: selectedProjectId,
+                  kind: FORGE_GRAPH_KIND.STORYLET,
+                  title: 'New Storylet'
+                });
+                
+                const createdGraph = await dataAdapter.createGraph({
+                  projectId: selectedProjectId,
+                  kind: FORGE_GRAPH_KIND.STORYLET,
+                  title: 'New Storylet',
+                  flow,
+                  startNodeId,
+                  endNodeIds,
+                });
+                
+                openGraphInScope('storylet', String(createdGraph.id));
+              }}
+            />
             <button
               onClick={openYarnModal}
               className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-1.5 text-xs text-df-text-secondary hover:text-df-text-primary transition"

@@ -200,15 +200,65 @@ function ForgeWorkspaceContent({
   // TODO: Pass dataAdapter through context or props if needed for default creation
 
   const onNarrativeGraphChange = useCallback(
-    (next: ForgeGraphDoc) => {
-      setGraph(String(next.id), next);
+    async (next: ForgeGraphDoc) => {
+      const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
+      const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
+      
+      // If graph has no ID (id === 0), it's a new graph that needs to be created in the database
+      // This happens when the first node is added to a blank graph
+      if (next.id === 0 && dataAdapter && selectedProjectId && next.flow.nodes.length > 0) {
+        try {
+          const createdGraph = await dataAdapter.createGraph({
+            projectId: selectedProjectId,
+            kind: next.kind,
+            title: next.title || 'Untitled Narrative',
+            flow: next.flow,
+            startNodeId: next.startNodeId,
+            endNodeIds: next.endNodeIds,
+          });
+          // Update the graph with the new ID and open it
+          const updatedGraph = { ...next, id: createdGraph.id };
+          setGraph(String(createdGraph.id), updatedGraph);
+          const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
+          openGraphInScope('narrative', String(createdGraph.id));
+        } catch (error) {
+          console.error('Failed to create graph:', error);
+        }
+      } else {
+        setGraph(String(next.id), next);
+      }
     },
     [setGraph]
   );
 
   const onStoryletGraphChange = useCallback(
-    (next: ForgeGraphDoc) => {
-      setGraph(String(next.id), next);
+    async (next: ForgeGraphDoc) => {
+      const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
+      const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
+      
+      // If graph has no ID (id === 0), it's a new graph that needs to be created in the database
+      // This happens when the first node is added to a blank graph
+      if (next.id === 0 && dataAdapter && selectedProjectId && next.flow.nodes.length > 0) {
+        try {
+          const createdGraph = await dataAdapter.createGraph({
+            projectId: selectedProjectId,
+            kind: next.kind,
+            title: next.title || 'Untitled Storylet',
+            flow: next.flow,
+            startNodeId: next.startNodeId,
+            endNodeIds: next.endNodeIds,
+          });
+          // Update the graph with the new ID and open it
+          const updatedGraph = { ...next, id: createdGraph.id };
+          setGraph(String(createdGraph.id), updatedGraph);
+          const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
+          openGraphInScope('storylet', String(createdGraph.id));
+        } catch (error) {
+          console.error('Failed to create graph:', error);
+        }
+      } else {
+        setGraph(String(next.id), next);
+      }
     },
     [setGraph]
   );

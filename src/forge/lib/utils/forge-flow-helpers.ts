@@ -439,6 +439,9 @@ export function createEmptyForgeGraphDoc(opts: {
 /**
  * Create a graph with proper start and end nodes.
  * This ensures all graphs have valid startNodeId and endNodeIds.
+ * 
+ * NOTE: This function now creates EMPTY graphs (no nodes/edges) as requested.
+ * The graph will be created in the database when the first node is added.
  */
 export function createGraphWithStartEnd(opts: {
   projectId: number
@@ -451,55 +454,17 @@ export function createGraphWithStartEnd(opts: {
 } {
   const timestamp = Date.now()
   const startNodeId = `start_${timestamp}`
-  const endNodeId = `end_${timestamp}`
   
-  // Determine start and end node types based on graph kind
-  const startNodeType = opts.kind === FORGE_GRAPH_KIND.NARRATIVE 
-    ? FORGE_NODE_TYPE.ACT 
-    : FORGE_NODE_TYPE.CHARACTER
-  
-  const endNodeType = opts.kind === FORGE_GRAPH_KIND.NARRATIVE
-    ? FORGE_NODE_TYPE.ACT
-    : FORGE_NODE_TYPE.CHARACTER
-  
-  // Create start node
-  const startNode = createFlowNode(startNodeType, startNodeId, 0, 0)
-  if (opts.kind === FORGE_GRAPH_KIND.NARRATIVE) {
-    startNode.data.label = 'Act 1'
-    startNode.data.content = 'The beginning of your narrative.'
-  } else {
-    startNode.data.label = 'Start'
-    startNode.data.content = 'This is the starting point.'
-    startNode.data.speaker = 'Character'
-  }
-  
-  // Create end node
-  const endNode = createFlowNode(endNodeType, endNodeId, 200, 0)
-  if (opts.kind === FORGE_GRAPH_KIND.NARRATIVE) {
-    endNode.data.label = 'End'
-    endNode.data.content = 'The conclusion of this narrative path.'
-  } else {
-    endNode.data.label = 'End'
-    endNode.data.content = 'This is the ending point.'
-  }
-  
-  // Create edge from start to end
-  const edge: ForgeReactFlowEdge = {
-    id: `edge_${timestamp}`,
-    source: startNodeId,
-    target: endNodeId,
-    type: 'default',
-  }
-  
+  // Create empty flow - graph will be populated when first node is added
   const flow: ForgeReactFlowJson = {
-    nodes: [startNode, endNode],
-    edges: [edge],
+    nodes: [],
+    edges: [],
     viewport: { x: 0, y: 0, zoom: 1 },
   }
   
   return {
     flow,
     startNodeId,
-    endNodeIds: [{ nodeId: endNodeId }],
+    endNodeIds: [],
   }
 }

@@ -45,6 +45,7 @@ import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/compone
 import { ConditionalNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNode';
 import { GraphLeftToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLeftToolbar';
 import { GraphLayoutControls } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls';
+import { GraphEditorToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorToolbar';
 import { useShallow } from 'zustand/shallow';
 import type { FlagSchema } from '@/forge/types/flags';
 import type { ForgeCharacter } from '@/forge/types/characters';
@@ -147,8 +148,21 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     sessionStore.setState({ showMiniMap: value });
   }, [sessionStore]);
 
+  // Create a default empty graph if none exists, with correct kind for narrative
+  const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
+  const effectiveGraph = React.useMemo(() => {
+    if (graph) return graph;
+    const { createEmptyForgeGraphDoc } = require('@/forge/lib/utils/forge-flow-helpers');
+    const { FORGE_GRAPH_KIND } = require('@/forge/types/forge-graph');
+    return createEmptyForgeGraphDoc({
+      projectId: selectedProjectId || 0,
+      kind: FORGE_GRAPH_KIND.NARRATIVE,
+      title: 'Untitled Narrative',
+    });
+  }, [graph, selectedProjectId]);
+
   const shell = useForgeFlowEditorShell({
-    graph,
+    graph: effectiveGraph,
     onChange,
     reactFlow,
     sessionStore,
@@ -402,13 +416,43 @@ function ForgeNarrativeGraphEditorContent({
               <Focus size={14} style={{ color: 'var(--color-df-info)' }} />
             )}
           </div>
-          <button
-            onClick={openYarnModal}
-            className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-1.5 text-xs text-df-text-secondary hover:text-df-text-primary transition"
-            title="View Yarn"
-          >
-            <FileText className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <GraphEditorToolbar 
+              scope="narrative" 
+              onCreateNew={async () => {
+                const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
+                const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
+                const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
+                if (!dataAdapter || !selectedProjectId) return;
+                
+                const { createGraphWithStartEnd } = await import('@/forge/lib/utils/forge-flow-helpers');
+                const { FORGE_GRAPH_KIND } = await import('@/forge/types/forge-graph');
+                const { flow, startNodeId, endNodeIds } = createGraphWithStartEnd({
+                  projectId: selectedProjectId,
+                  kind: FORGE_GRAPH_KIND.NARRATIVE,
+                  title: 'New Narrative'
+                });
+                
+                const createdGraph = await dataAdapter.createGraph({
+                  projectId: selectedProjectId,
+                  kind: FORGE_GRAPH_KIND.NARRATIVE,
+                  title: 'New Narrative',
+                  flow,
+                  startNodeId,
+                  endNodeIds,
+                });
+                
+                openGraphInScope('narrative', String(createdGraph.id));
+              }}
+            />
+            <button
+              onClick={openYarnModal}
+              className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-1.5 text-xs text-df-text-secondary hover:text-df-text-primary transition"
+              title="View Yarn"
+            >
+              <FileText className="h-4 w-4" />
+            </button>
+          </div>
         </div>
         
         {/* Graph editor */}

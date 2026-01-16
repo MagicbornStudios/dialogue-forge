@@ -122,11 +122,14 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
 
   const effectiveGraph: ForgeGraphDoc = React.useMemo(() => {
     const now = new Date().toISOString();
+    // If graph is null, create a default empty graph
+    // The kind will be inferred from the graph prop if available, otherwise default to STORYLET
+    // The actual kind should be set by the editor component based on scope
     return (
       graph || {
         id: 0,
         project: 0,
-        kind: FORGE_GRAPH_KIND.STORYLET,
+        kind: FORGE_GRAPH_KIND.STORYLET, // Default, but should be overridden by editor scope
         title: 'New Graph',
         startNodeId: '',
         endNodeIds: [],

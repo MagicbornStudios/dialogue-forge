@@ -144,6 +144,10 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
   // Use gameState.flags if available, fallback to gameStateFlags for backward compatibility
   const resolvedGameStateFlags = gameState?.flags || gameStateFlags;
   
+  const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
+  const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
+  const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
+  
   const {
     openYarnModal,
     openPlayModal,
@@ -210,8 +214,31 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     [sessionStore]
   );
 
+  // Create handler for creating new graph
+  const handleCreateNewGraph = React.useCallback(async () => {
+    if (!dataAdapter || !selectedProjectId) return;
+    
+    const { createGraphWithStartEnd } = await import('@/forge/lib/utils/forge-flow-helpers');
+    const { FORGE_GRAPH_KIND } = await import('@/forge/types/forge-graph');
+    const { flow, startNodeId, endNodeIds } = createGraphWithStartEnd({
+      projectId: selectedProjectId,
+      kind: FORGE_GRAPH_KIND.STORYLET,
+      title: 'New Storylet'
+    });
+    
+    const createdGraph = await dataAdapter.createGraph({
+      projectId: selectedProjectId,
+      kind: FORGE_GRAPH_KIND.STORYLET,
+      title: 'New Storylet',
+      flow,
+      startNodeId,
+      endNodeIds,
+    });
+    
+    openGraphInScope('storylet', String(createdGraph.id));
+  }, [dataAdapter, selectedProjectId, openGraphInScope]);
+
   // Create a default empty graph if none exists, with correct kind for storylet
-  const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
   const effectiveGraph = React.useMemo(() => {
     if (graph) return graph;
     const { createEmptyForgeGraphDoc } = require('@/forge/lib/utils/forge-flow-helpers');
@@ -413,6 +440,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
         openPlayModal={openPlayModal}
         openCopilotChat={openCopilotChat}
         handleClick={handleClick}
+        handleCreateNewGraph={handleCreateNewGraph}
         setLayoutDirection={setLayoutDirection}
         setAutoOrganize={setAutoOrganize}
         setShowPathHighlight={setShowPathHighlight}
@@ -443,6 +471,7 @@ function ForgeStoryletGraphEditorContent({
   openPlayModal,
   openCopilotChat,
   handleClick,
+  handleCreateNewGraph,
   setLayoutDirection,
   setAutoOrganize,
   setShowPathHighlight,
@@ -467,6 +496,7 @@ function ForgeStoryletGraphEditorContent({
   openPlayModal: () => void;
   openCopilotChat: () => void;
   handleClick: () => void;
+  handleCreateNewGraph: () => Promise<void>;
   setLayoutDirection: (dir: LayoutDirection) => void;
   setAutoOrganize: (value: boolean) => void;
   setShowPathHighlight: (value: boolean) => void;
@@ -503,31 +533,7 @@ function ForgeStoryletGraphEditorContent({
           <div className="flex items-center gap-2">
             <GraphEditorToolbar 
               scope="storylet" 
-              onCreateNew={async () => {
-                const store = useForgeWorkspaceStore.getState();
-                const dataAdapter = store.dataAdapter;
-                const selectedProjectId = store.selectedProjectId;
-                if (!dataAdapter || !selectedProjectId) return;
-                
-                const { createGraphWithStartEnd } = await import('@/forge/lib/utils/forge-flow-helpers');
-                const { FORGE_GRAPH_KIND } = await import('@/forge/types/forge-graph');
-                const { flow, startNodeId, endNodeIds } = createGraphWithStartEnd({
-                  projectId: selectedProjectId,
-                  kind: FORGE_GRAPH_KIND.STORYLET,
-                  title: 'New Storylet'
-                });
-                
-                const createdGraph = await dataAdapter.createGraph({
-                  projectId: selectedProjectId,
-                  kind: FORGE_GRAPH_KIND.STORYLET,
-                  title: 'New Storylet',
-                  flow,
-                  startNodeId,
-                  endNodeIds,
-                });
-                
-                openGraphInScope('storylet', String(createdGraph.id));
-              }}
+              onCreateNew={handleCreateNewGraph}
             />
             <button
               onClick={openYarnModal}

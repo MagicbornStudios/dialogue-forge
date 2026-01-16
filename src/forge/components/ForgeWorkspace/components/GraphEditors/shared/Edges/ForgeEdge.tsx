@@ -39,10 +39,12 @@ export const ForgeEdge = React.memo(function ForgeEdge({
   targetX,
   targetY,
   targetPosition,
-  sourceHandle,
   selected,
   data,
+  ...props
 }: EdgeProps) {
+  // Access sourceHandle from props (may not be in EdgeProps type but exists at runtime)
+  const sourceHandle = (props as any).sourceHandle ?? data?.sourceHandle;
   const [hovered, setHovered] = useState(false);
   
   const isBackEdge = data?.isBackEdge ?? false;
@@ -153,7 +155,6 @@ export const ForgeEdge = React.memo(function ForgeEdge({
       <BaseEdge 
         id={id} 
         path={edgePath}
-        className="forge-edge-path"
         style={edgeStyle}
         markerEnd={isBackEdge ? `url(#loop-arrow-${id})` : 'url(#react-flow__arrowclosed)'}
       />

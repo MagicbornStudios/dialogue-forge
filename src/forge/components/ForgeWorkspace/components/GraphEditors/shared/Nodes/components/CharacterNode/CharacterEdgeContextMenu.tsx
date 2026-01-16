@@ -1,5 +1,5 @@
 import React from 'react';
-import { ForgeNodeType } from '@/src/types/forge/forge-graph';
+import { ForgeNodeType } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE_LABELS } from '@/forge/types/ui-constants';
 
 interface CharacterEdgeContextMenuProps {

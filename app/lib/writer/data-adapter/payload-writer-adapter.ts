@@ -41,6 +41,14 @@ function mapChapter(doc: Chapter): WriterChapterDoc {
 }
 
 function mapPage(doc: Page): WriterPageDoc {
+  const dialogueGraphValue = doc.dialogueGraph;
+  const dialogueGraphId = 
+    dialogueGraphValue === null || dialogueGraphValue === undefined
+      ? null
+      : typeof dialogueGraphValue === 'number'
+      ? dialogueGraphValue
+      : dialogueGraphValue.id;
+
   return {
     id: doc.id,
     title: doc.title,
@@ -48,7 +56,7 @@ function mapPage(doc: Page): WriterPageDoc {
     order: doc.order,
     project: typeof doc.project === 'number' ? doc.project : doc.project.id,
     chapter: typeof doc.chapter === 'number' ? doc.chapter : doc.chapter.id,
-    dialogueGraph: typeof doc.dialogueGraph === 'number' ? doc.dialogueGraph : doc.dialogueGraph?.id ?? null,
+    dialogueGraph: dialogueGraphId,
     bookBody: normalizeBookBody(doc.bookBody),
     archivedAt: doc.archivedAt ?? null,
     _status: doc._status as 'draft' | 'published' | null,

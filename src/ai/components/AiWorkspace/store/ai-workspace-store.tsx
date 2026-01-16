@@ -65,10 +65,15 @@ export function createAiWorkspaceStore(options: CreateAiWorkspaceStoreOptions) {
 
   return createStore<AiWorkspaceState>()(
     devtools(
-      immer((set, get) => {
-        const configSlice = createConfigSlice(set, get, dataAdapter);
-        const requestsSlice = createRequestsSlice(set, get);
-        const responsesSlice = createResponsesSlice(set, get);
+      immer<AiWorkspaceState>((set, get) => {
+        // Type cast needed because Immer's set function signature differs from Zustand's
+        // The slices expect Zustand's set signature, but Immer wraps it
+        const setTyped = set as Parameters<typeof createConfigSlice>[0];
+        const getTyped = get as Parameters<typeof createConfigSlice>[1];
+        
+        const configSlice = createConfigSlice(setTyped, getTyped, dataAdapter);
+        const requestsSlice = createRequestsSlice(setTyped, getTyped);
+        const responsesSlice = createResponsesSlice(setTyped, getTyped);
 
         // Load API key on init
         if (dataAdapter) {

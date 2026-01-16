@@ -351,7 +351,7 @@ export interface Page {
   /**
    * Forge dialogue graph (kind=DIALOGUE) for this page.
    */
-  graph?: (number | null) | ForgeGraph;
+  dialogueGraph?: (number | null) | ForgeGraph;
   bookBody?: string | null;
   archivedAt?: string | null;
   updatedAt: string;
@@ -650,7 +650,7 @@ export interface PagesSelect<T extends boolean = true> {
   summary?: T;
   content?: T;
   order?: T;
-  graph?: T;
+  dialogueGraph?: T;
   bookBody?: T;
   archivedAt?: T;
   updatedAt?: T;

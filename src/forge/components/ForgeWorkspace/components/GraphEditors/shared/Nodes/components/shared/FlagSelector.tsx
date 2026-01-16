@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FlagSchema, FlagDefinition } from '../../../types/flags';
+import { FlagSchema, FlagDefinition } from '@/shared/types/flags';
 import { Info, X, BookOpen, Trophy, Package, TrendingUp, Crown, Globe, MessageSquare } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
@@ -85,23 +85,23 @@ export function FlagSelector({
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Get flag definitions for selected flags
-  const selectedFlags = value.map(flagId => {
-    const flag = flagSchema?.flags.find(f => f.id === flagId);
+  const selectedFlags = value.map((flagId: string) => {
+    const flag = flagSchema?.flags.find((f: FlagDefinition) => f.id === flagId);
     return flag ? { ...flag, id: flagId } : { id: flagId, type: 'dialogue' as const, name: flagId };
   });
 
   // Filter available flags (not already selected)
-  const availableFlags = flagSchema?.flags.filter(flag => !value.includes(flag.id)) || [];
+  const availableFlags = flagSchema?.flags.filter((flag: FlagDefinition) => !value.includes(flag.id)) || [];
 
   // Filter flags based on input
   const filteredFlags = inputValue.trim()
-    ? availableFlags.filter(flag => 
+    ? availableFlags.filter((flag: FlagDefinition) => 
         flag.id.toLowerCase().includes(inputValue.toLowerCase()) ||
         flag.name.toLowerCase().includes(inputValue.toLowerCase())
       )
     : availableFlags;
 
-  const flagsByCategory = filteredFlags.reduce((acc, flag) => {
+  const flagsByCategory = filteredFlags.reduce((acc: Record<string, FlagDefinition[]>, flag: FlagDefinition) => {
     const cat = flag.category || 'other';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(flag);

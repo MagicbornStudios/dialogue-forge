@@ -6,6 +6,9 @@ import { SearchInput } from '@/shared/ui/SearchInput';
 import { SectionToolbar, type SectionToolbarAction } from './SectionToolbar';
 import { cn } from '@/shared/lib/utils';
 
+// Re-export for convenience
+export type { SectionToolbarAction };
+
 interface SectionHeaderProps {
   title: string;
   icon: React.ReactNode;

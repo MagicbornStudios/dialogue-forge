@@ -11,7 +11,7 @@ import type {
   AiPlanStepProposal,
   AiResponse,
   AiStreamResponse,
-} from '@/src/lib/aiadapter/types';
+} from '@/ai/aiadapter/types';
 import { getOpenRouterConfig, type OpenRouterConfig } from './config';
 
 const OPENROUTER_MODEL_MODE = {
@@ -210,7 +210,7 @@ export const createOpenRouterAdapter = (
           messages,
           abortSignal: createTimeoutSignal(config.timeoutMs),
         });
-        const response = result.toDataStreamResponse();
+        const response = result.toTextStreamResponse();
         return {
           stream: response.body ?? new ReadableStream<Uint8Array>(),
           status: response.status,

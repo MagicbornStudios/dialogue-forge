@@ -1,9 +1,9 @@
 import React from 'react';
-import { ForgeNodeType, FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
+import { ForgeNodeType, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE_LABELS } from '@/forge/types/ui-constants';
-import { ContextMenuBase, ContextMenuButton } from '../../../shared/Nodes/components/ContextMenuBase';
-import { useForgeEditorActions } from '@/src/components/GraphEditors/hooks/useForgeEditorActions';
-import { useForgeEditorSessionStore } from '@/src/components/GraphEditors/hooks/useForgeEditorSession';
+import { ContextMenuBase, ContextMenuButton } from '../../shared/ContextMenuBase';
+import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
+import { useForgeEditorSessionStore } from '@/forge/lib/graph-editor/hooks/useForgeEditorSession';
 
 // CHAPTER nodes can connect to PAGE nodes
 const availableNodeTypes: ForgeNodeType[] = [FORGE_NODE_TYPE.PAGE];

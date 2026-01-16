@@ -1,6 +1,6 @@
 import React from 'react';
-import { FORGE_NODE_TYPE, type ForgeNodeType } from '../../../../../types/forge/forge-graph';
-import { FORGE_NODE_TYPE_LABELS } from '../../../../../types/ui-constants';
+import { FORGE_NODE_TYPE, type ForgeNodeType } from '@/forge/types/forge-graph';
+import { FORGE_NODE_TYPE_LABELS } from '@/forge/types/ui-constants';
 
 interface ConditionalEdgeContextMenuProps {
   x: number;

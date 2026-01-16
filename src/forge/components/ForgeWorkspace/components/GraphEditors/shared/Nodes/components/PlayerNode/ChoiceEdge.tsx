@@ -44,10 +44,12 @@ export const ChoiceEdge = React.memo(function ChoiceEdge({
   targetX,
   targetY,
   targetPosition,
-  sourceHandle,
   data,
   selected,
+  ...props
 }: EdgeProps) {
+  // Access sourceHandle from props (may not be in EdgeProps type but exists at runtime)
+  const sourceHandle = (props as any).sourceHandle ?? data?.sourceHandle;
   const [hovered, setHovered] = useState(false);
   
   const edgeData = data as ChoiceEdgeData | undefined;
@@ -138,7 +140,6 @@ export const ChoiceEdge = React.memo(function ChoiceEdge({
       <BaseEdge 
         id={id} 
         path={edgePath}
-        className="forge-edge-path"
         style={edgeStyle}
         markerEnd={isDimmed ? undefined : `url(#react-flow__arrowclosed-choice-${choiceIndex})`}
       />

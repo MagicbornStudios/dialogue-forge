@@ -1,7 +1,7 @@
 import React from 'react';
 import { Info, Download } from 'lucide-react';
 import { GraphViewModeTabs } from './GraphViewModeTabs';
-import { Button } from '../../ui/button';
+import { Button } from '@/shared/ui/button';
 import type { ViewMode } from '../../../../../types/constants';
 
 interface GraphToolbarProps {

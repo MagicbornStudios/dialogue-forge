@@ -1,7 +1,7 @@
 import React from 'react';
-import { ForgeGraphDoc } from '../../../types';
-import { FlagSchema } from '../../../types/flags';
-import { DialogueResult, ForgeFlagState } from '../../../types/forge-game-state';
+import { ForgeGraphDoc } from '@/forge/types/forge-graph';
+import { FlagSchema } from '@/forge/types/flags';
+import { DialogueResult, ForgeFlagState } from '@/forge/types/forge-game-state';
 import { VNStage } from './VNStage';
 
 export interface GamePlayerProps {

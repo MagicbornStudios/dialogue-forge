@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs"
 import { VIEW_MODE, type ViewMode } from "@/forge/types/constants"
 
 interface GraphViewModeTabsProps {
@@ -20,7 +20,7 @@ export function GraphViewModeTabs({
   className,
 }: GraphViewModeTabsProps) {
   return (
-    <Tabs value={value} onValueChange={v => onChange(v as ViewMode)}>
+    <Tabs value={value} onValueChange={(v: string) => onChange(v as ViewMode)}>
       <TabsList className={className}>
         <TabsTrigger value={VIEW_MODE.GRAPH}>{graphLabel}</TabsTrigger>
         <TabsTrigger value={VIEW_MODE.YARN}>{yarnLabel}</TabsTrigger>

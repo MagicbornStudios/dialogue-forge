@@ -1,5 +1,5 @@
 import React from 'react';
-import { ForgeChapter } from '../../../../../types/narrative';
+import { ForgeChapter } from '@/forge/types/narrative';
 
 interface ChapterNodeFieldsProps {
   chapter: ForgeChapter;

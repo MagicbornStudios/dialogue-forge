@@ -26,9 +26,9 @@ import { ActNode } from '../shared/Nodes/components/ActNode/ActNode';
 import { ChapterNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ChapterNode/ChapterNode';
 import { PageNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PageNode/PageNode';
 import { DetourNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode';
+import { StoryletNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/StoryletNode/StoryletNode';
 import { ForgeEdge } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Edges/ForgeEdge';
-import { Network, FileText, Focus } from 'lucide-react';
-import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
+import { FileText, Focus } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 
 import type { ForgeGraphDoc, ForgeNode, ForgeNodeType, ForgeReactFlowNode } from '@/forge/types/forge-graph';
@@ -40,14 +40,15 @@ import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/
 import { ForgeEditorActionsProvider, makeForgeEditorActions, useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { useForgeGraphEditorActions } from '@/forge/copilotkit';
 import { NarrativeGraphEditorPaneContextMenu } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/NarrativeGraphEditorPaneContextMenu';
-import { FORGE_COMMAND } from '@/forge/lib/graph-editor/hooks/forge-commands';
-import { useNodeDrag } from '@/forge/components/ForgeWorkspace/hooks/useNodeDrag';
 import { NARRATIVE_FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/ForgeGraphBreadcrumbs';
 import { ConditionalNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNode';
 import { GraphLeftToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLeftToolbar';
 import { GraphLayoutControls } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls';
 import { useShallow } from 'zustand/shallow';
+import type { FlagSchema } from '@/forge/types/flags';
+import type { ForgeCharacter } from '@/forge/types/characters';
+import type { ForgeGameFlagState, ForgeGameState } from '@/forge/types/forge-game-state';
 
 const nodeTypes = {
   [FORGE_NODE_TYPE.ACT]: ActNode,
@@ -55,6 +56,7 @@ const nodeTypes = {
   [FORGE_NODE_TYPE.PAGE]: PageNode,
   [FORGE_NODE_TYPE.CONDITIONAL]: ConditionalNode,
   [FORGE_NODE_TYPE.DETOUR]: DetourNode,
+  [FORGE_NODE_TYPE.STORYLET]: StoryletNode,
   START: ActNode,
 } as const;
 
@@ -66,6 +68,10 @@ export interface ForgeNarrativeGraphEditorProps {
   graph: ForgeGraphDoc | null;
   onChange: (graph: ForgeGraphDoc) => void;
   className?: string;
+  flagSchema?: FlagSchema;
+  characters?: Record<string, ForgeCharacter>;
+  gameState?: ForgeGameState;
+  gameStateFlags?: ForgeGameFlagState;
 }
 
 
@@ -74,7 +80,13 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     graph,
     onChange,
     className = '',
+    flagSchema,
+    characters = {},
+    gameState,
+    gameStateFlags,
   } = props;
+
+  const resolvedGameStateFlags = gameState?.flags || gameStateFlags;
   
   const {
     openYarnModal,
@@ -95,7 +107,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
       setContextNodeType: s.actions.setContextNodeType,
     }))
   );
-  const { draggedNodeType } = useNodeDrag();
 
   const reactFlow = useReactFlow();
 
@@ -196,22 +207,25 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     [shell.effectiveGraph.flow.nodes]
   );
 
-  // Decorate nodes with UI metadata
   const nodesWithMeta = React.useMemo(() => {
     const hasSelection = shell.selectedNodeId !== null && showPathHighlight;
-    return shell.effectiveGraph.flow.nodes.map((node) => {
+    const startId = shell.effectiveGraph.startNodeId;
+
+    return shell.nodes.map((node) => {
       const isInPath = showPathHighlight && nodeDepths.has(node.id);
       const isSelected = node.id === shell.selectedNodeId;
       const isDimmed = hasSelection && !isInPath && !isSelected;
-      const isStartNode = node.id === shell.effectiveGraph.startNodeId;
+      const flowNode = flowById.get(node.id);
+      const nodeType = (flowNode?.type as ForgeNodeType | undefined) ?? (flowNode?.data as ForgeNode | undefined)?.type;
+      const isStartNode = node.id === startId;
       const isEndNode = shell.effectiveGraph.endNodeIds.some((e) => e.nodeId === node.id);
-
-      const nodeData = (node.data ?? {}) as ForgeNode;
+      const nodeData = (flowNode?.data ?? {}) as ForgeNode;
 
       return {
         ...node,
         data: {
-          node: nodeData,
+          ...(node.data ?? {}),
+          node: { ...nodeData, id: node.id, type: nodeType },
           layoutDirection,
           ui: {
             isDimmed,
@@ -219,35 +233,75 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
             isStartNode,
             isEndNode,
           },
-        } as ShellNodeData,
+          flagSchema,
+          characters,
+          gameStateFlags: resolvedGameStateFlags,
+        } as ShellNodeData & {
+          flagSchema?: FlagSchema;
+          characters?: Record<string, ForgeCharacter>;
+          gameStateFlags?: ForgeGameFlagState;
+        },
       };
     });
   }, [
+    characters,
+    flagSchema,
+    resolvedGameStateFlags,
     layoutDirection,
     nodeDepths,
     showPathHighlight,
     shell.effectiveGraph.endNodeIds,
-    shell.effectiveGraph.flow.nodes,
     shell.effectiveGraph.startNodeId,
+    shell.nodes,
     shell.selectedNodeId,
+    flowById,
   ]);
 
-  // Decorate edges with UI metadata
+  const nodeById = React.useMemo(
+    () => new Map<string, typeof shell.nodes[number]>(shell.nodes.map((node) => [node.id, node])),
+    [shell.nodes]
+  );
+
   const edgesWithMeta = React.useMemo(() => {
-    return shell.effectiveGraph.flow.edges.map((edge) => {
-      const isInPath = showPathHighlight && edgesToSelectedNode.has(edge.id);
+    const hasSelection = showPathHighlight && shell.selectedNodeId !== null;
+
+    return shell.edges.map((edge) => {
+      const sourceNode = nodeById.get(edge.source);
+      const targetNode = nodeById.get(edge.target);
       const sourceFlowNode = flowById.get(edge.source);
+
+      const isBackEdge =
+        !!showBackEdges &&
+        !!sourceNode &&
+        !!targetNode &&
+        (layoutDirection === 'TB'
+          ? targetNode.position.y < sourceNode.position.y
+          : targetNode.position.x < sourceNode.position.x);
+
+      const isInPath = edgesToSelectedNode.has(edge.id);
+      const isDimmed = hasSelection && !isInPath;
 
       return {
         ...edge,
         data: {
-          ...edge.data,
+          ...(edge.data ?? {}),
           isInPathToSelected: isInPath,
+          isBackEdge,
+          isDimmed,
           sourceNode: sourceFlowNode,
         },
       };
     });
-  }, [edgesToSelectedNode, flowById, showPathHighlight, shell.effectiveGraph.flow.edges]);
+  }, [
+    edgesToSelectedNode,
+    flowById,
+    layoutDirection,
+    nodeById,
+    showBackEdges,
+    showPathHighlight,
+    shell.edges,
+    shell.selectedNodeId,
+  ]);
 
   return (
     <ForgeEditorActionsProvider actions={actions}>
@@ -332,7 +386,7 @@ function ForgeNarrativeGraphEditorContent({
   return (
     <div 
       className={cn(
-        "h-full w-full flex flex-col bg-[#0b0b14]",
+        "dialogue-graph-editor h-full w-full flex flex-col bg-[#0b0b14]",
         className
       )}
       onClick={handleClick}
@@ -360,77 +414,48 @@ function ForgeNarrativeGraphEditorContent({
         {/* Graph editor */}
         <div className="flex-1 min-h-0" ref={shell.reactFlowWrapperRef}>
             <ReactFlow
-        nodes={nodesWithMeta}
-        edges={edgesWithMeta}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        fitView
-        className="bg-df-canvas-bg"
-        minZoom={0.1}
-        maxZoom={1.5}
-        connectionLineType={ConnectionLineType.SmoothStep}
-        onNodesChange={shell.onNodesChange}
-        onEdgesChange={shell.onEdgesChange}
-        onConnect={shell.onConnect}
-        onNodeClick={(_, node) => {
-          shell.setSelectedNodeId(node.id);
-        }}
-        onNodeDoubleClick={(_, node) => {
-          shell.setSelectedNodeId(node.id);
-          if (reactFlow) {
-            reactFlow.fitView({
-              nodes: [{ id: node.id }],
-              padding: 0.2,
-              duration: 500,
-              minZoom: 0.5,
-              maxZoom: 2,
-            });
-          }
-        }}
-        onPaneClick={() => {
-          shell.setSelectedNodeId(null);
-          shell.setPaneContextMenu(null);
-          shell.setEdgeDropMenu(null);
-        }}
-        onPaneContextMenu={(event) => {
-          event.preventDefault();
-          const point = reactFlow.screenToFlowPosition({ x: event.clientX, y: event.clientY });
-          shell.setPaneContextMenu({
-            screenX: event.clientX,
-            screenY: event.clientY,
-            flowX: point.x,
-            flowY: point.y,
-          });
-        }}
-        onDragOver={(event) => {
-          event.preventDefault();
-          event.dataTransfer.dropEffect = 'move';
-        }}
-        onDrop={(event) => {
-          event.preventDefault();
-          const nodeType = event.dataTransfer.getData('application/reactflow') as ForgeNodeType;
-          
-          // Validate node type is allowed for narrative graphs
-          if (!nodeType || !Object.values(NARRATIVE_FORGE_NODE_TYPE).includes(nodeType as any)) {
-            return;
-          }
-          
-          const position = reactFlow.screenToFlowPosition({
-            x: event.clientX,
-            y: event.clientY,
-          });
-          
-          actions.createNode(nodeType, position.x, position.y);
-        }}
-        onEdgesDelete={(deletedEdges) => {
-          deletedEdges.forEach((edge) => {
-            shell.dispatch({
-              type: FORGE_COMMAND.GRAPH.EDGE_DELETE,
-              edgeId: edge.id,
-            });
-          });
-        }}
-      >
+              nodes={nodesWithMeta}
+              edges={edgesWithMeta}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              fitView
+              className="bg-df-canvas-bg"
+              minZoom={0.1}
+              maxZoom={1.5}
+              connectionLineType={ConnectionLineType.SmoothStep}
+              onNodesChange={shell.onNodesChange}
+              onNodesDelete={shell.onNodesDelete}
+              onEdgesChange={shell.onEdgesChange}
+              onEdgesDelete={shell.onEdgesDelete}
+              onNodeDragStop={shell.onNodeDragStop}
+              onConnect={shell.onConnect}
+              onConnectStart={shell.onConnectStart}
+              onConnectEnd={shell.onConnectEnd}
+              onNodeClick={shell.onNodeClick}
+              onNodeDoubleClick={shell.onNodeDoubleClick}
+              onPaneClick={shell.onPaneClick}
+              onPaneContextMenu={shell.onPaneContextMenu}
+              onDragOver={(event) => {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                const nodeType = event.dataTransfer.getData('application/reactflow') as ForgeNodeType;
+                
+                // Validate node type is allowed for narrative graphs
+                if (!nodeType || !Object.values(NARRATIVE_FORGE_NODE_TYPE).includes(nodeType as any)) {
+                  return;
+                }
+                
+                const position = reactFlow.screenToFlowPosition({
+                  x: event.clientX,
+                  y: event.clientY,
+                });
+                
+                actions.createNode(nodeType, position.x, position.y);
+              }}
+            >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
         <GraphMiniMap showMiniMap={showMiniMap} />
         <GraphLeftToolbar

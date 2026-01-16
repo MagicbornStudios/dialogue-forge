@@ -23,15 +23,24 @@ export interface WriterModalState {
   isSettingsModalOpen: boolean;
 }
 
+export interface WriterPageLayoutState {
+  fullWidthByPageId: Record<number, boolean>;
+}
+
 const defaultModalState: WriterModalState = {
   isYarnModalOpen: false,
   isPlayModalOpen: false,
   isSettingsModalOpen: false,
 };
 
+const defaultPageLayout: WriterPageLayoutState = {
+  fullWidthByPageId: {},
+};
+
 export interface ViewStateSlice {
   modalState: WriterModalState;
   panelLayout: WriterPanelLayoutState;
+  pageLayout: WriterPageLayoutState;
 }
 
 export interface ViewStateActions {
@@ -44,6 +53,8 @@ export interface ViewStateActions {
   togglePanel: (panel: 'sidebar' | 'editor') => void;
   dockPanel: (panel: 'sidebar' | 'editor') => void;
   undockPanel: (panel: 'sidebar' | 'editor') => void;
+  setPageFullWidth: (pageId: number, value: boolean) => void;
+  togglePageFullWidth: (pageId: number) => void;
 }
 
 export function createViewStateSlice(
@@ -53,6 +64,7 @@ export function createViewStateSlice(
   return {
     modalState: defaultModalState,
     panelLayout: defaultPanelLayout,
+    pageLayout: defaultPageLayout,
     openYarnModal: () =>
       set((state) => ({
         modalState: { ...state.modalState, isYarnModalOpen: true },
@@ -104,6 +116,26 @@ export function createViewStateSlice(
           [panel]: {
             ...state.panelLayout[panel],
             isDocked: false,
+          },
+        },
+      })),
+    setPageFullWidth: (pageId, value) =>
+      set((state) => ({
+        pageLayout: {
+          ...state.pageLayout,
+          fullWidthByPageId: {
+            ...state.pageLayout.fullWidthByPageId,
+            [pageId]: value,
+          },
+        },
+      })),
+    togglePageFullWidth: (pageId) =>
+      set((state) => ({
+        pageLayout: {
+          ...state.pageLayout,
+          fullWidthByPageId: {
+            ...state.pageLayout.fullWidthByPageId,
+            [pageId]: !state.pageLayout.fullWidthByPageId[pageId],
           },
         },
       })),

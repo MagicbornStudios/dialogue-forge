@@ -5,6 +5,7 @@ import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { TRANSFORMERS } from '@lexical/markdown';
 import { MarkdownPastePlugin } from './MarkdownPastePlugin';
+import { SlashCommandPlugin } from './SlashCommandPlugin';
 
 export function WriterPlugins() {
   return (
@@ -14,6 +15,7 @@ export function WriterPlugins() {
       <LinkPlugin />
       <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
       <MarkdownPastePlugin />
+      <SlashCommandPlugin />
     </>
   );
 }

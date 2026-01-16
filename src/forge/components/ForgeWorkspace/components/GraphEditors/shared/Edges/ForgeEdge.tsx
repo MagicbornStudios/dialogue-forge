@@ -18,6 +18,19 @@ interface EdgeContextMenuData {
   sourceType?: string; // Legacy support for narrative elements
 }
 
+function getChoiceIndex(sourceHandle?: string | null): number | null {
+  if (!sourceHandle) return null;
+  if (sourceHandle.startsWith('choice-')) {
+    const idx = parseInt(sourceHandle.replace('choice-', ''), 10);
+    return Number.isFinite(idx) ? idx : null;
+  }
+  if (sourceHandle.startsWith('block-')) {
+    const idx = parseInt(sourceHandle.replace('block-', ''), 10);
+    return Number.isFinite(idx) ? idx : null;
+  }
+  return null;
+}
+
 export function ForgeEdge({
   id,
   sourceX,
@@ -26,6 +39,7 @@ export function ForgeEdge({
   targetX,
   targetY,
   targetPosition,
+  sourceHandle,
   selected,
   data,
 }: EdgeProps) {
@@ -34,10 +48,14 @@ export function ForgeEdge({
   const isBackEdge = data?.isBackEdge ?? false;
   const menuData = data as EdgeContextMenuData | undefined;
   const sourceNode = menuData?.sourceNode;
+  const choiceIndex = getChoiceIndex(sourceHandle ?? data?.sourceHandle ?? null);
+  const dataChoiceIndex = choiceIndex !== null ? ((choiceIndex % 5) + 5) % 5 : null;
+  const isChoiceHandle = dataChoiceIndex !== null;
   
   // Get edge color using centralized function
-  const edge = { sourceHandle: data?.sourceHandle } as ForgeReactFlowEdge;
+  const edge = { sourceHandle: sourceHandle ?? data?.sourceHandle } as ForgeReactFlowEdge;
   const baseColor = edgeColorFor(edge, sourceNode);
+  const edgeColor = isChoiceHandle ? 'var(--edge-color)' : baseColor;
   
   // Use smooth step path for angular look (like the horizontal example)
   // For back edges, use bezier for a more curved appearance
@@ -72,13 +90,13 @@ export function ForgeEdge({
       ? 'var(--color-df-edge-default-hover)'
       : isBackEdge 
         ? 'var(--color-df-edge-loop)' 
-        : baseColor;
+        : edgeColor;
   
   const strokeWidth = isSelected || isInPath ? 4 : 3;
   const opacity = isDimmed ? 0.4 : (isSelected || isInPath ? 1 : 0.9);
   
   // Add glow effect when hovered or in path (only if not dimmed)
-  const glowColor = isBackEdge ? 'var(--color-df-edge-loop)' : baseColor;
+  const glowColor = isBackEdge ? 'var(--color-df-edge-loop)' : edgeColor;
   const filter = (hovered || isInPath) && !isDimmed 
     ? `drop-shadow(0 0 8px ${glowColor})`
     : !isDimmed
@@ -86,7 +104,7 @@ export function ForgeEdge({
     : undefined;
 
   // For pulse animation
-  const pulseColor = isBackEdge ? 'var(--color-df-edge-loop)' : baseColor;
+  const pulseColor = isBackEdge ? 'var(--color-df-edge-loop)' : edgeColor;
   const shouldAnimate = isInPath;
   
   // Loop arrow color
@@ -113,6 +131,7 @@ export function ForgeEdge({
       <BaseEdge 
         id={id} 
         path={edgePath}
+        className="forge-edge-path"
         style={{ 
           stroke: strokeColor, 
           strokeWidth, 
@@ -148,7 +167,14 @@ export function ForgeEdge({
   );
 
   if (!hasContextMenu) {
-    return edgeContent;
+    return (
+      <g
+        data-choice-index={dataChoiceIndex ?? undefined}
+        className={isChoiceHandle ? `forge-choice-edge${isDimmed ? ' is-dimmed' : ''}${isBackEdge ? ' is-loop' : ''}` : undefined}
+      >
+        {edgeContent}
+      </g>
+    );
   }
 
   // Calculate midpoint for insert operations (if needed)
@@ -163,6 +189,8 @@ export function ForgeEdge({
             e.preventDefault();
             e.stopPropagation();
           }}
+          data-choice-index={dataChoiceIndex ?? undefined}
+          className={isChoiceHandle ? `forge-choice-edge${isDimmed ? ' is-dimmed' : ''}${isBackEdge ? ' is-loop' : ''}` : undefined}
         >
           {edgeContent}
         </g>

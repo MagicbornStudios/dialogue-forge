@@ -32,9 +32,6 @@ interface ConditionalNodeData {
   layoutDirection?: LayoutDirection;
 }
 
-// Color scheme for conditional block edges
-const CONDITIONAL_COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b'];
-
 export function ConditionalNode({ data, selected }: NodeProps<ConditionalNodeData>) {
   const { node, flagSchema, characters = {}, ui = {}, layoutDirection = 'TB' } = data;
   const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
@@ -161,7 +158,6 @@ export function ConditionalNode({ data, selected }: NodeProps<ConditionalNodeDat
           {/* Conditional Blocks */}
           <div className="px-4 py-3">
             {blocks.map((block, idx) => {
-              const color = CONDITIONAL_COLORS[idx % CONDITIONAL_COLORS.length];
               const blockType = block.type === FORGE_CONDITIONAL_BLOCK_TYPE.IF ? 'IF' : block.type === FORGE_CONDITIONAL_BLOCK_TYPE.ELSE_IF ? 'ELSE IF' : 'ELSE';
 
               // Get character if characterId is set
@@ -205,11 +201,12 @@ export function ConditionalNode({ data, selected }: NodeProps<ConditionalNodeDat
                     type="source"
                     position={Position.Right}
                     id={`block-${idx}`}
+                    data-choice-index={idx % 5}
                     style={{
                       top: `${handlePositions[idx] || 0}px`,
                       right: -8,
                     }}
-                    className="!bg-df-control-bg !border-df-control-border !w-3 !h-3 !rounded-full hover:!border-df-conditional-selected hover:!bg-df-conditional-selected/20"
+                    className="forge-choice-handle !bg-df-control-bg !border-df-control-border !w-3 !h-3 !rounded-full hover:!border-df-conditional-selected hover:!bg-df-conditional-selected/20"
                   />
                 </div>
               );
@@ -271,4 +268,3 @@ export function ConditionalNode({ data, selected }: NodeProps<ConditionalNodeDat
     </ContextMenu>
   );
 }
-

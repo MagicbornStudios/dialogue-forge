@@ -1,0 +1,82 @@
+.dialogue-graph-editor [data-choice-index] {
+  --edge-color: var(--edge-choice-1);
+  --edge-color-muted: color-mix(in oklab, var(--edge-color) 60%, black);
+}
+
+.dialogue-graph-editor [data-choice-index="0"] {
+  --edge-color: var(--edge-choice-1);
+}
+
+.dialogue-graph-editor [data-choice-index="1"] {
+  --edge-color: var(--edge-choice-2);
+}
+
+.dialogue-graph-editor [data-choice-index="2"] {
+  --edge-color: var(--edge-choice-3);
+}
+
+.dialogue-graph-editor [data-choice-index="3"] {
+  --edge-color: var(--edge-choice-4);
+}
+
+.dialogue-graph-editor [data-choice-index="4"] {
+  --edge-color: var(--edge-choice-5);
+}
+
+.dialogue-graph-editor .forge-choice-color {
+  color: var(--edge-color);
+}
+
+.dialogue-graph-editor .forge-choice-border {
+  border-color: var(--edge-color);
+}
+
+.dialogue-graph-editor .forge-choice-border-top {
+  border-top-color: var(--edge-color);
+}
+
+.dialogue-graph-editor .forge-choice-border-bottom {
+  border-bottom-color: var(--edge-color);
+}
+
+.dialogue-graph-editor .forge-choice-handle {
+  border-color: var(--edge-color);
+}
+
+.dialogue-graph-editor .forge-choice-input {
+  border-color: #2a2a3e;
+}
+
+.dialogue-graph-editor .forge-choice-input[data-has-next="true"] {
+  border-color: var(--edge-color-muted);
+}
+
+.dialogue-graph-editor .forge-choice-input[data-has-text="true"] {
+  border-color: var(--edge-color-muted);
+}
+
+.dialogue-graph-editor .forge-choice-input:focus {
+  border-color: var(--edge-color);
+}
+
+.dialogue-graph-editor .forge-choice-edge .forge-edge-path {
+  stroke: var(--edge-color);
+}
+
+.dialogue-graph-editor .forge-choice-edge.is-loop:not(.is-dimmed) .forge-edge-path {
+  stroke: var(--color-df-edge-loop);
+}
+
+.dialogue-graph-editor .forge-choice-edge.is-dimmed .forge-edge-path {
+  stroke: var(--color-df-edge-dimmed);
+}
+
+.dialogue-graph-editor .forge-choice-edge .forge-choice-arrow {
+  stroke: var(--edge-color);
+  fill: var(--edge-color);
+}
+
+.dialogue-graph-editor .forge-choice-edge.is-loop:not(.is-dimmed) .forge-choice-arrow {
+  stroke: var(--color-df-edge-loop);
+  fill: var(--color-df-edge-loop);
+}

@@ -1,8 +1,6 @@
 // src/utils/forge-edge-style.ts
 import type { ForgeReactFlowEdge, ForgeReactFlowNode, ForgeNodeType } from '@/src/types/forge/forge-graph';
 
-export const CHOICE_COLORS = ['#e94560', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b'];
-
 export const TYPE_COLORS: Record<ForgeNodeType, string> = {
   ACT: '#8b5cf6',
   CHAPTER: '#06b6d4',
@@ -20,15 +18,6 @@ export function edgeColorFor(
   edge: ForgeReactFlowEdge,
   sourceNode?: ForgeReactFlowNode
 ): string {
-  const handle = edge.sourceHandle ?? '';
-  if (handle.startsWith('choice-')) {
-    const idx = parseInt(handle.replace('choice-', ''), 10);
-    return CHOICE_COLORS[(Number.isFinite(idx) ? idx : 0) % CHOICE_COLORS.length];
-  }
-  if (handle.startsWith('block-')) {
-    const idx = parseInt(handle.replace('block-', ''), 10);
-    return CHOICE_COLORS[(Number.isFinite(idx) ? idx : 0) % CHOICE_COLORS.length];
-  }
   // Check source node type from data if available
   if (sourceNode?.data?.type) {
     return TYPE_COLORS[sourceNode.data.type as ForgeNodeType] ?? '#9ca3af';

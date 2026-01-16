@@ -332,7 +332,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
         ...e,
         style: {
           ...(e.style ?? {}),
-          stroke,
+          ...(stroke ? { stroke } : {}),
           strokeWidth: isInPath ? 4 : 3,
           opacity: isDimmed ? 0.4 : isInPath ? 1 : 0.9,
           strokeDasharray: isBackEdge ? '8 4' : undefined,

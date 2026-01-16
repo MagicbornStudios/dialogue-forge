@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { BaseEdge, EdgeProps, getSmoothStepPath, getBezierPath, Position } from 'reactflow';
-import type { ForgeReactFlowEdge, ForgeReactFlowNode } from '@/forge/types/forge-graph';
-import { edgeColorFor } from '@/forge/lib/utils/forge-edge-styles';
+import type { ForgeReactFlowNode } from '@/forge/types/forge-graph';
 import { EdgePulseAnimation, LoopIndicator } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/EdgeSVGElements';
 import {
   ContextMenu,
@@ -22,6 +21,21 @@ interface ChoiceEdgeData {
   sourceNode?: ForgeReactFlowNode;
 }
 
+function getChoiceIndex(sourceHandle?: string | null, fallback?: number): number | null {
+  if (sourceHandle?.startsWith('choice-')) {
+    const idx = parseInt(sourceHandle.replace('choice-', ''), 10);
+    return Number.isFinite(idx) ? idx : null;
+  }
+  if (sourceHandle?.startsWith('block-')) {
+    const idx = parseInt(sourceHandle.replace('block-', ''), 10);
+    return Number.isFinite(idx) ? idx : null;
+  }
+  if (typeof fallback === 'number' && Number.isFinite(fallback)) {
+    return fallback;
+  }
+  return null;
+}
+
 export function ChoiceEdge({
   id,
   sourceX,
@@ -30,6 +44,7 @@ export function ChoiceEdge({
   targetX,
   targetY,
   targetPosition,
+  sourceHandle,
   data,
   selected,
 }: EdgeProps) {
@@ -37,7 +52,8 @@ export function ChoiceEdge({
   
   const edgeData = data as ChoiceEdgeData | undefined;
   const isBackEdge = edgeData?.isBackEdge ?? false;
-  const sourceNode = edgeData?.sourceNode;
+  const choiceIndex = getChoiceIndex(sourceHandle, edgeData?.choiceIndex) ?? 0;
+  const dataChoiceIndex = ((choiceIndex % 5) + 5) % 5;
   
   // Use smooth step path for angular look (like the horizontal example)
   // For back edges, use bezier for a more curved appearance
@@ -61,16 +77,8 @@ export function ChoiceEdge({
         borderRadius: 8,
       });
 
-  // Get edge color using centralized function
-  // The edgeColorFor function will use the sourceHandle (choice-X) to get the right color
-  const edge = { 
-    sourceHandle: `choice-${edgeData?.choiceIndex ?? 0}`,
-    id,
-  } as ForgeReactFlowEdge;
-  const baseColor = edgeColorFor(edge, sourceNode);
-  
   // Use loop color for back edges, otherwise use choice color
-  const colorVar = isBackEdge ? 'var(--color-df-edge-loop)' : baseColor;
+  const colorVar = isBackEdge ? 'var(--color-df-edge-loop)' : 'var(--edge-color)';
   const isSelected = selected || hovered;
   const isDimmed = edgeData?.isDimmed ?? false;
   
@@ -88,8 +96,6 @@ export function ChoiceEdge({
   // For pulse animation
   const pulseColor = colorVar;
   const shouldAnimate = edgeData?.isInPathToSelected ?? false;
-  
-  const choiceIndex = edgeData?.choiceIndex ?? 0;
   
   // Use actions instead of callbacks
   const actions = useForgeEditorActions();
@@ -113,8 +119,8 @@ export function ChoiceEdge({
       <BaseEdge 
         id={id} 
         path={edgePath}
+        className="forge-edge-path"
         style={{ 
-          stroke: strokeColor, 
           strokeWidth, 
           opacity,
           cursor: 'pointer',
@@ -152,10 +158,9 @@ export function ChoiceEdge({
           refY="0"
         >
           <polyline
-            stroke={colorVar}
+            className="forge-choice-arrow"
             strokeLinecap="round"
             strokeLinejoin="round"
-            fill={colorVar}
             points="-5,-4 0,0 -5,4 -5,-4"
           />
         </marker>
@@ -164,7 +169,14 @@ export function ChoiceEdge({
   );
 
   if (!hasContextMenu) {
-    return edgeContent;
+    return (
+      <g
+        data-choice-index={dataChoiceIndex}
+        className={`forge-choice-edge${isDimmed ? ' is-dimmed' : ''}${isBackEdge ? ' is-loop' : ''}`}
+      >
+        {edgeContent}
+      </g>
+    );
   }
 
   // Calculate midpoint for insert operations
@@ -179,6 +191,8 @@ export function ChoiceEdge({
             e.preventDefault();
             e.stopPropagation();
           }}
+          data-choice-index={dataChoiceIndex}
+          className={`forge-choice-edge${isDimmed ? ' is-dimmed' : ''}${isBackEdge ? ' is-loop' : ''}`}
         >
           {edgeContent}
         </g>
@@ -208,4 +222,3 @@ export function ChoiceEdge({
     </ContextMenu>
   );
 }
-

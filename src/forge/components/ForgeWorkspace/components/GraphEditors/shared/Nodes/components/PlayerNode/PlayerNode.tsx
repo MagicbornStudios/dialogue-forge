@@ -29,9 +29,6 @@ interface PlayerNodeData {
   layoutDirection?: LayoutDirection;
 }
 
-// Color scheme for choice edges (same as current implementation)
-const CHOICE_COLORS = ['#e94560', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b'];
-
 export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
   const { node, flagSchema, characters = {}, ui = {}, layoutDirection = 'TB' } = data;
   const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
@@ -172,9 +169,6 @@ export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
       {/* Choices */}
       <div className="px-4 py-3 space-y-2">
         {choices.map((choice, idx) => {
-          // Use calculated position or fallback
-          const choiceColor = CHOICE_COLORS[idx % CHOICE_COLORS.length];
-          
           return (
             <div 
               key={choice.id} 
@@ -212,13 +206,13 @@ export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
                   type="source"
                   position={Position.Right}
                   id={`choice-${idx}`}
+                  data-choice-index={idx % 5}
                   style={{ 
                     top: `50%`,
                     transform: `translateY(-50%)`,
                     right: '-6px',
-                    borderColor: choiceColor,
                   }}
-                  className="!bg-df-control-bg !border-2 hover:!border-df-player-selected hover:!bg-df-player-selected/20 !w-3 !h-3 !rounded-full"
+                  className="forge-choice-handle !bg-df-control-bg !border-2 hover:!border-df-player-selected hover:!bg-df-player-selected/20 !w-3 !h-3 !rounded-full"
                 />
               </div>
             </div>

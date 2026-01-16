@@ -69,6 +69,7 @@ export interface WriterWorkspaceState {
   // View state slice
   modalState: ReturnType<typeof createViewStateSlice>['modalState'];
   panelLayout: ReturnType<typeof createViewStateSlice>['panelLayout'];
+  pageLayout: ReturnType<typeof createViewStateSlice>['pageLayout'];
 
   // Data adapter
   dataAdapter?: WriterDataAdapter;
@@ -99,6 +100,19 @@ export interface WriterWorkspaceState {
     toggleActExpanded: (actId: number) => void;
     toggleChapterExpanded: (chapterId: number) => void;
     setNavigationError: (error: string | null) => void;
+
+    // View state actions
+    openYarnModal: () => void;
+    closeYarnModal: () => void;
+    openPlayModal: () => void;
+    closePlayModal: () => void;
+    openSettingsModal: () => void;
+    closeSettingsModal: () => void;
+    togglePanel: (panel: 'sidebar' | 'editor') => void;
+    dockPanel: (panel: 'sidebar' | 'editor') => void;
+    undockPanel: (panel: 'sidebar' | 'editor') => void;
+    setPageFullWidth: (pageId: number, value: boolean) => void;
+    togglePageFullWidth: (pageId: number) => void;
   };
 }
 
@@ -235,6 +249,8 @@ export function createWriterWorkspaceStore(
             togglePanel: viewStateSlice.togglePanel,
             dockPanel: viewStateSlice.dockPanel,
             undockPanel: viewStateSlice.undockPanel,
+            setPageFullWidth: viewStateSlice.setPageFullWidth,
+            togglePageFullWidth: viewStateSlice.togglePageFullWidth,
           },
         };
       }),

@@ -102,6 +102,7 @@ export interface WriterWorkspaceState {
   navigationError: string | null;
   modalState: unknown;
   panelLayout: unknown;
+  pageLayout: unknown;
   dataAdapter?: unknown;
   actions: Record<string, unknown>;
 }

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -6,14 +6,19 @@ import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
+import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
+import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor as LexicalEditorType } from 'lexical';
 import { writerNodes } from '@/writer/components/WriterWorkspace/editor/lexical/nodes';
+import { KeyboardShortcutsPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/KeyboardShortcutsPlugin';
 import { ToolbarPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/ToolbarPlugin';
+import { WriterPlugins } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/WriterPlugins';
 import { writerTheme } from '@/writer/components/WriterWorkspace/editor/lexical/theme';
 import { AiSelectionPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/AiSelectionPlugin';
 import { CopilotKitPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/CopilotKitPlugin';
 import { WriterEditorSessionProvider, createWriterEditorSessionStore } from '@/writer/components/WriterWorkspace/editor/hooks/useWriterEditorSession';
 import type { WriterDraftContent } from '@/writer/components/WriterWorkspace/store/writer-workspace-types';
+import { BlockHandlePlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/BlockHandlePlugin';
 
 const parseSerializedEditorState = (editor: LexicalEditorType, value: string) => {
   try {
@@ -42,6 +47,7 @@ export function LexicalEditor({
 }: LexicalEditorProps) {
   const initialValueRef = useRef(value);
   const sessionStoreRef = useRef(createWriterEditorSessionStore());
+  const [contentElem, setContentElem] = useState<HTMLDivElement | null>(null);
 
   const initialConfig = useMemo(() => ({
     namespace: 'WriterEditor',
@@ -75,37 +81,45 @@ export function LexicalEditor({
             <ToolbarPlugin />
             <AiSelectionPlugin />
             <CopilotKitPlugin />
+            <KeyboardShortcutsPlugin />
+            <WriterPlugins />
             <div className="relative flex min-h-0 flex-1 flex-col">
-            <RichTextPlugin
-              contentEditable={
-                <ContentEditable className="min-h-[240px] flex-1 px-4 py-4 text-sm text-df-text-primary outline-none" />
-              }
-              placeholder={
-                <div className="pointer-events-none absolute left-4 top-4 text-sm text-df-text-tertiary">
-                  {placeholder}
-                </div>
-              }
-              ErrorBoundary={LexicalErrorBoundary}
-            />
-            <HistoryPlugin />
-            <ListPlugin />
-            <OnChangePlugin
-              onChange={(editorState) => {
-                if (!onChange) {
-                  return;
+              <RichTextPlugin
+                contentEditable={
+                  <ContentEditable
+                    ref={setContentElem}
+                    className="min-h-[240px] flex-1 px-4 py-4 text-sm text-df-text-primary outline-none"
+                  />
                 }
-                const serializedState = JSON.stringify(editorState.toJSON());
-                editorState.read(() => {
-                  onChange({
-                    serialized: serializedState,
-                    plainText: $getRoot().getTextContent(),
+                placeholder={
+                  <div className="pointer-events-none absolute left-4 top-4 text-sm text-df-text-tertiary">
+                    {placeholder}
+                  </div>
+                }
+                ErrorBoundary={LexicalErrorBoundary}
+              />
+              {contentElem ? <BlockHandlePlugin anchorElem={contentElem} /> : null}
+              <HistoryPlugin />
+              <ListPlugin />
+              <CheckListPlugin />
+              <TabIndentationPlugin />
+              <OnChangePlugin
+                onChange={(editorState) => {
+                  if (!onChange) {
+                    return;
+                  }
+                  const serializedState = JSON.stringify(editorState.toJSON());
+                  editorState.read(() => {
+                    onChange({
+                      serialized: serializedState,
+                      plainText: $getRoot().getTextContent(),
+                    });
                   });
-                });
-              }}
-            />
+                }}
+              />
+            </div>
           </div>
-        </div>
-      </LexicalComposer>
+        </LexicalComposer>
       </WriterEditorSessionProvider>
     </div>
   );

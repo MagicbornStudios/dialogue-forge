@@ -1,14 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import {
+  CLEAR_FORMATTING_COMMAND,
   FORMAT_ELEMENT_COMMAND,
   FORMAT_TEXT_COMMAND,
   $getRoot,
   $getSelection,
   $isRangeSelection,
+  type LexicalNode,
 } from 'lexical';
-import { INSERT_UNORDERED_LIST_COMMAND, REMOVE_LIST_COMMAND, $isListNode } from '@lexical/list';
+import {
+  INSERT_CHECK_LIST_COMMAND,
+  INSERT_ORDERED_LIST_COMMAND,
+  INSERT_UNORDERED_LIST_COMMAND,
+  REMOVE_LIST_COMMAND,
+  $isListNode,
+} from '@lexical/list';
+import {
+  INSERT_TABLE_COMMAND,
+  $insertTableRowAtSelection,
+  $insertTableColumnAtSelection,
+  $deleteTableRowAtSelection,
+  $deleteTableColumnAtSelection,
+} from '@lexical/table';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
+import {
+  OPEN_EMBED_DIALOG_COMMAND,
+  OPEN_MEDIA_PICKER_COMMAND,
+} from '@/writer/components/WriterWorkspace/editor/lexical/plugins/MediaPlugin';
+import { WRITER_MEDIA_KIND } from '@/writer/lib/data-adapter/media';
 
 const toolbarButtonBase =
   'rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary transition hover:text-df-text-primary';
@@ -19,23 +39,39 @@ export function ToolbarPlugin() {
   const setAiSelection = useWriterWorkspaceStore((state) => state.actions.setAiSelection);
   const proposeAiEdits = useWriterWorkspaceStore((state) => state.actions.proposeAiEdits);
 
-  const onToggleList = () => {
+  const getListType = (node: LexicalNode | null) => {
+    let currentNode: LexicalNode | null = node;
+    while (currentNode) {
+      if ($isListNode(currentNode)) {
+        return currentNode.getListType();
+      }
+      currentNode = currentNode.getParent();
+    }
+    return null;
+  };
+
+  const toggleList = (
+    listType: 'bullet' | 'number' | 'check',
+    command:
+      | typeof INSERT_UNORDERED_LIST_COMMAND
+      | typeof INSERT_ORDERED_LIST_COMMAND
+      | typeof INSERT_CHECK_LIST_COMMAND
+  ) => {
     editor.update(() => {
       const selection = $getSelection();
-      const isInList =
-        $isRangeSelection(selection) &&
-        selection
-          .getNodes()
-          .some((node) => {
-            const parent = node.getParent();
-            return $isListNode(node) || (parent ? $isListNode(parent) : false);
-          });
-      editor.dispatchCommand(
-        isInList ? REMOVE_LIST_COMMAND : INSERT_UNORDERED_LIST_COMMAND,
-        undefined
-      );
+      if (!$isRangeSelection(selection)) {
+        return;
+      }
+      const isInList = selection
+        .getNodes()
+        .some((node) => getListType(node) === listType);
+      editor.dispatchCommand(isInList ? REMOVE_LIST_COMMAND : command, undefined);
     });
   };
+
+  const onToggleBulletList = () => toggleList('bullet', INSERT_UNORDERED_LIST_COMMAND);
+  const onToggleOrderedList = () => toggleList('number', INSERT_ORDERED_LIST_COMMAND);
+  const onToggleChecklist = () => toggleList('check', INSERT_CHECK_LIST_COMMAND);
 
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
@@ -94,6 +130,46 @@ export function ToolbarPlugin() {
       <button
         type="button"
         className={toolbarButtonBase}
+        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')}
+        aria-label="Underline"
+      >
+        Underline
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough')}
+        aria-label="Strikethrough"
+      >
+        Strike
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code')}
+        aria-label="Inline code"
+      >
+        Inline code
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'subscript')}
+        aria-label="Subscript"
+      >
+        Sub
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript')}
+        aria-label="Superscript"
+      >
+        Super
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
         onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'h1' as any)}
         aria-label="Heading 1"
       >
@@ -102,10 +178,138 @@ export function ToolbarPlugin() {
       <button
         type="button"
         className={toolbarButtonBase}
-        onClick={onToggleList}
-        aria-label="List"
+        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'h2' as any)}
+        aria-label="Heading 2"
       >
-        List
+        H2
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'h3' as any)}
+        aria-label="Heading 3"
+      >
+        H3
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={onToggleBulletList}
+        aria-label="Bulleted list"
+      >
+        Bullets
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={onToggleOrderedList}
+        aria-label="Ordered list"
+      >
+        Ordered
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={onToggleChecklist}
+        aria-label="Checklist"
+      >
+        Checklist
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() => editor.dispatchCommand(CLEAR_FORMATTING_COMMAND, undefined)}
+        aria-label="Clear formatting"
+      >
+        Clear
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() =>
+          editor.dispatchCommand(OPEN_MEDIA_PICKER_COMMAND, {
+            kind: WRITER_MEDIA_KIND.IMAGE,
+          })
+        }
+        aria-label="Insert image"
+      >
+        Image
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() =>
+          editor.dispatchCommand(OPEN_MEDIA_PICKER_COMMAND, {
+            kind: WRITER_MEDIA_KIND.FILE,
+          })
+        }
+        aria-label="Insert file attachment"
+      >
+        File
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() => editor.dispatchCommand(OPEN_EMBED_DIALOG_COMMAND, {})}
+        aria-label="Insert embed"
+      >
+        Embed
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() => editor.dispatchCommand(INSERT_TABLE_COMMAND, { rows: '3', columns: '3' })}
+        aria-label="Insert table"
+      >
+        Table
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() =>
+          editor.update(() => {
+            $insertTableRowAtSelection(true);
+          })
+        }
+        aria-label="Insert table row"
+      >
+        Row +
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() =>
+          editor.update(() => {
+            $insertTableColumnAtSelection(true);
+          })
+        }
+        aria-label="Insert table column"
+      >
+        Col +
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() =>
+          editor.update(() => {
+            $deleteTableRowAtSelection();
+          })
+        }
+        aria-label="Delete table row"
+      >
+        Row -
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() =>
+          editor.update(() => {
+            $deleteTableColumnAtSelection();
+          })
+        }
+        aria-label="Delete table column"
+      >
+        Col -
       </button>
       <button
         type="button"

@@ -199,6 +199,8 @@ function ForgeWorkspaceContent({
   const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
   const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
   const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
+  const setActiveNarrativeGraphId = useForgeWorkspaceStore((s) => s.actions.setActiveNarrativeGraphId);
+  const setActiveStoryletGraphId = useForgeWorkspaceStore((s) => s.actions.setActiveStoryletGraphId);
 
   const onNarrativeGraphChange = useCallback(
     async (next: ForgeGraphDoc) => {
@@ -226,13 +228,18 @@ function ForgeWorkspaceContent({
             await dataAdapter.updateGraph(createdGraph.id, { title: finalTitle });
           }
           
-          // Update the graph with the new ID and title, set it in store
+          // Update the graph with the new ID and title, set it in store FIRST
           const updatedGraph = { ...next, id: createdGraph.id, title: finalTitle };
           setGraph(String(createdGraph.id), updatedGraph);
           
-          // Open the graph in the narrative scope - this will make it the active graph
-          // The graph is already in the store, so openGraphInScope will work
-          await openGraphInScope('narrative', String(createdGraph.id));
+          // Set as active graph immediately (synchronously)
+          setActiveNarrativeGraphId(String(createdGraph.id));
+          
+          // Then open it (which will ensure it's loaded and push breadcrumb)
+          // Graph is already in store, so ensureGraph will return early
+          setTimeout(() => {
+            openGraphInScope('narrative', String(createdGraph.id), { pushBreadcrumb: true });
+          }, 0);
         } catch (error) {
           console.error('Failed to create graph:', error);
         }
@@ -240,7 +247,7 @@ function ForgeWorkspaceContent({
         setGraph(String(next.id), next);
       }
     },
-    [dataAdapter, selectedProjectId, openGraphInScope, setGraph]
+    [dataAdapter, selectedProjectId, openGraphInScope, setGraph, setActiveNarrativeGraphId]
   );
 
   const onStoryletGraphChange = useCallback(
@@ -269,13 +276,18 @@ function ForgeWorkspaceContent({
             await dataAdapter.updateGraph(createdGraph.id, { title: finalTitle });
           }
           
-          // Update the graph with the new ID and title, set it in store
+          // Update the graph with the new ID and title, set it in store FIRST
           const updatedGraph = { ...next, id: createdGraph.id, title: finalTitle };
           setGraph(String(createdGraph.id), updatedGraph);
           
-          // Open the graph in the storylet scope - this will make it the active graph
-          // The graph is already in the store, so openGraphInScope will work
-          await openGraphInScope('storylet', String(createdGraph.id));
+          // Set as active graph immediately (synchronously)
+          setActiveStoryletGraphId(String(createdGraph.id));
+          
+          // Then open it (which will ensure it's loaded and push breadcrumb)
+          // Graph is already in store, so ensureGraph will return early
+          setTimeout(() => {
+            openGraphInScope('storylet', String(createdGraph.id), { pushBreadcrumb: true });
+          }, 0);
         } catch (error) {
           console.error('Failed to create graph:', error);
         }
@@ -283,7 +295,7 @@ function ForgeWorkspaceContent({
         setGraph(String(next.id), next);
       }
     },
-    [dataAdapter, selectedProjectId, openGraphInScope, setGraph]
+    [dataAdapter, selectedProjectId, openGraphInScope, setGraph, setActiveStoryletGraphId]
   );
 
   // Modal actions from store

@@ -9,7 +9,7 @@ import {
   type LexicalEditor,
   type LexicalNode,
 } from 'lexical';
-import { LexicalDraggableBlockPlugin } from '@lexical/react/LexicalDraggableBlockPlugin';
+import { DraggableBlockPlugin_EXPERIMENTAL } from '@lexical/react/LexicalDraggableBlockPlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
 type BlockHandleMenuProps = {
@@ -97,6 +97,8 @@ const BlockHandleMenu = ({ anchorElem, blockElement, editor }: BlockHandleMenuPr
 export function BlockHandlePlugin({ anchorElem }: { anchorElem: HTMLElement }) {
   const [editor] = useLexicalComposerContext();
   const draggingBlockKeys = useRef<string[]>([]);
+  const menuRef = useRef<HTMLElement | null>(null);
+  const targetLineRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const removeDragStart = editor.registerCommand(
@@ -145,13 +147,24 @@ export function BlockHandlePlugin({ anchorElem }: { anchorElem: HTMLElement }) {
     };
   }, [editor]);
 
-  const menuComponent = useMemo(() => {
-    return (props: Omit<BlockHandleMenuProps, 'anchorElem'>) => (
+  const MenuWrapper = useMemo(() => {
+    return React.memo((props: Omit<BlockHandleMenuProps, 'anchorElem'>) => (
       <BlockHandleMenu {...props} anchorElem={anchorElem} />
-    );
+    ));
   }, [anchorElem]);
 
+  const isOnMenu = useCallback((element: HTMLElement) => {
+    return menuRef.current?.contains(element) ?? false;
+  }, []);
+
   return (
-    <LexicalDraggableBlockPlugin anchorElem={anchorElem} menuComponent={menuComponent} />
+    <DraggableBlockPlugin_EXPERIMENTAL
+      anchorElem={anchorElem}
+      menuRef={menuRef}
+      targetLineRef={targetLineRef}
+      menuComponent={<MenuWrapper blockElement={anchorElem} editor={editor} onClose={() => {}} />}
+      targetLineComponent={<div />}
+      isOnMenu={isOnMenu}
+    />
   );
 }

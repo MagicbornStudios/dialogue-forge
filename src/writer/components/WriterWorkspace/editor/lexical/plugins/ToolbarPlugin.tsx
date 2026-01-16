@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import {
-  CLEAR_FORMATTING_COMMAND,
-  FORMAT_ELEMENT_COMMAND,
   FORMAT_TEXT_COMMAND,
   $getRoot,
   $getSelection,
   $isRangeSelection,
+  $isTextNode,
+  $createParagraphNode,
   type LexicalNode,
 } from 'lexical';
+import {
+  $createHeadingNode,
+  $isHeadingNode,
+} from '@lexical/rich-text';
 import {
   INSERT_CHECK_LIST_COMMAND,
   INSERT_ORDERED_LIST_COMMAND,
@@ -72,6 +76,48 @@ export function ToolbarPlugin() {
   const onToggleBulletList = () => toggleList('bullet', INSERT_UNORDERED_LIST_COMMAND);
   const onToggleOrderedList = () => toggleList('number', INSERT_ORDERED_LIST_COMMAND);
   const onToggleChecklist = () => toggleList('check', INSERT_CHECK_LIST_COMMAND);
+
+  const clearFormatting = () => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if (!$isRangeSelection(selection)) {
+        return;
+      }
+      const nodes = selection.getNodes();
+      for (const node of nodes) {
+        if ($isTextNode(node)) {
+          node.setFormat(0);
+        }
+      }
+    });
+  };
+
+  const insertHeading = (tag: 'h1' | 'h2' | 'h3') => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if (!$isRangeSelection(selection)) {
+        return;
+      }
+      const anchorNode = selection.anchor.getNode();
+      const topLevelNode = anchorNode.getTopLevelElementOrThrow();
+      
+      if ($isHeadingNode(topLevelNode) && topLevelNode.getTag() === tag) {
+        // Already this heading type, convert to paragraph
+        const paragraph = $createParagraphNode();
+        const children = topLevelNode.getChildren();
+        paragraph.append(...children);
+        topLevelNode.replace(paragraph);
+        paragraph.selectEnd();
+      } else {
+        // Convert to heading
+        const heading = $createHeadingNode(tag);
+        const children = topLevelNode.getChildren();
+        heading.append(...children);
+        topLevelNode.replace(heading);
+        heading.selectEnd();
+      }
+    });
+  };
 
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
@@ -170,7 +216,7 @@ export function ToolbarPlugin() {
       <button
         type="button"
         className={toolbarButtonBase}
-        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'h1' as any)}
+        onClick={() => insertHeading('h1')}
         aria-label="Heading 1"
       >
         H1
@@ -178,7 +224,7 @@ export function ToolbarPlugin() {
       <button
         type="button"
         className={toolbarButtonBase}
-        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'h2' as any)}
+        onClick={() => insertHeading('h2')}
         aria-label="Heading 2"
       >
         H2
@@ -186,7 +232,7 @@ export function ToolbarPlugin() {
       <button
         type="button"
         className={toolbarButtonBase}
-        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'h3' as any)}
+        onClick={() => insertHeading('h3')}
         aria-label="Heading 3"
       >
         H3
@@ -218,7 +264,7 @@ export function ToolbarPlugin() {
       <button
         type="button"
         className={toolbarButtonBase}
-        onClick={() => editor.dispatchCommand(CLEAR_FORMATTING_COMMAND, undefined)}
+        onClick={clearFormatting}
         aria-label="Clear formatting"
       >
         Clear

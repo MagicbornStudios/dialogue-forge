@@ -1,14 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  $createHeadingNode,
   $createParagraphNode,
-  $createQuoteNode,
   $createTextNode,
   $getSelection,
   $isRangeSelection,
   type LexicalNode,
 } from 'lexical';
+import {
+  $createHeadingNode,
+  $createQuoteNode,
+} from '@lexical/rich-text';
 import { $createCodeNode } from '@lexical/code';
 import {
   INSERT_CHECK_LIST_COMMAND,
@@ -20,7 +22,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import {
   LexicalTypeaheadMenuPlugin,
   useBasicTypeaheadTriggerMatch,
-  LexicalTypeaheadMenuOption,
+  MenuOption,
   type MenuTextMatch,
 } from '@lexical/react/LexicalTypeaheadMenuPlugin';
 import {
@@ -31,7 +33,7 @@ import { WRITER_MEDIA_KIND } from '@/writer/lib/data-adapter/media';
 
 type SlashCommandAction = () => void;
 
-class SlashCommandOption extends LexicalTypeaheadMenuOption {
+class SlashCommandOption extends MenuOption {
   title: string;
   description?: string;
   keywords: string[];
@@ -276,8 +278,8 @@ export function SlashCommandPlugin() {
     <LexicalTypeaheadMenuPlugin
       onQueryChange={setQuery}
       onSelectOption={onSelectOption}
-      triggerFn={(text) => {
-        const match = checkForSlash(text) as MenuTextMatch | null;
+      triggerFn={(text, editor) => {
+        const match = checkForSlash(text, editor) as MenuTextMatch | null;
         return match;
       }}
       options={options}

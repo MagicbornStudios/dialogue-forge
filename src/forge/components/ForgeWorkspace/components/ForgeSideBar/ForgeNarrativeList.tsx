@@ -25,9 +25,12 @@ export function ForgeNarrativeList({ className }: ForgeNarrativeListProps) {
   const [renamingGraphId, setRenamingGraphId] = useState<string | null>(null)
   
   // Read from store - memoize the selector result to prevent re-renders
+  // Filter out graphs with id === 0 (unsaved graphs) from sidebar display
   const allGraphs = useForgeWorkspaceStore(s => s.graphs.byId)
   const narrativeGraphs = useMemo(() => 
-    Object.values(allGraphs).filter(g => g.kind === FORGE_GRAPH_KIND.NARRATIVE),
+    Object.values(allGraphs).filter(g => 
+      g.kind === FORGE_GRAPH_KIND.NARRATIVE && g.id !== 0
+    ),
     [allGraphs]
   )
   const activeNarrativeGraphId = useForgeWorkspaceStore(s => s.activeNarrativeGraphId)

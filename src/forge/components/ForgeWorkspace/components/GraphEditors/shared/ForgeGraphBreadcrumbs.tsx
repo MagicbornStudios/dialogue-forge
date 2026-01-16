@@ -97,7 +97,13 @@ export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
             <ContextMenuTrigger asChild>
               <span 
                 className="px-2 py-1 text-df-text-primary font-medium cursor-pointer hover:bg-df-control-bg rounded transition-colors"
-                onDoubleClick={() => storeState.activeGraphId && setRenamingGraphId(storeState.activeGraphId)}
+                onDoubleClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (storeState.activeGraphId) {
+                    setRenamingGraphId(storeState.activeGraphId);
+                  }
+                }}
                 title="Double-click to rename"
               >
                 {currentGraphTitle}
@@ -173,7 +179,13 @@ export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
                 <ContextMenuTrigger asChild>
                   <button
                     onClick={() => storeState.navigateToBreadcrumb(scope, actualIndex)}
-                    onDoubleClick={() => isLast && setRenamingGraphId(breadcrumb.graphId)}
+                    onDoubleClick={(e) => {
+                      if (isLast) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setRenamingGraphId(breadcrumb.graphId);
+                      }
+                    }}
                     className={cn(
                       "px-2 py-1 rounded transition-colors text-left",
                       isLast

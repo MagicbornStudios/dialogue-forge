@@ -22,6 +22,9 @@ export const writerTheme = {
     superscript: 'align-super text-[0.75em]',
   },
   code: 'block whitespace-pre-wrap rounded-md bg-df-surface px-3 py-2 font-mono text-sm text-df-text-primary',
+  table: 'w-full border-collapse',
+  tableRow: 'border-b border-df-node-border',
+  tableCell: 'min-w-[80px] border border-df-node-border p-2 align-top text-sm',
   codeHighlight: {
     atrule: 'text-sky-300',
     attr: 'text-emerald-300',

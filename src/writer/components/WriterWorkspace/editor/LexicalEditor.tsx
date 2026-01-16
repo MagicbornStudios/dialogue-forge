@@ -10,8 +10,9 @@ import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
 import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor as LexicalEditorType } from 'lexical';
 import { writerNodes } from '@/writer/components/WriterWorkspace/editor/lexical/nodes';
-import { ToolbarPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/ToolbarPlugin';
 import { KeyboardShortcutsPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/KeyboardShortcutsPlugin';
+import { ToolbarPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/ToolbarPlugin';
+import { WriterPlugins } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/WriterPlugins';
 import { writerTheme } from '@/writer/components/WriterWorkspace/editor/lexical/theme';
 import { AiSelectionPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/AiSelectionPlugin';
 import { CopilotKitPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/CopilotKitPlugin';
@@ -79,6 +80,7 @@ export function LexicalEditor({
             <AiSelectionPlugin />
             <CopilotKitPlugin />
             <KeyboardShortcutsPlugin />
+            <WriterPlugins />
             <div className="relative flex min-h-0 flex-1 flex-col">
               <RichTextPlugin
                 contentEditable={

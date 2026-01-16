@@ -252,6 +252,11 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
   }, [pendingFocus, graph, reactFlow, clearFocus, shell.effectiveGraph]);
 
 
+  const flowById = React.useMemo(
+    () => new Map<string, ForgeReactFlowNode>(shell.effectiveGraph.flow.nodes.map((n: ForgeReactFlowNode) => [n.id, n])),
+    [shell.effectiveGraph.flow.nodes]
+  );
+
   // Decorate nodes with UI metadata + read-only context (NO callbacks)
   const nodesWithMeta = React.useMemo(() => {
     const hasSelection = shell.selectedNodeId !== null && showPathHighlight;
@@ -262,7 +267,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
       const isSelected = n.id === shell.selectedNodeId;
       const isDimmed = hasSelection && !inPath && !isSelected;
 
-      const flowNode = shell.effectiveGraph.flow.nodes.find((node: ForgeReactFlowNode) => node.id === n.id);
+      const flowNode = flowById.get(n.id);
       const nodeType = (flowNode?.type as ForgeNodeType | undefined) ?? (flowNode?.data as any)?.type;
 
       const isStartNode = n.id === startId;
@@ -301,17 +306,17 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     layoutDirection,
     nodeDepths,
     showPathHighlight,
-    shell,
+    shell.effectiveGraph.startNodeId,
+    shell.endNodeIds,
+    shell.nodes,
+    shell.selectedNodeId,
+    flowById,
   ]);
 
   // Create lookup maps for nodes and flow nodes (moved outside to avoid hook-in-hook)
   const nodeById = React.useMemo(
     () => new Map<string, typeof shell.nodes[number]>(shell.nodes.map((n) => [n.id, n])),
     [shell.nodes]
-  );
-  const flowById = React.useMemo(
-    () => new Map<string, ForgeReactFlowNode>(shell.effectiveGraph.flow.nodes.map((n: ForgeReactFlowNode) => [n.id, n])),
-    [shell.effectiveGraph.flow.nodes]
   );
 
   // Decorate edges with UI metadata (NO callbacks)

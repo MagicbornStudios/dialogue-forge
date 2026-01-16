@@ -189,6 +189,11 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     [layoutDirection, onChange, reactFlow, shell.effectiveGraph, setLayoutDirection]
   );
 
+  const flowById = React.useMemo(
+    () => new Map<string, ForgeReactFlowNode>(shell.effectiveGraph.flow.nodes.map((node) => [node.id, node])),
+    [shell.effectiveGraph.flow.nodes]
+  );
+
   // Decorate nodes with UI metadata
   const nodesWithMeta = React.useMemo(() => {
     const hasSelection = shell.selectedNodeId !== null && showPathHighlight;
@@ -215,14 +220,21 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
         } as ShellNodeData,
       };
     });
-  }, [shell.effectiveGraph, shell.selectedNodeId, showPathHighlight, nodeDepths, layoutDirection]);
+  }, [
+    layoutDirection,
+    nodeDepths,
+    showPathHighlight,
+    shell.effectiveGraph.endNodeIds,
+    shell.effectiveGraph.flow.nodes,
+    shell.effectiveGraph.startNodeId,
+    shell.selectedNodeId,
+  ]);
 
   // Decorate edges with UI metadata
   const edgesWithMeta = React.useMemo(() => {
     return shell.effectiveGraph.flow.edges.map((edge) => {
       const isInPath = showPathHighlight && edgesToSelectedNode.has(edge.id);
-      const sourceNode = shell.effectiveGraph.flow.nodes.find((n) => n.id === edge.source);
-      const sourceFlowNode = sourceNode as ForgeReactFlowNode | undefined;
+      const sourceFlowNode = flowById.get(edge.source);
 
       return {
         ...edge,
@@ -233,7 +245,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
         },
       };
     });
-  }, [shell.effectiveGraph, showPathHighlight, edgesToSelectedNode]);
+  }, [edgesToSelectedNode, flowById, showPathHighlight, shell.effectiveGraph.flow.edges]);
 
   return (
     <ForgeEditorActionsProvider actions={actions}>

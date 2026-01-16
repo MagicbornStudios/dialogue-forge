@@ -46,15 +46,15 @@ export function ForgeWorkspaceLayout({
       data-focused={isFocused ? 'true' : 'false'}
     >
       {panelVisibility.sidebar && (
-        <div className="w-[280px] border-r border-df-sidebar-border flex-shrink-0 relative group">
-          <div className="absolute inset-y-0 right-0 w-[1px] bg-[var(--color-df-border-hover)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+        <div className="w-[280px] border-r border-border flex-shrink-0 relative group">
+          <div className="absolute inset-y-0 right-0 w-[1px] bg-[var(--editor-border-hover)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
           <SidebarPanel />
         </div>
       )}
       <div className="flex-1 flex flex-col min-w-0">
         {panelVisibility['narrative-editor'] && (
-          <div className="flex-1 border-b border-df-sidebar-border min-h-0 relative group">
-            <div className="absolute inset-x-0 top-0 h-[1px] bg-[var(--color-df-border-hover)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+          <div className="flex-1 border-b border-border min-h-0 relative group">
+            <div className="absolute inset-x-0 top-0 h-[1px] bg-[var(--editor-border-hover)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
             <NarrativeEditorPanel 
               graph={narrativeGraph}
               onChange={onNarrativeGraphChange}

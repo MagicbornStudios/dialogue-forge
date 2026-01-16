@@ -27,7 +27,7 @@ export function ForgeWorkspaceToolbar({
   const togglePanel = useForgeWorkspaceStore((s) => s.actions.togglePanel);
 
   return (
-    <div className="flex items-center justify-between border-b border-df-sidebar-border bg-df-base/80 px-3 py-2">
+    <div className="flex items-center justify-between border-b border-border bg-background/80 px-3 py-2">
       <div className="flex items-center gap-2">
         <Button type="button" variant="outline" size="icon" onClick={onPlayClick} title="Play selected page">
           <Play size={16} />
@@ -38,7 +38,7 @@ export function ForgeWorkspaceToolbar({
         <Button type="button" variant="outline" size="icon" onClick={onGuideClick} title="Open guide">
           <HelpCircle size={16} />
         </Button>
-        <div className="h-4 w-px bg-df-control-border mx-1" />
+        <div className="h-4 w-px bg-border mx-1" />
         <Button
           type="button"
           variant="outline"
@@ -67,7 +67,7 @@ export function ForgeWorkspaceToolbar({
           {panelLayout.storyletEditor.visible ? <Eye size={16} /> : <EyeOff size={16} />}
         </Button>
       </div>
-      <div className="text-[11px] text-df-text-tertiary">
+      <div className="text-[11px] text-muted-foreground">
         {counts.actCount} acts · {counts.chapterCount} chapters · {counts.pageCount} pages · {counts.characterCount} characters
       </div>
       <div className="flex items-center gap-2">{toolbarActions}</div>

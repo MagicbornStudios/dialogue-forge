@@ -27,18 +27,18 @@ import { FORGE_NODE_TYPE_LABELS } from '@/forge/types/ui-constants';
  */
 function getNodeIconColor(nodeType: ForgeNodeType): string {
   const colorMap: Record<ForgeNodeType, string> = {
-    [FORGE_NODE_TYPE.CHARACTER]: 'var(--color-df-npc-border)',
-    [FORGE_NODE_TYPE.PLAYER]: 'var(--color-df-player-border)',
-    [FORGE_NODE_TYPE.CONDITIONAL]: 'var(--color-df-conditional-border)',
+    [FORGE_NODE_TYPE.CHARACTER]: 'var(--editor-npc-border)',
+    [FORGE_NODE_TYPE.PLAYER]: 'var(--editor-player-border)',
+    [FORGE_NODE_TYPE.CONDITIONAL]: 'var(--editor-conditional-border)',
     [FORGE_NODE_TYPE.ACT]: '#8b5cf6', // Purple
     [FORGE_NODE_TYPE.CHAPTER]: '#06b6d4', // Cyan
     [FORGE_NODE_TYPE.PAGE]: '#22c55e', // Green
     [FORGE_NODE_TYPE.DETOUR]: '#a78bfa', // Light purple
-    [FORGE_NODE_TYPE.STORYLET]: 'var(--color-df-npc-border)', // Use NPC color
+    [FORGE_NODE_TYPE.STORYLET]: 'var(--editor-npc-border)', // Use NPC color
     [FORGE_NODE_TYPE.JUMP]: '#f472b6', // Pink
     [FORGE_NODE_TYPE.END]: '#9ca3af', // Gray
   };
-  return colorMap[nodeType] || 'var(--color-df-text-tertiary)';
+  return colorMap[nodeType] || 'var(--editor-muted-foreground)';
 }
 
 /**
@@ -221,7 +221,7 @@ export function NodePalette({ className }: NodePaletteProps) {
 
     return (
       <div key={category} className="mb-3">
-        <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-df-text-tertiary">
+        <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
           {categoryLabels[category]}
         </div>
         <div className="space-y-0.5">
@@ -235,10 +235,10 @@ export function NodePalette({ className }: NodePaletteProps) {
                     onDragEnd={handleDragEnd}
                     className={cn(
                       'flex items-center gap-2 px-2 py-1.5 text-xs cursor-grab active:cursor-grabbing',
-                      'text-df-text-secondary hover:bg-df-control-hover hover:text-df-text-primary',
+                      'text-muted-foreground hover:bg-muted hover:text-foreground',
                       'transition-colors rounded',
-                      focusedEditor === 'narrative' && 'border-l-1 border-l-[var(--color-df-info)]',
-                      focusedEditor === 'storylet' && 'border-l-1 border-l-[var(--color-df-edge-choice-1)]'
+                      focusedEditor === 'narrative' && 'border-l-1 border-l-[var(--editor-info)]',
+                      focusedEditor === 'storylet' && 'border-l-1 border-l-[var(--editor-edge-choice)]'
                     )}
                   >
                     <ColoredNodeIcon nodeType={nodeInfo.type} icon={nodeInfo.icon} />
@@ -258,25 +258,25 @@ export function NodePalette({ className }: NodePaletteProps) {
 
   // Determine colors based on focused editor
   const headerBgColor = focusedEditor === 'narrative' 
-    ? 'bg-[var(--color-df-info)]/10' 
+    ? 'bg-[var(--editor-info)]/10' 
     : focusedEditor === 'storylet'
-    ? 'bg-[var(--color-df-edge-choice-1)]/10'
+    ? 'bg-[var(--editor-edge-choice)]/10'
     : 'bg-transparent';
   const headerBorderColor = focusedEditor === 'narrative'
-    ? 'border-b-[var(--color-df-info)]'
+    ? 'border-b-[var(--editor-info)]'
     : focusedEditor === 'storylet'
-    ? 'border-b-[var(--color-df-edge-choice-1)]'
-    : 'border-b-df-sidebar-border';
+    ? 'border-b-[var(--editor-edge-choice)]'
+    : 'border-b-border';
   const headerTextColor = focusedEditor === 'narrative'
-    ? 'text-[var(--color-df-info)]'
+    ? 'text-[var(--editor-info)]'
     : focusedEditor === 'storylet'
-    ? 'text-[var(--color-df-edge-choice-1)]'
-    : 'text-df-text-secondary';
+    ? 'text-[var(--editor-edge-choice)]'
+    : 'text-muted-foreground';
   const headerIconColor = focusedEditor === 'narrative'
-    ? 'var(--color-df-info)'
+    ? 'var(--editor-info)'
     : focusedEditor === 'storylet'
-    ? 'var(--color-df-edge-choice-1)'
-    : 'var(--color-df-text-tertiary)';
+    ? 'var(--editor-edge-choice)'
+    : 'var(--editor-muted-foreground)';
 
   return (
     <div className={cn('flex h-full w-full flex-col', className)}>
@@ -296,8 +296,8 @@ export function NodePalette({ className }: NodePaletteProps) {
                 variant="secondary" 
                 className={cn(
                   "h-4 px-1.5 text-[10px]",
-                  focusedEditor === 'narrative' && "bg-[var(--color-df-info)]/20 text-[var(--color-df-info)] border-[var(--color-df-info)]/30",
-                  focusedEditor === 'storylet' && "bg-[var(--color-df-edge-choice-1)]/20 text-[var(--color-df-edge-choice-1)] border-[var(--color-df-edge-choice-1)]/30"
+                  focusedEditor === 'narrative' && "bg-[var(--editor-info)]/20 text-[var(--editor-info)] border-[var(--editor-info)]/30",
+                  focusedEditor === 'storylet' && "bg-[var(--editor-edge-choice)]/20 text-[var(--editor-edge-choice)] border-[var(--editor-edge-choice)]/30"
                 )}
               >
                 {focusedEditor === 'narrative' ? 'Narrative' : 'Storylet'}
@@ -322,7 +322,7 @@ export function NodePalette({ className }: NodePaletteProps) {
           renderCategory(category, nodes)
         )}
         {Object.values(filteredNodes).every((nodes) => nodes.length === 0) && (
-          <div className="px-3 py-6 text-center text-xs text-df-text-tertiary">
+          <div className="px-3 py-6 text-center text-xs text-muted-foreground">
             {searchQuery ? 'No nodes found' : 'No nodes available'}
           </div>
         )}

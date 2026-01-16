@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { Layers, Edit3, Trash2, Plus } from 'lucide-react';
 import {
@@ -12,7 +12,7 @@ import type { ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowE
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 
-export function ActNode({ data, selected, id }: NodeProps<ShellNodeData>) {
+export const ActNode = React.memo(function ActNode({ data, selected, id }: NodeProps<ShellNodeData>) {
   const { node, ui = {} } = data;
   const { isDimmed = false, isInPath = false } = ui;
   
@@ -20,6 +20,15 @@ export function ActNode({ data, selected, id }: NodeProps<ShellNodeData>) {
   const summary = node.content;
   
   const actions = useForgeEditorActions();
+  const handleEdit = useCallback(() => {
+    if (id) actions.openNodeEditor(id);
+  }, [actions, id]);
+  const handleAddChapter = useCallback(() => {
+    if (id) actions.openNodeEditor(id);
+  }, [actions, id]);
+  const handleDelete = useCallback(() => {
+    if (id) actions.deleteNode(id);
+  }, [actions, id]);
   const nodeType = node.type ?? FORGE_NODE_TYPE.ACT;
 
   return (
@@ -67,18 +76,15 @@ export function ActNode({ data, selected, id }: NodeProps<ShellNodeData>) {
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={() => actions.openNodeEditor(id!)}>
+        <ContextMenuItem onSelect={handleEdit}>
           <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Act
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => {
-          // Add Chapter - this will be handled by edge drop menu or pane context menu
-          actions.openNodeEditor(id!);
-        }}>
+        <ContextMenuItem onSelect={handleAddChapter}>
           <Plus size={14} className="mr-2 text-df-player-selected" /> Add Chapter
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem 
-          onSelect={() => actions.deleteNode(id!)}
+          onSelect={handleDelete}
           className="text-destructive focus:text-destructive"
         >
           <Trash2 size={14} className="mr-2" /> Delete
@@ -86,4 +92,6 @@ export function ActNode({ data, selected, id }: NodeProps<ShellNodeData>) {
       </ContextMenuContent>
     </ContextMenu>
   );
-}
+});
+
+ActNode.displayName = 'ActNode';

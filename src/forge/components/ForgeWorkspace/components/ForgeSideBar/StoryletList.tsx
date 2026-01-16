@@ -77,10 +77,10 @@ export function StoryletList({ className }: StoryletsListProps) {
   return (
     <div className={`flex h-full w-full flex-col ${className ?? ''}`}>
       {/* Compact header */}
-      <div className="flex items-center justify-between px-2 py-1.5 border-b border-df-sidebar-border">
+      <div className="flex items-center justify-between px-2 py-1.5 border-b border-border">
         <div className="flex items-center gap-1.5">
-          <Layers size={14} className="text-df-text-tertiary" />
-          <span className="text-xs font-medium text-df-text-secondary">Storylets</span>
+          <Layers size={14} className="text-muted-foreground" />
+          <span className="text-xs font-medium text-muted-foreground">Storylets</span>
           {filteredGraphs.length > 0 && (
             <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
               {filteredGraphs.length}
@@ -107,7 +107,7 @@ export function StoryletList({ className }: StoryletsListProps) {
       </div>
 
       {/* Search */}
-      <div className="px-2 py-1.5 border-b border-df-sidebar-border">
+      <div className="px-2 py-1.5 border-b border-border">
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
@@ -118,7 +118,7 @@ export function StoryletList({ className }: StoryletsListProps) {
       {/* List */}
       <div className="flex-1 overflow-y-auto">
         {filteredGraphs.length === 0 ? (
-          <div className="px-3 py-6 text-center text-xs text-df-text-tertiary">
+          <div className="px-3 py-6 text-center text-xs text-muted-foreground">
             {searchQuery ? 'No storylets found' : 'No storylets'}
           </div>
         ) : (
@@ -133,12 +133,12 @@ export function StoryletList({ className }: StoryletsListProps) {
                       onClick={() => workspaceActions.openStoryletGraph(String(graph.id))}
                       className={`w-full px-2 py-1.5 text-left text-xs transition-colors duration-200 ${
                         isSelected
-                          ? 'bg-df-control-hover text-df-text-primary border-l-2 border-[var(--color-df-border-active)]'
-                          : 'text-df-text-secondary hover:bg-df-control-hover hover:text-df-text-primary hover:border-l-2 hover:border-[var(--color-df-border-hover)]'
+                          ? 'bg-muted text-foreground border-l-2 border-[var(--editor-border-active)]'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:border-l-2 hover:border-[var(--editor-border-hover)]'
                       }`}
                     >
                       <div className="flex items-center gap-1.5 truncate">
-                        <Layers size={12} className="shrink-0 text-df-text-tertiary" />
+                        <Layers size={12} className="shrink-0 text-muted-foreground" />
                         <span className="truncate font-medium">{graph.title ?? String(graph.id)}</span>
                       </div>
                     </button>

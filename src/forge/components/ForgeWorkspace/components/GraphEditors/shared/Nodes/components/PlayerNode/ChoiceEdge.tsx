@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { BaseEdge, EdgeProps, getSmoothStepPath, getBezierPath, Position } from 'reactflow';
 import type { ForgeReactFlowNode } from '@/forge/types/forge-graph';
 import { EdgePulseAnimation, LoopIndicator } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/EdgeSVGElements';
@@ -36,7 +36,7 @@ function getChoiceIndex(sourceHandle?: string | null, fallback?: number): number
   return null;
 }
 
-export function ChoiceEdge({
+export const ChoiceEdge = React.memo(function ChoiceEdge({
   id,
   sourceX,
   sourceY,
@@ -52,13 +52,17 @@ export function ChoiceEdge({
   
   const edgeData = data as ChoiceEdgeData | undefined;
   const isBackEdge = edgeData?.isBackEdge ?? false;
-  const choiceIndex = getChoiceIndex(sourceHandle, edgeData?.choiceIndex) ?? 0;
+  const choiceIndex = useMemo(
+    () => getChoiceIndex(sourceHandle, edgeData?.choiceIndex) ?? 0,
+    [sourceHandle, edgeData?.choiceIndex],
+  );
   const dataChoiceIndex = ((choiceIndex % 5) + 5) % 5;
   
   // Use smooth step path for angular look (like the horizontal example)
   // For back edges, use bezier for a more curved appearance
-  const [edgePath, labelX, labelY] = isBackEdge 
-    ? getBezierPath({
+  const [edgePath, labelX, labelY] = useMemo(() => {
+    if (isBackEdge) {
+      return getBezierPath({
         sourceX,
         sourceY,
         sourcePosition,
@@ -66,16 +70,18 @@ export function ChoiceEdge({
         targetY,
         targetPosition,
         curvature: 0.5,
-      })
-    : getSmoothStepPath({
-        sourceX,
-        sourceY,
-        sourcePosition: sourcePosition || Position.Bottom,
-        targetX,
-        targetY,
-        targetPosition: targetPosition || Position.Top,
-        borderRadius: 8,
       });
+    }
+    return getSmoothStepPath({
+      sourceX,
+      sourceY,
+      sourcePosition: sourcePosition || Position.Bottom,
+      targetX,
+      targetY,
+      targetPosition: targetPosition || Position.Top,
+      borderRadius: 8,
+    });
+  }, [isBackEdge, sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition]);
 
   // Use loop color for back edges, otherwise use choice color
   const colorVar = isBackEdge ? 'var(--color-df-edge-loop)' : 'var(--edge-color)';
@@ -99,10 +105,23 @@ export function ChoiceEdge({
   
   // Use actions instead of callbacks
   const actions = useForgeEditorActions();
+  const handleMouseEnter = useCallback(() => setHovered(true), []);
+  const handleMouseLeave = useCallback(() => setHovered(false), []);
+  const handleDeleteEdge = useCallback(() => actions.deleteEdge(id), [actions, id]);
   
   // Get insert node types from edge data
   const insertNodeTypes = edgeData?.insertElementTypes;
   const hasContextMenu = !!insertNodeTypes && insertNodeTypes.length > 0;
+  const edgeStyle = useMemo(() => ({
+    strokeWidth,
+    opacity,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    pointerEvents: 'none',
+    filter,
+    // Dashed line for back edges
+    strokeDasharray: isBackEdge ? '8 4' : undefined,
+  }), [strokeWidth, opacity, filter, isBackEdge]);
 
   const edgeContent = (
     <>
@@ -113,23 +132,14 @@ export function ChoiceEdge({
         stroke="transparent"
         strokeWidth={20}
         style={{ cursor: 'pointer', pointerEvents: 'all' }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       />
       <BaseEdge 
         id={id} 
         path={edgePath}
         className="forge-edge-path"
-        style={{ 
-          strokeWidth, 
-          opacity,
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          pointerEvents: 'none',
-          filter,
-          // Dashed line for back edges
-          strokeDasharray: isBackEdge ? '8 4' : undefined,
-        }}
+        style={edgeStyle}
         markerEnd={isDimmed ? undefined : `url(#react-flow__arrowclosed-choice-${choiceIndex})`}
       />
       {/* Loop indicator icon for back edges */}
@@ -213,7 +223,7 @@ export function ChoiceEdge({
           </>
         )}
         <ContextMenuItem
-          onSelect={() => actions.deleteEdge(id)}
+          onSelect={handleDeleteEdge}
           className="text-destructive focus:text-destructive"
         >
           Delete edge
@@ -221,4 +231,6 @@ export function ChoiceEdge({
       </ContextMenuContent>
     </ContextMenu>
   );
-}
+});
+
+ChoiceEdge.displayName = 'ChoiceEdge';

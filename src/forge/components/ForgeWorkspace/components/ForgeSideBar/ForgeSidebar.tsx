@@ -26,16 +26,16 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
           if (value) setActiveTab(value as 'narratives' | 'storylets' | 'nodes');
         }}
         variant="outline"
-        className="w-full flex rounded-none bg-transparent h-8 px-0 gap-0 m-0 min-w-0 overflow-hidden border-b border-df-sidebar-border relative group"
+        className="w-full flex rounded-none bg-transparent h-8 px-0 gap-0 m-0 min-w-0 overflow-hidden border-b border-border relative group"
       >
-        <div className="absolute inset-x-0 bottom-0 h-[1px] bg-[var(--color-df-border-hover)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-[1px] bg-[var(--editor-border-hover)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
         <ToggleGroupItem
           value="narratives"
           aria-label="Narratives"
           className={cn(
             "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight",
-            "text-df-text-secondary hover:text-df-text-primary",
-            "data-[state=on]:bg-df-control-hover data-[state=on]:text-df-text-primary data-[state=on]:border-b-2 data-[state=on]:border-[var(--color-df-border-active)]"
+            "text-muted-foreground hover:text-foreground",
+            "data-[state=on]:bg-muted data-[state=on]:text-foreground data-[state=on]:border-b-2 data-[state=on]:border-[var(--editor-border-active)]"
           )}
         >
           <BookOpen
@@ -43,7 +43,7 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
             className={cn(
               "mr-0.5 shrink-0 transition-colors",
               activeTab === 'narratives'
-                ? "text-[var(--color-df-info)]"
+                ? "text-[var(--editor-info)]"
                 : "text-[var(--color-df-info-muted,theme(colors.blue.300))]"
             )}
           />
@@ -54,8 +54,8 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
           aria-label="Storylets"
           className={cn(
             "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight",
-            "text-df-text-secondary hover:text-df-text-primary",
-            "data-[state=on]:bg-df-control-hover data-[state=on]:text-df-text-primary data-[state=on]:border-b-2 data-[state=on]:border-[var(--color-df-border-active)]"
+            "text-muted-foreground hover:text-foreground",
+            "data-[state=on]:bg-muted data-[state=on]:text-foreground data-[state=on]:border-b-2 data-[state=on]:border-[var(--editor-border-active)]"
           )}
         >
           <Layers
@@ -63,7 +63,7 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
             className={cn(
               "mr-0.5 shrink-0 transition-colors",
               activeTab === 'storylets'
-                ? "text-[var(--color-df-edge-choice-1)]"
+                ? "text-[var(--editor-edge-choice)]"
                 : "text-[var(--color-df-edge-choice-1-muted,theme(colors.green.400))]"
             )}
           />
@@ -74,8 +74,8 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
           aria-label="Nodes"
           className={cn(
             "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight",
-            "text-df-text-secondary hover:text-df-text-primary",
-            "data-[state=on]:bg-df-control-hover data-[state=on]:text-df-text-primary data-[state=on]:border-b-2 data-[state=on]:border-[var(--color-df-border-active)]"
+            "text-muted-foreground hover:text-foreground",
+            "data-[state=on]:bg-muted data-[state=on]:text-foreground data-[state=on]:border-b-2 data-[state=on]:border-[var(--editor-border-active)]"
           )}
         >
           <Boxes
@@ -83,7 +83,7 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
             className={cn(
               "mr-0.5 shrink-0 transition-colors",
               activeTab === 'nodes'
-                ? "text-[var(--color-df-warning)]"
+                ? "text-[var(--editor-warning)]"
                 : "text-[var(--color-df-warning-muted,theme(colors.amber.400))]"
             )}
           />
@@ -91,8 +91,8 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
           {focusedEditor && (
             <span className={cn(
               "ml-0.5 text-[9px] px-1 py-0.5 rounded shrink-0",
-              focusedEditor === 'narrative' && "bg-[var(--color-df-info)]/20 text-[var(--color-df-info)]",
-              focusedEditor === 'storylet' && "bg-[var(--color-df-edge-choice-1)]/20 text-[var(--color-df-edge-choice-1)]"
+              focusedEditor === 'narrative' && "bg-[var(--editor-info)]/20 text-[var(--editor-info)]",
+              focusedEditor === 'storylet' && "bg-[var(--editor-edge-choice)]/20 text-[var(--editor-edge-choice)]"
             )}>
               {focusedEditor === 'narrative' ? 'N' : 'S'}
             </span>

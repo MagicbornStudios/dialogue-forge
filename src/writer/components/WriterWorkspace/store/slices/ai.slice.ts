@@ -4,16 +4,26 @@ import type {
   WriterPatchOp,
   WriterSelectionSnapshot,
 } from '@/writer/types/writer-ai-types';
-import type { WriterWorkspaceState, WriterAiPreviewMeta, WriterAiProposalStatus } from '../writer-workspace-types';
-import { WRITER_AI_PROPOSAL_STATUS } from '../writer-workspace-types';
+import type {
+  WriterWorkspaceState,
+  WriterAiPreviewMeta,
+  WriterAiProposalStatus,
+  WriterDraftContent,
+} from '../writer-workspace-types';
+import {
+  createWriterDraftContent,
+  getPlainTextFromSerializedContent,
+  WRITER_AI_PROPOSAL_STATUS,
+  WRITER_SAVE_STATUS,
+} from '../writer-workspace-types';
 import { applyWriterPatchOps } from '@/writer/lib/editor/patches';
 
 const createSnapshotFromPage = (
   page: { title: string; bookBody?: string | null },
-  draft?: { title: string; content: string }
+  draft?: { title: string; content: WriterDraftContent }
 ): WriterDocSnapshot => ({
   title: draft?.title ?? page.title,
-  content: draft?.content ?? page.bookBody ?? '',
+  content: draft?.content.plainText ?? getPlainTextFromSerializedContent(page.bookBody),
 });
 
 export interface AiSlice {
@@ -58,8 +68,8 @@ export function createAiSlice(
       }
       const draft = state.drafts[targetId] ?? {
         title: page.title,
-        content: page.bookBody ?? '',
-        status: 'saved' as const,
+        content: createWriterDraftContent(page.bookBody),
+        status: WRITER_SAVE_STATUS.SAVED,
         error: null,
         revision: 0,
       };
@@ -159,8 +169,8 @@ export function createAiSlice(
       }
       const draft = state.drafts[targetId] ?? {
         title: page.title,
-        content: page.bookBody ?? '',
-        status: 'saved' as const,
+        content: createWriterDraftContent(page.bookBody),
+        status: WRITER_SAVE_STATUS.SAVED,
         error: null,
         revision: 0,
       };
@@ -176,7 +186,10 @@ export function createAiSlice(
         aiUndoSnapshot: snapshot,
       });
 
-      get().actions.setDraftContent(targetId, nextSnapshot.content ?? '');
+      get().actions.setDraftContent(
+        targetId,
+        createWriterDraftContent(nextSnapshot.content ?? '')
+      );
       if (typeof nextSnapshot.title === 'string') {
         get().actions.setDraftTitle(targetId, nextSnapshot.title);
       }
@@ -198,7 +211,10 @@ export function createAiSlice(
         aiError: null,
       });
 
-      get().actions.setDraftContent(targetId, undoSnapshot.content ?? '');
+      get().actions.setDraftContent(
+        targetId,
+        createWriterDraftContent(undoSnapshot.content ?? '')
+      );
       if (typeof undoSnapshot.title === 'string') {
         get().actions.setDraftTitle(targetId, undoSnapshot.title);
       }

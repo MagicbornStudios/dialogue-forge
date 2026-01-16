@@ -1,5 +1,6 @@
 import type { StateCreator } from 'zustand';
 import type { WriterWorkspaceState } from '../writer-workspace-types';
+import { createWriterDraftContent, WRITER_SAVE_STATUS } from '../writer-workspace-types';
 
 export interface NavigationSlice {
   activePageId: number | null;
@@ -41,8 +42,8 @@ export function createNavigationSlice(
         // Create draft for page
         const draft = {
           title: page.title,
-          content: page.bookBody ?? '',
-          status: 'saved' as const,
+          content: createWriterDraftContent(page.bookBody),
+          status: WRITER_SAVE_STATUS.SAVED,
           error: null,
           revision: 0,
         };

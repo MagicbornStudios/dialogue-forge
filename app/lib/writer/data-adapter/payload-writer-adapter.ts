@@ -3,6 +3,16 @@ import type { WriterDataAdapter, WriterActDoc, WriterChapterDoc, WriterPageDoc }
 import type { Act, Chapter, Page } from '@/app/payload-types';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
 
+const normalizeBookBody = (value: unknown): string | null => {
+  if (!value) {
+    return null;
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return JSON.stringify(value);
+};
+
 function mapAct(doc: Act): WriterActDoc {
   return {
     id: doc.id,
@@ -11,7 +21,7 @@ function mapAct(doc: Act): WriterActDoc {
     order: doc.order,
     project: typeof doc.project === 'number' ? doc.project : doc.project.id,
     bookHeading: doc.bookHeading ?? null,
-    bookBody: doc.bookBody ?? null,
+    bookBody: normalizeBookBody(doc.bookBody),
     _status: doc._status as 'draft' | 'published' | null,
   };
 }
@@ -25,7 +35,7 @@ function mapChapter(doc: Chapter): WriterChapterDoc {
     project: typeof doc.project === 'number' ? doc.project : doc.project.id,
     act: typeof doc.act === 'number' ? doc.act : doc.act.id,
     bookHeading: doc.bookHeading ?? null,
-    bookBody: doc.bookBody ?? null,
+    bookBody: normalizeBookBody(doc.bookBody),
     _status: doc._status as 'draft' | 'published' | null,
   };
 }
@@ -39,7 +49,7 @@ function mapPage(doc: Page): WriterPageDoc {
     project: typeof doc.project === 'number' ? doc.project : doc.project.id,
     chapter: typeof doc.chapter === 'number' ? doc.chapter : doc.chapter.id,
     dialogueGraph: typeof doc.dialogueGraph === 'number' ? doc.dialogueGraph : doc.dialogueGraph?.id ?? null,
-    bookBody: doc.bookBody ?? null,
+    bookBody: normalizeBookBody(doc.bookBody),
     archivedAt: doc.archivedAt ?? null,
     _status: doc._status as 'draft' | 'published' | null,
   };

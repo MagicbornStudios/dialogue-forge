@@ -10,9 +10,56 @@ export const WRITER_SAVE_STATUS = {
 export type WriterSaveStatus =
   (typeof WRITER_SAVE_STATUS)[keyof typeof WRITER_SAVE_STATUS];
 
+export type WriterDraftContent = {
+  serialized: string;
+  plainText: string;
+};
+
+type SerializedLexicalNode = {
+  text?: string;
+  children?: SerializedLexicalNode[];
+};
+
+const extractPlainTextFromSerialized = (serialized: string): string | null => {
+  if (!serialized) {
+    return '';
+  }
+  try {
+    const parsed = JSON.parse(serialized) as { root?: SerializedLexicalNode };
+    if (!parsed || typeof parsed !== 'object' || !parsed.root) {
+      return null;
+    }
+    const parts: string[] = [];
+    const walk = (node: SerializedLexicalNode) => {
+      if (typeof node.text === 'string') {
+        parts.push(node.text);
+      }
+      if (Array.isArray(node.children)) {
+        node.children.forEach(walk);
+      }
+    };
+    walk(parsed.root);
+    return parts.join('');
+  } catch {
+    return null;
+  }
+};
+
+export const getPlainTextFromSerializedContent = (value?: string | null): string => {
+  if (!value) {
+    return '';
+  }
+  return extractPlainTextFromSerialized(value) ?? value;
+};
+
+export const createWriterDraftContent = (value?: string | null): WriterDraftContent => ({
+  serialized: value ?? '',
+  plainText: getPlainTextFromSerializedContent(value),
+});
+
 export type WriterDraftState = {
   title: string;
-  content: string;
+  content: WriterDraftContent;
   status: WriterSaveStatus;
   error: string | null;
   revision: number;

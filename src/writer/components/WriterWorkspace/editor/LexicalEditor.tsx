@@ -6,18 +6,31 @@ import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
-import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical';
+import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor as LexicalEditorType } from 'lexical';
 import { writerNodes } from '@/writer/components/WriterWorkspace/editor/lexical/nodes';
 import { ToolbarPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/ToolbarPlugin';
 import { writerTheme } from '@/writer/components/WriterWorkspace/editor/lexical/theme';
 import { AiSelectionPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/AiSelectionPlugin';
 import { CopilotKitPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/CopilotKitPlugin';
 import { WriterEditorSessionProvider, createWriterEditorSessionStore } from '@/writer/components/WriterWorkspace/editor/hooks/useWriterEditorSession';
+import type { WriterDraftContent } from '@/writer/components/WriterWorkspace/store/writer-workspace-types';
+
+const parseSerializedEditorState = (editor: LexicalEditorType, value: string) => {
+  try {
+    const parsed = JSON.parse(value) as { root?: unknown };
+    if (!parsed || typeof parsed !== 'object' || !('root' in parsed)) {
+      return null;
+    }
+    return editor.parseEditorState(parsed);
+  } catch {
+    return null;
+  }
+};
 
 interface LexicalEditorProps {
   value?: string;
   placeholder?: string;
-  onChange?: (value: string) => void;
+  onChange?: (value: WriterDraftContent) => void;
   className?: string;
 }
 
@@ -37,8 +50,13 @@ export function LexicalEditor({
     onError: (error: Error) => {
       throw error;
     },
-    editorState: () => {
+    editorState: (editor) => {
       if (!initialValueRef.current) {
+        return;
+      }
+      const parsedState = parseSerializedEditorState(editor, initialValueRef.current);
+      if (parsedState) {
+        editor.setEditorState(parsedState);
         return;
       }
       const root = $getRoot();
@@ -76,8 +94,12 @@ export function LexicalEditor({
                 if (!onChange) {
                   return;
                 }
+                const serializedState = JSON.stringify(editorState.toJSON());
                 editorState.read(() => {
-                  onChange($getRoot().getTextContent());
+                  onChange({
+                    serialized: serializedState,
+                    plainText: $getRoot().getTextContent(),
+                  });
                 });
               }}
             />

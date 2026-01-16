@@ -26,15 +26,15 @@ export function GraphMiniMap({ showMiniMap }: GraphMiniMapProps) {
           style={{
             width: 180,
             height: 120,
-            backgroundColor: '#0d0d14',
+            backgroundColor: 'var(--minimap-bg)',
           }}
-          maskColor="rgba(0, 0, 0, 0.7)"
+          maskColor="var(--minimap-mask)"
           nodeColor={node => {
             if (node.type === FORGE_NODE_TYPE.CHARACTER || node.type === FORGE_NODE_TYPE.STORYLET)
-              return '#e94560';
-            if (node.type === FORGE_NODE_TYPE.PLAYER) return '#8b5cf6';
-            if (node.type === FORGE_NODE_TYPE.CONDITIONAL) return '#3b82f6';
-            return '#4a4a6a';
+              return 'var(--minimap-node-character)';
+            if (node.type === FORGE_NODE_TYPE.PLAYER) return 'var(--minimap-node-player)';
+            if (node.type === FORGE_NODE_TYPE.CONDITIONAL) return 'var(--minimap-node-conditional)';
+            return 'var(--minimap-node-default)';
           }}
           nodeStrokeWidth={2}
           pannable

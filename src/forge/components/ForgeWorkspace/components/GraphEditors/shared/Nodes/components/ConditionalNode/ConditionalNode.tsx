@@ -130,12 +130,12 @@ export const ConditionalNode = React.memo(function ConditionalNode({ data, selec
           >
             {/* Icon Placeholder - Left side (no avatar for conditional) */}
             <div className="w-14 h-14 rounded-full bg-node border-[3px] border-node flex items-center justify-center shadow-lg flex-shrink-0">
-              <Code size={20} className="text-df-conditional-selected" />
+              <Code size={20} className="text-[var(--node-accent)]" />
             </div>
 
             {/* Node Type Name - Center/Left */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-bold text-df-text-primary truncate leading-tight">
+              <h3 className="text-base font-bold text-foreground truncate leading-tight">
                 Conditional Logic
               </h3>
             </div>
@@ -143,26 +143,32 @@ export const ConditionalNode = React.memo(function ConditionalNode({ data, selec
             {/* Metadata Icons - Right side */}
             <div className="flex items-center gap-2 flex-shrink-0">
               {/* Node ID Icon */}
-              <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-base/50 border border-df-control-border" title={`Node ID: ${node.id}`}>
-                <Hash size={12} className="text-df-text-secondary" />
-                <span className="text-[10px] font-mono text-df-text-secondary">{node.id}</span>
+              <div
+                className="flex items-center gap-1 px-2 py-1 rounded bg-[color-mix(in_oklab,var(--color-df-base)_50%,transparent)] border border-border"
+                title={`Node ID: ${node.id}`}
+              >
+                <Hash size={12} className="text-[var(--color-df-text-secondary)]" />
+                <span className="text-[10px] font-mono text-[var(--color-df-text-secondary)]">{node.id}</span>
               </div>
 
               {/* Type Icon */}
-              <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-conditional-selected/20 border border-df-conditional-selected/50" title="Conditional Node">
-                <GitBranch size={14} className="text-df-conditional-selected" />
-                <span className="text-[10px] font-semibold text-df-conditional-selected">IF/ELSE</span>
+              <div
+                className="flex items-center gap-1 px-2 py-1 rounded bg-[color-mix(in_oklab,var(--node-accent)_20%,transparent)] border border-[color-mix(in_oklab,var(--node-accent)_50%,transparent)]"
+                title="Conditional Node"
+              >
+                <GitBranch size={14} className="text-[var(--node-accent)]" />
+                <span className="text-[10px] font-semibold text-[var(--node-accent)]">IF/ELSE</span>
               </div>
             </div>
 
             {/* Start/End badge - Overlay on header */}
             {isStartNode && (
-              <div className="absolute top-1 right-1 bg-df-start text-df-text-primary text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
+              <div className="absolute top-1 right-1 bg-[var(--node-start-border)] text-foreground text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
                 <Play size={8} fill="currentColor" /> START
               </div>
             )}
             {isEndNode && (
-              <div className="absolute top-1 right-1 bg-df-end text-df-text-primary text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
+              <div className="absolute top-1 right-1 bg-[var(--node-end-border)] text-foreground text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
                 <Flag size={8} /> END
               </div>
             )}
@@ -182,14 +188,14 @@ export const ConditionalNode = React.memo(function ConditionalNode({ data, selec
                 <div
                   key={block.id}
                   ref={el => { blockRefs.current[idx] = el; }}
-                  className="px-3 py-2 border-b border-df-control-border last:border-b-0"
+                  className="px-3 py-2 border-b border-border last:border-b-0"
                 >
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-df-base text-df-text-primary font-semibold">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-[var(--color-df-base)] text-foreground font-semibold">
                       {blockType}
                     </span>
                     {block.condition && block.condition.length > 0 && (
-                      <span className="text-[9px] text-df-text-secondary font-mono truncate flex-1">
+                      <span className="text-[9px] text-[var(--color-df-text-secondary)] font-mono truncate flex-1">
                         {block.condition.map((condition: ForgeCondition) => {
                           return formatCondition(condition);
                         }).filter(c => c).join(' and ').slice(0, 30)}
@@ -201,11 +207,11 @@ export const ConditionalNode = React.memo(function ConditionalNode({ data, selec
                   {displayName && (
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <span className="text-sm flex-shrink-0">{avatar}</span>
-                      <span className="text-[10px] text-df-conditional-selected font-medium">{displayName}</span>
+                      <span className="text-[10px] text-[var(--node-accent)] font-medium">{displayName}</span>
                     </div>
                   )}
 
-                  <div className="text-xs text-df-text-primary line-clamp-2 bg-df-elevated border border-df-control-border rounded px-3 py-1.5">
+                  <div className="text-xs text-foreground line-clamp-2 bg-card border border-border rounded px-3 py-1.5">
                     &quot;{block.content?.slice(0, 60) + (block.content?.length && block.content.length > 60 ? '...' : '')}&quot;
                   </div>
 
@@ -228,7 +234,7 @@ export const ConditionalNode = React.memo(function ConditionalNode({ data, selec
 
           {/* Flag indicators */}
           {setFlags.length > 0 && (
-            <div className="px-4 py-2 border-t border-df-control-border flex flex-wrap gap-1">
+            <div className="px-4 py-2 border-t border-border flex flex-wrap gap-1">
               {setFlags.map(flagId => {
                 const flag = flagSchema?.flags.find(f => f.id === flagId);
                 const flagType = flag?.type || 'dialogue';
@@ -246,7 +252,7 @@ export const ConditionalNode = React.memo(function ConditionalNode({ data, selec
 
       <ContextMenuContent className="w-48">
         <ContextMenuItem onSelect={handleEdit}>
-          <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
+          <Edit3 size={14} className="mr-2 text-[var(--node-accent)]" /> Edit Node
         </ContextMenuItem>
         {!isStartNode && node.id && (
           <>
@@ -261,7 +267,7 @@ export const ConditionalNode = React.memo(function ConditionalNode({ data, selec
         )}
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={handleAddBlock}>
-          <Plus size={14} className="mr-2 text-df-npc-selected" /> Add Conditional Block
+          <Plus size={14} className="mr-2 text-[var(--node-accent)]" /> Add Conditional Block
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

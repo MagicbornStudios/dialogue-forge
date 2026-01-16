@@ -83,19 +83,19 @@ export function CharacterSelector({
         variant="ghost"
         size="icon"
         onClick={handleClear}
-        className="flex-shrink-0 h-auto w-auto p-0.5 hover:bg-df-control-hover"
+        className="flex-shrink-0 h-auto w-auto p-0.5 hover:bg-accent"
         title="Clear character"
         type="button"
       >
-        <X size={compact ? 10 : 12} className="text-df-text-secondary" />
+        <X size={compact ? 10 : 12} className="text-muted-foreground" />
       </Button>
     </>
   ) : (
     <>
-      <User size={compact ? 10 : 14} className="text-df-text-secondary flex-shrink-0" />
+      <User size={compact ? 10 : 14} className="text-muted-foreground flex-shrink-0" />
       <span
         className={cn(
-          'text-df-text-secondary',
+          'text-muted-foreground',
           compact ? 'text-[10px]' : 'flex-1 text-left'
         )}
       >
@@ -109,17 +109,17 @@ export function CharacterSelector({
   const dropdownContent = (
     <DropdownMenuContent
       className={cn(
-        'bg-df-sidebar-bg border-df-sidebar-border',
+        'bg-popover border border-border',
         compact ? 'w-48 max-h-48' : 'w-full max-h-64'
       )}
       align="start"
     >
       {/* Search Input */}
-      <div className={cn('border-b border-df-sidebar-border', compact ? 'p-1.5' : 'p-2')}>
+      <div className={cn('border-b border-border', compact ? 'p-1.5' : 'p-2')}>
         <div className="relative">
           <Search
             size={compact ? 12 : 14}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-df-text-secondary pointer-events-none"
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
           />
           <Input
             type="text"
@@ -127,7 +127,7 @@ export function CharacterSelector({
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search..."
             className={cn(
-              'bg-df-elevated border-df-control-border text-df-text-primary placeholder:text-df-text-tertiary focus:border-df-control-hover',
+              'bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-[var(--color-df-control-hover)]',
               compact ? 'h-6 pl-6 text-[10px]' : 'pl-7'
             )}
             autoFocus
@@ -140,7 +140,7 @@ export function CharacterSelector({
         {filteredCharacters.length === 0 ? (
           <div
             className={cn(
-              'text-df-text-secondary text-center',
+              'text-muted-foreground text-center',
               compact ? 'p-2 text-[10px]' : 'p-3 text-sm'
             )}
           >
@@ -153,27 +153,27 @@ export function CharacterSelector({
               variant="ghost"
               onClick={() => handleSelect(id)}
               className={cn(
-                'w-full flex items-center justify-start hover:bg-df-elevated transition-colors',
+                'w-full flex items-center justify-start hover:bg-accent transition-colors',
                 compact
                   ? 'gap-1.5 px-2 py-1 h-auto'
                   : 'gap-2 px-3 py-2',
-                selectedCharacterId === id && 'bg-df-npc-selected/20'
+                selectedCharacterId === id && 'bg-[color-mix(in_oklab,var(--node-npc-accent)_20%,transparent)]'
               )}
             >
               <span className={cn('flex-shrink-0', compact ? 'text-sm' : 'text-lg')}>
                 {character.avatar || '👤'}
               </span>
               {compact ? (
-                <span className="text-[10px] text-df-text-primary truncate flex-1">
+                <span className="text-[10px] text-foreground truncate flex-1">
                   {character.name}
                 </span>
               ) : (
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-df-text-primary font-medium truncate">
+                  <div className="text-sm text-foreground font-medium truncate">
                     {character.name}
                   </div>
                   {character.description && (
-                    <div className="text-xs text-df-text-secondary truncate">
+                    <div className="text-xs text-muted-foreground truncate">
                       {character.description}
                     </div>
                   )}
@@ -182,7 +182,7 @@ export function CharacterSelector({
               {selectedCharacterId === id && (
                 <div
                   className={cn(
-                    'flex-shrink-0 rounded-full bg-df-npc-selected',
+                    'flex-shrink-0 rounded-full bg-[var(--node-npc-accent)]',
                     compact ? 'w-1.5 h-1.5' : 'w-2 h-2'
                   )}
                 />
@@ -200,7 +200,7 @@ export function CharacterSelector({
         <Button
           variant="outline"
           className={cn(
-            'w-full flex items-center gap-2 bg-df-elevated border-df-control-border text-df-text-primary hover:border-df-control-hover transition-colors justify-start',
+            'w-full flex items-center gap-2 bg-card border-border text-foreground hover:border-[var(--color-df-control-hover)] transition-colors justify-start',
             compact && 'h-auto px-1.5 py-0.5 text-[10px]',
             className
           )}

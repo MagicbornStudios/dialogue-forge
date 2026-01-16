@@ -92,55 +92,58 @@ export const StoryletNode = React.memo(function StoryletNode({ data, selected }:
 
           <div className="bg-node-header border-b-2 border-node px-3 py-2.5 flex items-center gap-3 relative">
             <div className="w-14 h-14 rounded-full bg-node border-[3px] border-node flex items-center justify-center text-3xl shadow-lg flex-shrink-0">
-              <BookOpen size={20} className="text-df-npc-selected" />
+              <BookOpen size={20} className="text-[var(--node-accent)]" />
             </div>
 
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-bold text-df-text-primary truncate leading-tight">Storylet</h3>
+              <h3 className="text-base font-bold text-foreground truncate leading-tight">Storylet</h3>
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
               <div
-                className="flex items-center gap-1 px-2 py-1 rounded bg-df-base/50 border border-df-control-border"
+                className="flex items-center gap-1 px-2 py-1 rounded bg-[color-mix(in_oklab,var(--color-df-base)_50%,transparent)] border border-border"
                 title={`Node ID: ${node.id}`}
               >
-                <Hash size={12} className="text-df-text-secondary" />
-                <span className="text-[10px] font-mono text-df-text-secondary">{node.id}</span>
+                <Hash size={12} className="text-[var(--color-df-text-secondary)]" />
+                <span className="text-[10px] font-mono text-[var(--color-df-text-secondary)]">{node.id}</span>
               </div>
 
-              <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-npc-selected/20 border border-df-npc-selected/50" title="Storylet Node">
-                <BookOpen size={14} className="text-df-npc-selected" />
-                <span className="text-[10px] font-semibold text-df-npc-selected">STORYLET</span>
+              <div
+                className="flex items-center gap-1 px-2 py-1 rounded bg-[color-mix(in_oklab,var(--node-accent)_20%,transparent)] border border-[color-mix(in_oklab,var(--node-accent)_50%,transparent)]"
+                title="Storylet Node"
+              >
+                <BookOpen size={14} className="text-[var(--node-accent)]" />
+                <span className="text-[10px] font-semibold text-[var(--node-accent)]">STORYLET</span>
               </div>
             </div>
 
             {isStartNode && (
-              <div className="absolute top-1 right-1 bg-df-start text-df-text-primary text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
+              <div className="absolute top-1 right-1 bg-[var(--node-start-border)] text-foreground text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
                 <Play size={8} fill="currentColor" /> START
               </div>
             )}
             {isEndNode && (
-              <div className="absolute top-1 right-1 bg-df-end text-df-text-primary text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
+              <div className="absolute top-1 right-1 bg-[var(--node-end-border)] text-foreground text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
                 <Flag size={8} /> END
               </div>
             )}
           </div>
 
           <div className="px-4 py-3 space-y-2">
-            <div className="bg-df-elevated border border-df-control-border rounded-lg px-4 py-3">
-              <p className="text-sm text-df-text-primary leading-relaxed">&quot;{contentPreview}&quot;</p>
+            <div className="bg-card border border-border rounded-lg px-4 py-3">
+              <p className="text-sm text-foreground leading-relaxed">&quot;{contentPreview}&quot;</p>
             </div>
 
             <div className="space-y-1">
-              <div className="text-[10px] text-df-text-secondary uppercase">Graph ID</div>
-              <div className="text-xs text-df-text-primary font-mono bg-df-base/40 border border-df-control-border rounded px-2 py-1">
+              <div className="text-[10px] text-[var(--color-df-text-secondary)] uppercase">Graph ID</div>
+              <div className="text-xs text-foreground font-mono bg-[color-mix(in_oklab,var(--color-df-base)_40%,transparent)] border border-border rounded px-2 py-1">
                 {graphId || 'Not set'}
               </div>
             </div>
 
             <div className="space-y-1">
-              <div className="text-[10px] text-df-text-secondary uppercase">Return Node ID</div>
-              <div className="text-xs text-df-text-primary font-mono bg-df-base/40 border border-df-control-border rounded px-2 py-1">
+              <div className="text-[10px] text-[var(--color-df-text-secondary)] uppercase">Return Node ID</div>
+              <div className="text-xs text-foreground font-mono bg-[color-mix(in_oklab,var(--color-df-base)_40%,transparent)] border border-border rounded px-2 py-1">
                 {returnNodeId || 'Not set'}
               </div>
             </div>
@@ -175,7 +178,7 @@ export const StoryletNode = React.memo(function StoryletNode({ data, selected }:
 
       <ContextMenuContent className="w-56">
         <ContextMenuItem onSelect={handleEdit}>
-          <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
+          <Edit3 size={14} className="mr-2 text-[var(--node-accent)]" /> Edit Node
         </ContextMenuItem>
 
         {graphId && (

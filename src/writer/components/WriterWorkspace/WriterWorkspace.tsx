@@ -14,6 +14,7 @@ import { WriterLayout } from '@/writer/components/WriterWorkspace/layout/WriterL
 import { WriterEditorPane } from '@/writer/components/WriterWorkspace/editor/WriterEditorPane';
 import { WriterWorkspaceModalsRenderer } from '@/writer/components/WriterWorkspace/modals/WriterWorkspaceModals';
 import { CopilotKitWorkspaceProvider } from '@/ai/copilotkit/providers/CopilotKitWorkspaceProvider';
+import { useWriterWorkspaceActions } from '@/writer/copilotkit';
 
 interface WriterWorkspaceProps {
   acts?: ForgeAct[];
@@ -79,13 +80,27 @@ export function WriterWorkspace({
   return (
     <WriterWorkspaceStoreProvider store={storeRef.current}>
       <CopilotKitWorkspaceProvider workspaceStore={storeRef.current}>
-        <WriterWorkspaceContent
-          className={className}
-          onActivePageChange={onActivePageChange}
-        />
+        <WriterWorkspaceActionsWrapper store={storeRef.current}>
+          <WriterWorkspaceContent
+            className={className}
+            onActivePageChange={onActivePageChange}
+          />
+        </WriterWorkspaceActionsWrapper>
       </CopilotKitWorkspaceProvider>
     </WriterWorkspaceStoreProvider>
   );
+}
+
+function WriterWorkspaceActionsWrapper({ 
+  children,
+  store,
+}: { 
+  children: React.ReactNode;
+  store: ReturnType<typeof createWriterWorkspaceStore>;
+}) {
+  // Register workspace actions
+  useWriterWorkspaceActions(store);
+  return <>{children}</>;
 }
 
 function WriterWorkspaceContent({

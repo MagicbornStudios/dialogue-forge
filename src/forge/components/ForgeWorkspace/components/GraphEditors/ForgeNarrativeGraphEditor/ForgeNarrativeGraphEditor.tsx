@@ -38,6 +38,7 @@ import { useForgeFlowEditorShell, type ShellNodeData } from '@/forge/lib/graph-e
 import { createForgeEditorSessionStore, ForgeEditorSessionProvider, useForgeEditorSession, useForgeEditorSessionStore } from '@/forge/lib/graph-editor/hooks/useForgeEditorSession';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { ForgeEditorActionsProvider, makeForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
+import { useForgeGraphEditorActions } from '@/forge/copilotkit';
 import { NarrativeGraphEditorPaneContextMenu } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/NarrativeGraphEditorPaneContextMenu';
 import { FORGE_COMMAND } from '@/forge/lib/graph-editor/hooks/forge-commands';
 import { useNodeDrag } from '@/forge/components/ForgeWorkspace/hooks/useNodeDrag';
@@ -128,6 +129,9 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
 
   // Create actions from dispatch and provide to children
   const actions = React.useMemo(() => makeForgeEditorActions(shell.dispatch), [shell.dispatch]);
+
+  // Register CopilotKit editor actions
+  useForgeGraphEditorActions();
 
   // Path highlighting - only calculate when enabled
   const { edgesToSelectedNode, nodeDepths } = useFlowPathHighlighting(

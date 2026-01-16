@@ -83,6 +83,7 @@ import {
   ForgeEditorActionsProvider,
   makeForgeEditorActions,
 } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
+import { useForgeGraphEditorActions } from '@/forge/copilotkit';
 
 const nodeTypes = {
   CHARACTER: CharacterNode,
@@ -200,6 +201,9 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
   // Actions from dispatch (node/edge components consume this)
   const actions = React.useMemo(() => makeForgeEditorActions(shell.dispatch), [shell.dispatch]);
+
+  // Register CopilotKit editor actions
+  useForgeGraphEditorActions();
 
   // Path highlighting - only calculate when enabled
   const { edgesToSelectedNode, nodeDepths } = useFlowPathHighlighting(

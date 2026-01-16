@@ -21,6 +21,7 @@ import {
 import { setupForgeWorkspaceSubscriptions } from '@/forge/components/ForgeWorkspace/store/slices/subscriptions';
 import type { ForgeEvent } from '@/forge/events/events';
 import { ForgeDataAdapter } from '@/forge/adapters/forge-data-adapter';
+import { useForgeWorkspaceActions } from '@/forge/copilotkit';
 
 export interface HeaderLink {
   label: string;
@@ -99,16 +100,29 @@ export function ForgeWorkspace({
 
   return (
     <ForgeWorkspaceStoreProvider store={storeRef.current}>
-      <NodeDragProvider>
-        <ProjectSync selectedProjectId={selectedProjectId} />
-        <ForgeWorkspaceContent
-          characters={initialCharacters}
-          className={className}
-          headerLinks={headerLinks}
-        />
-      </NodeDragProvider>
+      <ForgeWorkspaceActionsWrapper store={storeRef.current}>
+        <NodeDragProvider>
+          <ProjectSync selectedProjectId={selectedProjectId} />
+          <ForgeWorkspaceContent
+            characters={initialCharacters}
+            className={className}
+            headerLinks={headerLinks}
+          />
+        </NodeDragProvider>
+      </ForgeWorkspaceActionsWrapper>
     </ForgeWorkspaceStoreProvider>
   );
+}
+
+function ForgeWorkspaceActionsWrapper({
+  children,
+  store,
+}: {
+  children: React.ReactNode;
+  store: ReturnType<typeof createForgeWorkspaceStore>;
+}) {
+  useForgeWorkspaceActions(store);
+  return <>{children}</>;
 }
 
 type PanelId = 'sidebar' | 'narrative-editor' | 'storylet-editor';

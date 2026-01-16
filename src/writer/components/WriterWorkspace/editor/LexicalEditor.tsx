@@ -5,8 +5,12 @@ import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
+import { ListPlugin } from '@lexical/react/LexicalListPlugin';
+import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
+import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor as LexicalEditorType } from 'lexical';
 import { writerNodes } from '@/writer/components/WriterWorkspace/editor/lexical/nodes';
+import { KeyboardShortcutsPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/KeyboardShortcutsPlugin';
 import { ToolbarPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/ToolbarPlugin';
 import { WriterPlugins } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/WriterPlugins';
 import { writerTheme } from '@/writer/components/WriterWorkspace/editor/lexical/theme';
@@ -75,6 +79,7 @@ export function LexicalEditor({
             <ToolbarPlugin />
             <AiSelectionPlugin />
             <CopilotKitPlugin />
+            <KeyboardShortcutsPlugin />
             <WriterPlugins />
             <div className="relative flex min-h-0 flex-1 flex-col">
               <RichTextPlugin
@@ -89,6 +94,9 @@ export function LexicalEditor({
                 ErrorBoundary={LexicalErrorBoundary}
               />
               <HistoryPlugin />
+              <ListPlugin />
+              <CheckListPlugin />
+              <TabIndentationPlugin />
               <OnChangePlugin
                 onChange={(editorState) => {
                   if (!onChange) {

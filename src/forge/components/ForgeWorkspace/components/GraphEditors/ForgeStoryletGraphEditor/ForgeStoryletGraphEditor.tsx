@@ -78,6 +78,7 @@ import {
 
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
+import { useShallow } from 'zustand/shallow';
 
 import {
   ForgeEditorActionsProvider,
@@ -141,15 +142,29 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
   // Use gameState.flags if available, fallback to gameStateFlags for backward compatibility
   const resolvedGameStateFlags = gameState?.flags || gameStateFlags;
   
-  // Modal actions from workspace
-  const openYarnModal = useForgeWorkspaceStore((s) => s.actions.openYarnModal);
-  const openPlayModal = useForgeWorkspaceStore((s) => s.actions.openPlayModal);
+  const {
+    openYarnModal,
+    openPlayModal,
+    focusedEditor,
+    setFocusedEditor,
+    pendingFocus,
+    clearFocus,
+    setContextNodeType,
+  } = useForgeWorkspaceStore(
+    useShallow((s) => ({
+      openYarnModal: s.actions.openYarnModal,
+      openPlayModal: s.actions.openPlayModal,
+      focusedEditor: s.focusedEditor,
+      setFocusedEditor: s.actions.setFocusedEditor,
+      pendingFocus: s.pendingFocusByScope.storylet,
+      clearFocus: s.actions.clearFocus,
+      setContextNodeType: s.actions.setContextNodeType,
+    }))
+  );
 
   const reactFlow = useReactFlow();
 
   // Editor focus tracking - click-only, no hover preview
-  const setFocusedEditor = useForgeWorkspaceStore((s) => s.actions.setFocusedEditor);
-  const focusedEditor = useForgeWorkspaceStore((s) => s.focusedEditor);
   const isFocused = focusedEditor === 'storylet';
 
   const handleClick = React.useCallback(() => {
@@ -199,7 +214,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     sessionStore,
   });
 
-  const setContextNodeType = useForgeWorkspaceStore((s) => s.actions.setContextNodeType);
   const selectedNodeType = shell.selectedNode?.type ?? null;
 
   React.useEffect(() => {
@@ -223,9 +237,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
   );
 
   // Consume focus requests from workspace
-  const pendingFocus = useForgeWorkspaceStore((s) => s.pendingFocusByScope.storylet);
-  const clearFocus = useForgeWorkspaceStore((s) => s.actions.clearFocus);
-  
   React.useEffect(() => {
     if (pendingFocus && graph && String(graph.id) === pendingFocus.graphId) {
       if (pendingFocus.nodeId) {

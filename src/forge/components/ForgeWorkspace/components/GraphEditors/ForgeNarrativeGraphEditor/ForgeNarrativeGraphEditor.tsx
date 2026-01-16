@@ -47,6 +47,7 @@ import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/compone
 import { ConditionalNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNode';
 import { GraphLeftToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLeftToolbar';
 import { GraphLayoutControls } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls';
+import { useShallow } from 'zustand/shallow';
 
 const nodeTypes = {
   [FORGE_NODE_TYPE.ACT]: ActNode,
@@ -75,15 +76,28 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     className = '',
   } = props;
   
-  // Modal actions from workspace
-  const openYarnModal = useForgeWorkspaceStore((s) => s.actions.openYarnModal);
+  const {
+    openYarnModal,
+    focusedEditor,
+    setFocusedEditor,
+    pendingFocus,
+    clearFocus,
+    setContextNodeType,
+  } = useForgeWorkspaceStore(
+    useShallow((s) => ({
+      openYarnModal: s.actions.openYarnModal,
+      focusedEditor: s.focusedEditor,
+      setFocusedEditor: s.actions.setFocusedEditor,
+      pendingFocus: s.pendingFocusByScope.narrative,
+      clearFocus: s.actions.clearFocus,
+      setContextNodeType: s.actions.setContextNodeType,
+    }))
+  );
   const { draggedNodeType } = useNodeDrag();
 
   const reactFlow = useReactFlow();
 
   // Editor focus tracking - click-only, no hover preview
-  const setFocusedEditor = useForgeWorkspaceStore((s) => s.actions.setFocusedEditor);
-  const focusedEditor = useForgeWorkspaceStore((s) => s.focusedEditor);
   const isFocused = focusedEditor === 'narrative';
 
   const handleClick = React.useCallback(() => {
@@ -127,7 +141,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     sessionStore,
   });
 
-  const setContextNodeType = useForgeWorkspaceStore((s) => s.actions.setContextNodeType);
   const selectedNodeType = shell.selectedNode?.type ?? null;
 
   React.useEffect(() => {
@@ -151,9 +164,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
   );
 
   // Consume focus requests from workspace
-  const pendingFocus = useForgeWorkspaceStore((s) => s.pendingFocusByScope.narrative);
-  const clearFocus = useForgeWorkspaceStore((s) => s.actions.clearFocus);
-  
   React.useEffect(() => {
     if (pendingFocus && graph && String(graph.id) === pendingFocus.graphId) {
       if (pendingFocus.nodeId) {

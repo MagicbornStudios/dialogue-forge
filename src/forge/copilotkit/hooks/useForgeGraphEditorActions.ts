@@ -21,7 +21,22 @@ export function useForgeGraphEditorActions() {
   );
 
   // Register each action with CopilotKit
-  actions.forEach((action) => {
-    useCopilotAction(action);
-  });
+  // Hooks must be called at the top level, not inside loops
+  const [
+    createNodeAction,
+    deleteNodeAction,
+    updateNodeAction,
+    createEdgeAction,
+    deleteEdgeAction,
+    focusNodeAction,
+    createAndConnectNodeAction,
+  ] = actions;
+  
+  useCopilotAction(createNodeAction);
+  useCopilotAction(deleteNodeAction);
+  useCopilotAction(updateNodeAction);
+  useCopilotAction(createEdgeAction);
+  useCopilotAction(deleteEdgeAction);
+  useCopilotAction(focusNodeAction);
+  useCopilotAction(createAndConnectNodeAction);
 }

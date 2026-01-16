@@ -1,5 +1,5 @@
 // src/forge/adapter/forge-data-adapter.ts
-import type { ForgeGraphDoc, ForgeReactFlowJson, ForgeGraphKind } from '@/src/types/forge/forge-graph';
+import type { ForgeGraphDoc, ForgeReactFlowJson, ForgeGraphKind } from '@/forge/types/forge-graph';
 import { ForgeGameState } from '@/forge/types/forge-game-state';
 import { ForgeAct } from '@/forge/types/narrative';
 import type { ForgeCharacter } from '@/forge/types/characters';

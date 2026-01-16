@@ -7,6 +7,7 @@
  * - Forge: @/forge/copilotkit
  */
 
+export { CopilotKitProvider } from './providers/CopilotKitProvider';
 export { CopilotKitWorkspaceProvider } from './providers/CopilotKitWorkspaceProvider';
 export { useCopilotKitContext } from './hooks/useCopilotKitContext';
 export { CopilotKitContextProvider } from './providers/CopilotKitContextProvider';

@@ -17,7 +17,11 @@ export function useWriterWorkspaceActions(
   );
 
   // Register each action with CopilotKit
-  actions.forEach((action) => {
-    useCopilotAction(action);
-  });
+  // Hooks must be called at the top level, not inside loops
+  const [proposeTextEditAction, getCurrentPageAction, listPagesAction, switchPageAction] = actions;
+  
+  useCopilotAction(proposeTextEditAction);
+  useCopilotAction(getCurrentPageAction);
+  useCopilotAction(listPagesAction);
+  useCopilotAction(switchPageAction);
 }

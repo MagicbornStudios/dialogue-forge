@@ -22,6 +22,7 @@ import { setupForgeWorkspaceSubscriptions } from '@/forge/components/ForgeWorksp
 import type { ForgeEvent } from '@/forge/events/events';
 import { ForgeDataAdapter } from '@/forge/adapters/forge-data-adapter';
 import { useForgeWorkspaceActions } from '@/forge/copilotkit';
+import { CopilotKitProvider } from '@/ai/copilotkit/providers/CopilotKitProvider';
 
 export interface HeaderLink {
   label: string;
@@ -99,18 +100,23 @@ export function ForgeWorkspace({
   }, [dataAdapter]);
 
   return (
-    <ForgeWorkspaceStoreProvider store={storeRef.current}>
-      <ForgeWorkspaceActionsWrapper store={storeRef.current}>
-        <NodeDragProvider>
-          <ProjectSync selectedProjectId={selectedProjectId} />
-          <ForgeWorkspaceContent
-            characters={initialCharacters}
-            className={className}
-            headerLinks={headerLinks}
-          />
-        </NodeDragProvider>
-      </ForgeWorkspaceActionsWrapper>
-    </ForgeWorkspaceStoreProvider>
+    <CopilotKitProvider
+      instructions="You are an AI assistant for the Forge workspace. Help users create and edit dialogue graphs, manage flags, and build interactive narratives."
+      defaultOpen={false}
+    >
+      <ForgeWorkspaceStoreProvider store={storeRef.current}>
+        <ForgeWorkspaceActionsWrapper store={storeRef.current}>
+          <NodeDragProvider>
+            <ProjectSync selectedProjectId={selectedProjectId} />
+            <ForgeWorkspaceContent
+              characters={initialCharacters}
+              className={className}
+              headerLinks={headerLinks}
+            />
+          </NodeDragProvider>
+        </ForgeWorkspaceActionsWrapper>
+      </ForgeWorkspaceStoreProvider>
+    </CopilotKitProvider>
   );
 }
 

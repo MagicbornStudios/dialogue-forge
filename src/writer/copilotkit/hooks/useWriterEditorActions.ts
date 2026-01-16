@@ -10,7 +10,10 @@ export function useWriterEditorActions() {
   const actions = useMemo(() => createWriterEditorActions(), []);
 
   // Register each action with CopilotKit
-  actions.forEach((action) => {
-    useCopilotAction(action);
-  });
+  // Hooks must be called at the top level, not inside loops
+  const [insertTextAction, replaceSelectionAction, formatTextAction] = actions;
+  
+  useCopilotAction(insertTextAction);
+  useCopilotAction(replaceSelectionAction);
+  useCopilotAction(formatTextAction);
 }

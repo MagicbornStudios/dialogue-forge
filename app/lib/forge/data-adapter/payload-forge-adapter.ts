@@ -1,7 +1,7 @@
 // src/forge/adapter/payload-forge-adapter.ts
 import { PayloadSDK } from '@payloadcms/sdk';
 import type { ForgeDataAdapter, ForgeProjectSummary, ForgeFlagSchema } from '@/forge/adapters/forge-data-adapter';
-import type { ForgeGraphDoc, ForgeReactFlowJson, ForgeGraphKind } from '@/src/types/forge/forge-graph';
+import type { ForgeGraphDoc, ForgeReactFlowJson, ForgeGraphKind } from '@/forge/types/forge-graph';
 import type { Project, Character, FlagSchema, ForgeGraph, Act, GameState } from '@/app/payload-types';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
 import { ForgeAct } from '@/forge/types/narrative';
@@ -430,6 +430,22 @@ export function makePayloadForgeAdapter(opts?: {
             collection: PAYLOAD_COLLECTIONS.GAME_STATES,
             id: projectId,
         });
+    },
+    async createProject(input: {
+        name: string;
+        slug: string;
+        narrativeGraph: number;
+    }): Promise<ForgeProjectSummary> {
+        const result = await payload.create({
+            collection: PAYLOAD_COLLECTIONS.PROJECTS,
+            data: input,
+        }) as Project;
+        return {
+            id: result.id,
+            name: result.name,
+            slug: result.slug ?? null,
+            narrativeGraph: extractNarrativeGraphId(result),
+        };
     },
   };
 

@@ -176,5 +176,24 @@ export function makePayloadWriterAdapter(opts?: {
       }) as Page;
       return mapPage(doc);
     },
+    async createPage(input: {
+      title: string;
+      project: number;
+      chapter: number;
+      order: number;
+      bookBody?: string | null;
+    }): Promise<WriterPageDoc> {
+      const doc = await payload.create({
+        collection: PAYLOAD_COLLECTIONS.PAGES,
+        data: {
+          title: input.title,
+          project: input.project,
+          chapter: input.chapter,
+          order: input.order,
+          bookBody: input.bookBody ?? null,
+        },
+      }) as Page;
+      return mapPage(doc);
+    },
   };
 }

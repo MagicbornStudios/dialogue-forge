@@ -18,6 +18,13 @@ export interface WriterDataAdapter {
   updateAct(actId: number, patch: Partial<WriterActDoc>): Promise<WriterActDoc>;
   updateChapter(chapterId: number, patch: Partial<WriterChapterDoc>): Promise<WriterChapterDoc>;
   updatePage(pageId: number, patch: Partial<WriterPageDoc>): Promise<WriterPageDoc>;
+  createPage?: (input: {
+    title: string;
+    project: number;
+    chapter: number;
+    order: number;
+    bookBody?: string | null;
+  }) => Promise<WriterPageDoc>;
 
   uploadMedia?(file: File): Promise<WriterMediaUploadResult>;
   resolveMedia?(mediaId: string): Promise<WriterMediaRecord | null>;

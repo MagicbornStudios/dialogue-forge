@@ -18,11 +18,25 @@ export function useForgeWorkspaceActions(
 
   // Register each action with CopilotKit
   // Hooks must be called at the top level, not inside loops
-  const [getCurrentGraphAction, listGraphsAction, switchGraphAction, getFlagSchemaAction, getGameStateAction] = actions;
+  const [
+    getCurrentGraphAction,
+    listGraphsAction,
+    switchGraphAction,
+    getFlagSchemaAction,
+    getGameStateAction,
+    getChaptersAction,
+    getActsAction,
+    getPagesAction,
+    getGraphAction,
+  ] = actions;
   
   useCopilotAction(getCurrentGraphAction);
   useCopilotAction(listGraphsAction);
   useCopilotAction(switchGraphAction);
   useCopilotAction(getFlagSchemaAction);
   useCopilotAction(getGameStateAction);
+  useCopilotAction(getChaptersAction);
+  useCopilotAction(getActsAction);
+  useCopilotAction(getPagesAction);
+  useCopilotAction(getGraphAction);
 }

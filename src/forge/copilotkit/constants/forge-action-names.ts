@@ -12,6 +12,10 @@ export const FORGE_ACTION_NAME = {
     SWITCH_GRAPH: 'forge.workspace.switchGraph',
     GET_FLAG_SCHEMA: 'forge.workspace.getFlagSchema',
     GET_GAME_STATE: 'forge.workspace.getGameState',
+    GET_CHAPTERS: 'forge.workspace.getChapters',
+    GET_ACTS: 'forge.workspace.getActs',
+    GET_PAGES: 'forge.workspace.getPages',
+    GET_GRAPH: 'forge.workspace.getGraph',
   },
   EDITOR: {
     CREATE_NODE: 'forge.editor.createNode',

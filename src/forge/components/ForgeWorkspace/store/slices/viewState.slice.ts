@@ -28,6 +28,7 @@ export interface ModalState {
   isYarnModalOpen: boolean;
   isFlagModalOpen: boolean;
   isGuideOpen: boolean;
+  isCopilotChatOpen: boolean;
 }
 
 const defaultModalState: ModalState = {
@@ -35,6 +36,7 @@ const defaultModalState: ModalState = {
   isYarnModalOpen: false,
   isFlagModalOpen: false,
   isGuideOpen: false,
+  isCopilotChatOpen: false,
 };
 
 export interface ViewStateSlice {
@@ -51,6 +53,7 @@ export interface ViewStateSlice {
   panelLayout: PanelLayoutState
   focusedEditor: "narrative" | "storylet" | null
   modalState: ModalState
+  copilotVisible: boolean
 }
 
 export interface ViewStateActions {
@@ -71,6 +74,9 @@ export interface ViewStateActions {
   closeFlagModal: () => void
   openGuide: () => void
   closeGuide: () => void
+  openCopilotChat: () => void
+  closeCopilotChat: () => void
+  setCopilotVisible: (visible: boolean) => void
 }
 
 export function createViewStateSlice(
@@ -88,6 +94,7 @@ export function createViewStateSlice(
     panelLayout: defaultPanelLayout,
     focusedEditor: null,
     modalState: defaultModalState,
+    copilotVisible: true,
     setGraphScope: scope => set({ graphScope: scope }),
     setStoryletFocusId: id => set({ storyletFocusId: id }),
     requestFocus: (scope, graphId, nodeId) => {
@@ -171,5 +178,12 @@ export function createViewStateSlice(
     closeGuide: () => set((state) => ({
       modalState: { ...state.modalState, isGuideOpen: false }
     })),
+    openCopilotChat: () => set((state) => ({
+      modalState: { ...state.modalState, isCopilotChatOpen: true }
+    })),
+    closeCopilotChat: () => set((state) => ({
+      modalState: { ...state.modalState, isCopilotChatOpen: false }
+    })),
+    setCopilotVisible: (visible) => set({ copilotVisible: visible }),
   }
 }

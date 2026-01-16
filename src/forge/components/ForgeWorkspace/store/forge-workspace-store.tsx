@@ -48,6 +48,7 @@ export interface ForgeWorkspaceState {
   panelLayout: ReturnType<typeof createViewStateSlice>["panelLayout"]
   focusedEditor: ReturnType<typeof createViewStateSlice>["focusedEditor"]
   modalState: ReturnType<typeof createViewStateSlice>["modalState"]
+  copilotVisible: ReturnType<typeof createViewStateSlice>["copilotVisible"]
 
   // Project slice
   selectedProjectId: ReturnType<typeof createProjectSlice>["selectedProjectId"]
@@ -101,6 +102,9 @@ export interface ForgeWorkspaceState {
     closeFlagModal: ReturnType<typeof createViewStateSlice>["closeFlagModal"]
     openGuide: ReturnType<typeof createViewStateSlice>["openGuide"]
     closeGuide: ReturnType<typeof createViewStateSlice>["closeGuide"]
+    openCopilotChat: ReturnType<typeof createViewStateSlice>["openCopilotChat"]
+    closeCopilotChat: ReturnType<typeof createViewStateSlice>["closeCopilotChat"]
+    setCopilotVisible: ReturnType<typeof createViewStateSlice>["setCopilotVisible"]
     
     // Project actions
     setSelectedProjectId: ReturnType<typeof createProjectSlice>["setSelectedProjectId"]

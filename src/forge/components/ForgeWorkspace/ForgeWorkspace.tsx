@@ -22,7 +22,9 @@ import { setupForgeWorkspaceSubscriptions } from '@/forge/components/ForgeWorksp
 import type { ForgeEvent } from '@/forge/events/events';
 import { ForgeDataAdapter } from '@/forge/adapters/forge-data-adapter';
 import { useForgeWorkspaceActions } from '@/forge/copilotkit';
+import { useForgeCopilotContext } from '@/forge/copilotkit/hooks/useForgeCopilotContext';
 import { CopilotKitProvider } from '@/ai/copilotkit/providers/CopilotKitProvider';
+import { CopilotChatModal } from './components/CopilotChatModal';
 
 export interface HeaderLink {
   label: string;
@@ -128,6 +130,7 @@ function ForgeWorkspaceActionsWrapper({
   store: ReturnType<typeof createForgeWorkspaceStore>;
 }) {
   useForgeWorkspaceActions(store);
+  useForgeCopilotContext(store);
   return <>{children}</>;
 }
 
@@ -213,6 +216,8 @@ function ForgeWorkspaceContent({
   const openPlayModal = useForgeWorkspaceStore((s) => s.actions.openPlayModal);
   const openFlagModal = useForgeWorkspaceStore((s) => s.actions.openFlagModal);
   const openGuide = useForgeWorkspaceStore((s) => s.actions.openGuide);
+  const isCopilotChatOpen = useForgeWorkspaceStore((s) => s.modalState.isCopilotChatOpen);
+  const closeCopilotChat = useForgeWorkspaceStore((s) => s.actions.closeCopilotChat);
 
   // Wrapper callbacks for modals
   const handleUpdateFlagSchema = useCallback(
@@ -251,6 +256,12 @@ function ForgeWorkspaceContent({
         panelVisibility={panelVisibility}
         onTogglePanel={togglePanel}
         headerLinks={headerLinks}
+      />
+      
+      <CopilotChatModal
+        isOpen={isCopilotChatOpen}
+        onClose={closeCopilotChat}
+        instructions="You are an AI assistant for the Forge workspace. Help users create and edit dialogue graphs, manage flags, and build interactive narratives. You have access to chapters, acts, pages, and graphs for context."
       />
 
       <ForgeWorkspaceLayout

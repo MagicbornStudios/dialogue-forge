@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Panel } from 'reactflow';
 import { Grid3x3, Map as MapIcon, Settings, BookOpen } from 'lucide-react';
-import { listLayouts } from '../../../../../lib/utils/layout/layout';
-import { ANIMATION_CONSTANTS } from '../../../../../lib/utils/constants';
+import { listLayouts } from '@/forge/lib/utils/layout/layout';
+import { ANIMATION_CONSTANTS } from '@/forge/lib/utils/constants';
+import { CopilotButton, CopilotButtonContainer } from '@/forge/components/ForgeWorkspace/components/CopilotButton';
+import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 
 interface GraphLeftToolbarProps {
   layoutStrategy: string;
@@ -14,6 +16,7 @@ interface GraphLeftToolbarProps {
   onOpenGuide?: () => void;
   onLoadExampleDialogue?: (dialogue: any) => void;
   onLoadExampleFlags?: (flags: any) => void;
+  onOpenCopilot?: () => void;
 }
 
 export function GraphLeftToolbar({
@@ -26,12 +29,24 @@ export function GraphLeftToolbar({
   onOpenGuide,
   onLoadExampleDialogue,
   onLoadExampleFlags,
+  onOpenCopilot,
 }: GraphLeftToolbarProps) {
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
+  const copilotVisible = useForgeWorkspaceStore((s) => s.copilotVisible);
+  const openCopilotChat = useForgeWorkspaceStore((s) => s.actions.openCopilotChat);
+  
+  const handleCopilotClick = () => {
+    if (onOpenCopilot) {
+      onOpenCopilot();
+    } else {
+      openCopilotChat();
+    }
+  };
 
   return (
     <Panel position="top-left" className="!bg-transparent !border-0 !p-0 !m-2">
-      <div className="flex flex-col gap-1.5 bg-df-sidebar-bg border border-df-sidebar-border rounded-lg p-1.5 shadow-lg">
+      <CopilotButtonContainer>
+        <div className="flex flex-col gap-1.5 bg-df-sidebar-bg border border-df-sidebar-border rounded-lg p-1.5 shadow-lg">
         {/* Layout Strategy Dropdown */}
         <div className="relative">
           <button
@@ -111,7 +126,16 @@ export function GraphLeftToolbar({
             <BookOpen size={14} />
           </button>
         )}
+
+        {copilotVisible && (
+          <CopilotButton
+            onClick={handleCopilotClick}
+            size="sm"
+            title="Open AI Assistant"
+          />
+        )}
       </div>
+      </CopilotButtonContainer>
     </Panel>
   );
 }

@@ -151,6 +151,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     pendingFocus,
     clearFocus,
     setContextNodeType,
+    openCopilotChat,
   } = useForgeWorkspaceStore(
     useShallow((s) => ({
       openYarnModal: s.actions.openYarnModal,
@@ -160,6 +161,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
       pendingFocus: s.pendingFocusByScope.storylet,
       clearFocus: s.actions.clearFocus,
       setContextNodeType: s.actions.setContextNodeType,
+      openCopilotChat: s.actions.openCopilotChat,
     }))
   );
 
@@ -579,6 +581,7 @@ function ForgeStoryletGraphEditorContent({
                 layoutStrategy="dagre"
                 showMiniMap={showMiniMap}
                 onToggleMiniMap={() => setShowMiniMap(!showMiniMap)}
+                onOpenCopilot={openCopilotChat}
               />
 
               <GraphLayoutControls

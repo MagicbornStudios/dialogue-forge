@@ -78,6 +78,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
   
   const {
     openYarnModal,
+    openCopilotChat,  
     focusedEditor,
     setFocusedEditor,
     pendingFocus,
@@ -86,6 +87,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
   } = useForgeWorkspaceStore(
     useShallow((s) => ({
       openYarnModal: s.actions.openYarnModal,
+      openCopilotChat: s.actions.openCopilotChat,
       focusedEditor: s.focusedEditor,
       setFocusedEditor: s.actions.setFocusedEditor,
       pendingFocus: s.pendingFocusByScope.narrative,
@@ -250,6 +252,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
   return (
     <ForgeEditorActionsProvider actions={actions}>
       <ForgeNarrativeGraphEditorContent
+        openCopilotChat={openCopilotChat}
         graph={graph}
         shell={shell}
         reactFlow={reactFlow}
@@ -289,6 +292,7 @@ function ForgeNarrativeGraphEditorContent({
   autoOrganize,
   isFocused,
   openYarnModal,
+  openCopilotChat,
   handleClick,
   handleAutoLayout,
   setLayoutDirection,
@@ -310,6 +314,7 @@ function ForgeNarrativeGraphEditorContent({
   autoOrganize: boolean;
   isFocused: boolean;
   openYarnModal: () => void;
+  openCopilotChat: () => void;
   handleClick: () => void;
   handleAutoLayout: (direction?: LayoutDirection) => void;
   setLayoutDirection: (dir: LayoutDirection) => void;
@@ -432,6 +437,7 @@ function ForgeNarrativeGraphEditorContent({
           layoutStrategy="dagre"
           showMiniMap={showMiniMap}
           onToggleMiniMap={() => setShowMiniMap(!showMiniMap)}
+          onOpenCopilot={openCopilotChat}
         />
         <GraphLayoutControls
           autoOrganize={autoOrganize}

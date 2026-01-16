@@ -19,10 +19,11 @@ import {
   FileText,
   Layers,
 } from 'lucide-react';
+import { CopilotButton, CopilotButtonContainer } from '@/forge/components/ForgeWorkspace/components/CopilotButton';
+import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { Button } from '@/shared/ui/button';
 import { ForgeProjectSwitcher } from './ForgeProjectSwitcher';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
-import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import type { ForgeGameStateRecord } from '@/forge/types/forge-game-state';
 
 type PanelId = 'sidebar' | 'narrative-editor' | 'storylet-editor';
@@ -38,6 +39,7 @@ interface ForgeWorkspaceMenuBarProps {
   onPlayClick: () => void;
   onFlagClick: () => void;
   onGuideClick: () => void;
+  onCopilotClick?: () => void;
   counts: {
     actCount: number;
     chapterCount: number;
@@ -53,11 +55,22 @@ export function ForgeWorkspaceMenuBar({
   onPlayClick,
   onFlagClick,
   onGuideClick,
+  onCopilotClick,
   counts,
   panelVisibility,
   onTogglePanel,
   headerLinks,
 }: ForgeWorkspaceMenuBarProps) {
+  const copilotVisible = useForgeWorkspaceStore((s) => s.copilotVisible);
+  const openCopilotChat = useForgeWorkspaceStore((s) => s.actions.openCopilotChat);
+  
+  const handleCopilotClick = () => {
+    if (onCopilotClick) {
+      onCopilotClick();
+    } else {
+      openCopilotChat();
+    }
+  };
   const gameStatesById = useForgeWorkspaceStore((s) => s.gameStatesById);
   const activeGameStateId = useForgeWorkspaceStore((s) => s.activeGameStateId);
   const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
@@ -249,8 +262,8 @@ export function ForgeWorkspaceMenuBar({
         {counts.actCount} acts · {counts.chapterCount} chapters · {counts.pageCount} pages · {counts.characterCount} characters
       </div>
 
-      {/* Right Section: Header Links + Theme Switcher */}
-      <div className="flex items-center gap-2">
+      {/* Right Section: Header Links + Copilot + Theme Switcher */}
+      <CopilotButtonContainer className="flex items-center gap-2">
         {headerLinks && headerLinks.length > 0 && (
           <>
             <div className="flex items-center gap-1">
@@ -271,8 +284,15 @@ export function ForgeWorkspaceMenuBar({
             <div className="h-4 w-px bg-border" />
           </>
         )}
+        {copilotVisible && (
+          <CopilotButton
+            onClick={handleCopilotClick}
+            size="sm"
+            title="Open AI Assistant"
+          />
+        )}
         <ThemeSwitcher />
-      </div>
+      </CopilotButtonContainer>
     </div>
   );
 }

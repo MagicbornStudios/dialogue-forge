@@ -5,7 +5,7 @@ import type { ForgeGraphDoc, ForgeReactFlowJson, ForgeGraphKind } from '@/forge/
 import type { Project, Character, FlagSchema, ForgeGraph, Act, GameState } from '@/app/payload-types';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
 import { ForgeAct } from '@/forge/types/narrative';
-import { ForgeFlagState, ForgeGameState } from '@/forge/types/forge-game-state';
+import { ForgeFlagState, ForgeGameState, ForgeGameStateRecord } from '@/forge/types/forge-game-state';
 import type { ForgeCharacter } from '@/forge/types/characters';
 
 /**
@@ -69,6 +69,38 @@ function mapForgeGraph(graph: ForgeGraph): ForgeGraphDoc {
     compiledYarn: graph.compiledYarn ?? null,
     updatedAt: graph.updatedAt,
     createdAt: graph.createdAt,
+  };
+}
+
+function extractProjectId(project: GameState['project']): number {
+  if (typeof project === 'number') {
+    return project;
+  }
+  if (project && typeof project === 'object' && 'id' in project) {
+    return project.id;
+  }
+  throw new Error('Cannot map GameState: project field is missing or invalid.');
+}
+
+function normalizeGameState(state: unknown): ForgeGameState {
+  if (!state || typeof state !== 'object') {
+    return { flags: {} };
+  }
+  const stateData = state as { flags?: ForgeFlagState; characters?: unknown };
+  return {
+    flags: stateData.flags ?? {},
+    characters: stateData.characters as Record<string, ForgeCharacter> | undefined,
+  };
+}
+
+function mapGameStateRecord(gameState: GameState): ForgeGameStateRecord {
+  return {
+    id: gameState.id,
+    projectId: extractProjectId(gameState.project),
+    name: gameState.playerKey ?? `Game State ${gameState.id}`,
+    createdAt: gameState.createdAt,
+    updatedAt: gameState.updatedAt,
+    state: normalizeGameState(gameState.state),
   };
 }
 
@@ -361,74 +393,81 @@ export function makePayloadForgeAdapter(opts?: {
             _status: result._status as 'draft' | 'published' | null,
         };
     },  
-    async getGameState(projectId: number): Promise<ForgeGameState> {
-        try {
-            const result = await payload.findByID({
-                collection: PAYLOAD_COLLECTIONS.GAME_STATES,
-                id: projectId,
-            }) as GameState;
-
-            let charactersResult = await payload.find({
-                collection: PAYLOAD_COLLECTIONS.CHARACTERS,
-                where: {
-                    project: {
-                        equals: projectId,
-                    },
+    async listGameStates(projectId: number): Promise<ForgeGameStateRecord[]> {
+        const result = await payload.find({
+            collection: PAYLOAD_COLLECTIONS.GAME_STATES,
+            where: {
+                project: {
+                    equals: projectId,
                 },
-            });
-            let characters = charactersResult.docs.map((c) => mapCharacter(c as Character))
-            const forgeCharacters = characters.map((c) => c as ForgeCharacter);
-            const forgeCharactersMapRecord = forgeCharacters.reduce((acc, c) => {
-                acc[c.id] = c; // c.id is already a string
-                return acc;
-            }, {} as Record<string, ForgeCharacter>);
-            const stateData = result.state as { flags?: ForgeFlagState; characters?: unknown } | undefined;
-            const forgeFlags = stateData?.flags as ForgeFlagState | undefined;
-
-            return {
-                flags: forgeFlags || {},
-                characters: forgeCharactersMapRecord,
-            } as ForgeGameState;
-        } catch (error: any) {
-            // Handle 404 or other errors gracefully
-            if (error?.status === 404 || error?.message?.includes('not found') || error?.message?.includes('Error retrieving the document')) {
-                // Return default empty game state
-                return { flags: {} };
-            }
-            // Re-throw unexpected errors
-            throw error;
-        }
+            },
+            limit: 200,
+        });
+        return result.docs.map((doc) => mapGameStateRecord(doc as GameState));
     },
-    async updateGameState(projectId: number, patch: Partial<ForgeGameState>): Promise<ForgeGameState> {
+    async getGameState(gameStateId: number): Promise<ForgeGameStateRecord> {
+        const result = await payload.findByID({
+            collection: PAYLOAD_COLLECTIONS.GAME_STATES,
+            id: gameStateId,
+        }) as GameState;
+        return mapGameStateRecord(result);
+    },
+    async getActiveGameStateId(projectId: number): Promise<number | null> {
+        const project = await payload.findByID({
+            collection: PAYLOAD_COLLECTIONS.PROJECTS,
+            id: projectId,
+        }) as Project;
+        const settings = project.settings as { activeGameStateId?: number | null } | null | undefined;
+        const activeId = settings?.activeGameStateId;
+        return typeof activeId === 'number' ? activeId : null;
+    },
+    async setActiveGameState(projectId: number, gameStateId: number): Promise<void> {
+        const project = await payload.findByID({
+            collection: PAYLOAD_COLLECTIONS.PROJECTS,
+            id: projectId,
+        }) as Project;
+        const settings = (project.settings as Record<string, unknown> | null | undefined) ?? {};
+        await payload.update({
+            collection: PAYLOAD_COLLECTIONS.PROJECTS,
+            id: projectId,
+            data: {
+                settings: {
+                    ...settings,
+                    activeGameStateId: gameStateId,
+                },
+            },
+        });
+    },
+    async updateGameState(gameStateId: number, patch: Partial<ForgeGameState>): Promise<ForgeGameStateRecord> {
         const result = await payload.update({
             collection: PAYLOAD_COLLECTIONS.GAME_STATES,
-            id: projectId,
+            id: gameStateId,
             data: {
                 state: patch,
             },
         }) as GameState;
-        const stateData = (result.state as unknown) as ForgeGameState | undefined;
-        return stateData || { flags: {} };
+        return mapGameStateRecord(result);
     },
     async createGameState(input: {
         projectId: number;
-        state: unknown;
-    }): Promise<ForgeGameState> {
+        name: string;
+        state: ForgeGameState;
+    }): Promise<ForgeGameStateRecord> {
         const result = await payload.create({
             collection: PAYLOAD_COLLECTIONS.GAME_STATES,
             data: {
                 project: input.projectId,
                 type: 'AUTHORED',
+                playerKey: input.name,
                 state: input.state,
             },
         }) as GameState;
-        const stateData = (result.state as unknown) as ForgeGameState | undefined;
-        return stateData || { flags: {} };
+        return mapGameStateRecord(result);
     },
-    async deleteGameState(projectId: number): Promise<void> {
+    async deleteGameState(gameStateId: number): Promise<void> {
         await payload.delete({
             collection: PAYLOAD_COLLECTIONS.GAME_STATES,
-            id: projectId,
+            id: gameStateId,
         });
     },
     async createProject(input: {

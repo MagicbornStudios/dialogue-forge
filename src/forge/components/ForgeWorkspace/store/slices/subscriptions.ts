@@ -2,6 +2,7 @@ import type { EventSink } from "@/forge/components/ForgeWorkspace/store/forge-wo
 import { ForgeWorkspaceStore } from "@/forge/components/ForgeWorkspace/store/forge-workspace-store"
 import { ForgeDataAdapter } from "@/forge/adapters/forge-data-adapter"
 import type { FlagSchema } from "@/forge/types/flags"
+import type { ForgeGameStateRecord } from "@/forge/types/forge-game-state"
 import { FORGE_GRAPH_KIND } from "@/forge/types/forge-graph"
 
 /**
@@ -34,12 +35,13 @@ export function setupForgeWorkspaceSubscriptions(
         // Clear active graphs when no project selected
         state.actions.setActiveNarrativeGraphId(null)
         state.actions.setActiveStoryletGraphId(null)
+        state.actions.setGameStates([], null, null)
         return
       }
       
       // Check if we already have data for this project
       const hasFlagSchema = state.loadedFlagSchemaProjectId === selectedProjectId && state.activeFlagSchema
-      const hasGameState = state.loadedGameStateProjectId === selectedProjectId && state.activeGameState
+      const hasGameStates = state.loadedGameStatesProjectId === selectedProjectId && Object.keys(state.gameStatesById).length > 0
       
       // Check if graphs are already loaded for this project
       const existingNarrativeGraphs = Object.values(state.graphs.byId).filter(
@@ -121,20 +123,36 @@ export function setupForgeWorkspaceSubscriptions(
           }
         }
         
-        // 4. Load game state only if not already cached
-        if (!hasGameState) {
-          const gameStateRequestKey = `game-state-${selectedProjectId}`
+        // 4. Load game states only if not already cached
+        if (!hasGameStates) {
+          const gameStateRequestKey = `game-states-${selectedProjectId}`
           if (!inFlightRequests.has(gameStateRequestKey)) {
             inFlightRequests.add(gameStateRequestKey)
             try {
-              const gameState = await dataAdapter.getGameState(selectedProjectId)
+              const gameStates = await dataAdapter.listGameStates(selectedProjectId)
+              let activeGameStateId = await dataAdapter.getActiveGameStateId(selectedProjectId)
+              let resolvedStates: ForgeGameStateRecord[] = gameStates
+
+              if (!resolvedStates.length) {
+                const defaultState = await dataAdapter.createGameState({
+                  projectId: selectedProjectId,
+                  name: 'Default State',
+                  state: { flags: {} },
+                })
+                resolvedStates = [defaultState]
+                activeGameStateId = defaultState.id
+                await dataAdapter.setActiveGameState(selectedProjectId, defaultState.id)
+              } else if (!activeGameStateId || !resolvedStates.some((state) => state.id === activeGameStateId)) {
+                activeGameStateId = resolvedStates[0].id
+                await dataAdapter.setActiveGameState(selectedProjectId, activeGameStateId)
+              }
+
               const currentState = domainStore.getState()
-              currentState.actions.setActiveGameState(gameState, selectedProjectId)
+              currentState.actions.setGameStates(resolvedStates, selectedProjectId, activeGameStateId)
             } catch (error) {
-              console.error('Failed to load game state:', error)
+              console.error('Failed to load game states:', error)
               const currentState = domainStore.getState()
-              // Set empty game state on error
-              currentState.actions.setActiveGameState({ flags: {} }, selectedProjectId)
+              currentState.actions.setGameStates([], selectedProjectId, null)
             } finally {
               inFlightRequests.delete(gameStateRequestKey)
             }

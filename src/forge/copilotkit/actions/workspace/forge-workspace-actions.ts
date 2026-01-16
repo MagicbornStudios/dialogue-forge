@@ -187,12 +187,16 @@ export function createGetGameStateAction(
     handler: async () => {
       const state = workspaceStore.getState();
       const gameState = state.activeGameState;
+      const activeGameStateId = state.activeGameStateId;
+      const activeGameStateRecord = activeGameStateId ? state.gameStatesById[String(activeGameStateId)] : undefined;
 
       if (!gameState) {
         return { error: 'No game state loaded' };
       }
 
       return {
+        id: activeGameStateId ?? undefined,
+        name: activeGameStateRecord?.name,
         flagCount: Object.keys(gameState.flags || {}).length,
         flags: gameState.flags,
       };

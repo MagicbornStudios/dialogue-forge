@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
-import { ForgeFlagCard } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/FlagManager/ForgeFlagCard';
+import { ForgeFlagCard } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagCard';
 import type { FlagDefinition, FlagType } from '@/forge/types/flags';
 import { flagTypeLabels } from '@/forge/lib/flag-manager/utils/flag-constants';
 

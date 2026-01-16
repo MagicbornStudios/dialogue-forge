@@ -40,5 +40,37 @@ export const Media: CollectionConfig = {
       name: 'alt',
       type: 'text',
     },
+    {
+      name: 'externalProvider',
+      type: 'text',
+    },
+    {
+      name: 'externalId',
+      type: 'text',
+    },
+    {
+      name: 'externalUrl',
+      type: 'text',
+    },
+    {
+      name: 'secureUrl',
+      type: 'text',
+    },
+    {
+      name: 'width',
+      type: 'number',
+    },
+    {
+      name: 'height',
+      type: 'number',
+    },
+    {
+      name: 'format',
+      type: 'text',
+    },
+    {
+      name: 'resourceType',
+      type: 'text',
+    },
   ],
 }

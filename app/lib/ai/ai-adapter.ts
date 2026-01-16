@@ -14,6 +14,8 @@ export type {
   AiEditProposal,
   AiError,
   AiFailureResponse,
+  AiImageGenerationRequest,
+  AiImageGenerationResult,
   AiPlan,
   AiPlanStep,
   AiPlanStepApplyResult,
@@ -79,6 +81,7 @@ const defaultAdapter: AiAdapter = {
   createPlan: async () => errorResponse(NOT_CONFIGURED_MESSAGE, 501),
   proposePlanStep: async () => errorResponse(NOT_CONFIGURED_MESSAGE, 501),
   applyPlanStep: async () => errorResponse(NOT_CONFIGURED_MESSAGE, 501),
+  generateImage: async () => errorResponse(NOT_CONFIGURED_MESSAGE, 501),
 };
 
 export const isServerSideApplyEnabled = () =>

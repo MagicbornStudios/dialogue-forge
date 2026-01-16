@@ -120,6 +120,13 @@
   --color-df-canvas-bg: oklch(0.16 0 0);
   --color-df-canvas-grid: oklch(0.22 0 0);
 
+  --minimap-bg: var(--color-df-canvas-bg);
+  --minimap-mask: oklch(0 0 0 / 0.7);
+  --minimap-node-default: var(--color-df-edge-dimmed);
+  --minimap-node-character: var(--node-npc-accent);
+  --minimap-node-player: var(--node-player-accent);
+  --minimap-node-conditional: var(--node-conditional-accent);
+
   --color-df-sidebar-bg: oklch(0.22 0 0);
   --color-df-sidebar-border: oklch(0.32 0 0);
   --color-df-sidebar-border-active: oklch(0.72 0.22 150);

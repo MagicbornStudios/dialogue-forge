@@ -77,46 +77,52 @@ export const DetourNode = React.memo(function DetourNode({ data, selected }: Nod
       
       <div className="bg-node-header border-b-2 border-node px-3 py-2.5 flex items-center gap-3 relative">
         <div className="w-14 h-14 rounded-full bg-node border-[3px] border-node flex items-center justify-center shadow-lg flex-shrink-0">
-          <CornerDownRight size={20} className="text-df-storylet-selected" />
+          <CornerDownRight size={20} className="text-[var(--node-accent)]" />
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-df-text-primary truncate leading-tight">
+          <h3 className="text-base font-bold text-foreground truncate leading-tight">
             {title || 'Detour'}
           </h3>
           {summary && (
-            <p className="text-xs text-df-text-secondary truncate mt-0.5">
+            <p className="text-xs text-[var(--color-df-text-secondary)] truncate mt-0.5">
               {summary}
             </p>
           )}
         </div>
         
         <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-base/50 border border-df-control-border" title={`Node ID: ${id}`}>
-            <Hash size={12} className="text-df-text-secondary" />
-            <span className="text-[10px] font-mono text-df-text-secondary">{id}</span>
+          <div
+            className="flex items-center gap-1 px-2 py-1 rounded bg-[color-mix(in_oklab,var(--color-df-base)_50%,transparent)] border border-border"
+            title={`Node ID: ${id}`}
+          >
+            <Hash size={12} className="text-[var(--color-df-text-secondary)]" />
+            <span className="text-[10px] font-mono text-[var(--color-df-text-secondary)]">{id}</span>
           </div>
           
-          <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-storylet-selected/20 border border-df-storylet-selected/50" title="Detour Node">
-            <CornerDownRight size={14} className="text-df-storylet-selected" />
-            <span className="text-[10px] font-semibold text-df-storylet-selected">DETOUR</span>
+          <div
+            className="flex items-center gap-1 px-2 py-1 rounded bg-[color-mix(in_oklab,var(--node-accent)_20%,transparent)] border border-[color-mix(in_oklab,var(--node-accent)_50%,transparent)]"
+            title="Detour Node"
+          >
+            <CornerDownRight size={14} className="text-[var(--node-accent)]" />
+            <span className="text-[10px] font-semibold text-[var(--node-accent)]">DETOUR</span>
           </div>
         </div>
       </div>
       
       <div className="px-4 py-3 space-y-2">
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-df-text-secondary">Storylet:</span>
-          <span className="text-df-storylet-selected font-mono text-xs bg-df-base px-2 py-0.5 rounded border border-df-control-border">
+          <span className="text-[var(--color-df-text-secondary)]">Storylet:</span>
+          <span className="text-[var(--node-accent)] font-mono text-xs bg-[var(--color-df-base)] px-2 py-0.5 rounded border border-border">
             {storyletId ? String(storyletId) : 'Not set'}
           </span>
         </div>
         
         {returnNodeId && (
           <div className="flex items-center gap-2 text-sm">
-            <ArrowLeftCircle size={14} className="text-df-text-secondary" />
-            <span className="text-df-text-secondary">Returns to:</span>
-            <span className="text-df-text-primary font-mono text-xs bg-df-base px-2 py-0.5 rounded border border-df-control-border">
+            <ArrowLeftCircle size={14} className="text-[var(--color-df-text-secondary)]" />
+            <span className="text-[var(--color-df-text-secondary)]">Returns to:</span>
+            <span className="text-foreground font-mono text-xs bg-[var(--color-df-base)] px-2 py-0.5 rounded border border-border">
               {returnNodeId}
             </span>
           </div>
@@ -133,7 +139,7 @@ export const DetourNode = React.memo(function DetourNode({ data, selected }: Nod
 
       <ContextMenuContent className="w-48">
         <ContextMenuItem onSelect={handleEdit}>
-          <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
+          <Edit3 size={14} className="mr-2 text-[var(--node-accent)]" /> Edit Node
         </ContextMenuItem>
         {!isStartNode && node.id && (
           <>

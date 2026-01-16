@@ -26,8 +26,8 @@ export function CharacterEdgeContextMenu({
 }: CharacterEdgeContextMenuProps) {
   return (
     <div className="fixed z-50" style={{ left: x, top: y }}>
-      <div className="bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-lg p-1 min-w-[180px]">
-        <div className="px-3 py-1 text-[10px] text-df-text-secondary uppercase border-b border-df-sidebar-border">
+      <div className="bg-popover border border-border rounded-lg shadow-lg p-1 min-w-[180px]">
+        <div className="px-3 py-1 text-[10px] text-muted-foreground uppercase border-b border-border">
           Insert Node
         </div>
         {availableNodeTypes.map(type => (
@@ -37,14 +37,14 @@ export function CharacterEdgeContextMenu({
               onInsertNode(type, edgeId, graphX, graphY);
               onClose();
             }}
-            className="w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded"
+            className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded"
           >
             Insert {FORGE_NODE_TYPE_LABELS[type]}
           </button>
         ))}
         <button
           onClick={onClose}
-          className="w-full text-left px-3 py-2 text-sm text-df-text-secondary hover:bg-df-elevated rounded"
+          className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:bg-accent rounded"
         >
           Cancel
         </button>

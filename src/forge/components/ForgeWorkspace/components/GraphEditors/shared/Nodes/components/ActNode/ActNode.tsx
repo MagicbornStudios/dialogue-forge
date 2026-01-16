@@ -55,16 +55,16 @@ export const ActNode = React.memo(function ActNode({ data, selected, id }: NodeP
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-xs uppercase tracking-wide">Act</div>
-              <div className="text-sm font-semibold text-df-text-primary truncate">{title}</div>
+              <div className="text-sm font-semibold text-foreground truncate">{title}</div>
             </div>
           </div>
           <div className="px-3 py-2 space-y-2">
-            <div className="text-[10px] uppercase tracking-wide text-df-text-tertiary">ID</div>
-            <div className="text-xs font-mono text-df-text-secondary bg-df-base/40 border border-df-node-border rounded px-2 py-1">
+            <div className="text-[10px] uppercase tracking-wide text-[var(--color-df-text-tertiary)]">ID</div>
+            <div className="text-xs font-mono text-[var(--color-df-text-secondary)] bg-[color-mix(in_oklab,var(--color-df-base)_40%,transparent)] border border-border rounded px-2 py-1">
               {id}
             </div>
             {summary && (
-              <div className="text-xs text-df-text-secondary leading-relaxed">{summary}</div>
+              <div className="text-xs text-[var(--color-df-text-secondary)] leading-relaxed">{summary}</div>
             )}
           </div>
           <Handle
@@ -77,10 +77,10 @@ export const ActNode = React.memo(function ActNode({ data, selected, id }: NodeP
 
       <ContextMenuContent className="w-48">
         <ContextMenuItem onSelect={handleEdit}>
-          <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Act
+          <Edit3 size={14} className="mr-2 text-[var(--node-accent)]" /> Edit Act
         </ContextMenuItem>
         <ContextMenuItem onSelect={handleAddChapter}>
-          <Plus size={14} className="mr-2 text-df-player-selected" /> Add Chapter
+          <Plus size={14} className="mr-2 text-[var(--node-chapter-accent)]" /> Add Chapter
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem 

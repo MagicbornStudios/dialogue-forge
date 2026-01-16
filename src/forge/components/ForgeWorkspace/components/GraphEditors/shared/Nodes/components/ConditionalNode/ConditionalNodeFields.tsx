@@ -142,8 +142,8 @@ export function ConditionalNodeFields({
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-df-control-bg border border-df-control-border flex items-center justify-center flex-shrink-0">
-                      <User size={14} className="text-df-text-secondary" />
+                    <div className="w-7 h-7 rounded-full bg-[var(--color-df-control-bg)] border border-border flex items-center justify-center flex-shrink-0">
+                      <User size={14} className="text-[var(--color-df-text-secondary)]" />
                     </div>
                     <input
                       type="text"

@@ -73,7 +73,7 @@ export function PlayerNodeFields({
   return (
     <div>
       <div>
-        <label className="text-[10px] text-df-text-secondary uppercase">Character</label>
+        <label className="text-[10px] text-[var(--color-df-text-secondary)] uppercase">Character</label>
         <CharacterSelector
           characters={characters}
           selectedCharacterId={node.characterId}
@@ -87,21 +87,21 @@ export function PlayerNodeFields({
           placeholder="Select character..."
           className="mb-2"
         />
-        <div className="text-[9px] text-df-text-tertiary mt-1">
+        <div className="text-[9px] text-[var(--color-df-text-tertiary)] mt-1">
           Or enter custom speaker name below
         </div>
       </div>
       <div>
-        <label className="text-[10px] text-df-text-secondary uppercase">Speaker (Custom)</label>
+        <label className="text-[10px] text-[var(--color-df-text-secondary)] uppercase">Speaker (Custom)</label>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-df-control-bg border border-df-control-border flex items-center justify-center flex-shrink-0">
-            <User size={16} className="text-df-text-secondary" />
+          <div className="w-8 h-8 rounded-full bg-[var(--color-df-control-bg)] border border-border flex items-center justify-center flex-shrink-0">
+            <User size={16} className="text-[var(--color-df-text-secondary)]" />
           </div>
           <input
             type="text"
             value={node.speaker || ''}
             onChange={(event) => onUpdate({ speaker: event.target.value })}
-            className="flex-1 bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-player-selected outline-none"
+            className="flex-1 bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-player-accent)] outline-none"
             placeholder="Custom speaker name (optional)"
           />
         </div>

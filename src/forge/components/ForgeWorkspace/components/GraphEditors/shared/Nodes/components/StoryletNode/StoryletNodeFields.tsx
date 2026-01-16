@@ -56,7 +56,7 @@ export function StoryletNodeFields({
             const newGraphId = event.target.value ? parseInt(event.target.value) : undefined;
             onUpdateStoryletCall({ targetGraphId: newGraphId });
           }}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-storylet-accent)] outline-none"
         >
           <option value="">Select storylet graph...</option>
           {storyletGraphs.map((g) => (
@@ -65,7 +65,7 @@ export function StoryletNodeFields({
             </option>
           ))}
         </select>
-        <div className="text-[9px] text-df-text-tertiary mt-1">
+        <div className="text-[9px] text-[var(--color-df-text-tertiary)] mt-1">
           Or enter Template ID manually below
         </div>
       </div>
@@ -75,7 +75,7 @@ export function StoryletNodeFields({
           type="text"
           value={node.storyletCall?.targetGraphId || ''}
           onChange={(event) => onUpdateStoryletCall({ targetGraphId: parseInt(event.target.value || '0') || undefined })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-storylet-accent)] outline-none"
           placeholder="target_graph_id"
         />
       </div>
@@ -84,7 +84,7 @@ export function StoryletNodeFields({
         <select
           value={node.storyletCall?.mode || ''}
           onChange={(event) => onUpdateStoryletCall({ mode: event.target.value as ForgeStoryletCallMode })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-storylet-accent)] outline-none"
         >
           <option value="">Select mode...</option>
           <option value={FORGE_STORYLET_CALL_MODE.DETOUR_RETURN}>{FORGE_STORYLET_CALL_MODE.DETOUR_RETURN}</option>
@@ -97,7 +97,7 @@ export function StoryletNodeFields({
           type="text"
           value={node.storyletCall?.targetStartNodeId || ''}
           onChange={(event) => onUpdateStoryletCall({ targetStartNodeId: event.target.value || undefined })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-storylet-accent)] outline-none"
           placeholder="target_start_node_id"
         />
       </div>
@@ -108,7 +108,7 @@ export function StoryletNodeFields({
           type="text"
           value={node.storyletCall?.returnNodeId || ''}
           onChange={(event) => onUpdateStoryletCall({ returnNodeId: event.target.value || undefined })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-storylet-accent)] outline-none"
           placeholder="return_node_id"
         />
       </div>

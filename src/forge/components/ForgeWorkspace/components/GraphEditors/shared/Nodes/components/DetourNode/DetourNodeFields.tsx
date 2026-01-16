@@ -39,7 +39,7 @@ export function DetourNodeFields({
           type="text"
           value={node.label || ''}
           onChange={(event) => onUpdate({ label: event.target.value || undefined })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-storylet-selected outline-none"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-detour-accent)] outline-none"
           placeholder="Detour title"
         />
       </div>
@@ -49,7 +49,7 @@ export function DetourNodeFields({
         <textarea
           value={node.content || ''}
           onChange={(event) => onUpdate({ content: event.target.value || undefined })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-storylet-selected outline-none min-h-[60px] resize-y"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-detour-accent)] outline-none min-h-[60px] resize-y"
           placeholder="Detour summary/description"
         />
       </div>
@@ -100,7 +100,7 @@ export function DetourNodeFields({
               } : undefined,
             });
           }}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-storylet-selected outline-none"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-detour-accent)] outline-none"
         >
           <option value="">Select storylet graph...</option>
           {storyletGraphs.map((g) => (
@@ -127,7 +127,7 @@ export function DetourNodeFields({
               });
             }
           }}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-storylet-selected outline-none"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-detour-accent)] outline-none"
           placeholder="return_node_id"
         />
       </div>

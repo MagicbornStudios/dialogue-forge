@@ -15,7 +15,7 @@ export function PageNodeFields({ page, onUpdate }: PageNodeFieldsProps) {
           type="text"
           value={page.title || ''}
           onChange={(event) => onUpdate({ title: event.target.value || undefined })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-page-accent)] outline-none"
           placeholder="Page title"
         />
       </div>
@@ -24,7 +24,7 @@ export function PageNodeFields({ page, onUpdate }: PageNodeFieldsProps) {
         <textarea
           value={page.summary || ''}
           onChange={(event) => onUpdate({ summary: event.target.value || undefined })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none min-h-[100px] resize-y"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-page-accent)] outline-none min-h-[100px] resize-y"
           placeholder="Page summary"
         />
       </div>
@@ -34,7 +34,7 @@ export function PageNodeFields({ page, onUpdate }: PageNodeFieldsProps) {
           type="number"
           value={page.dialogueGraph || ''}
           onChange={(event) => onUpdate({ dialogueGraph: event.target.value ? Number(event.target.value) : null })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none font-mono"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-page-accent)] outline-none font-mono"
           placeholder="dialogue_graph_id"
         />
       </div>

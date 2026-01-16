@@ -15,6 +15,7 @@ import {
   INSERT_ORDERED_LIST_COMMAND,
   INSERT_UNORDERED_LIST_COMMAND,
 } from '@lexical/list';
+import { INSERT_TABLE_COMMAND } from '@lexical/table';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   LexicalTypeaheadMenuPlugin,
@@ -22,6 +23,11 @@ import {
   LexicalTypeaheadMenuOption,
   type MenuTextMatch,
 } from '@lexical/react/LexicalTypeaheadMenuPlugin';
+import {
+  OPEN_EMBED_DIALOG_COMMAND,
+  OPEN_MEDIA_PICKER_COMMAND,
+} from '@/writer/components/WriterWorkspace/editor/lexical/plugins/MediaPlugin';
+import { WRITER_MEDIA_KIND } from '@/writer/lib/data-adapter/media';
 
 type SlashCommandAction = () => void;
 
@@ -125,19 +131,21 @@ export function SlashCommandPlugin() {
       return divider;
     });
 
-  const insertTablePlaceholder = () =>
-    insertBlock(() => {
-      const table = $createParagraphNode();
-      table.append($createTextNode('[Table]'));
-      return table;
+  const insertTable = () =>
+    editor.dispatchCommand(INSERT_TABLE_COMMAND, { rows: '3', columns: '3' });
+
+  const insertImage = () =>
+    editor.dispatchCommand(OPEN_MEDIA_PICKER_COMMAND, {
+      kind: WRITER_MEDIA_KIND.IMAGE,
     });
 
-  const insertImagePlaceholder = () =>
-    insertBlock(() => {
-      const image = $createParagraphNode();
-      image.append($createTextNode('[Image]'));
-      return image;
+  const insertFile = () =>
+    editor.dispatchCommand(OPEN_MEDIA_PICKER_COMMAND, {
+      kind: WRITER_MEDIA_KIND.FILE,
     });
+
+  const insertEmbed = () =>
+    editor.dispatchCommand(OPEN_EMBED_DIALOG_COMMAND, {});
 
   const baseOptions = useMemo(
     () => [
@@ -212,15 +220,27 @@ export function SlashCommandPlugin() {
       }),
       new SlashCommandOption({
         title: 'Table',
-        description: 'Insert a table placeholder',
+        description: 'Insert a table',
         keywords: ['table', 'grid'],
-        onSelect: insertTablePlaceholder,
+        onSelect: insertTable,
       }),
       new SlashCommandOption({
         title: 'Image',
-        description: 'Insert an image placeholder',
+        description: 'Insert an image',
         keywords: ['image', 'photo', 'media'],
-        onSelect: insertImagePlaceholder,
+        onSelect: insertImage,
+      }),
+      new SlashCommandOption({
+        title: 'File attachment',
+        description: 'Upload a file',
+        keywords: ['file', 'attachment', 'upload'],
+        onSelect: insertFile,
+      }),
+      new SlashCommandOption({
+        title: 'Embed',
+        description: 'Embed an external URL',
+        keywords: ['embed', 'video', 'iframe'],
+        onSelect: insertEmbed,
       }),
     ],
     [editor]

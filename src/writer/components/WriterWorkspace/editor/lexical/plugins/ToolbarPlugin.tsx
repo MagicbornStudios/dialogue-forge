@@ -15,8 +15,20 @@ import {
   REMOVE_LIST_COMMAND,
   $isListNode,
 } from '@lexical/list';
+import {
+  INSERT_TABLE_COMMAND,
+  $insertTableRowAtSelection,
+  $insertTableColumnAtSelection,
+  $deleteTableRowAtSelection,
+  $deleteTableColumnAtSelection,
+} from '@lexical/table';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
+import {
+  OPEN_EMBED_DIALOG_COMMAND,
+  OPEN_MEDIA_PICKER_COMMAND,
+} from '@/writer/components/WriterWorkspace/editor/lexical/plugins/MediaPlugin';
+import { WRITER_MEDIA_KIND } from '@/writer/lib/data-adapter/media';
 
 const toolbarButtonBase =
   'rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary transition hover:text-df-text-primary';
@@ -210,6 +222,94 @@ export function ToolbarPlugin() {
         aria-label="Clear formatting"
       >
         Clear
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() =>
+          editor.dispatchCommand(OPEN_MEDIA_PICKER_COMMAND, {
+            kind: WRITER_MEDIA_KIND.IMAGE,
+          })
+        }
+        aria-label="Insert image"
+      >
+        Image
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() =>
+          editor.dispatchCommand(OPEN_MEDIA_PICKER_COMMAND, {
+            kind: WRITER_MEDIA_KIND.FILE,
+          })
+        }
+        aria-label="Insert file attachment"
+      >
+        File
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() => editor.dispatchCommand(OPEN_EMBED_DIALOG_COMMAND, {})}
+        aria-label="Insert embed"
+      >
+        Embed
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() => editor.dispatchCommand(INSERT_TABLE_COMMAND, { rows: '3', columns: '3' })}
+        aria-label="Insert table"
+      >
+        Table
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() =>
+          editor.update(() => {
+            $insertTableRowAtSelection(true);
+          })
+        }
+        aria-label="Insert table row"
+      >
+        Row +
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() =>
+          editor.update(() => {
+            $insertTableColumnAtSelection(true);
+          })
+        }
+        aria-label="Insert table column"
+      >
+        Col +
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() =>
+          editor.update(() => {
+            $deleteTableRowAtSelection();
+          })
+        }
+        aria-label="Delete table row"
+      >
+        Row -
+      </button>
+      <button
+        type="button"
+        className={toolbarButtonBase}
+        onClick={() =>
+          editor.update(() => {
+            $deleteTableColumnAtSelection();
+          })
+        }
+        aria-label="Delete table column"
+      >
+        Col -
       </button>
       <button
         type="button"

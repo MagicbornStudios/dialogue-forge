@@ -2,6 +2,8 @@ import React from 'react';
 import { Panel } from 'reactflow';
 import { Layout, ArrowDown, ArrowRight, Magnet, Sparkles, Undo2, Flag, Home } from 'lucide-react';
 import { LayoutDirection } from '../../../../../lib/utils/layout/types';
+import { CopilotButton, CopilotButtonContainer } from '@/forge/components/ForgeWorkspace/components/CopilotButton';
+import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 
 interface GraphLayoutControlsProps {
   autoOrganize: boolean;
@@ -32,9 +34,12 @@ export function GraphLayoutControls({
   onGoToEnd,
   endNodeCount,
 }: GraphLayoutControlsProps) {
+  const openCopilotChat = useForgeWorkspaceStore((s) => s.actions.openCopilotChat);
+
   return (
     <Panel position="top-right" className="!bg-transparent !border-0 !p-0 !m-2">
-      <div className="flex items-center gap-1.5 bg-df-sidebar-bg border border-df-sidebar-border rounded-lg p-1.5 shadow-lg">
+      <CopilotButtonContainer>
+        <div className="group flex items-center gap-1.5 bg-df-sidebar-bg border border-df-sidebar-border rounded-lg p-1.5 shadow-lg">
         {/* Auto-organize toggle */}
         <button
           onClick={onToggleAutoOrganize}
@@ -135,7 +140,14 @@ export function GraphLayoutControls({
             <Flag size={14} />
           </button>
         )}
+
+        <CopilotButton
+          onClick={openCopilotChat}
+          size="sm"
+          title="Open AI Assistant"
+        />
       </div>
+      </CopilotButtonContainer>
     </Panel>
   );
 }

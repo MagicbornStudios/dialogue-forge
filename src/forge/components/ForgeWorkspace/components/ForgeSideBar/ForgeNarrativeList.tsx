@@ -15,6 +15,9 @@ import { useForgeWorkspaceActions } from '@/forge/components/ForgeWorkspace/hook
 import { FORGE_GRAPH_KIND } from '@/forge/types/forge-graph';
 import { createGraphWithStartEnd } from '@/forge/lib/utils/forge-flow-helpers';
 import { SearchInput } from '@/shared/ui/SearchInput';
+import { InlineRenameInput } from './InlineRenameInput';
+import { useHotkeys } from 'react-hotkeys-hook';
+import { Kbd } from '@/shared/ui/kbd';
 
 interface ForgeNarrativeListProps {
   className?: string;
@@ -22,6 +25,7 @@ interface ForgeNarrativeListProps {
 
 export function ForgeNarrativeList({ className }: ForgeNarrativeListProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [renamingGraphId, setRenamingGraphId] = useState<string | null>(null)
   
   // Read from store - memoize the selector result to prevent re-renders
   const allGraphs = useForgeWorkspaceStore(s => s.graphs.byId)
@@ -34,6 +38,35 @@ export function ForgeNarrativeList({ className }: ForgeNarrativeListProps) {
   const dataAdapter = useForgeWorkspaceStore(s => s.dataAdapter)
   const setGraph = useForgeWorkspaceStore(s => s.actions.setGraph)
   const workspaceActions = useForgeWorkspaceActions()
+  
+  // F2 hotkey for rename (only when a narrative is selected)
+  useHotkeys(
+    'f2',
+    (e) => {
+      if (activeNarrativeGraphId && !renamingGraphId) {
+        e.preventDefault();
+        setRenamingGraphId(activeNarrativeGraphId);
+      }
+    },
+    { enableOnFormTags: false, enabled: !!activeNarrativeGraphId && !renamingGraphId }
+  )
+  
+  const handleRename = async (graphId: string, newTitle: string) => {
+    if (!dataAdapter) {
+      console.warn('Cannot rename: dataAdapter unavailable');
+      setRenamingGraphId(null);
+      return;
+    }
+    
+    try {
+      const updatedGraph = await dataAdapter.updateGraph(Number(graphId), { title: newTitle });
+      setGraph(graphId, updatedGraph);
+      setRenamingGraphId(null);
+    } catch (error) {
+      console.error('Failed to rename graph:', error);
+      setRenamingGraphId(null);
+    }
+  };
   
   // Filter locally
   const filteredGraphs = useMemo(() => {
@@ -126,34 +159,50 @@ export function ForgeNarrativeList({ className }: ForgeNarrativeListProps) {
           <div className="py-1">
             {filteredGraphs.map(graph => {
               const isSelected = activeNarrativeGraphId === String(graph.id);
+              const isRenaming = renamingGraphId === String(graph.id);
+              
               return (
                 <ContextMenu key={graph.id}>
                   <ContextMenuTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={() => workspaceActions.openNarrativeGraph(String(graph.id))}
+                    <div
                       className={`w-full px-2 py-1.5 text-left text-xs transition-colors duration-200 ${
-                        isSelected
+                        isSelected && !isRenaming
                           ? 'bg-muted text-foreground border-l-2 border-[var(--editor-border-active)]'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:border-l-2 hover:border-[var(--editor-border-hover)]'
+                          : !isRenaming
+                          ? 'text-muted-foreground hover:bg-muted hover:text-foreground hover:border-l-2 hover:border-[var(--editor-border-hover)]'
+                          : ''
                       }`}
                     >
-                      <div className="flex items-center gap-1.5 truncate">
-                        <BookOpen size={12} className="shrink-0 text-muted-foreground" />
-                        <span className="truncate font-medium">{graph.title ?? String(graph.id)}</span>
-                      </div>
-                    </button>
+                      {isRenaming ? (
+                        <InlineRenameInput
+                          value={graph.title || ''}
+                          onSave={(newTitle) => handleRename(String(graph.id), newTitle)}
+                          onCancel={() => setRenamingGraphId(null)}
+                          className="w-full"
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => workspaceActions.openNarrativeGraph(String(graph.id))}
+                          className="w-full flex items-center gap-1.5 truncate"
+                        >
+                          <BookOpen size={12} className="shrink-0 text-muted-foreground" />
+                          <span className="truncate font-medium">{graph.title ?? String(graph.id)}</span>
+                        </button>
+                      )}
+                    </div>
                   </ContextMenuTrigger>
                   <ContextMenuContent className="w-48">
                     <ContextMenuItem onSelect={() => workspaceActions.openNarrativeGraph(String(graph.id))}>
                       <ExternalLink size={14} className="mr-2" />
                       Open
                     </ContextMenuItem>
-                    <ContextMenuItem onSelect={() => {
-                      console.log('Edit metadata for graph:', graph.id)
-                    }}>
+                    <ContextMenuItem onSelect={() => setRenamingGraphId(String(graph.id))}>
                       <Edit size={14} className="mr-2" />
-                      Edit
+                      <span>Rename</span>
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        <Kbd variant="outline">F2</Kbd>
+                      </span>
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem

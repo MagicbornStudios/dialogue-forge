@@ -6,7 +6,7 @@
 
 | File | Content | Primary Domain | Secondary Users | Ownership Recommendation |
 |------|---------|----------------|-----------------|-------------------------|
-| `constants.ts` | Global constants (VIEW_MODE, FLAG_TYPE, NODE_TYPE, etc.) | Cross-Package | Forge, Writer | **Cross-Package Shared** |
+| `constants.ts` | Global constants (VIEW_MODE, FLAG_TYPE, NODE_TYPE, etc.) | Cross-Package | Forge, Writer, CopilotKit | **Cross-Package Shared** |
 | `index.ts` | Main type exports | Cross-Package | All | **Cross-Package Shared** |
 | `characters.ts` | Character definition types | Forge | GamePlayer | **Forge Domain** |
 | `flags.ts` | Flag system types | Cross-Package | Forge, GamePlayer | **Cross-Package Shared** |
@@ -15,12 +15,25 @@
 | `ui-constants.ts` | UI styling constants | Forge | GraphEditors | **Forge UI Layer** |
 | `forge/forge-graph.ts` | Graph node/edge types | Forge | GraphEditors | **Forge Domain** |
 
+### CopilotKit Integration Types (NEW)
+
+| File | Content | Domain | Importers | Ownership Recommendation |
+|------|---------|--------|-----------|-------------------------|
+| `src/ai/copilotkit/actions/base-actions.ts` | Base CopilotKit action types | Cross-Package AI | Domains | **Cross-Package Shared** |
+| `src/forge/copilotkit/actions/workspace/types.ts` | Forge workspace action types | Forge CopilotKit | Forge actions | **Forge Domain** |
+| `src/forge/copilotkit/actions/editor/types.ts` | Forge editor action types | Forge CopilotKit | Forge editor actions | **Forge Domain** |
+| `src/writer/copilotkit/actions/workspace/types.ts` | Writer workspace action types | Writer CopilotKit | Writer actions | **Writer Domain** |
+| `src/writer/copilotkit/actions/editor/types.ts` | Writer editor action types | Writer CopilotKit | Writer editor actions | **Writer Domain** |
+| `src/forge/copilotkit/constants/forge-action-names.ts` | Forge action name constants | Forge CopilotKit | Forge actions | **Forge Domain** |
+| `src/writer/copilotkit/constants/writer-action-names.ts` | Writer action name constants | Writer CopilotKit | Writer actions | **Writer Domain** |
+
 ### Library Types
 
 | File | Content | Domain | Importers | Ownership Recommendation |
 |------|---------|--------|-----------|-------------------------|
 | `src/lib/yarn-converter/types.ts` | Yarn conversion types | Forge (shared) | Yarn converter | **Package-Shared** |
 | `src/components/GraphEditors/utils/layout/types.ts` | Layout algorithm types | Forge UI | Layout utils | **Feature-Shared** |
+| `src/ai/aiadapter/types.ts` | AI adapter core types | Cross-Package AI | AI infrastructure | **Cross-Package Shared** |
 
 ### Host-Only Types
 
@@ -41,7 +54,7 @@
 - `NODE_TYPE`: Node type constants (legacy)
 - `QUEST_STATE`: Quest progress states
 
-**Importers**: Forge, Writer, GraphEditors (40+ files)
+**Importers**: Forge, Writer, GraphEditors, CopilotKit (40+ files)
 **Usage**: Heavy cross-domain usage
 **Recommendation**: Keep as **Cross-Package Shared** - core foundation
 
@@ -62,9 +75,28 @@
 **Importers**: 
 - Forge: NarrativeGraphEditor, forge-data-adapter
 - Writer: WriterWorkspace, writer-adapter
+- CopilotKit: Forge actions, Writer actions
 
 **Usage**: Both domains need these types
 **Recommendation**: **Cross-Package Shared** - essential bridge between domains
+
+#### `src/ai/copilotkit/actions/base-actions.ts` (NEW)
+**Content**: Base CopilotKit action framework
+- Base action creation utilities
+- Shared action patterns
+
+**Importers**: Domain CopilotKit integrations
+**Usage**: Foundation for CopilotKit actions
+**Recommendation**: **Cross-Package Shared** - AI infrastructure
+
+#### `src/ai/aiadapter/types.ts` (NEW)
+**Content**: Core AI adapter interfaces
+- `AiAdapter`, `AiResponse`, `AiStreamResponse`
+- OpenRouter integration types
+
+**Importers**: AI infrastructure, CopilotKit runtime
+**Usage**: Core AI abstraction
+**Recommendation**: **Cross-Package Shared** - AI foundation
 
 ### Forge Domain Types 🔧
 
@@ -74,7 +106,7 @@
 - Graph structure types
 - React Flow integrations
 
-**Importers**: Forge components, GraphEditors (20+ files)
+**Importers**: Forge components, GraphEditors, CopilotKit Forge actions (20+ files)
 **Usage**: Central to Forge functionality
 **Recommendation**: **Forge Domain** - core Forge model
 
@@ -93,6 +125,26 @@
 **Importers**: Forge, GamePlayer
 **Usage**: Game simulation
 **Recommendation**: **Forge Domain** - Forge's game engine
+
+#### Forge CopilotKit Types (NEW)
+- `src/forge/copilotkit/actions/workspace/types.ts`
+- `src/forge/copilotkit/actions/editor/types.ts`
+- `src/forge/copilotkit/constants/forge-action-names.ts`
+
+**Importers**: Forge CopilotKit actions
+**Usage**: Forge-specific AI interactions
+**Recommendation**: **Forge Domain** - AI integration for Forge
+
+### Writer Domain Types ✍️
+
+#### Writer CopilotKit Types (NEW)
+- `src/writer/copilotkit/actions/workspace/types.ts`
+- `src/writer/copilotkit/actions/editor/types.ts`
+- `src/writer/copilotkit/constants/writer-action-names.ts`
+
+**Importers**: Writer CopilotKit actions
+**Usage**: Writer-specific AI interactions
+**Recommendation**: **Writer Domain** - AI integration for Writer
 
 ### Forge UI Layer Types 🎨
 
@@ -124,6 +176,31 @@
 **Usage**: GraphEditors feature
 **Recommendation**: **Feature-Shared** - GraphEditors only
 
+## Type Dependencies Graph (Updated)
+
+```
+Cross-Package Shared (src/types/, src/ai/)
+├── constants.ts → Forge, Writer, CopilotKit
+├── flags.ts → Forge, GamePlayer
+├── narrative.ts → Forge GraphEditor, Writer workspace, CopilotKit actions
+├── ai/copilotkit/actions/base-actions.ts → Domain CopilotKit actions
+└── ai/aiadapter/types.ts → AI infrastructure
+
+Forge Domain (src/forge/, src/types/forge/)
+├── forge-graph.ts → Forge components, GraphEditors, CopilotKit Forge actions
+├── characters.ts → Forge components, GamePlayer
+├── forge-game-state.ts → Forge components, GamePlayer
+├── ui-constants.ts → Forge UI, GraphEditors
+└── copilotkit/ → Forge CopilotKit integration
+
+Writer Domain (src/writer/)
+├── Writer components → Writer workspace
+└── copilotkit/ → Writer CopilotKit integration
+
+Host Only (app/)
+└── payload-types.ts → Host application only
+```
+
 ## Import Pattern Analysis
 
 ### Heavy Importers (>5 type imports)
@@ -133,23 +210,29 @@
 - `ForgeWorkspace/store/forge-workspace-store.tsx` - 6 type imports
 - `forge/forge-data-adapter/forge-data-adapter.ts` - 5 type imports
 
-**GraphEditors**:
-- Multiple node components import narrative types
-- Shared components import flag types
-- Layout utilities stay within their domain
-
 **Writer Components**:
 - `WriterWorkspace/WriterWorkspace.tsx` - 3 type imports
 - `WriterWorkspace/store/writer-workspace-store.tsx` - 3 type imports
 
+**CopilotKit Components**:
+- `forge/copilotkit/actions/workspace/forge-workspace-actions.ts` - 4 type imports
+- `writer/copilotkit/actions/workspace/writer-workspace-actions.ts` - 4 type imports
+- CopilotKit providers - 3 type imports each
+
 ### Cross-Domain Dependencies
+
+**CopilotKit Bridge**:
+- CopilotKit actions import domain types (intentional and correct)
+- Domain actions import CopilotKit types (proper layering)
 
 **Writer ↔ Forge Bridge**:
 - Writer imports `narrative.ts` types (ForgeAct, ForgeChapter, ForgePage)
 - This is **intentional and correct** - Writer works with narrative structure
 
-**No Reverse Dependencies**:
-- Forge components don't import Writer-specific types ✅
+**AI Integration Bridge**:
+- AI adapter types used by CopilotKit runtime
+- CopilotKit actions use domain workspace types
+- Clean architecture with proper boundaries
 
 ## Ownership Issues & Recommendations
 
@@ -163,16 +246,16 @@
    - Narrative types used by both domains
    - Needs careful coordination for changes
 
-3. **Constants vs UI Constants**:
-   - `constants.ts` (shared) vs `ui-constants.ts` (Forge-only)
-   - Names could be clearer
+3. **CopilotKit Type Organization**:
+   - Domain-specific CopilotKit types are well-separated ✅
+   - Base CopilotKit types properly shared ✅
 
 ### Recommendations ✅
 
 #### Immediate Actions
 1. **Separate Domain Exports**: Create separate index files for each domain
 2. **Clear Type Organization**: Group types by domain in exports
-3. **Document Cross-Domain Types**: Clearly mark which types are shared
+3. **Document CopilotKit Types**: Clearly mark AI integration types
 
 #### Target Structure Proposal
 ```
@@ -181,57 +264,92 @@ src/types/
 │   ├── constants.ts
 │   ├── flags.ts
 │   ├── narrative.ts
-│   └── index.ts
+│   ├── index.ts
+│   └── ai/            # AI integration types
+│       ├── base-actions.ts
+│       └── index.ts
 ├── forge/            # Forge domain only
 │   ├── forge-graph.ts
 │   ├── characters.ts
 │   ├── forge-game-state.ts
-│   └── index.ts
-├── forge-ui/         # Forge UI layer
 │   ├── ui-constants.ts
-│   └── index.ts
+│   ├── index.ts
+│   └── copilotkit/    # Forge CopilotKit types
+│       ├── actions/
+│       ├── constants/
+│       └── index.ts
+├── writer/           # Writer domain
+│   ├── index.ts
+│   └── copilotkit/    # Writer CopilotKit types
+│       ├── actions/
+│       ├── constants/
+│       └── index.ts
 └── index.ts          # Re-exports only shared types
 ```
 
 #### Migration Strategy
 1. **Phase 1**: Reorganize files without breaking imports
 2. **Phase 2**: Update imports to use domain-specific exports
-3. **Phase 3**: Enforce boundaries with ESLint rules
+3. **Phase 3**: Add CopilotKit type organization
+4. **Phase 4**: Enforce boundaries with ESLint rules
 
-## Boundary Enforcement Rules
+## Boundary Enforcement Rules (Updated)
 
 ### Recommended ESLint Rules
 ```javascript
-// Writer cannot import Forge domain types
+// Writer cannot import Forge CopilotKit types
 {
   'no-restricted-imports': ['error', {
-    patterns: ['@/src/types/forge/*']
+    patterns: ['@/src/forge/copilotkit/*']
   }],
-  // Apply only to WriterWorkspace files
+  // Apply to WriterWorkspace files
 }
 
-// Forge cannot import UI types from shared
+// Forge cannot import Writer CopilotKit types
 {
   'no-restricted-imports': ['error', {
-    patterns: ['@/src/types/forge-ui/*']
+    patterns: ['@/src/writer/copilotkit/*']
   }],
-  // Apply to core Forge libraries
+  // Apply to ForgeWorkspace files
+}
+
+// Both domains can import shared CopilotKit base
+{
+  'no-restricted-imports': ['error', {
+    patterns: [
+      '!@/src/ai/copilotkit/actions/base-actions',
+      '!@/src/ai/aiadapter/types'
+    ]
+  }],
+  // Apply to both domains
 }
 ```
 
 ## Next Steps
 
 ### Before Reorganization
-1. **Audit type usage**: Verify domain assignments are correct
-2. **Plan migration**: Map current imports to new structure
-3. **Test impact**: Ensure no functionality breaks
+1. **Audit Type Usage**: Verify all type locations and importers are identified
+2. **Plan CopilotKit Migration**: Map current CopilotKit types to new structure
+3. **Test Impact**: Ensure no functionality breaks during reorganization
 
-### During Reorganization
-1. **Maintain compatibility**: Keep old exports during transition
-2. **Update imports gradually**: One domain at a time
-3. **Add validation**: ESLint rules to catch violations
+### During Reorganization  
+1. **Maintain Compatibility**: Keep old exports during transition
+2. **Update Imports Gradually**: One domain at a time
+3. **Organize CopilotKit Types**: Move AI integration types to proper structure
 
 ### After Reorganization
-1. **Document contracts**: Clear API for shared types
-2. **Version shared types**: Semver for breaking changes
-3. **Monitor usage**: Watch for unintended cross-domain imports
+1. **Document Type Contracts**: Clear API for shared types
+2. **Version Shared Types**: Semver for breaking changes
+3. **Monitor CopilotKit Usage**: Watch for unintended cross-domain imports
+
+## Assessment Summary
+
+**Positive Discovery**: CopilotKit integration adds **excellent type organization** with:
+- Proper domain separation for CopilotKit types
+- Clean shared base types for AI infrastructure
+- No cross-domain type violations in CopilotKit code
+- Well-structured action type definitions
+
+**Primary Challenge**: Original type organization issues remain, but CopilotKit types serve as a model for proper organization.
+
+**Recommendation**: Maintain CopilotKit type architecture while reorganizing core types into similar domain-separated structure.

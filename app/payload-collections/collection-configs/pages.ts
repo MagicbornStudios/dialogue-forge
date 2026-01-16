@@ -49,7 +49,7 @@ export const Pages: CollectionConfig = {
       index: true,
     },
     {
-      name: 'dialogueGraph',
+      name: 'graph',
       type: 'relationship',
       relationTo: PAYLOAD_COLLECTIONS.FORGE_GRAPHS as any,
       required: false,

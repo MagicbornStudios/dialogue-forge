@@ -12,7 +12,7 @@ import { ToolbarPlugin } from '@/writer/components/WriterWorkspace/editor/lexica
 import { writerTheme } from '@/writer/components/WriterWorkspace/editor/lexical/theme';
 import { AiSelectionPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/AiSelectionPlugin';
 import { CopilotKitPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/CopilotKitPlugin';
-import { WriterEditorSessionProvider, createWriterEditorSessionStore } from '../hooks/useWriterEditorSession';
+import { WriterEditorSessionProvider, createWriterEditorSessionStore } from '@/writer/components/WriterWorkspace/editor/hooks/useWriterEditorSession';
 
 interface LexicalEditorProps {
   value?: string;

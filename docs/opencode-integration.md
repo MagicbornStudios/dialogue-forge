@@ -53,10 +53,29 @@ Submodules are the best fit for this use case.
 
 ## Usage
 
-Navigate to `/opencode` in your Next.js app to view the OpenCode UI.
+### Homepage Access
 
-- **Dev mode**: Iframe loads from the dev server (hot reload enabled)
+OpenCode is now accessible from the main homepage at `/` alongside other tools:
+
+- **Forge** - Visual Dialogue Editor (`/forge`)
+- **Writer** - Narrative Editor (`/writer`) 
+- **OpenCode** - AI Assistant (`/opencode`) ← **NEW**
+- **Admin** - Payload CMS (`/admin`)
+
+### Direct Access
+
+Navigate to `/opencode` in your Next.js app to view the OpenCode UI directly.
+
+- **Dev mode**: Iframe loads from dev server (hot reload enabled)
 - **Prod mode**: Iframe loads from static assets at `/vendor/opencode/index.html`
+
+### Homepage Integration
+
+The OpenCode card on the homepage features:
+- **Terminal Icon**: Orange theme to distinguish from other tools
+- **Hover Effects**: Consistent with other tool cards
+- **Responsive Design**: Works on all screen sizes
+- **Direct Navigation**: One-click access from the main landing page
 
 ## Updating OpenCode
 

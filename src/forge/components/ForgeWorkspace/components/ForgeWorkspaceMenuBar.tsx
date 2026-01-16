@@ -61,7 +61,6 @@ export function ForgeWorkspaceMenuBar({
   onTogglePanel,
   headerLinks,
 }: ForgeWorkspaceMenuBarProps) {
-  const copilotVisible = useForgeWorkspaceStore((s) => s.copilotVisible);
   const openCopilotChat = useForgeWorkspaceStore((s) => s.actions.openCopilotChat);
   
   const handleCopilotClick = () => {
@@ -263,7 +262,7 @@ export function ForgeWorkspaceMenuBar({
       </div>
 
       {/* Right Section: Header Links + Copilot + Theme Switcher */}
-      <CopilotButtonContainer className="flex items-center gap-2">
+      <CopilotButtonContainer className="group flex items-center gap-2">
         {headerLinks && headerLinks.length > 0 && (
           <>
             <div className="flex items-center gap-1">
@@ -284,13 +283,11 @@ export function ForgeWorkspaceMenuBar({
             <div className="h-4 w-px bg-border" />
           </>
         )}
-        {copilotVisible && (
-          <CopilotButton
-            onClick={handleCopilotClick}
-            size="sm"
-            title="Open AI Assistant"
-          />
-        )}
+        <CopilotButton
+          onClick={handleCopilotClick}
+          size="sm"
+          title="Open AI Assistant"
+        />
         <ThemeSwitcher />
       </CopilotButtonContainer>
     </div>

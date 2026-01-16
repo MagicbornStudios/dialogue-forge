@@ -32,21 +32,12 @@ export function GraphLeftToolbar({
   onOpenCopilot,
 }: GraphLeftToolbarProps) {
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
-  const copilotVisible = useForgeWorkspaceStore((s) => s.copilotVisible);
-  const openCopilotChat = useForgeWorkspaceStore((s) => s.actions.openCopilotChat);
   
-  const handleCopilotClick = () => {
-    if (onOpenCopilot) {
-      onOpenCopilot();
-    } else {
-      openCopilotChat();
-    }
-  };
 
   return (
     <Panel position="top-left" className="!bg-transparent !border-0 !p-0 !m-2">
       <CopilotButtonContainer>
-        <div className="flex flex-col gap-1.5 bg-df-sidebar-bg border border-df-sidebar-border rounded-lg p-1.5 shadow-lg">
+        <div className="group flex flex-col gap-1.5 bg-df-sidebar-bg border border-df-sidebar-border rounded-lg p-1.5 shadow-lg">
         {/* Layout Strategy Dropdown */}
         <div className="relative">
           <button
@@ -127,13 +118,7 @@ export function GraphLeftToolbar({
           </button>
         )}
 
-        {copilotVisible && (
-          <CopilotButton
-            onClick={handleCopilotClick}
-            size="sm"
-            title="Open AI Assistant"
-          />
-        )}
+   
       </div>
       </CopilotButtonContainer>
     </Panel>

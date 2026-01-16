@@ -397,6 +397,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
         isFocused={isFocused}
         openYarnModal={openYarnModal}
         openPlayModal={openPlayModal}
+        openCopilotChat={openCopilotChat}
         handleClick={handleClick}
         setLayoutDirection={setLayoutDirection}
         setAutoOrganize={setAutoOrganize}
@@ -426,6 +427,7 @@ function ForgeStoryletGraphEditorContent({
   isFocused,
   openYarnModal,
   openPlayModal,
+  openCopilotChat,
   handleClick,
   setLayoutDirection,
   setAutoOrganize,
@@ -449,6 +451,7 @@ function ForgeStoryletGraphEditorContent({
   isFocused: boolean;
   openYarnModal: () => void;
   openPlayModal: () => void;
+  openCopilotChat: () => void;
   handleClick: () => void;
   setLayoutDirection: (dir: LayoutDirection) => void;
   setAutoOrganize: (value: boolean) => void;

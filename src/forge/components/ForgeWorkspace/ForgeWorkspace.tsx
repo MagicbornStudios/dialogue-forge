@@ -25,6 +25,7 @@ import { useForgeWorkspaceActions } from '@/forge/copilotkit';
 import { useForgeCopilotContext } from '@/forge/copilotkit/hooks/useForgeCopilotContext';
 import { CopilotKitProvider } from '@/ai/copilotkit/providers/CopilotKitProvider';
 import { CopilotChatModal } from './components/CopilotChatModal';
+import { CommandBar, useCommandBar } from './components/CommandBar/CommandBar';
 
 export interface HeaderLink {
   label: string;
@@ -218,6 +219,9 @@ function ForgeWorkspaceContent({
   const openGuide = useForgeWorkspaceStore((s) => s.actions.openGuide);
   const isCopilotChatOpen = useForgeWorkspaceStore((s) => s.modalState.isCopilotChatOpen);
   const closeCopilotChat = useForgeWorkspaceStore((s) => s.actions.closeCopilotChat);
+  
+  // Command bar
+  const { open: commandBarOpen, setOpen: setCommandBarOpen } = useCommandBar();
 
   // Wrapper callbacks for modals
   const handleUpdateFlagSchema = useCallback(
@@ -263,6 +267,8 @@ function ForgeWorkspaceContent({
         onClose={closeCopilotChat}
         instructions="You are an AI assistant for the Forge workspace. Help users create and edit dialogue graphs, manage flags, and build interactive narratives. You have access to chapters, acts, pages, and graphs for context."
       />
+
+      <CommandBar open={commandBarOpen} onOpenChange={setCommandBarOpen} />
 
       <ForgeWorkspaceLayout
         panelVisibility={panelVisibility}

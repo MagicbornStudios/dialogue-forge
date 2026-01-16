@@ -16,11 +16,10 @@ import {
 import { FORGE_NODE_TYPE, NARRATIVE_FORGE_NODE_TYPE, type ForgeNodeType } from '@/forge/types/forge-graph';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { useNodeDrag } from '@/forge/components/ForgeWorkspace/hooks/useNodeDrag';
-import { SearchInput } from '@/src/shared/ui/SearchInput';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
-import { Badge } from '@/shared/ui/badge';
 import { cn } from '@/shared/lib/utils';
 import { FORGE_NODE_TYPE_LABELS } from '@/forge/types/ui-constants';
+import { SectionHeader } from './SectionHeader';
 
 /**
  * Get the CSS color variable for a node type's icon
@@ -256,65 +255,16 @@ export function NodePalette({ className }: NodePaletteProps) {
     );
   };
 
-  // Determine colors based on focused editor
-  const headerBgColor = focusedEditor === 'narrative' 
-    ? 'bg-[var(--editor-info)]/10' 
-    : focusedEditor === 'storylet'
-    ? 'bg-[var(--editor-edge-choice)]/10'
-    : 'bg-transparent';
-  const headerBorderColor = focusedEditor === 'narrative'
-    ? 'border-b-[var(--editor-info)]'
-    : focusedEditor === 'storylet'
-    ? 'border-b-[var(--editor-edge-choice)]'
-    : 'border-b-border';
-  const headerTextColor = focusedEditor === 'narrative'
-    ? 'text-[var(--editor-info)]'
-    : focusedEditor === 'storylet'
-    ? 'text-[var(--editor-edge-choice)]'
-    : 'text-muted-foreground';
-  const headerIconColor = focusedEditor === 'narrative'
-    ? 'var(--editor-info)'
-    : focusedEditor === 'storylet'
-    ? 'var(--editor-edge-choice)'
-    : 'var(--editor-muted-foreground)';
-
   return (
     <div className={cn('flex h-full w-full flex-col', className)}>
-      {/* Header and Search - Combined colorful section */}
-      <div className={cn(
-        "flex flex-col border-b-1",
-        headerBgColor,
-        headerBorderColor
-      )}>
-        {/* Header */}
-        <div className="flex items-center justify-between px-2 py-1.5">
-          <div className="flex items-center gap-1.5">
-            <Layers size={14} style={{ color: headerIconColor }} />
-            <span className={cn("text-xs font-medium", headerTextColor)}>Nodes</span>
-            {focusedEditor && (
-              <Badge 
-                variant="secondary" 
-                className={cn(
-                  "h-4 px-1.5 text-[10px]",
-                  focusedEditor === 'narrative' && "bg-[var(--editor-info)]/20 text-[var(--editor-info)] border-[var(--editor-info)]/30",
-                  focusedEditor === 'storylet' && "bg-[var(--editor-edge-choice)]/20 text-[var(--editor-edge-choice)] border-[var(--editor-edge-choice)]/30"
-                )}
-              >
-                {focusedEditor === 'narrative' ? 'Narrative' : 'Storylet'}
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="px-2 py-1.5">
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search nodes..."
-          />
-        </div>
-      </div>
+      <SectionHeader
+        title="Nodes"
+        icon={<Layers size={14} />}
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search nodes..."
+        focusedEditor={focusedEditor}
+      />
 
       {/* Node list */}
       <div className="flex-1 overflow-y-auto py-1">

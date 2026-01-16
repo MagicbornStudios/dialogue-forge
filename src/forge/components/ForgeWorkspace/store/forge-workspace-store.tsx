@@ -289,6 +289,9 @@ export function createForgeWorkspaceStore(
             closeFlagModal: viewStateSlice.closeFlagModal,
             openGuide: viewStateSlice.openGuide,
             closeGuide: viewStateSlice.closeGuide,
+            openCopilotChat: viewStateSlice.openCopilotChat,
+            closeCopilotChat: viewStateSlice.closeCopilotChat,
+            setCopilotVisible: viewStateSlice.setCopilotVisible,
             
             // Project actions
             setSelectedProjectId: projectSlice.setSelectedProjectId,

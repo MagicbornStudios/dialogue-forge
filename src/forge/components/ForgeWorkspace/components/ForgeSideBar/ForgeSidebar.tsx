@@ -33,9 +33,13 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
           value="narratives"
           aria-label="Narratives"
           className={cn(
-            "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight",
-            "text-muted-foreground hover:text-foreground",
-            "data-[state=on]:bg-muted data-[state=on]:text-foreground data-[state=on]:border-b-2 data-[state=on]:border-[var(--editor-border-active)]"
+            "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight relative",
+            "text-muted-foreground hover:text-foreground transition-colors",
+            "data-[state=on]:bg-muted data-[state=on]:text-foreground",
+            // Left border for selected
+            activeTab === 'narratives' && "border-l-2 border-l-[var(--editor-info)]",
+            // Duller left border for unselected
+            activeTab !== 'narratives' && "border-l-2 border-l-[var(--color-df-info-muted,theme(colors.blue.300))]/30"
           )}
         >
           <BookOpen
@@ -48,14 +52,26 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
             )}
           />
           <span className="truncate">Narratives</span>
+          {focusedEditor === 'narrative' && activeTab === 'narratives' && (
+            <span className={cn(
+              "ml-0.5 text-[9px] px-1 py-0.5 rounded shrink-0",
+              "bg-[var(--editor-info)]/20 text-[var(--editor-info)]"
+            )}>
+              N
+            </span>
+          )}
         </ToggleGroupItem>
         <ToggleGroupItem
           value="storylets"
           aria-label="Storylets"
           className={cn(
-            "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight",
-            "text-muted-foreground hover:text-foreground",
-            "data-[state=on]:bg-muted data-[state=on]:text-foreground data-[state=on]:border-b-2 data-[state=on]:border-[var(--editor-border-active)]"
+            "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight relative",
+            "text-muted-foreground hover:text-foreground transition-colors",
+            "data-[state=on]:bg-muted data-[state=on]:text-foreground",
+            // Left border for selected
+            activeTab === 'storylets' && "border-l-2 border-l-[var(--editor-edge-choice)]",
+            // Duller left border for unselected
+            activeTab !== 'storylets' && "border-l-2 border-l-[var(--color-df-edge-choice-1-muted,theme(colors.green.400))]/30"
           )}
         >
           <Layers
@@ -68,14 +84,26 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
             )}
           />
           <span className="truncate">Storylets</span>
+          {focusedEditor === 'storylet' && activeTab === 'storylets' && (
+            <span className={cn(
+              "ml-0.5 text-[9px] px-1 py-0.5 rounded shrink-0",
+              "bg-[var(--editor-edge-choice)]/20 text-[var(--editor-edge-choice)]"
+            )}>
+              S
+            </span>
+          )}
         </ToggleGroupItem>
         <ToggleGroupItem
           value="nodes"
           aria-label="Nodes"
           className={cn(
-            "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight",
-            "text-muted-foreground hover:text-foreground",
-            "data-[state=on]:bg-muted data-[state=on]:text-foreground data-[state=on]:border-b-2 data-[state=on]:border-[var(--editor-border-active)]"
+            "min-w-0 flex-1 text-xs rounded-none px-1 py-0.5 truncate leading-tight relative",
+            "text-muted-foreground hover:text-foreground transition-colors",
+            "data-[state=on]:bg-muted data-[state=on]:text-foreground",
+            // Left border for selected
+            activeTab === 'nodes' && "border-l-2 border-l-[var(--editor-warning)]",
+            // Duller left border for unselected
+            activeTab !== 'nodes' && "border-l-2 border-l-[var(--color-df-warning-muted,theme(colors.amber.400))]/30"
           )}
         >
           <Boxes
@@ -88,7 +116,7 @@ export function ForgeSidebar({ className }: ForgeSidebarProps) {
             )}
           />
           <span className="truncate">Nodes</span>
-          {focusedEditor && (
+          {focusedEditor && activeTab === 'nodes' && (
             <span className={cn(
               "ml-0.5 text-[9px] px-1 py-0.5 rounded shrink-0",
               focusedEditor === 'narrative' && "bg-[var(--editor-info)]/20 text-[var(--editor-info)]",

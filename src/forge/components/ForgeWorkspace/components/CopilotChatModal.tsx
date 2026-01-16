@@ -33,8 +33,6 @@ export function CopilotChatModal({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl h-[85vh] flex flex-col p-0 m-4">

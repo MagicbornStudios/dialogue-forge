@@ -7,17 +7,14 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/shared/ui/context-menu';
-import { Button } from '@/shared/ui/button';
-import { Badge } from '@/shared/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { useForgeWorkspaceActions } from '@/forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
 import { FORGE_GRAPH_KIND } from '@/forge/types/forge-graph';
 import { createGraphWithStartEnd } from '@/forge/lib/utils/forge-flow-helpers';
-import { SearchInput } from '@/src/shared/ui/SearchInput';
 import { InlineRenameInput } from './InlineRenameInput';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Kbd } from '@/shared/ui/kbd';
+import { SectionHeader, type SectionToolbarAction } from './SectionHeader';
 
 interface StoryletsListProps {
   className?: string;
@@ -107,46 +104,30 @@ export function StoryletList({ className }: StoryletsListProps) {
       console.error('Failed to create storylet:', error)
     }
   }
+  const focusedEditor = useForgeWorkspaceStore((s) => s.focusedEditor);
+  
+  const toolbarActions: SectionToolbarAction[] = [
+    {
+      id: 'create-storylet',
+      label: 'Create Storylet',
+      icon: <Plus size={12} />,
+      onClick: handleCreateStorylet,
+      tooltip: 'Create storylet',
+    },
+  ];
+
   return (
     <div className={`flex h-full w-full flex-col ${className ?? ''}`}>
-      {/* Compact header */}
-      <div className="flex items-center justify-between px-2 py-1.5 border-b border-border">
-        <div className="flex items-center gap-1.5">
-          <Layers size={14} className="text-muted-foreground" />
-          <span className="text-xs font-medium text-muted-foreground">Storylets</span>
-          {filteredGraphs.length > 0 && (
-            <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
-              {filteredGraphs.length}
-            </Badge>
-          )}
-        </div>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={handleCreateStorylet}
-              >
-                <Plus size={12} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Create storylet</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-
-      {/* Search */}
-      <div className="px-2 py-1.5 border-b border-border">
-        <SearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Search..."
-        />
-      </div>
+      <SectionHeader
+        title="Storylets"
+        icon={<Layers size={14} />}
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search storylets..."
+        badge={filteredGraphs.length > 0 ? { label: String(filteredGraphs.length) } : undefined}
+        focusedEditor={focusedEditor}
+        toolbarActions={toolbarActions}
+      />
 
       {/* List */}
       <div className="flex-1 overflow-y-auto">

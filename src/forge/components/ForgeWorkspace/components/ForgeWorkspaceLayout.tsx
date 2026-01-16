@@ -58,6 +58,9 @@ export function ForgeWorkspaceLayout({
             <NarrativeEditorPanel 
               graph={narrativeGraph}
               onChange={onNarrativeGraphChange}
+              flagSchema={flagSchema}
+              gameState={gameState}
+              characters={characters}
             />
           </div>
         )}

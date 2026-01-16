@@ -65,6 +65,13 @@
   --node-header-bg: var(--node-default-header);
   --node-text: var(--node-default-text);
   --node-accent: var(--node-default-accent);
+  --node-shadow: var(--shadow-df-md);
+  --node-selected-shadow: var(--shadow-df-lg), 0 0 0 2px var(--context-ring),
+    0 0 12px var(--context-glow);
+  --node-start-shadow: var(--shadow-df-md), 0 0 0 2px var(--context-ring),
+    0 0 12px var(--context-glow);
+  --node-end-shadow: var(--shadow-df-md), 0 0 0 2px var(--context-ring),
+    0 0 12px var(--context-glow);
 }
 
 .dialogue-graph-editor [data-node-type="CHARACTER"] {
@@ -152,16 +159,20 @@
 
 .dialogue-graph-editor .forge-node {
   border-color: var(--node-border);
-  box-shadow: none;
+  box-shadow: var(--node-shadow);
 }
 
 .dialogue-graph-editor .forge-node[data-selected="true"] {
-  box-shadow: var(--shadow-df-lg), var(--shadow-df-glow);
+  box-shadow: var(--node-selected-shadow);
 }
 
 .dialogue-graph-editor .forge-node[data-start="true"],
 .dialogue-graph-editor .forge-node[data-end="true"] {
-  box-shadow: var(--shadow-df-md);
+  box-shadow: var(--node-start-shadow);
+}
+
+.dialogue-graph-editor .forge-node[data-end="true"] {
+  box-shadow: var(--node-end-shadow);
 }
 
 .dialogue-graph-editor .forge-node[data-dimmed="true"] {

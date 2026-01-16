@@ -1,11 +1,11 @@
 import type { StateCreator } from 'zustand';
 import type { ForgePage } from '@/forge/types/narrative';
-import type { WriterWorkspaceState, WriterDraftState } from '../writer-workspace-types';
-import { WRITER_SAVE_STATUS } from '../writer-workspace-types';
+import type { WriterWorkspaceState, WriterDraftState, WriterDraftContent } from '../writer-workspace-types';
+import { createWriterDraftContent, WRITER_SAVE_STATUS } from '../writer-workspace-types';
 
 const createDraftFromPage = (page: ForgePage): WriterDraftState => ({
   title: page.title,
-  content: page.bookBody ?? '',
+  content: createWriterDraftContent(page.bookBody),
   status: WRITER_SAVE_STATUS.SAVED,
   error: null,
   revision: 0,
@@ -18,7 +18,7 @@ export interface EditorSlice {
 
 export interface EditorActions {
   setDraftTitle: (pageId: number, title: string) => void;
-  setDraftContent: (pageId: number, content: string) => void;
+  setDraftContent: (pageId: number, content: WriterDraftContent) => void;
   saveNow: (pageId?: number) => Promise<void>;
   createDraftForPage: (page: ForgePage) => void;
   setEditorError: (error: string | null) => void;
@@ -141,7 +141,7 @@ export function createEditorSlice(
         }
         const nextPages = state.pages.map((page) =>
           page.id === targetId
-            ? { ...page, title: draft.title, bookBody: draft.content }
+            ? { ...page, title: draft.title, bookBody: draft.content.serialized }
             : page
         );
         return {

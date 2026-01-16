@@ -12,6 +12,7 @@ import {
 } from '@/shared/ui/context-menu';
 
 import type { ForgeNode } from '@/forge/types/forge-graph';
+import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { getFlagColorClass } from '@/forge/lib/utils/flag-styles';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { useForgeWorkspaceActions } from '@/forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
@@ -39,15 +40,7 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
   const targetPosition = isHorizontal ? Position.Left : Position.Top;
   const sourcePosition = isHorizontal ? Position.Right : Position.Bottom;
 
-  const borderClass = selected
-    ? 'border-df-npc-selected shadow-lg shadow-df-glow'
-    : isStartNode
-      ? 'border-df-start shadow-md'
-      : isEndNode
-        ? 'border-df-end shadow-md'
-        : 'border-df-npc-border';
-
-  const headerBgClass = isStartNode ? 'bg-df-start-bg' : isEndNode ? 'bg-df-end-bg' : 'bg-df-npc-header';
+  const nodeType = node.type ?? FORGE_NODE_TYPE.STORYLET;
 
   const contentPreview =
     node.content?.length && node.content.length > 60 ? `${node.content.slice(0, 60)}...` : node.content || 'No description yet.';
@@ -66,19 +59,22 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
             e.stopPropagation();
             if (node.id) actions.openNodeEditor(node.id);
           }}
-          className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${
-            isInPath ? 'border-df-node-selected/70' : ''
-          } bg-df-npc-bg min-w-[320px] max-w-[450px] relative overflow-hidden`}
-          style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
+          data-node-type={nodeType}
+          data-selected={selected ? 'true' : 'false'}
+          data-in-path={isInPath ? 'true' : 'false'}
+          data-dimmed={isDimmed ? 'true' : 'false'}
+          data-start={isStartNode ? 'true' : 'false'}
+          data-end={isEndNode ? 'true' : 'false'}
+          className="forge-node rounded-lg border-2 transition-all duration-300 border-node bg-node text-node min-w-[320px] max-w-[450px] relative overflow-hidden"
         >
           <Handle
             type="target"
             position={targetPosition}
-            className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full"
+            className="node-handle !w-4 !h-4 !rounded-full"
           />
 
-          <div className={`${headerBgClass} border-b-2 border-df-npc-border px-3 py-2.5 flex items-center gap-3 relative`}>
-            <div className="w-14 h-14 rounded-full bg-df-npc-bg border-[3px] border-df-npc-border flex items-center justify-center text-3xl shadow-lg flex-shrink-0">
+          <div className="bg-node-header border-b-2 border-node px-3 py-2.5 flex items-center gap-3 relative">
+            <div className="w-14 h-14 rounded-full bg-node border-[3px] border-node flex items-center justify-center text-3xl shadow-lg flex-shrink-0">
               <BookOpen size={20} className="text-df-npc-selected" />
             </div>
 
@@ -155,7 +151,7 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
             type="source"
             position={sourcePosition}
             id="next"
-            className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full hover:!border-df-npc-selected hover:!bg-df-npc-selected/20"
+            className="node-handle !w-4 !h-4 !rounded-full"
           />
         </div>
       </ContextMenuTrigger>

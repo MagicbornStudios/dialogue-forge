@@ -1,0 +1,201 @@
+:root {
+  --node-default-bg: var(--color-df-node-bg);
+  --node-default-border: var(--color-df-node-border);
+  --node-default-header: var(--color-df-node-bg);
+  --node-default-text: var(--color-df-text-primary);
+  --node-default-accent: var(--color-df-node-selected);
+  --node-selected-border: var(--color-df-node-selected);
+  --node-start-border: var(--color-df-start);
+  --node-start-header: var(--color-df-start-bg);
+  --node-end-border: var(--color-df-end);
+  --node-end-header: var(--color-df-end-bg);
+
+  --node-npc-bg: var(--color-df-npc-bg);
+  --node-npc-border: var(--color-df-npc-border);
+  --node-npc-header: var(--color-df-npc-header);
+  --node-npc-text: var(--color-df-npc-text);
+  --node-npc-accent: var(--color-df-npc-selected);
+
+  --node-player-bg: var(--color-df-player-bg);
+  --node-player-border: var(--color-df-player-border);
+  --node-player-header: var(--color-df-player-header);
+  --node-player-text: var(--color-df-player-text);
+  --node-player-accent: var(--color-df-player-selected);
+
+  --node-conditional-bg: var(--color-df-conditional-bg);
+  --node-conditional-border: var(--color-df-conditional-border);
+  --node-conditional-header: var(--color-df-conditional-header);
+  --node-conditional-text: var(--color-df-conditional-text);
+  --node-conditional-accent: var(--color-df-conditional-border);
+
+  --node-storylet-bg: var(--color-df-npc-bg);
+  --node-storylet-border: var(--color-df-npc-border);
+  --node-storylet-header: var(--color-df-npc-header);
+  --node-storylet-text: var(--color-df-npc-text);
+  --node-storylet-accent: var(--color-df-npc-selected);
+
+  --node-page-bg: var(--color-df-warning-bg);
+  --node-page-border: var(--color-df-warning);
+  --node-page-header: color-mix(in oklab, var(--color-df-warning) 20%, var(--color-df-warning-bg));
+  --node-page-text: var(--color-df-text-primary);
+  --node-page-accent: var(--color-df-warning);
+
+  --node-act-bg: var(--color-df-info-bg);
+  --node-act-border: var(--color-df-info);
+  --node-act-header: color-mix(in oklab, var(--color-df-info) 20%, var(--color-df-info-bg));
+  --node-act-text: var(--color-df-text-primary);
+  --node-act-accent: var(--color-df-info);
+
+  --node-chapter-bg: var(--color-df-success-bg);
+  --node-chapter-border: var(--color-df-success);
+  --node-chapter-header: color-mix(in oklab, var(--color-df-success) 20%, var(--color-df-success-bg));
+  --node-chapter-text: var(--color-df-text-primary);
+  --node-chapter-accent: var(--color-df-success);
+
+  --node-detour-bg: var(--color-df-warning-bg);
+  --node-detour-border: var(--color-df-warning);
+  --node-detour-header: color-mix(in oklab, var(--color-df-warning) 20%, var(--color-df-warning-bg));
+  --node-detour-text: var(--color-df-text-primary);
+  --node-detour-accent: var(--color-df-warning);
+}
+
+.dialogue-graph-editor [data-node-type] {
+  --node-bg: var(--node-default-bg);
+  --node-border: var(--node-default-border);
+  --node-header-bg: var(--node-default-header);
+  --node-text: var(--node-default-text);
+  --node-accent: var(--node-default-accent);
+}
+
+.dialogue-graph-editor [data-node-type="CHARACTER"] {
+  --node-bg: var(--node-npc-bg);
+  --node-border: var(--node-npc-border);
+  --node-header-bg: var(--node-npc-header);
+  --node-text: var(--node-npc-text);
+  --node-accent: var(--node-npc-accent);
+}
+
+.dialogue-graph-editor [data-node-type="PLAYER"] {
+  --node-bg: var(--node-player-bg);
+  --node-border: var(--node-player-border);
+  --node-header-bg: var(--node-player-header);
+  --node-text: var(--node-player-text);
+  --node-accent: var(--node-player-accent);
+}
+
+.dialogue-graph-editor [data-node-type="CONDITIONAL"] {
+  --node-bg: var(--node-conditional-bg);
+  --node-border: var(--node-conditional-border);
+  --node-header-bg: var(--node-conditional-header);
+  --node-text: var(--node-conditional-text);
+  --node-accent: var(--node-conditional-accent);
+}
+
+.dialogue-graph-editor [data-node-type="STORYLET"] {
+  --node-bg: var(--node-storylet-bg);
+  --node-border: var(--node-storylet-border);
+  --node-header-bg: var(--node-storylet-header);
+  --node-text: var(--node-storylet-text);
+  --node-accent: var(--node-storylet-accent);
+}
+
+.dialogue-graph-editor [data-node-type="PAGE"] {
+  --node-bg: var(--node-page-bg);
+  --node-border: var(--node-page-border);
+  --node-header-bg: var(--node-page-header);
+  --node-text: var(--node-page-text);
+  --node-accent: var(--node-page-accent);
+}
+
+.dialogue-graph-editor [data-node-type="ACT"] {
+  --node-bg: var(--node-act-bg);
+  --node-border: var(--node-act-border);
+  --node-header-bg: var(--node-act-header);
+  --node-text: var(--node-act-text);
+  --node-accent: var(--node-act-accent);
+}
+
+.dialogue-graph-editor [data-node-type="CHAPTER"] {
+  --node-bg: var(--node-chapter-bg);
+  --node-border: var(--node-chapter-border);
+  --node-header-bg: var(--node-chapter-header);
+  --node-text: var(--node-chapter-text);
+  --node-accent: var(--node-chapter-accent);
+}
+
+.dialogue-graph-editor [data-node-type="DETOUR"] {
+  --node-bg: var(--node-detour-bg);
+  --node-border: var(--node-detour-border);
+  --node-header-bg: var(--node-detour-header);
+  --node-text: var(--node-detour-text);
+  --node-accent: var(--node-detour-accent);
+}
+
+.dialogue-graph-editor [data-start="true"] {
+  --node-border: var(--node-start-border);
+  --node-header-bg: var(--node-start-header);
+}
+
+.dialogue-graph-editor [data-end="true"] {
+  --node-border: var(--node-end-border);
+  --node-header-bg: var(--node-end-header);
+}
+
+.dialogue-graph-editor [data-in-path="true"] {
+  --node-border: color-mix(in oklab, var(--node-accent) 70%, var(--node-border));
+}
+
+.dialogue-graph-editor [data-selected="true"] {
+  --node-border: var(--node-selected-border);
+  --node-accent: var(--node-selected-border);
+}
+
+.dialogue-graph-editor .forge-node {
+  border-color: var(--node-border);
+  box-shadow: none;
+}
+
+.dialogue-graph-editor .forge-node[data-selected="true"] {
+  box-shadow: var(--shadow-df-lg), var(--shadow-df-glow);
+}
+
+.dialogue-graph-editor .forge-node[data-start="true"],
+.dialogue-graph-editor .forge-node[data-end="true"] {
+  box-shadow: var(--shadow-df-md);
+}
+
+.dialogue-graph-editor .forge-node[data-dimmed="true"] {
+  opacity: 0.35;
+  filter: saturate(0.3);
+}
+
+.dialogue-graph-editor .bg-node {
+  background-color: var(--node-bg);
+}
+
+.dialogue-graph-editor .border-node {
+  border-color: var(--node-border);
+}
+
+.dialogue-graph-editor .text-node {
+  color: var(--node-text);
+}
+
+.dialogue-graph-editor .bg-node-header {
+  background-color: var(--node-header-bg);
+}
+
+.dialogue-graph-editor .node-handle {
+  background-color: var(--color-df-control-bg);
+  border: 2px solid var(--color-df-control-border);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.dialogue-graph-editor .node-handle:hover {
+  border-color: var(--node-accent);
+  background-color: color-mix(in oklab, var(--node-accent) 20%, var(--color-df-control-bg));
+}
+
+.dialogue-graph-editor .node-choice:hover {
+  border-color: var(--node-accent);
+}

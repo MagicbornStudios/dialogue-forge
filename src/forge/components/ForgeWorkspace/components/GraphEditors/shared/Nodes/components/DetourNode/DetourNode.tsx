@@ -11,6 +11,7 @@ import {
 } from '@/shared/ui/context-menu';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import type { ForgeNode } from '@/forge/types/forge-graph';
+import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 
 interface DetourNodeData {
   node: ForgeNode;
@@ -42,12 +43,7 @@ export function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
   const isHorizontal = layoutDirection === 'LR';
   const targetPosition = isHorizontal ? Position.Left : Position.Top;
   const sourcePosition = isHorizontal ? Position.Right : Position.Bottom;
-
-  const borderClass = selected 
-    ? 'border-df-storylet-border shadow-lg shadow-df-glow'
-    : 'border-df-storylet-border';
-
-  const headerBgClass = 'bg-df-storylet-header';
+  const nodeType = node.type ?? FORGE_NODE_TYPE.DETOUR;
 
   return (
     <ContextMenu>
@@ -58,17 +54,22 @@ export function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
             e.stopPropagation();
             if (node.id) actions.openNodeEditor(node.id);
           }}
-          className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-storylet-border/70' : ''} bg-df-storylet-bg min-w-[280px] max-w-[350px] relative overflow-hidden`}
-          style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
+          data-node-type={nodeType}
+          data-selected={selected ? 'true' : 'false'}
+          data-in-path={isInPath ? 'true' : 'false'}
+          data-dimmed={isDimmed ? 'true' : 'false'}
+          data-start={isStartNode ? 'true' : 'false'}
+          data-end={isEndNode ? 'true' : 'false'}
+          className="forge-node rounded-lg border-2 transition-all duration-300 border-node bg-node text-node min-w-[280px] max-w-[350px] relative overflow-hidden"
         >
       <Handle 
         type="target" 
         position={targetPosition} 
-        className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full"
+        className="node-handle !w-4 !h-4 !rounded-full"
       />
       
-      <div className={`${headerBgClass} border-b-2 border-df-storylet-border px-3 py-2.5 flex items-center gap-3 relative`}>
-        <div className="w-14 h-14 rounded-full bg-df-storylet-bg border-[3px] border-df-storylet-border flex items-center justify-center shadow-lg flex-shrink-0">
+      <div className="bg-node-header border-b-2 border-node px-3 py-2.5 flex items-center gap-3 relative">
+        <div className="w-14 h-14 rounded-full bg-node border-[3px] border-node flex items-center justify-center shadow-lg flex-shrink-0">
           <CornerDownRight size={20} className="text-df-storylet-selected" />
         </div>
         
@@ -118,7 +119,7 @@ export function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
       <Handle 
         type="source" 
         position={sourcePosition} 
-        className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full"
+        className="node-handle !w-4 !h-4 !rounded-full"
       />
         </div>
       </ContextMenuTrigger>

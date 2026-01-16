@@ -10,6 +10,7 @@ import {
 } from '@/shared/ui/context-menu';
 import type { ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
+import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 
 export function ChapterNode({ data, selected, id }: NodeProps<ShellNodeData>) {
   const { node, ui = {} } = data;
@@ -19,34 +20,32 @@ export function ChapterNode({ data, selected, id }: NodeProps<ShellNodeData>) {
   const summary = node.content;
   
   const actions = useForgeEditorActions();
-
-  // Glow effect based on selection and path state - green for chapters
-  const glowClass = selected 
-    ? 'shadow-[0_0_20px_rgba(16,185,129,0.6)]' // emerald glow
-    : isInPath 
-      ? 'shadow-[0_0_12px_rgba(16,185,129,0.4)]' 
-      : '';
+  const nodeType = node.type ?? FORGE_NODE_TYPE.CHAPTER;
 
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div
           onContextMenu={(e) => e.stopPropagation()}
-          className={`min-w-[220px] max-w-[320px] rounded-lg border-2 shadow-sm bg-df-node-bg transition-all duration-200 ${
-            selected ? 'border-emerald-500' : 'border-df-node-border'
-          } ${isDimmed ? 'opacity-30' : ''} ${glowClass}`}
+          data-node-type={nodeType}
+          data-selected={selected ? 'true' : 'false'}
+          data-in-path={isInPath ? 'true' : 'false'}
+          data-dimmed={isDimmed ? 'true' : 'false'}
+          data-start="false"
+          data-end="false"
+          className="forge-node min-w-[220px] max-w-[320px] rounded-lg border-2 shadow-sm transition-all duration-200 border-node bg-node text-node"
         >
           <Handle
             type="target"
             position={Position.Left}
-            className="!bg-df-control-bg !border-df-control-border !w-3 !h-3"
+            className="node-handle !w-3 !h-3"
           />
-          <div className="px-3 py-2 border-b border-df-node-border flex items-center gap-2 bg-emerald-500/10">
-            <div className="h-8 w-8 rounded-full flex items-center justify-center text-emerald-500 border border-emerald-500/30 bg-df-node-bg/40">
+          <div className="px-3 py-2 border-b border-node flex items-center gap-2 bg-node-header">
+            <div className="h-8 w-8 rounded-full flex items-center justify-center border border-node bg-node">
               <BookOpen size={16} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs uppercase tracking-wide text-emerald-500/70">Chapter</div>
+              <div className="text-xs uppercase tracking-wide">Chapter</div>
               <div className="text-sm font-semibold text-df-text-primary truncate">{title}</div>
             </div>
           </div>
@@ -62,7 +61,7 @@ export function ChapterNode({ data, selected, id }: NodeProps<ShellNodeData>) {
           <Handle
             type="source"
             position={Position.Right}
-            className="!bg-df-control-bg !border-df-control-border !w-3 !h-3"
+            className="node-handle !w-3 !h-3"
           />
         </div>
       </ContextMenuTrigger>

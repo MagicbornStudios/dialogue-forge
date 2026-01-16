@@ -50,7 +50,7 @@ export function ConditionalEdgeDropMenu({
   };
 
   return (
-    <ContextMenuBase x={screenX} y={screenY} title="Create Node">
+    <ContextMenuBase x={screenX} y={screenY} title="Create Node" onClose={onClose}>
       {availableNodeTypes.map(type => (
         <ContextMenuButton
           key={type}

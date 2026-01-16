@@ -15,7 +15,8 @@ import { createAiSlice } from './slices/ai.slice';
 import { createNavigationSlice } from './slices/navigation.slice';
 import { createViewStateSlice } from './slices/viewState.slice';
 import type { EventSink } from '@/writer/events/writer-events';
-import { createEvent, WRITER_EVENT_TYPE } from '@/writer/events/events';
+import { createEvent } from '@/writer/events/events';
+import { WRITER_EVENT_TYPE } from '@/writer/events/writer-events';
 import type {
   WriterDraftState,
   WriterSaveStatus,
@@ -87,7 +88,7 @@ export interface WriterWorkspaceState {
 
     // AI actions
     setAiSelection: (selection: import('@/writer/types/writer-ai-types').WriterSelectionSnapshot | null) => void;
-    proposeAiEdits: () => Promise<void>;
+            proposeAiEdits: (instruction?: string) => Promise<void>;
     applyAiEdits: () => void;
     revertAiDraft: () => void;
 
@@ -121,12 +122,17 @@ export function createWriterWorkspaceStore(
 
   return createStore<WriterWorkspaceState>()(
     devtools(
-      immer((set, get) => {
-        const contentSlice = createContentSlice(set, get, initialActs, initialChapters, initialPages);
-        const editorSlice = createEditorSlice(set, get, initialPages);
-        const aiSlice = createAiSlice(set, get);
-        const navigationSlice = createNavigationSlice(set, get, initialActivePageId);
-        const viewStateSlice = createViewStateSlice(set, get);
+      immer<WriterWorkspaceState>((set, get) => {
+        // Type cast needed because Immer's set function signature differs from Zustand's
+        // The slices expect Zustand's set signature, but Immer wraps it
+        const setTyped = set as Parameters<typeof createContentSlice>[0];
+        const getTyped = get as Parameters<typeof createContentSlice>[1];
+        
+        const contentSlice = createContentSlice(setTyped, getTyped, initialActs, initialChapters, initialPages);
+        const editorSlice = createEditorSlice(setTyped, getTyped, initialPages);
+        const aiSlice = createAiSlice(setTyped, getTyped);
+        const navigationSlice = createNavigationSlice(setTyped, getTyped, initialActivePageId);
+        const viewStateSlice = createViewStateSlice(setTyped, getTyped);
 
         // Wrap actions to emit events
         const setPagesWithEvents = (pages: ForgePage[]) => {
@@ -205,7 +211,9 @@ export function createWriterWorkspaceStore(
 
             // AI actions
             setAiSelection: aiSlice.setAiSelection,
-            proposeAiEdits: aiSlice.proposeAiEdits,
+            proposeAiEdits: async (instruction?: string) => {
+              await aiSlice.proposeAiEdits(instruction);
+            },
             applyAiEdits: applyAiEditsWithEvents,
             revertAiDraft: aiSlice.revertAiDraft,
 

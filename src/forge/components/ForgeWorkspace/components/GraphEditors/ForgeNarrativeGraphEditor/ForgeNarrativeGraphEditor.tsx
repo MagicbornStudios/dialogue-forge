@@ -351,7 +351,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
             </ReactFlow>
           </div>
         </div>
-      </div>
     </ForgeEditorActionsProvider>
   );
 }

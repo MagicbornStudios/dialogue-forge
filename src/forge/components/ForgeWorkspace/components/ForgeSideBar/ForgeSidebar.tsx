@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 import { Layers, Boxes, BookOpen } from 'lucide-react';
-import { StoryletList } from './components/StoryletList';
-import { ForgeNarrativeList } from './components/ForgeNarrativeList';
-import { NodePalette } from './components/NodePalette';
+import { StoryletList } from './StoryletList';
+import { ForgeNarrativeList } from './ForgeNarrativeList';
+import { NodePalette } from './NodePalette';
 import { useForgeWorkspaceStore } from '../../store/forge-workspace-store';
 import { cn } from '@/shared/lib/utils';
 

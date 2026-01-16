@@ -6,10 +6,10 @@ import {
 } from '@/shared/ui/dialog';
 import { Button } from '@/shared/ui/button';
 import { ForgeFlagNavigation } from './ForgeFlagNavigation';
-import { ForgeFlagList } from './components/ForgeFlagList';
+import { ForgeFlagList } from './ForgeFlagList';
 import { ForgeFlagEditor } from './ForgeFlagEditor';
-import { useFlagManager } from '../../../../../../lib/flag-manager/hooks/useFlagManager';
-import { useUsedFlags } from '../../../../../../lib/flag-manager/hooks/useUsedFlags';
+import { useFlagManager } from '@/forge/lib/flag-manager/hooks/useFlagManager';
+import { useUsedFlags } from '@/forge/lib/flag-manager/hooks/useUsedFlags';
 import type { FlagSchema } from '@/forge/types/flags';
 import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
 

@@ -28,7 +28,7 @@ export interface AiSlice {
 
 export interface AiActions {
   setAiSelection: (selection: WriterSelectionSnapshot | null) => void;
-  proposeAiEdits: () => Promise<void>;
+  proposeAiEdits: (instruction?: string) => Promise<void>;
   applyAiEdits: () => void;
   revertAiDraft: () => void;
 }
@@ -46,7 +46,7 @@ export function createAiSlice(
     aiSnapshot: null,
     aiUndoSnapshot: null,
     setAiSelection: (selection) => set({ aiSelection: selection }),
-    proposeAiEdits: async () => {
+    proposeAiEdits: async (instruction?: string) => {
       const state = get();
       const targetId = state.activePageId;
       if (!targetId) {
@@ -82,6 +82,7 @@ export function createAiSlice(
             pageId: targetId,
             selection: state.aiSelection,
             snapshot,
+            instruction,
           }),
         });
 

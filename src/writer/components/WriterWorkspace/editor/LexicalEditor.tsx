@@ -10,6 +10,9 @@ import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical';
 import { writerNodes } from '@/writer/components/WriterWorkspace/editor/lexical/nodes';
 import { ToolbarPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/ToolbarPlugin';
 import { writerTheme } from '@/writer/components/WriterWorkspace/editor/lexical/theme';
+import { AiSelectionPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/AiSelectionPlugin';
+import { CopilotKitPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/CopilotKitPlugin';
+import { WriterEditorSessionProvider, createWriterEditorSessionStore } from '../hooks/useWriterEditorSession';
 
 interface LexicalEditorProps {
   value?: string;
@@ -25,6 +28,7 @@ export function LexicalEditor({
   className,
 }: LexicalEditorProps) {
   const initialValueRef = useRef(value);
+  const sessionStoreRef = useRef(createWriterEditorSessionStore());
 
   const initialConfig = useMemo(() => ({
     namespace: 'WriterEditor',
@@ -47,10 +51,13 @@ export function LexicalEditor({
 
   return (
     <div className={`flex min-h-0 flex-1 flex-col ${className ?? ''}`}>
-      <LexicalComposer initialConfig={initialConfig}>
-        <div className="flex min-h-0 flex-1 flex-col">
-          <ToolbarPlugin />
-          <div className="relative flex min-h-0 flex-1 flex-col">
+      <WriterEditorSessionProvider store={sessionStoreRef.current}>
+        <LexicalComposer initialConfig={initialConfig}>
+          <div className="flex min-h-0 flex-1 flex-col">
+            <ToolbarPlugin />
+            <AiSelectionPlugin />
+            <CopilotKitPlugin />
+            <div className="relative flex min-h-0 flex-1 flex-col">
             <RichTextPlugin
               contentEditable={
                 <ContentEditable className="min-h-[240px] flex-1 px-4 py-4 text-sm text-df-text-primary outline-none" />
@@ -77,6 +84,7 @@ export function LexicalEditor({
           </div>
         </div>
       </LexicalComposer>
+      </WriterEditorSessionProvider>
     </div>
   );
 }

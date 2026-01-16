@@ -13,6 +13,7 @@ import { WriterTree } from '@/writer/components/WriterWorkspace/sidebar/WriterTr
 import { WriterLayout } from '@/writer/components/WriterWorkspace/layout/WriterLayout';
 import { WriterEditorPane } from '@/writer/components/WriterWorkspace/editor/WriterEditorPane';
 import { WriterWorkspaceModalsRenderer } from '@/writer/components/WriterWorkspace/modals/WriterWorkspaceModals';
+import { CopilotKitWorkspaceProvider } from '@/ai/copilotkit/providers/CopilotKitWorkspaceProvider';
 
 interface WriterWorkspaceProps {
   acts?: ForgeAct[];
@@ -77,10 +78,12 @@ export function WriterWorkspace({
 
   return (
     <WriterWorkspaceStoreProvider store={storeRef.current}>
-      <WriterWorkspaceContent
-        className={className}
-        onActivePageChange={onActivePageChange}
-      />
+      <CopilotKitWorkspaceProvider workspaceStore={storeRef.current}>
+        <WriterWorkspaceContent
+          className={className}
+          onActivePageChange={onActivePageChange}
+        />
+      </CopilotKitWorkspaceProvider>
     </WriterWorkspaceStoreProvider>
   );
 }

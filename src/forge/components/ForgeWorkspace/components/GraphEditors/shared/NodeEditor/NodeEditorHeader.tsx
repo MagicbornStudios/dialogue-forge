@@ -3,7 +3,7 @@ import { Trash2, X } from 'lucide-react';
 import { ForgeNode } from '@/forge/types/forge-graph';
 import { Button } from '@/shared/ui/button';
 import { Badge } from '@/shared/ui/badge';
-import { getNodeTypeBadge, getNodeTypeLabel } from '../../../../../../../lib/node-editor/utils/nodeTypeHelpers';
+import { getNodeTypeBadge, getNodeTypeLabel } from '@/forge/lib/node-editor/utils/nodeTypeHelpers';
 
 interface NodeEditorHeaderProps {
   node: ForgeNode;

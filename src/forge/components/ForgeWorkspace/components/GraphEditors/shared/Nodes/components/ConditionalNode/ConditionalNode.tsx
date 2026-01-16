@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
 import type { ForgeCondition, ForgeConditionalBlock, ForgeNode } from '@/forge/types/forge-graph';
-import { CONDITION_VALUE_TYPE, FORGE_CONDITIONAL_BLOCK_TYPE } from '@/forge/types/forge-graph';
+import { FORGE_CONDITIONAL_BLOCK_TYPE, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { GitBranch, Play, Flag, Hash, Code, Edit3, Trash2, Plus } from 'lucide-react';
 import { FlagSchema } from '@/forge/types/flags';
 import { ForgeCharacter } from '@/forge/types/characters';
@@ -79,44 +79,35 @@ export function ConditionalNode({ data, selected }: NodeProps<ConditionalNodeDat
     }
   }, [blocks.length, node.id, updateNodeInternals]);
 
-  // Border color based on state
-  const borderClass = selected
-    ? 'border-df-conditional-border shadow-lg shadow-df-glow'
-    : isStartNode
-      ? 'border-df-start shadow-md'
-      : isEndNode
-        ? 'border-df-end shadow-md'
-        : 'border-df-conditional-border';
-
-  // Header background for conditional nodes
-  const headerBgClass = isStartNode
-    ? 'bg-df-start-bg'
-    : isEndNode
-      ? 'bg-df-end-bg'
-      : 'bg-df-conditional-header';
+  const nodeType = node.type ?? FORGE_NODE_TYPE.CONDITIONAL;
 
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div
           onContextMenu={(e) => e.stopPropagation()}
-          className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-conditional-border/70' : ''} bg-df-conditional-bg min-w-[320px] max-w-[450px] relative overflow-hidden`}
-          style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
+          data-node-type={nodeType}
+          data-selected={selected ? 'true' : 'false'}
+          data-in-path={isInPath ? 'true' : 'false'}
+          data-dimmed={isDimmed ? 'true' : 'false'}
+          data-start={isStartNode ? 'true' : 'false'}
+          data-end={isEndNode ? 'true' : 'false'}
+          className="forge-node rounded-lg border-2 transition-all duration-300 border-node bg-node text-node min-w-[320px] max-w-[450px] relative overflow-hidden"
         >
           {/* Input handle - position based on layout direction */}
           <Handle
             type="target"
             position={targetPosition}
-            className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full"
+            className="node-handle !w-4 !h-4 !rounded-full"
           />
 
           {/* Health Bar Style Header */}
           <div
             ref={headerRef}
-            className={`${headerBgClass} border-b-2 border-df-conditional-border px-3 py-2.5 flex items-center gap-3 relative`}
+            className="bg-node-header border-b-2 border-node px-3 py-2.5 flex items-center gap-3 relative"
           >
             {/* Icon Placeholder - Left side (no avatar for conditional) */}
-            <div className="w-14 h-14 rounded-full bg-df-conditional-bg border-[3px] border-df-conditional-border flex items-center justify-center shadow-lg flex-shrink-0">
+            <div className="w-14 h-14 rounded-full bg-node border-[3px] border-node flex items-center justify-center shadow-lg flex-shrink-0">
               <Code size={20} className="text-df-conditional-selected" />
             </div>
 
@@ -206,7 +197,7 @@ export function ConditionalNode({ data, selected }: NodeProps<ConditionalNodeDat
                       top: `${handlePositions[idx] || 0}px`,
                       right: -8,
                     }}
-                    className="forge-choice-handle !bg-df-control-bg !border-df-control-border !w-3 !h-3 !rounded-full hover:!border-df-conditional-selected hover:!bg-df-conditional-selected/20"
+                    className="forge-choice-handle !w-3 !h-3 !rounded-full"
                   />
                 </div>
               );

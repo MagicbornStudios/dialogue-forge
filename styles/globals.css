@@ -3,6 +3,8 @@
 /* Import dialogue-forge theme */
 @import './themes.css';
 @import './graph.css';
+@import '../src/forge/styles/nodes.css';
+@import '../src/forge/styles/forge-context.css';
 @import './scrollbar.css';
 
 /* Source paths for Tailwind content detection */

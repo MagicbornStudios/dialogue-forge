@@ -28,6 +28,10 @@
   --input: var(--color-df-control-border);
   --ring: var(--color-df-node-selected);
 
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: var(--color-df-control-border);
+  --scrollbar-thumb-hover: var(--color-df-border-hover);
+
   --radius: 0.6rem;
 
   /* Shadows */

@@ -53,7 +53,7 @@
 }
 
 .dialogue-graph-editor .forge-choice-input {
-  border-color: #2a2a3e;
+  border-color: var(--border);
 }
 
 .dialogue-graph-editor .forge-choice-input[data-has-next="true"] {

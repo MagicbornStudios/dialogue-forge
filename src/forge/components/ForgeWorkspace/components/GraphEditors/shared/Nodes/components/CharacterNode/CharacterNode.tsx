@@ -9,12 +9,12 @@
  * - Start/End badges when applicable
  */
 
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { ForgeCharacter } from '@/forge/types/characters';
 import { MessageSquare, Play, Flag, Hash, Edit3, Plus, Trash2 } from 'lucide-react';
 import { FlagSchema } from '@/forge/types/flags';
-import { LayoutDirection } from '@/forge/lib/utils/layout/types'
+import { LayoutDirection } from '@/forge/lib/utils/layout/types';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -46,7 +46,7 @@ import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEd
 // Component
 // ============================================================================
 
-export function CharacterNode({ data, selected }: NodeProps<CharacterNodeData>) {
+export const CharacterNode = React.memo(function CharacterNode({ data, selected }: NodeProps<CharacterNodeData>) {
   const { 
     node, 
     flagSchema,
@@ -56,9 +56,33 @@ export function CharacterNode({ data, selected }: NodeProps<CharacterNodeData>) 
   } = data;
 
   const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
+  const setFlags = useMemo(() => node.setFlags ?? [], [node.setFlags]);
 
   // Use actions instead of callbacks
   const actions = useForgeEditorActions();
+  const handleEdit = useCallback(() => {
+    if (node.id) actions.openNodeEditor(node.id);
+  }, [actions, node.id]);
+  const handleAddConditionals = useCallback(() => {
+    if (!node.id) return;
+    actions.patchNode(node.id, {
+      conditionalBlocks: [
+        {
+          id: `block_${Date.now()}`,
+          type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
+          condition: [],
+          content: '',
+          characterId: undefined,
+          nextNodeId: undefined,
+          setFlags: undefined,
+        },
+      ],
+    });
+    actions.openNodeEditor(node.id);
+  }, [actions, node.id]);
+  const handleDelete = useCallback(() => {
+    if (node.id) actions.deleteNode(node.id);
+  }, [actions, node.id]);
 
   // Get character if characterId is set
   const character = node.characterId ? characters[node.characterId] : undefined;
@@ -73,9 +97,10 @@ export function CharacterNode({ data, selected }: NodeProps<CharacterNodeData>) 
   const nodeType = node.type ?? FORGE_NODE_TYPE.CHARACTER;
 
   // Content preview (truncated)
-  const contentPreview = node.content?.length && node.content.length > 60 
-    ? node.content.slice(0, 60) + '...' 
-    : node.content;
+  const contentPreview = useMemo(() => {
+    if (!node.content) return node.content;
+    return node.content.length > 60 ? `${node.content.slice(0, 60)}...` : node.content;
+  }, [node.content]);
 
   return (
     <ContextMenu>
@@ -148,9 +173,9 @@ export function CharacterNode({ data, selected }: NodeProps<CharacterNodeData>) 
         </div>
         
         {/* Flag indicators */}
-        {node.setFlags && node.setFlags.length > 0 && (
+        {setFlags.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {node.setFlags.map((flagId: string) => {
+            {setFlags.map((flagId: string) => {
               const flag = flagSchema?.flags.find((f: { id: string }) => f.id === flagId);
               const flagType = flag?.type || 'dialogue';
               return (
@@ -178,28 +203,11 @@ export function CharacterNode({ data, selected }: NodeProps<CharacterNodeData>) 
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={() => node.id && actions.openNodeEditor(node.id)}>
+        <ContextMenuItem onSelect={handleEdit}>
           <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
         </ContextMenuItem>
         {node.id && (
-          <ContextMenuItem onSelect={() => {
-            if (!node.id) return;
-            // Add conditional blocks
-            actions.patchNode(node.id, {
-              conditionalBlocks: [
-                {
-                  id: `block_${Date.now()}`,
-                  type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
-                  condition: [],
-                  content: '',
-                  characterId: undefined,
-                  nextNodeId: undefined,
-                  setFlags: undefined,
-                },
-              ],
-            });
-            actions.openNodeEditor(node.id);
-          }}>
+          <ContextMenuItem onSelect={handleAddConditionals}>
             <Plus size={14} className="mr-2 text-df-conditional-border" /> Add Conditionals
           </ContextMenuItem>
         )}
@@ -207,7 +215,7 @@ export function CharacterNode({ data, selected }: NodeProps<CharacterNodeData>) 
           <>
             <ContextMenuSeparator />
             <ContextMenuItem 
-              onSelect={() => node.id && actions.deleteNode(node.id)}
+              onSelect={handleDelete}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 size={14} className="mr-2" /> Delete
@@ -217,4 +225,6 @@ export function CharacterNode({ data, selected }: NodeProps<CharacterNodeData>) 
       </ContextMenuContent>
     </ContextMenu>
   );
-}
+});
+
+CharacterNode.displayName = 'CharacterNode';

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { CornerDownRight, Hash, ArrowLeftCircle, Edit3, Trash2 } from 'lucide-react';
 import type { LayoutDirection } from '@/forge/lib/utils/layout/types';
@@ -24,7 +24,7 @@ interface DetourNodeData {
   layoutDirection?: LayoutDirection;
 }
 
-export function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
+export const DetourNode = React.memo(function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
   const { 
     node,
     ui = {},
@@ -39,6 +39,16 @@ export function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
   const returnNodeId = node.storyletCall?.returnNodeId;
   
   const actions = useForgeEditorActions();
+  const handleEdit = useCallback(() => {
+    if (node.id) actions.openNodeEditor(node.id);
+  }, [actions, node.id]);
+  const handleDoubleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation();
+    if (node.id) actions.openNodeEditor(node.id);
+  }, [actions, node.id]);
+  const handleDelete = useCallback(() => {
+    if (node.id) actions.deleteNode(node.id);
+  }, [actions, node.id]);
 
   const isHorizontal = layoutDirection === 'LR';
   const targetPosition = isHorizontal ? Position.Left : Position.Top;
@@ -50,10 +60,7 @@ export function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
       <ContextMenuTrigger asChild>
         <div 
           onContextMenu={(e) => e.stopPropagation()}
-          onDoubleClick={(e) => {
-            e.stopPropagation();
-            if (node.id) actions.openNodeEditor(node.id);
-          }}
+          onDoubleClick={handleDoubleClick}
           data-node-type={nodeType}
           data-selected={selected ? 'true' : 'false'}
           data-in-path={isInPath ? 'true' : 'false'}
@@ -125,14 +132,14 @@ export function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={() => node.id && actions.openNodeEditor(node.id)}>
+        <ContextMenuItem onSelect={handleEdit}>
           <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
         </ContextMenuItem>
         {!isStartNode && node.id && (
           <>
             <ContextMenuSeparator />
             <ContextMenuItem 
-              onSelect={() => node.id && actions.deleteNode(node.id)}
+              onSelect={handleDelete}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 size={14} className="mr-2" /> Delete
@@ -142,4 +149,6 @@ export function DetourNode({ data, selected }: NodeProps<DetourNodeData>) {
       </ContextMenuContent>
     </ContextMenu>
   );
-}
+});
+
+DetourNode.displayName = 'DetourNode';

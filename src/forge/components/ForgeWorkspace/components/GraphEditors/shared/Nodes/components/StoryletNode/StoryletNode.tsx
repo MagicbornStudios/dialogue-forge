@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { Hash, BookOpen, Flag, Play, Edit3, Trash2, ExternalLink } from 'lucide-react';
 import type { FlagSchema } from '@/forge/types/flags';
@@ -29,12 +29,30 @@ interface StoryletNodeData {
   layoutDirection?: LayoutDirection;
 }
 
-export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
+export const StoryletNode = React.memo(function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
   const { node, flagSchema, ui = {}, layoutDirection = 'TB' } = data;
   const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
+  const setFlags = useMemo(() => node.setFlags ?? [], [node.setFlags]);
 
   const actions = useForgeEditorActions();
   const workspaceActions = useForgeWorkspaceActions();
+  const handleEdit = useCallback(() => {
+    if (node.id) actions.openNodeEditor(node.id);
+  }, [actions, node.id]);
+  const handleDoubleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation();
+    if (node.id) actions.openNodeEditor(node.id);
+  }, [actions, node.id]);
+  const handleOpenStorylet = useCallback(() => {
+    if (node.storyletCall?.targetGraphId) {
+      workspaceActions.openStoryletGraph(String(node.storyletCall.targetGraphId), {
+        focusNodeId: node.storyletCall?.targetStartNodeId,
+      });
+    }
+  }, [node.storyletCall?.targetGraphId, node.storyletCall?.targetStartNodeId, workspaceActions]);
+  const handleDelete = useCallback(() => {
+    if (node.id) actions.deleteNode(node.id);
+  }, [actions, node.id]);
 
   const isHorizontal = layoutDirection === 'LR';
   const targetPosition = isHorizontal ? Position.Left : Position.Top;
@@ -42,8 +60,10 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
 
   const nodeType = node.type ?? FORGE_NODE_TYPE.STORYLET;
 
-  const contentPreview =
-    node.content?.length && node.content.length > 60 ? `${node.content.slice(0, 60)}...` : node.content || 'No description yet.';
+  const contentPreview = useMemo(() => {
+    if (!node.content) return 'No description yet.';
+    return node.content.length > 60 ? `${node.content.slice(0, 60)}...` : node.content;
+  }, [node.content]);
 
   const graphId = node.storyletCall?.targetGraphId;
   const returnNodeId = node.storyletCall?.returnNodeId;
@@ -55,10 +75,7 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
       <ContextMenuTrigger asChild>
         <div
           onContextMenu={(e) => e.stopPropagation()}
-          onDoubleClick={(e) => {
-            e.stopPropagation();
-            if (node.id) actions.openNodeEditor(node.id);
-          }}
+          onDoubleClick={handleDoubleClick}
           data-node-type={nodeType}
           data-selected={selected ? 'true' : 'false'}
           data-in-path={isInPath ? 'true' : 'false'}
@@ -128,9 +145,9 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
               </div>
             </div>
 
-            {node.setFlags && node.setFlags.length > 0 && (
+            {setFlags.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {node.setFlags.map((flagId: string) => {
+                {setFlags.map((flagId: string) => {
                   const flag = flagSchema?.flags.find((f: { id: string }) => f.id === flagId);
                   const flagType = flag?.type || 'dialogue';
                   return (
@@ -157,12 +174,12 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-56">
-        <ContextMenuItem onSelect={() => node.id && actions.openNodeEditor(node.id)}>
+        <ContextMenuItem onSelect={handleEdit}>
           <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
         </ContextMenuItem>
 
         {graphId && (
-          <ContextMenuItem onSelect={() => workspaceActions.openStoryletGraph(String(graphId), { focusNodeId: node.storyletCall?.targetStartNodeId })}>
+          <ContextMenuItem onSelect={handleOpenStorylet}>
             <ExternalLink size={14} className="mr-2" /> Open Storylet Graph
           </ContextMenuItem>
         )}
@@ -171,7 +188,7 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
           <>
             <ContextMenuSeparator />
             <ContextMenuItem
-              onSelect={() => node.id && actions.deleteNode(node.id)}
+              onSelect={handleDelete}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 size={14} className="mr-2" /> Delete
@@ -181,4 +198,6 @@ export function StoryletNode({ data, selected }: NodeProps<StoryletNodeData>) {
       </ContextMenuContent>
     </ContextMenu>
   );
-}
+});
+
+StoryletNode.displayName = 'StoryletNode';

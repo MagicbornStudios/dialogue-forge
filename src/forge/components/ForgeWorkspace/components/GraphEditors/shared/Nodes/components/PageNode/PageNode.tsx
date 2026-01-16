@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { Files, Edit3, Trash2, FilePlus, BookPlus, LayoutList, MessageSquareText } from 'lucide-react';
 import {
@@ -12,7 +12,7 @@ import type { ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowE
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 
-export function PageNode({ data, selected, id }: NodeProps<ShellNodeData>) {
+export const PageNode = React.memo(function PageNode({ data, selected, id }: NodeProps<ShellNodeData>) {
   const { node, ui = {} } = data;
   const { isDimmed = false, isInPath = false } = ui;
   
@@ -20,6 +20,24 @@ export function PageNode({ data, selected, id }: NodeProps<ShellNodeData>) {
   const summary = node.content;
   
   const actions = useForgeEditorActions();
+  const handleAddPage = useCallback(() => {
+    if (id) actions.openNodeEditor(id);
+  }, [actions, id]);
+  const handleAddChapter = useCallback(() => {
+    if (id) actions.openNodeEditor(id);
+  }, [actions, id]);
+  const handleAddAct = useCallback(() => {
+    if (id) actions.openNodeEditor(id);
+  }, [actions, id]);
+  const handleEditDialogue = useCallback(() => {
+    if (id) actions.openNodeEditor(id);
+  }, [actions, id]);
+  const handleEditPage = useCallback(() => {
+    if (id) actions.openNodeEditor(id);
+  }, [actions, id]);
+  const handleDelete = useCallback(() => {
+    if (id) actions.deleteNode(id);
+  }, [actions, id]);
   const nodeType = node.type ?? FORGE_NODE_TYPE.PAGE;
 
   return (
@@ -67,37 +85,25 @@ export function PageNode({ data, selected, id }: NodeProps<ShellNodeData>) {
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-56">
-        <ContextMenuItem onSelect={() => {
-          // Add Page - this will be handled by edge drop menu or pane context menu
-          actions.openNodeEditor(id!);
-        }}>
+        <ContextMenuItem onSelect={handleAddPage}>
           <FilePlus size={14} className="mr-2 text-df-page" /> Add Page
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => {
-          // Add Chapter - this will be handled by edge drop menu or pane context menu
-          actions.openNodeEditor(id!);
-        }}>
+        <ContextMenuItem onSelect={handleAddChapter}>
           <BookPlus size={14} className="mr-2 text-df-chapter" /> Add Chapter
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => {
-          // Add Act - this will be handled by edge drop menu or pane context menu
-          actions.openNodeEditor(id!);
-        }}>
+        <ContextMenuItem onSelect={handleAddAct}>
           <LayoutList size={14} className="mr-2 text-df-act" /> Add Act
         </ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem onSelect={() => {
-          // Edit Dialogue - this will be handled by workspace adapter in PR6
-          actions.openNodeEditor(id!);
-        }}>
+        <ContextMenuItem onSelect={handleEditDialogue}>
           <MessageSquareText size={14} className="mr-2 text-df-npc-selected" /> Edit Dialogue
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => actions.openNodeEditor(id!)}>
+        <ContextMenuItem onSelect={handleEditPage}>
           <Edit3 size={14} className="mr-2 text-df-text-secondary" /> Edit Page Details
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem 
-          onSelect={() => actions.deleteNode(id!)}
+          onSelect={handleDelete}
           className="text-destructive focus:text-destructive"
         >
           <Trash2 size={14} className="mr-2" /> Delete
@@ -105,4 +111,6 @@ export function PageNode({ data, selected, id }: NodeProps<ShellNodeData>) {
       </ContextMenuContent>
     </ContextMenu>
   );
-}
+});
+
+PageNode.displayName = 'PageNode';

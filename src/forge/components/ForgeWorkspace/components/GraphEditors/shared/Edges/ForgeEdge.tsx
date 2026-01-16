@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { BaseEdge, EdgeProps, getSmoothStepPath, getBezierPath, Position } from 'reactflow';
 import type { ForgeReactFlowEdge, ForgeReactFlowNode, ForgeNodeType } from '@/forge/types/forge-graph';
 import { edgeColorFor } from '@/forge/lib/utils/forge-edge-styles';
@@ -31,7 +31,7 @@ function getChoiceIndex(sourceHandle?: string | null): number | null {
   return null;
 }
 
-export function ForgeEdge({
+export const ForgeEdge = React.memo(function ForgeEdge({
   id,
   sourceX,
   sourceY,
@@ -48,19 +48,26 @@ export function ForgeEdge({
   const isBackEdge = data?.isBackEdge ?? false;
   const menuData = data as EdgeContextMenuData | undefined;
   const sourceNode = menuData?.sourceNode;
-  const choiceIndex = getChoiceIndex(sourceHandle ?? data?.sourceHandle ?? null);
+  const choiceIndex = useMemo(
+    () => getChoiceIndex(sourceHandle ?? data?.sourceHandle ?? null),
+    [sourceHandle, data?.sourceHandle],
+  );
   const dataChoiceIndex = choiceIndex !== null ? ((choiceIndex % 5) + 5) % 5 : null;
   const isChoiceHandle = dataChoiceIndex !== null;
   
   // Get edge color using centralized function
-  const edge = { sourceHandle: sourceHandle ?? data?.sourceHandle } as ForgeReactFlowEdge;
-  const baseColor = edgeColorFor(edge, sourceNode);
+  const edge = useMemo(
+    () => ({ sourceHandle: sourceHandle ?? data?.sourceHandle } as ForgeReactFlowEdge),
+    [sourceHandle, data?.sourceHandle],
+  );
+  const baseColor = useMemo(() => edgeColorFor(edge, sourceNode), [edge, sourceNode]);
   const edgeColor = isChoiceHandle ? 'var(--edge-color)' : baseColor;
   
   // Use smooth step path for angular look (like the horizontal example)
   // For back edges, use bezier for a more curved appearance
-  const [edgePath, labelX, labelY] = isBackEdge 
-    ? getBezierPath({
+  const [edgePath, labelX, labelY] = useMemo(() => {
+    if (isBackEdge) {
+      return getBezierPath({
         sourceX,
         sourceY,
         sourcePosition,
@@ -68,16 +75,18 @@ export function ForgeEdge({
         targetY,
         targetPosition,
         curvature: 0.5,
-      })
-    : getSmoothStepPath({
-        sourceX,
-        sourceY,
-        sourcePosition: sourcePosition || Position.Bottom,
-        targetX,
-        targetY,
-        targetPosition: targetPosition || Position.Top,
-        borderRadius: 8,
       });
+    }
+    return getSmoothStepPath({
+      sourceX,
+      sourceY,
+      sourcePosition: sourcePosition || Position.Bottom,
+      targetX,
+      targetY,
+      targetPosition: targetPosition || Position.Top,
+      borderRadius: 8,
+    });
+  }, [isBackEdge, sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition]);
 
   const isSelected = selected || hovered;
   const isDimmed = data?.isDimmed ?? false;
@@ -112,9 +121,22 @@ export function ForgeEdge({
 
   // Use actions instead of callbacks
   const actions = useForgeEditorActions();
+  const handleMouseEnter = useCallback(() => setHovered(true), []);
+  const handleMouseLeave = useCallback(() => setHovered(false), []);
+  const handleDeleteEdge = useCallback(() => actions.deleteEdge(id), [actions, id]);
   
   const insertElementTypes = menuData?.insertElementTypes;
   const hasContextMenu = !!insertElementTypes && insertElementTypes.length > 0;
+  const edgeStyle = useMemo(() => ({
+    stroke: strokeColor,
+    strokeWidth,
+    opacity,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    filter,
+    // Dashed line for back edges
+    strokeDasharray: isBackEdge ? '8 4' : undefined,
+  }), [strokeColor, strokeWidth, opacity, filter, isBackEdge]);
 
   const edgeContent = (
     <>
@@ -125,23 +147,14 @@ export function ForgeEdge({
         stroke="transparent"
         strokeWidth={20}
         style={{ cursor: 'pointer', pointerEvents: 'all' }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       />
       <BaseEdge 
         id={id} 
         path={edgePath}
         className="forge-edge-path"
-        style={{ 
-          stroke: strokeColor, 
-          strokeWidth, 
-          opacity,
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          filter,
-          // Dashed line for back edges
-          strokeDasharray: isBackEdge ? '8 4' : undefined,
-        }}
+        style={edgeStyle}
         markerEnd={isBackEdge ? `url(#loop-arrow-${id})` : 'url(#react-flow__arrowclosed)'}
       />
       {/* Loop indicator icon for back edges */}
@@ -211,7 +224,7 @@ export function ForgeEdge({
           </>
         )}
         <ContextMenuItem
-          onSelect={() => actions.deleteEdge(id)}
+          onSelect={handleDeleteEdge}
           className="text-destructive focus:text-destructive"
         >
           Delete edge
@@ -219,4 +232,6 @@ export function ForgeEdge({
       </ContextMenuContent>
     </ContextMenu>
   );
-}
+});
+
+ForgeEdge.displayName = 'ForgeEdge';

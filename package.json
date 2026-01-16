@@ -45,7 +45,13 @@
     "prepublishOnly": "npm run build:lib",
     "postinstall": "node scripts/patch-undici.js",
     "sync": "./sync-to-repo.sh",
-    "pack": "npm pack --dry-run"
+    "pack": "npm pack --dry-run",
+    "vendor:opencode:install": "cd vendor/opencode && bun install",
+    "vendor:opencode:dev": "cd vendor/opencode/packages/console/app && bun run dev",
+    "vendor:opencode:build": "cd vendor/opencode/packages/console/app && bun run build",
+    "vendor:opencode:sync": "node scripts/sync-opencode-ui.js",
+    "vendor:opencode:update": "node scripts/update-opencode-submodule.js",
+    "vendor:opencode:update-and-build": "npm run vendor:opencode:update && npm run vendor:opencode:build && npm run vendor:opencode:sync"
   },
   "keywords": [
     "dialogue",

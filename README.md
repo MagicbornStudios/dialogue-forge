@@ -1,261 +1,363 @@
 # Dialogue Forge
 
-A visual node-based dialogue editor with Yarn Spinner support for game development.
+A comprehensive narrative development platform combining visual dialogue editing, narrative structure management, AI-assisted writing, and runtime simulation. Built as both a **Next.js application** and a **library package** (`@magicborn/dialogue-forge`).
 
-## Project Vision
+## 🎯 Project Vision
 
-Dialogue Forge is being built as a **toolkit for narrative teams**: a visual
-editor for branching dialogue plus a narrative layer (storylets, chapters, acts)
-and a runtime player so you can test the dialogue exactly as players will see
-it. The repo ships both the **library** (`@magicborn/dialogue-forge`) and a
-**Next.js demo app** that showcases the editor, Yarn integration, and runtime
-playback.
+Dialogue Forge is a **toolkit for narrative teams** that provides:
+
+- **Visual Node-Based Dialogue Editor** - Create branching dialogue with conditions, flags, and storylets
+- **Narrative Workspace** - Organize content into acts, chapters, pages, and storylets
+- **Writer Workspace** - AI-assisted text-based content creation
+- **Yarn Spinner Integration** - Import/export `.yarn` files for game engine integration
+- **Flag System** - Game state management with schema-driven validation
+- **Runtime Player** - Test dialogues exactly as players will experience them
+- **AI Integration** - CopilotKit-powered assistance across all workspaces
 
 ## 🚀 Quick Start
 
-### Run the Demo (from source)
+### Run the Application (Development)
 
 ```bash
+# Install dependencies
 npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your API keys (see Environment Variables section)
+
+# Start development server
 npm run dev
 ```
 
-This starts the demo at `http://localhost:3000`.
+The application will be available at `http://localhost:3000` with routes:
+- `/forge` - Visual dialogue editor
+- `/writer` - AI-assisted writing workspace
+- `/opencode` - OpenCode AI coding assistant (see [OpenCode Integration](./docs/opencode-integration.md))
+- `/admin` - PayloadCMS admin panel
 
-### Run the Demo (from npm)
+### Install as Library Package
 
-```bash
-npx @magicborn/dialogue-forge
-```
-
-This downloads the package and starts an interactive demo server at `http://localhost:3000`.
-
-### Install as Library
+> **Note**: The library package (`@magicborn/dialogue-forge`) is currently in development. The npm package exists but may not be fully functional for standalone use. The primary development focus is on the Next.js application.
 
 ```bash
 npm install @magicborn/dialogue-forge
 ```
 
-### 1. Define Your Flags
+See [Library Usage](#library-usage) section for API examples.
+
+## 📁 Project Structure
+
+```
+dialogue-forge/
+├── app/                          # Next.js Host Application
+│   ├── (forge)/forge/           # Forge workspace route
+│   ├── (writer)/writer/         # Writer workspace route
+│   ├── (opencode)/opencode/     # OpenCode integration route
+│   ├── (payload)/admin/         # PayloadCMS admin panel
+│   ├── api/                     # API routes (AI, CopilotKit)
+│   ├── lib/                     # Host-side adapters
+│   │   ├── ai/                  # AI data adapter (PayloadCMS)
+│   │   ├── forge/               # Forge data adapter
+│   │   └── writer/              # Writer data adapter
+│   └── payload-collections/     # PayloadCMS collection configs
+│
+├── src/                          # Library Source (Package Code)
+│   ├── shared/                  # Cross-domain shared code
+│   │   ├── types/               # Shared types, constants
+│   │   ├── ui/                  # Shared UI components
+│   │   └── utils/               # Shared utilities
+│   ├── forge/                   # Forge Domain
+│   │   ├── components/         # Forge UI components
+│   │   ├── lib/                 # Forge business logic
+│   │   └── types/               # Forge-specific types
+│   ├── writer/                  # Writer Domain
+│   │   ├── components/          # Writer UI components
+│   │   ├── lib/                 # Writer business logic
+│   │   └── types/               # Writer-specific types
+│   ├── ai/                       # AI Infrastructure
+│   │   ├── adapters/            # AI adapters (OpenRouter, etc.)
+│   │   └── copilotkit/          # CopilotKit integration
+│   └── styles/                   # Global styles and themes
+│
+├── vendor/                       # Vendor Dependencies (Git Submodules)
+│   └── opencode/                 # OpenCode submodule
+│
+├── public/                       # Static assets
+│   └── vendor/                   # Vendor build outputs (gitignored)
+│
+└── docs/                         # Documentation
+    ├── architecture/             # Architecture documentation
+    ├── opencode-integration.md   # OpenCode vendor setup
+    └── environment-variables.md  # Environment variable reference
+```
+
+## 🏗️ Architecture & Layering
+
+### Layer Model
+
+The codebase follows a strict layering model to maintain separation between the host application and the library package:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Host Layer (app/)                                       │
+│  - Next.js routes, API endpoints                        │
+│  - PayloadCMS integration                                │
+│  - Host-specific data adapters                          │
+│  - Generated types (payload-types.ts)                   │
+└──────────────────┬──────────────────────────────────────┘
+                   │ imports
+┌──────────────────▼──────────────────────────────────────┐
+│  Library Layer (src/)                                   │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  Shared (src/shared/)                              │ │
+│  │  - Cross-domain types, utilities, UI primitives    │ │
+│  └────────────────────────────────────────────────────┘ │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  Domains (src/forge/, src/writer/)                │ │
+│  │  - Domain-specific components, logic, types      │ │
+│  │  - NO cross-domain imports (Forge ↔ Writer)      │ │
+│  └────────────────────────────────────────────────────┘ │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  AI (src/ai/)                                      │ │
+│  │  - AI infrastructure, adapters, contracts        │ │
+│  └────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Import Direction Rules
+
+**Critical**: These rules are non-negotiable and enforced to maintain package independence.
+
+1. **Host (`app/`) may import from `src/`** ✅
+   - Host can use library code
+   - Example: `import { ForgeWorkspace } from '@magicborn/dialogue-forge'`
+
+2. **Library (`src/`) must NOT import from `app/`** ❌
+   - Library must remain independent of host implementation
+   - No imports from `app/**` or `app/payload-types.ts`
+   - This ensures the library can be used in any host application
+
+3. **Domains may NOT import each other** ❌
+   - `src/forge/` cannot import from `src/writer/`
+   - `src/writer/` cannot import from `src/forge/`
+   - Cross-domain code goes in `src/shared/`
+
+4. **Domains may import from `shared/` and `ai/`** ✅
+   - Both Forge and Writer can use shared utilities
+   - Both can use AI infrastructure
+
+5. **AI layer is independent** ✅
+   - `src/ai/` does not import from domains or host
+   - Domains import AI, not the reverse
+
+### North Star Placement Rule
+
+> **Place code in the lowest layer that can own it without depending on higher layers.**
+
+**Decision Tree:**
+1. Needs Next.js, PayloadCMS, or host wiring? → **Host (`app/`)**
+2. Reused across Forge + Writer? → **Shared (`src/shared/`)**
+3. Forge- or Writer-specific? → **Domain (`src/forge/`, `src/writer/`)**
+4. AI infrastructure or contracts? → **AI (`src/ai/`)**
+
+**Promotion Pattern**: Start in domain, promote to shared when reused.
+
+### Type Independence Pattern
+
+The library maintains **complete independence** from host types:
+
+- **Library types** (in `src/**`): `ForgeGraphDoc`, `NarrativeAct`, `NarrativeChapter`
+- **Host types** (in `app/payload-types.ts`): `ForgeGraph`, `Act`, `Chapter`
+
+**Rules:**
+- Library types match PayloadCMS structure for compatibility but are defined independently
+- Host provides transformation adapters (`app/lib/forge/data-adapter/`)
+- Library code never imports `app/payload-types.ts`
+
+This ensures the library can be used in any host application, not just PayloadCMS.
+
+## 🎨 Conventions & Rules
+
+### Type Constants (CRITICAL)
+
+**NEVER use string literals for types. ALWAYS use exported constants.**
 
 ```typescript
-import { FlagSchema, FLAG_TYPE, FLAG_VALUE_TYPE } from '@magicborn/dialogue-forge';
-
-const flagSchema: FlagSchema = {
-  categories: ['quests', 'items', 'stats'],
-  flags: [
-    {
-      id: 'quest_dragon_slayer',
-      name: 'Dragon Slayer Quest',
-      type: FLAG_TYPE.QUEST,  // ✅ Use constant, not 'quest'
-      category: 'quests',
-      valueType: FLAG_VALUE_TYPE.STRING
-    },
-    {
-      id: 'item_ancient_key',
-      name: 'Ancient Key',
-      type: FLAG_TYPE.ITEM,  // ✅ Use constant
-      category: 'items'
-    },
-    {
-      id: 'stat_gold',
-      name: 'Gold',
-      type: FLAG_TYPE.STAT,  // ✅ Use constant
-      category: 'stats',
-      valueType: FLAG_VALUE_TYPE.NUMBER,
-      defaultValue: 0
-    }
-  ]
-};
-```
-
-### 2. Load Dialogue from Yarn
-
-```typescript
-import { importFromYarn } from '@magicborn/dialogue-forge';
-
-const yarnContent = await loadFile('merchant.yarn');
-const dialogue = importFromYarn(yarnContent, 'Merchant Dialogue');
-```
-
-### 3. Edit Dialogue
-
-```tsx
-import { DialogueGraphEditor, exportToYarn } from '@magicborn/dialogue-forge';
-
-<DialogueGraphEditor
-  dialogue={dialogue}
-  onChange={(updated) => {
-    const yarn = exportToYarn(updated);
-    saveFile('merchant.yarn', yarn);
-  }}
-  flagSchema={flagSchema}
-/>
-```
-
-### 4. Run Dialogue with Game State
-
-```tsx
-import { GamePlayer } from '@magicborn/dialogue-forge';
-
-// Get current game flags
-const gameFlags = {
-  quest_dragon_slayer: 'complete',
-  item_ancient_key: true,
-  stat_gold: 1000
+// ❌ WRONG
+const node: DialogueNode = {
+  type: 'npc',  // String literal
 };
 
-<GamePlayer
-  dialogue={dialogue}
-  gameStateFlags={gameFlags}
-  onComplete={(result) => {
-    // Update game state with new flags
-    gameState.flags = {
-      ...gameState.flags,
-      ...result.updatedFlags
-    };
-  }}
-/>
-```
+if (flag.type === 'quest') {  // String literal
+  // ...
+}
 
-## Features
+// ✅ CORRECT
+import { NODE_TYPE, FLAG_TYPE } from '@magicborn/dialogue-forge';
 
-- **Visual Node Editor** - Drag nodes, connect edges, right-click menus
-- **Narrative Workspace** - Organize dialogue into, acts, chapters, and storylets
-- **Yarn Spinner Import/Export** - Work with `.yarn` files
-- **Flag System** - Reference game flags with autocomplete dropdown
-- **Simulation Mode** - Test dialogues with current game state
-- **Built-in Guide** - Click book icon for complete documentation
+const node: DialogueNode = {
+  type: NODE_TYPE.NPC,  // Constant
+};
 
-## Flag System
-
-Flags represent game state (quests, items, achievements, etc.). The editor:
-- Shows available flags in dropdowns when setting flags
-- Validates flag references
-- Exports flags to Yarn format
-- Returns updated flags after dialogue completes
-
-**Flag Types** (use `FLAG_TYPE` constant):
-- `FLAG_TYPE.QUEST` - Quest state and completion
-- `FLAG_TYPE.ACHIEVEMENT` - Unlocked achievements
-- `FLAG_TYPE.ITEM` - Inventory items
-- `FLAG_TYPE.STAT` - Player statistics
-- `FLAG_TYPE.TITLE` - Earned titles
-- `FLAG_TYPE.DIALOGUE` - Temporary, dialogue-scoped
-- `FLAG_TYPE.GLOBAL` - Global game state
-
-**Important:** Always use the exported constants (`FLAG_TYPE`, `NODE_TYPE`, etc.) instead of string literals for type safety.
-
-See [DATA_STRUCTURES.md](./DATA_STRUCTURES.md) for complete type documentation and [FLAG_SYSTEM.md](./FLAG_SYSTEM.md) for flag system details.
-
-## API Reference
-
-### Components
-
-- `DialogueGraphEditor` - Visual editor for creating/editing dialogues
-- `NarrativeWorkspace` - Narrative + dialogue editor workspace (storylets/chapters/pages)
-- `GamePlayer` - Runtime player for dialogue + narrative traversal
-- `GuidePanel` - Built-in documentation panel
-- `FlagSelector` - Flag autocomplete component
-
-### Utilities
-
-- `importFromYarn(yarnContent, title)` - Parse Yarn file to DialogueTree
-- `exportToYarn(dialogue)` - Convert DialogueTree to Yarn format
-- `initializeFlags(schema)` - Create default flag state from schema
-- `mergeFlagUpdates(current, updates, schema)` - Merge flag updates
-- `validateFlags(flags, schema)` - Validate flags against schema
-
-### Types
-
-- `DialogueTree` - Dialogue structure
-- `DialogueNode` - Individual dialogue node (NPC or Player)
-- `FlagSchema` - Flag definitions
-- `GameFlagState` - Current flag values `{ [flagId]: value }`
-- `DialogueResult` - Result from running dialogue (updated flags, visited nodes)
-
-### Dialogue Graph Editor with View Modes
-
-`DialogueGraphEditor` supports graph, yarn, and play views. Use the exported `VIEW_MODE` constant (instead of string literals) alongside the `ViewMode` type so consumers get auto-complete and type safety when switching views.
-
-```tsx
-import { DialogueGraphEditor, VIEW_MODE, type DialogueTree, type ViewMode } from '@magicborn/dialogue-forge';
-import { useState } from 'react';
-
-export function DialogueEditorDemo() {
-  const [dialogue, setDialogue] = useState<DialogueTree | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);
-
-  return (
-    <DialogueGraphEditor
-      dialogue={dialogue}
-      onChange={setDialogue}
-      viewMode={viewMode}
-      onViewModeChange={setViewMode}
-    />
-  );
+if (flag.type === FLAG_TYPE.QUEST) {  // Constant
+  // ...
 }
 ```
 
-### Authoring dialogue data programmatically
+**Available Constants** (from `src/shared/types/constants.ts`):
+- `NODE_TYPE`: `NPC`, `PLAYER`, `CONDITIONAL`
+- `FLAG_TYPE`: `DIALOGUE`, `QUEST`, `ACHIEVEMENT`, `ITEM`, `STAT`, `TITLE`, `GLOBAL`
+- `FLAG_VALUE_TYPE`: `BOOLEAN`, `NUMBER`, `STRING`
+- `CONDITION_OPERATOR`: `IS_SET`, `IS_NOT_SET`, `EQUALS`, `NOT_EQUALS`, etc.
+- `VIEW_MODE`: `GRAPH`, `YARN`, `PLAY`
+- `QUEST_STATE`: `NOT_STARTED`, `STARTED`, `IN_PROGRESS`, `COMPLETED`, `FAILED`
 
-You can build dialogue content without the editor and still take advantage of the types and constants that power the scene player. This makes it easy to script nonlinear stories, export them, or feed them directly into `Gameplayer`.
+**Why This Matters:**
+- Type safety at compile time
+- Refactoring safety (change constant, all usages update)
+- Better IDE autocomplete
+- Prevents typos and inconsistencies
 
-```ts
-import {
-  NODE_TYPE,
-  type DialogueTree,
-  type DialogueNode,
-  GamePlayer
-} from '@magicborn/dialogue-forge';
+### Component Organization
 
-const nodes: Record<string, DialogueNode> = {
-  npc_1: {
-    id: 'npc_1',
-    type: NODE_TYPE.NPC,
-    speaker: 'Merchant',
-    content: 'Welcome, traveler! Looking for supplies?',
-    nextNodeId: 'player_1',
-    x: 0,
-    y: 0,
-  },
-  player_1: {
-    id: 'player_1',
-    type: NODE_TYPE.PLAYER,
-    content: ' ',
-    choices: [
-      { id: 'buy', text: 'Show me your wares.', nextNodeId: 'npc_2' },
-      { id: 'chat', text: 'Any rumors?', nextNodeId: 'npc_3' },
-    ],
-    x: 320,
-    y: 0,
-  },
-  npc_2: {
-    id: 'npc_2',
-    type: NODE_TYPE.NPC,
-    content: 'Take a look! Fresh stock just arrived.',
-    x: 640,
-    y: -120,
-  },
-  npc_3: {
-    id: 'npc_3',
-    type: NODE_TYPE.NPC,
-    content: 'Bandits have been spotted near the bridge—stay sharp.',
-    x: 640,
-    y: 120,
-  },
-};
+- **Small, focused files**: One component per file, compose higher-level components
+- **Feature folders**: Group related components (e.g., `src/forge/components/narrative-editor/`)
+- **Single-purpose exports**: Export one component per file unless tightly coupled
 
-const merchantIntro: DialogueTree = {
-  id: 'merchant_intro',
-  title: 'Merchant Greeting',
-  startNodeId: 'npc_1',
-  nodes,
-};
+### Data Flow
 
+- **UI vs. domain logic**: Keep transformations in `src/shared/utils/` or domain utils
+- **Immutable updates**: Always return new arrays/objects when modifying nested structures
+- **Explicit props**: Pass state and handlers into subcomponents; avoid hidden imports
+
+### File Naming
+
+- Components: `PascalCase.tsx` (e.g., `ForgeWorkspace.tsx`)
+- Utilities: `kebab-case.ts` (e.g., `reactflow-converter.ts`)
+- Types: `kebab-case.ts` (e.g., `forge-graph.ts`)
+- Constants: `constants.ts` (always in `types/` folder)
+
+## 🎨 Theming
+
+Dialogue Forge supports multiple themes via CSS custom properties:
+
+**Available Themes:**
+- `dark-fantasy` (default)
+- `light`
+- `cyberpunk`
+- `darcula`
+- `high-contrast`
+
+**Theme System:**
+- Themes defined in `src/styles/themes.css`
+- Uses CSS custom properties (`--color-df-*`)
+- Theme switching via `data-theme` attribute on `<html>`
+- Theme switcher component: `components/ThemeSwitcher.tsx`
+
+**Domain-Specific Tokens:**
+- `--color-df-info-*` - Information/blue colors
+- `--color-df-edge-choice-*-*` - Choice edge colors
+- `--color-df-warning-*` - Warning/amber colors
+- `--color-df-success-*` - Success/green colors
+
+Themes are applied globally and affect all workspaces (Forge, Writer, etc.).
+
+## 📦 Vendor Dependencies
+
+The `vendor/` folder contains **git submodules** for external dependencies that we vendor (include directly) rather than install via npm.
+
+### Why Vendor?
+
+We vendor dependencies when:
+1. **Source access needed** - We need to customize the UI or behavior
+2. **Not published** - The dependency isn't available as an npm package
+3. **Version control** - We want to track exact commits and maintain customizations
+4. **Integration** - We need to embed it in our app (e.g., iframe integration)
+
+### Current Vendors
+
+#### OpenCode (`vendor/opencode/`)
+
+OpenCode is an AI-powered coding assistant. We vendor it to:
+- Embed the SolidJS web UI in our Next.js app
+- Customize the UI to match our theming
+- Receive upstream updates while maintaining customizations
+
+**Setup & Usage:**
+See [docs/opencode-integration.md](./docs/opencode-integration.md) for complete documentation.
+
+**Quick Commands:**
+```bash
+# Install dependencies
+npm run vendor:opencode:install
+
+# Development (hot reload)
+npm run vendor:opencode:dev
+
+# Production build
+npm run vendor:opencode:build
+npm run vendor:opencode:sync
+
+# Update to latest upstream
+npm run vendor:opencode:update-and-build
 ```
 
-## Complete Example
+### Adding a New Vendor
+
+1. **Add as git submodule:**
+   ```bash
+   git submodule add <repository-url> vendor/<name>
+   git submodule update --init --recursive
+   ```
+
+2. **Add build scripts** to `package.json`:
+   ```json
+   {
+     "scripts": {
+       "vendor:<name>:install": "cd vendor/<name> && npm install",
+       "vendor:<name>:build": "cd vendor/<name> && npm run build",
+       "vendor:<name>:sync": "node scripts/sync-<name>.js"
+     }
+   }
+   ```
+
+3. **Create sync script** (`scripts/sync-<name>.js`):
+   - Copy build output to `public/vendor/<name>/`
+   - Handle path normalization
+
+4. **Update `.gitignore`**:
+   - Exclude `public/vendor/<name>/` (build artifacts)
+   - Keep `vendor/<name>/` tracked (it's a submodule)
+
+5. **Document integration** in `docs/<name>-integration.md`
+
+### Vendor Update Workflow
+
+```bash
+# Automated update (recommended)
+npm run vendor:<name>:update-and-build
+
+# Manual update
+cd vendor/<name>
+git fetch origin
+git merge origin/main
+cd ../..
+npm run vendor:<name>:build
+npm run vendor:<name>:sync
+```
+
+## 📚 Library Usage
+
+> **Status**: The library package is in development. While it can be installed via npm, it may not be fully functional for standalone use. The primary development focus is on the Next.js application.
+
+### Installation
+
+```bash
+npm install @magicborn/dialogue-forge
+```
+
+### Basic Usage
 
 ```typescript
 import {
@@ -263,70 +365,185 @@ import {
   GamePlayer,
   importFromYarn,
   exportToYarn,
-  FlagSchema,
-  GameFlagState
+  FLAG_TYPE,
+  NODE_TYPE,
+  type DialogueTree,
+  type FlagSchema
 } from '@magicborn/dialogue-forge';
+```
 
-// Define flags
-import { FLAG_TYPE } from '@magicborn/dialogue-forge';
+### Define Flags
 
+```typescript
 const flagSchema: FlagSchema = {
+  categories: ['quests', 'items'],
   flags: [
-    { id: 'quest_complete', type: FLAG_TYPE.QUEST, category: 'quests' },
-    { id: 'item_key', type: FLAG_TYPE.ITEM, category: 'items' },
+    {
+      id: 'quest_main',
+      name: 'Main Quest',
+      type: FLAG_TYPE.QUEST,
+      category: 'quests',
+      valueType: FLAG_VALUE_TYPE.STRING
+    }
   ]
 };
+```
 
-// Load dialogue
-const dialogue = importFromYarn(yarnFile, 'Merchant');
+### Edit Dialogue
 
-// Get current game state
-const gameFlags: GameFlagState = {
-  quest_complete: 'complete',
-  item_key: true
-};
-
-// Edit dialogue
+```tsx
 <DialogueGraphEditor
   dialogue={dialogue}
   onChange={(updated) => {
     const yarn = exportToYarn(updated);
-    saveFile(yarn);
+    saveFile('dialogue.yarn', yarn);
   }}
   flagSchema={flagSchema}
-  initialFlags={gameFlags}
 />
+```
 
-// OR run dialogue
+### Run Dialogue
+
+```tsx
 <GamePlayer
   dialogue={dialogue}
   gameStateFlags={gameFlags}
   onComplete={(result) => {
-    // Update game with new flags
+    // Update game state with new flags
     gameState.flags = result.updatedFlags;
-    // Next dialogue will have different options
-    // based on updated flags
   }}
 />
 ```
 
-## Documentation
+See the [API Reference](#api-reference) section for complete documentation.
 
-- **[GUIDE.md](./GUIDE.md)** - Friendly, educational guide for learning Dialogue Forge
-- **[UNREAL_INTEGRATION.md](./UNREAL_INTEGRATION.md)** - Complete guide for integrating with Unreal Engine
-- **[DATA_STRUCTURES.md](./DATA_STRUCTURES.md)** - Complete type reference and API documentation
-- **[INTEGRATION.md](./INTEGRATION.md)** - General integration patterns
-- **[FLAG_SYSTEM.md](./FLAG_SYSTEM.md)** - Detailed flag system documentation
+## 🔧 Environment Variables
 
-Click the **book icon** in the editor to open the built-in guide.
+All environment variables are documented in `.env.example` with inline comments.
 
-### Key Concepts
+**Required:**
+- `OPENROUTER_API_KEY` - For AI features (CopilotKit, Writer, Forge AI assistance)
+- `PAYLOAD_SECRET` - For PayloadCMS encryption (change from default in production!)
 
-**Flags = Yarn Variables**: Flags you define in Dialogue Forge become `$variable` in Yarn Spinner. These variables are stored in Yarn Spinner's Variable Storage at runtime, not in the .yarn file.
+**Optional:**
+- `NEXT_PUBLIC_OPENCODE_UI_DEV_URL` - OpenCode dev server URL (for hot reload)
+- `AI_TEMPERATURE`, `AI_MAX_OUTPUT_TOKENS` - AI runtime configuration
+- `PAYLOAD_PUBLIC_SERVER_URL` - PayloadCMS server URL
 
-**Bidirectional Flow**: 
-- Edit in Dialogue Forge → Export .yarn → Import to Unreal
-- Game sets variables → Yarn reads them → Dialogue reacts
-- Dialogue sets variables → Yarn stores them → Game reads them
+See [docs/environment-variables.md](./docs/environment-variables.md) for complete reference.
 
-See [UNREAL_INTEGRATION.md](./UNREAL_INTEGRATION.md) for complete details.
+**Quick Setup:**
+```bash
+cp .env.example .env.local
+# Edit .env.local with your values
+```
+
+## 🛣️ Roadmap
+
+### Current State (v0.1.8)
+
+- ✅ Next.js application with Forge, Writer, and OpenCode workspaces
+- ✅ PayloadCMS integration for data persistence
+- ✅ AI assistance via CopilotKit and OpenRouter
+- ✅ Yarn Spinner import/export
+- ✅ Flag system with schema validation
+- ✅ Multiple themes
+- ✅ Vendor dependency system (OpenCode)
+
+### Short Term
+
+- 🔄 **Library Package Stability** - Fix npm package for standalone use
+- 🔄 **Type Safety Audit** - Replace remaining string literals with constants
+- 🔄 **Storylet Export** - Define Yarn export strategy for storylets/randomizers
+- 🔄 **Documentation** - Complete API documentation and integration guides
+
+### Medium Term
+
+- 📋 **Testing** - Unit tests for core logic, integration tests for workspaces
+- 📋 **Performance** - Optimize large graph rendering, virtual scrolling
+- 📋 **Accessibility** - Keyboard navigation, screen reader support
+- 📋 **Export Formats** - Additional export formats (JSON, XML, etc.)
+
+### Long Term
+
+- 🎯 **Plugin System** - Extensible plugin architecture for custom node types
+- 🎯 **Collaboration** - Real-time collaborative editing
+- 🎯 **Version Control** - Built-in versioning and branching for dialogue trees
+- 🎯 **Game Engine SDKs** - Native integrations for Unity, Unreal, Godot
+
+## 📖 Documentation
+
+### Architecture
+
+- **[docs/architecture/BOUNDARIES.md](./docs/architecture/BOUNDARIES.md)** - Layer boundaries and import rules
+- **[docs/architecture/FILE-PLACEMENT.md](./docs/architecture/FILE-PLACEMENT.md)** - File placement decision tree
+- **[ARCHITECTURE_REVIEW.md](./ARCHITECTURE_REVIEW.md)** - Architecture review and cleanup priorities
+
+### Integration
+
+- **[docs/opencode-integration.md](./docs/opencode-integration.md)** - OpenCode vendor integration
+- **[docs/environment-variables.md](./docs/environment-variables.md)** - Environment variable reference
+- **[docs/copilotkit-setup.md](./docs/copilotkit-setup.md)** - CopilotKit AI setup
+
+### Development
+
+- **[agents.md](./agents.md)** - AI agent guide (coding preferences, conventions)
+- **[docs/nodes-and-editors.md](./docs/nodes-and-editors.md)** - Node types and editor architecture
+
+## 🧪 Development
+
+### Scripts
+
+```bash
+# Development
+npm run dev              # Start Next.js dev server
+npm run dev:watch        # Watch library TypeScript compilation
+
+# Building
+npm run build            # Build Next.js app
+npm run build:lib        # Build library package
+npm run build:types      # Generate PayloadCMS types
+
+# Testing
+npm test                 # Run tests
+npm run test:watch       # Watch mode
+npm run test:ui          # Test UI
+
+# Vendors
+npm run vendor:opencode:install    # Install OpenCode dependencies
+npm run vendor:opencode:dev        # Run OpenCode dev server
+npm run vendor:opencode:build      # Build OpenCode UI
+npm run vendor:opencode:sync       # Sync build to public/
+npm run vendor:opencode:update-and-build  # Update and rebuild
+```
+
+### Code Quality
+
+- **TypeScript**: Strict mode enabled
+- **Linting**: ESLint (configured in `.eslintrc.cjs`)
+- **Formatting**: Prettier (configured in `package.json`)
+- **Type Safety**: No `any` types, use constants instead of string literals
+
+## 📄 License
+
+MIT
+
+## 🤝 Contributing
+
+Contributions welcome! Please read the architecture documentation and follow the conventions outlined in this README and `agents.md`.
+
+**Key Guidelines:**
+- Follow the layer boundaries (no `src/` imports from `app/`)
+- Use constants, not string literals
+- Place code in the lowest appropriate layer
+- Document new features and integrations
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/MagicbornStudios/dialogue-forge/issues)
+- **Documentation**: See `docs/` folder
+- **Agent Guide**: See `agents.md` for AI agent assistance
+
+---
+
+**Dialogue Forge** - Built for narrative teams, powered by modern web technologies.

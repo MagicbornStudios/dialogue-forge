@@ -53,3 +53,10 @@ next-env.d.ts
 # OS
 Thumbs.db
 .DS_Store
+
+# Vendor build artifacts
+/public/vendor/opencode
+/vendor/opencode/packages/console/app/.output
+/vendor/opencode/packages/console/app/.nitro
+/vendor/opencode/packages/console/app/node_modules
+/vendor/opencode/node_modules

@@ -8,7 +8,6 @@ import { FlagSelector } from '@/forge/components/ForgeWorkspace/components/Graph
 import { EdgeIcon } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/EdgeIcon';
 import { User, GitBranch } from 'lucide-react';
 import { validateCondition, parseCondition } from '@/forge/lib/yarn-converter/utils/condition-utils';
-import { CHOICE_COLORS } from '@/forge/lib/utils/forge-flow-helpers';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 
 interface PlayerNodeFieldsProps {
@@ -26,17 +25,6 @@ interface PlayerNodeFieldsProps {
   onFocusNode?: (nodeId: string) => void;
   setConditionInputs: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   setChoiceInputs: React.Dispatch<React.SetStateAction<Record<string, Partial<ForgeChoice>>>>;
-}
-
-function darkenColor(color: string): string {
-  const hex = color.replace('#', '');
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-  const darkR = Math.floor(r * 0.6);
-  const darkG = Math.floor(g * 0.6);
-  const darkB = Math.floor(b * 0.6);
-  return `rgb(${darkR}, ${darkG}, ${darkB})`;
 }
 
 export function PlayerNodeFields({
@@ -139,26 +127,22 @@ export function PlayerNodeFields({
           const displayText = localInput?.text !== undefined ? localInput.text : (debouncedInput?.text ?? choice.text ?? '');
           const displayNextNodeId = localInput?.nextNodeId !== undefined ? localInput.nextNodeId : (debouncedInput?.nextNodeId ?? choice.nextNodeId);
           
-          const choiceColor = CHOICE_COLORS[idx % CHOICE_COLORS.length];
-          const darkChoiceColor = darkenColor(choiceColor);
-          
+          const choiceIndex = idx % 5;
+
           return (
             <div 
               key={choice.id} 
+              data-choice-index={choiceIndex}
               className={`rounded p-2 space-y-2 ${
                 hasCondition 
                   ? 'bg-blue-500/10 border-2 border-blue-500/50' 
-                  : 'bg-[#12121a] border border-[#2a2a3e]'
+                  : 'bg-[#12121a] border border-[#2a2a3e] forge-choice-border-top'
               }`}
-              style={{
-                borderTopColor: hasCondition ? undefined : choiceColor
-              }}
             >
               <div 
-                className="flex items-center gap-2 pb-2 border-b"
-                style={{
-                  borderBottomColor: hasCondition ? '#2a2a3e' : choiceColor
-                }}
+                className={`flex items-center gap-2 pb-2 border-b ${
+                  hasCondition ? 'border-[#2a2a3e]' : 'forge-choice-border-bottom'
+                }`}
               >
                 <label className="flex items-center cursor-pointer">
                   <div className="relative">
@@ -202,14 +186,10 @@ export function PlayerNodeFields({
                         onFocusNode(displayNextNodeId);
                       }
                     }}
-                    className="transition-colors cursor-pointer flex-shrink-0"
+                    className="forge-choice-color transition-colors cursor-pointer flex-shrink-0"
                     title={`Focus on node: ${displayNextNodeId}`}
                   >
-                    <EdgeIcon 
-                      size={16} 
-                      color={CHOICE_COLORS[idx % CHOICE_COLORS.length]} 
-                      className="transition-colors"
-                    />
+                    <EdgeIcon size={16} className="transition-colors" />
                   </button>
                 )}
                 <div className="relative flex-1">
@@ -223,24 +203,9 @@ export function PlayerNodeFields({
                       }));
                       handleUpdateChoice(idx, { nextNodeId: newNextNodeId });
                     }}
-                    className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 outline-none"
-                    style={{
-                      borderColor: displayNextNodeId ? darkChoiceColor : '#2a2a3e',
-                    }}
-                    onFocus={(event) => {
-                      if (displayNextNodeId) {
-                        event.target.style.borderColor = darkChoiceColor;
-                      } else {
-                        event.target.style.borderColor = '#e94560';
-                      }
-                    }}
-                    onBlur={(event) => {
-                      if (displayNextNodeId) {
-                        event.target.style.borderColor = darkChoiceColor;
-                      } else {
-                        event.target.style.borderColor = '#2a2a3e';
-                      }
-                    }}
+                    data-choice-index={choiceIndex}
+                    data-has-next={displayNextNodeId ? 'true' : 'false'}
+                    className="forge-choice-input w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 outline-none"
                   >
                     <option value="">— Select target —</option>
                     {graph.flow?.nodes?.map((n) => (
@@ -249,9 +214,8 @@ export function PlayerNodeFields({
                   </select>
                   {displayNextNodeId && (
                     <div 
-                      className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                      className="forge-choice-color absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
                       title={`Connects to node: ${displayNextNodeId}`}
-                      style={{ color: CHOICE_COLORS[idx % CHOICE_COLORS.length] }}
                     >
                       <GitBranch size={14} />
                     </div>
@@ -282,12 +246,11 @@ export function PlayerNodeFields({
                     // Also update immediately for better UX
                     handleUpdateChoice(idx, { text: newText });
                   }}
-                  className={`w-full bg-[#0d0d14] border rounded px-3 py-2 text-sm outline-none transition-colors ${
+                  data-choice-index={choiceIndex}
+                  data-has-text={displayText ? 'true' : 'false'}
+                  className={`forge-choice-input w-full bg-[#0d0d14] border rounded px-3 py-2 text-sm outline-none transition-colors ${
                     hasCondition ? 'text-gray-100' : 'text-gray-200'
                   }`}
-                  style={{
-                    borderColor: displayText ? darkChoiceColor : '#2a2a3e'
-                  }}
                   placeholder="Dialogue text..."
                 />
               </div>

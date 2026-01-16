@@ -19,12 +19,6 @@ import {
   FORGE_GRAPH_KIND,
 } from '@/forge/types/forge-graph';
 
-/**
- * Choice palette (used for Player/Conditional multi-branches)
- * Keep this consistent with your existing ChoiceEdge visuals.
- */
-export const CHOICE_COLORS = ['#e94560', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b'];
-
 export type LayoutDirection = 'TB' | 'LR';
 
 export enum Prefixes {
@@ -376,18 +370,16 @@ export function insertNodeBetweenEdge(
 
 /**
  * Utility to compute visual stroke color for a given edge.
- * - choice-/block- handles use CHOICE_COLORS[idx]
+ * - choice-/block- handles should use CSS choice variables instead of inline colors
  * - otherwise use the source node type palette (matches your NPCEdgeV2 intent)
  */
-export function edgeStrokeColor(edge: ForgeReactFlowEdge, sourceType?: string): string {
+export function edgeStrokeColor(edge: ForgeReactFlowEdge, sourceType?: string): string | undefined {
   const handle = edge.sourceHandle ?? '';
   if (handle.startsWith(Prefixes.CHOICE)) {
-    const idx = parseInt(handle.replace(Prefixes.CHOICE, ''), 10);
-    return CHOICE_COLORS[(Number.isFinite(idx) ? idx : 0) % CHOICE_COLORS.length];
+    return undefined;
   }
   if (handle.startsWith(Prefixes.BLOCK)) {
-    const idx = parseInt(handle.replace(Prefixes.BLOCK, ''), 10);
-    return CHOICE_COLORS[(Number.isFinite(idx) ? idx : 0) % CHOICE_COLORS.length];
+    return undefined;
   }
 
   // Type palette aligned with edgeColorFor in forge-edge-styles.ts

@@ -2,6 +2,7 @@
 
 /* Import dialogue-forge theme */
 @import './themes.css';
+@import './graph.css';
 @import './scrollbar.css';
 
 /* Source paths for Tailwind content detection */

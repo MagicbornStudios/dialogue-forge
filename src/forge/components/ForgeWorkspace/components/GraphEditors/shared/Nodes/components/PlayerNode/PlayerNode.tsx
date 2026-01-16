@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { ForgeChoice   } from '@/forge/types/forge-graph';
+import { ForgeChoice, ForgeNode, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { ForgeCharacter } from '@/forge/types/characters';
 import { GitBranch, Play, Flag, Hash, Edit3, Plus, Trash2 } from 'lucide-react';
 import { FlagSchema } from '@/forge/types/flags';
@@ -12,7 +12,6 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/shared/ui/context-menu';
-import { ForgeNode } from '@/forge/types/forge-graph';
 import { getFlagColorClass } from '@/forge/lib/utils/flag-styles';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 
@@ -90,44 +89,35 @@ export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
   // Check if this is an end node (player node with no choices that have nextNodeId)
   const hasNoOutgoingConnections = !choices.some(c => c.nextNodeId);
 
-  // Border color based on state
-  const borderClass = selected 
-    ? 'border-df-player-selected shadow-lg shadow-df-glow'
-    : isStartNode 
-      ? 'border-df-start shadow-md'
-      : isEndNode 
-        ? 'border-df-end shadow-md'
-        : 'border-df-player-border';
-
-  // Header background for player nodes
-  const headerBgClass = isStartNode 
-    ? 'bg-df-start-bg' 
-    : isEndNode 
-      ? 'bg-df-end-bg' 
-      : 'bg-df-player-header';
+  const nodeType = node.type ?? FORGE_NODE_TYPE.PLAYER;
 
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div 
           onContextMenu={(e) => e.stopPropagation()}
-          className={`rounded-lg border-2 transition-all duration-300 ${borderClass} ${isInPath ? 'border-df-player-selected/70' : ''} bg-df-player-bg min-w-[320px] max-w-[450px] relative overflow-hidden`}
-          style={isDimmed ? { opacity: 0.35, filter: 'saturate(0.3)' } : undefined}
+          data-node-type={nodeType}
+          data-selected={selected ? 'true' : 'false'}
+          data-in-path={isInPath ? 'true' : 'false'}
+          data-dimmed={isDimmed ? 'true' : 'false'}
+          data-start={isStartNode ? 'true' : 'false'}
+          data-end={isEndNode ? 'true' : 'false'}
+          className="forge-node rounded-lg border-2 transition-all duration-300 border-node bg-node text-node min-w-[320px] max-w-[450px] relative overflow-hidden"
         >
       {/* Input handle - position based on layout direction */}
       <Handle 
         type="target" 
         position={targetPosition} 
-        className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full"
+        className="node-handle !w-4 !h-4 !rounded-full"
       />
       
       {/* Health Bar Style Header */}
       <div 
         ref={headerRef}
-        className={`${headerBgClass} border-b-2 border-df-player-border px-3 py-2.5 flex items-center gap-3 relative`}
+        className="bg-node-header border-b-2 border-node px-3 py-2.5 flex items-center gap-3 relative"
       >
         {/* Large Avatar - Left side */}
-        <div className="w-14 h-14 rounded-full bg-df-player-bg border-[3px] border-df-player-border flex items-center justify-center text-3xl shadow-lg flex-shrink-0">
+        <div className="w-14 h-14 rounded-full bg-node border-[3px] border-node flex items-center justify-center text-3xl shadow-lg flex-shrink-0">
           {avatar}
         </div>
         
@@ -177,7 +167,7 @@ export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
               }}
               className="relative group"
             >
-              <div className="bg-df-elevated border border-df-control-border rounded-lg px-3 py-2 flex items-start gap-2 hover:border-df-player-selected/50 transition-colors">
+              <div className="node-choice bg-df-elevated border border-df-control-border rounded-lg px-3 py-2 flex items-start gap-2 transition-colors">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-df-text-primary leading-relaxed">
                     &quot;{choice.text || 'Empty choice'}&quot;
@@ -212,7 +202,7 @@ export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
                     transform: `translateY(-50%)`,
                     right: '-6px',
                   }}
-                  className="forge-choice-handle !bg-df-control-bg !border-2 hover:!border-df-player-selected hover:!bg-df-player-selected/20 !w-3 !h-3 !rounded-full"
+                  className="forge-choice-handle !w-3 !h-3 !rounded-full"
                 />
               </div>
             </div>
@@ -225,7 +215,7 @@ export function PlayerNode({ data, selected }: NodeProps<PlayerNodeData>) {
         type="source" 
         position={sourcePosition} 
         id="next"
-        className="!bg-df-control-bg !border-df-control-border !w-4 !h-4 !rounded-full hover:!border-df-player-selected hover:!bg-df-player-selected/20"
+        className="node-handle !w-4 !h-4 !rounded-full"
       />
         </div>
       </ContextMenuTrigger>

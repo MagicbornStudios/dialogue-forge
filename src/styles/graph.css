@@ -41,6 +41,15 @@
 
 .dialogue-graph-editor .forge-choice-handle {
   border-color: var(--edge-color);
+  border-style: solid;
+  border-width: 2px;
+  background-color: var(--color-df-control-bg);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.dialogue-graph-editor .forge-choice-handle:hover {
+  border-color: var(--edge-color);
+  background-color: color-mix(in oklab, var(--edge-color) 20%, var(--color-df-control-bg));
 }
 
 .dialogue-graph-editor .forge-choice-input {

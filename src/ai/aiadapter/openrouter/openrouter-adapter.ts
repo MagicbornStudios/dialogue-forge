@@ -6,6 +6,8 @@ import { generateText, streamText } from 'ai';
 import type {
   AiAdapter,
   AiEditProposal,
+  AiImageGenerationRequest,
+  AiImageGenerationResult,
   AiPlan,
   AiPlanStepApplyResult,
   AiPlanStepProposal,
@@ -182,6 +184,34 @@ const normalizeEditProposal = (
 const createTimeoutSignal = (timeoutMs: number) =>
   timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : undefined;
 
+const buildImageGenerationPayload = (
+  payload: AiImageGenerationRequest,
+  config: OpenRouterConfig
+): AiImageGenerationRequest => ({
+  ...payload,
+  model: payload.model ?? config.models.fast,
+});
+
+const parseOpenRouterError = async (response: Response) => {
+  try {
+    const payload = (await response.json()) as {
+      error?: { message?: string };
+      message?: string;
+    };
+    if (payload?.error?.message) {
+      return payload.error.message;
+    }
+    if (payload?.message) {
+      return payload.message;
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      return error.message;
+    }
+  }
+  return 'OpenRouter request failed.';
+};
+
 export const createOpenRouterAdapter = (
   config: OpenRouterConfig = getOpenRouterConfig()
 ): AiAdapter => {
@@ -192,6 +222,7 @@ export const createOpenRouterAdapter = (
       createPlan: async () => errorResponse(NOT_CONFIGURED_MESSAGE, 501),
       proposePlanStep: async () => errorResponse(NOT_CONFIGURED_MESSAGE, 501),
       applyPlanStep: async () => errorResponse(NOT_CONFIGURED_MESSAGE, 501),
+      generateImage: async () => errorResponse(NOT_CONFIGURED_MESSAGE, 501),
     };
   }
 
@@ -269,5 +300,34 @@ export const createOpenRouterAdapter = (
       errorResponse('Plan step proposals are not configured.', 501),
     applyPlanStep: async (): Promise<AiResponse<AiPlanStepApplyResult>> =>
       errorResponse('Plan step apply is not configured.', 501),
+    generateImage: async (
+      payload: AiImageGenerationRequest
+    ): Promise<AiResponse<AiImageGenerationResult>> => {
+      try {
+        const response = await fetch(`${config.baseUrl}/images/generations`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${config.apiKey}`,
+          },
+          body: JSON.stringify(buildImageGenerationPayload(payload, config)),
+          signal: createTimeoutSignal(config.timeoutMs),
+        });
+
+        if (!response.ok) {
+          return errorResponse(await parseOpenRouterError(response), response.status);
+        }
+
+        const data = (await response.json()) as AiImageGenerationResult;
+        return { ok: true, data };
+      } catch (error) {
+        return errorResponse(
+          error instanceof Error
+            ? error.message
+            : 'OpenRouter image generation request failed.',
+          502
+        );
+      }
+    },
   };
 };

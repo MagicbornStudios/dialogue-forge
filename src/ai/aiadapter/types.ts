@@ -45,6 +45,28 @@ export type AiPlanStepApplyResult = {
   patch?: string;
 };
 
+export type AiImageGenerationRequest = {
+  prompt: string;
+  model?: string;
+  size?: string;
+  n?: number;
+  response_format?: 'url' | 'b64_json';
+  quality?: string;
+  style?: string;
+  seed?: number;
+  user?: string;
+};
+
+export type AiImageGenerationResult = {
+  created?: number;
+  data: Array<{
+    url?: string;
+    b64_json?: string;
+    revised_prompt?: string;
+  }>;
+  model?: string;
+};
+
 export type AiStreamResponse = {
   stream: ReadableStream<Uint8Array>;
   status?: number;
@@ -63,4 +85,7 @@ export interface AiAdapter {
   createPlan: (payload: unknown) => Promise<AiResponse<AiPlan>>;
   proposePlanStep: (payload: AiPlanStepRequest) => Promise<AiResponse<AiPlanStepProposal>>;
   applyPlanStep?: (payload: AiPlanStepRequest) => Promise<AiResponse<AiPlanStepApplyResult>>;
+  generateImage: (
+    payload: AiImageGenerationRequest
+  ) => Promise<AiResponse<AiImageGenerationResult>>;
 }

@@ -31,4 +31,6 @@ export const DOM_EVENT_TYPE = {
     ARROW_RIGHT: 'ArrowRight',
   } as const;
   
-  export type KeyboardKey = typeof KEYBOARD_KEY[keyof typeof KEYBOARD_KEY];
+export type KeyboardKey = typeof KEYBOARD_KEY[keyof typeof KEYBOARD_KEY];
+
+export * from './bindings';

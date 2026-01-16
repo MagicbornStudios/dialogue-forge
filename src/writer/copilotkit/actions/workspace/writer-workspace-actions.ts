@@ -7,6 +7,8 @@
 
 import type { StoreApi } from 'zustand/vanilla';
 import type { WriterWorkspaceState } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
+import { WRITER_SAVE_STATUS } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
+import { getPlainTextFromSerializedContent } from '@/writer/components/WriterWorkspace/store/writer-workspace-types';
 import type { Parameter } from '@copilotkit/shared';
 import type { FrontendAction } from '@copilotkit/react-core';
 import { WRITER_ACTION_NAME } from '../../constants/writer-action-names';
@@ -68,10 +70,11 @@ export function createGetCurrentPageAction(
         return { error: 'No page selected' };
       }
       const draft = state.drafts[page.id];
+      const plainText = draft?.content.plainText ?? getPlainTextFromSerializedContent(page.bookBody);
       return {
         title: page.title,
-        content: draft?.content ?? page.bookBody ?? '',
-        hasUnsavedChanges: draft?.status === 'dirty',
+        content: plainText,
+        hasUnsavedChanges: draft?.status === WRITER_SAVE_STATUS.DIRTY,
       };
     },
   };

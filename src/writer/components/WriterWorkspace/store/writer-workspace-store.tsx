@@ -19,6 +19,7 @@ import { createEvent } from '@/writer/events/events';
 import { WRITER_EVENT_TYPE } from '@/writer/events/writer-events';
 import type {
   WriterDraftState,
+  WriterDraftContent,
   WriterSaveStatus,
   WriterAiProposalStatus,
   WriterAiPreviewMeta,
@@ -32,6 +33,7 @@ import {
 export type { WriterDocSnapshot, WriterPatchOp, WriterSelectionSnapshot } from '@/writer/types/writer-ai-types';
 export type {
   WriterDraftState,
+  WriterDraftContent,
   WriterSaveStatus,
   WriterAiProposalStatus,
   WriterAiPreviewMeta,
@@ -81,7 +83,7 @@ export interface WriterWorkspaceState {
 
     // Editor actions
     setDraftTitle: (pageId: number, title: string) => void;
-    setDraftContent: (pageId: number, content: string) => void;
+    setDraftContent: (pageId: number, content: WriterDraftContent) => void;
     saveNow: (pageId?: number) => Promise<void>;
     createDraftForPage: (page: ForgePage) => void;
     setEditorError: (error: string | null) => void;

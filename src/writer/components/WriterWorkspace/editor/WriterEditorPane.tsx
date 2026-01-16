@@ -6,6 +6,7 @@ import {
   WRITER_SAVE_STATUS,
   WriterWorkspaceState,
 } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
+import { getPlainTextFromSerializedContent } from '@/writer/components/WriterWorkspace/store/writer-workspace-types';
 import { applyWriterPatchOps } from '@/writer/lib/editor/patches';
 import { LexicalEditor } from '@/writer/components/WriterWorkspace/editor/LexicalEditor';
 import { AutosavePlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/AutosavePlugin';
@@ -74,7 +75,9 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
     return applyWriterPatchOps(aiSnapshot, aiPreview);
   }, [aiPreview, aiSnapshot]);
 
-  const beforeContent = aiSnapshot?.content ?? draft?.content ?? activePage?.bookBody ?? '';
+  const beforeContent = aiSnapshot?.content
+    ?? draft?.content.plainText
+    ?? getPlainTextFromSerializedContent(activePage?.bookBody);
   const afterContent = aiPreviewSnapshot?.content ?? '';
   const hasPreview = Boolean(aiPreview && aiPreview.length > 0);
   const isLoading = aiProposalStatus === WRITER_AI_PROPOSAL_STATUS.LOADING;
@@ -116,7 +119,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
           <>
             <LexicalEditor
               key={activePage.id}
-              value={draft?.content ?? activePage.bookBody ?? ''}
+              value={draft?.content.serialized ?? activePage.bookBody ?? ''}
               placeholder="Start writing..."
               onChange={(nextValue) => {
                 if (!activePageId) {

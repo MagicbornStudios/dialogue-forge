@@ -144,7 +144,7 @@ export const PlayerNode = React.memo(function PlayerNode({ data, selected }: Nod
         
         {/* Character Name - Center/Left */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-df-text-primary truncate leading-tight">
+          <h3 className="text-base font-bold text-foreground truncate leading-tight">
             {displayName}
           </h3>
         </div>
@@ -152,26 +152,32 @@ export const PlayerNode = React.memo(function PlayerNode({ data, selected }: Nod
         {/* Metadata Icons - Right side */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Node ID Icon */}
-          <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-base/50 border border-df-control-border" title={`Node ID: ${node.id}`}>
-            <Hash size={12} className="text-df-text-secondary" />
-            <span className="text-[10px] font-mono text-df-text-secondary">{node.id}</span>
+          <div
+            className="flex items-center gap-1 px-2 py-1 rounded bg-[color-mix(in_oklab,var(--color-df-base)_50%,transparent)] border border-border"
+            title={`Node ID: ${node.id}`}
+          >
+            <Hash size={12} className="text-[var(--color-df-text-secondary)]" />
+            <span className="text-[10px] font-mono text-[var(--color-df-text-secondary)]">{node.id}</span>
           </div>
           
           {/* Type Icon */}
-          <div className="flex items-center gap-1 px-2 py-1 rounded bg-df-player-selected/20 border border-df-player-selected/50" title="Player Node">
-            <GitBranch size={14} className="text-df-player-selected" />
-            <span className="text-[10px] font-semibold text-df-player-selected">PLAYER</span>
+          <div
+            className="flex items-center gap-1 px-2 py-1 rounded bg-[color-mix(in_oklab,var(--node-accent)_20%,transparent)] border border-[color-mix(in_oklab,var(--node-accent)_50%,transparent)]"
+            title="Player Node"
+          >
+            <GitBranch size={14} className="text-[var(--node-accent)]" />
+            <span className="text-[10px] font-semibold text-[var(--node-accent)]">PLAYER</span>
           </div>
         </div>
         
         {/* Start/End badge - Overlay on header */}
         {isStartNode && (
-          <div className="absolute top-1 right-1 bg-df-start text-df-text-primary text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
+          <div className="absolute top-1 right-1 bg-[var(--node-start-border)] text-foreground text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
             <Play size={8} fill="currentColor" /> START
           </div>
         )}
         {isEndNode && (
-          <div className="absolute top-1 right-1 bg-df-end text-df-text-primary text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
+          <div className="absolute top-1 right-1 bg-[var(--node-end-border)] text-foreground text-[8px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-lg z-20">
             <Flag size={8} /> END
           </div>
         )}
@@ -188,9 +194,9 @@ export const PlayerNode = React.memo(function PlayerNode({ data, selected }: Nod
               }}
               className="relative group"
             >
-              <div className="node-choice bg-df-elevated border border-df-control-border rounded-lg px-3 py-2 flex items-start gap-2 transition-colors">
+              <div className="node-choice bg-card border border-border rounded-lg px-3 py-2 flex items-start gap-2 transition-colors">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-df-text-primary leading-relaxed">
+                  <p className="text-sm text-foreground leading-relaxed">
                     &quot;{choice.text || 'Empty choice'}&quot;
                   </p>
                   
@@ -200,8 +206,7 @@ export const PlayerNode = React.memo(function PlayerNode({ data, selected }: Nod
                       {choice.setFlags.map(flagId => {
                         const flag = flagSchema?.flags.find(f => f.id === flagId);
                         const flagType = flag?.type || 'dialogue';
-                        const colorClass = flagType === 'dialogue' ? 'bg-df-flag-dialogue-bg text-df-flag-dialogue border-df-flag-dialogue' :
-                          getFlagColorClass(flagType);
+                        const colorClass = getFlagColorClass(flagType);
                         return (
                           <span key={flagId} className={`text-[8px] px-1 py-0.5 rounded-full border ${colorClass}`} title={flag?.name || flagId}>
                             {flagType === 'dialogue' ? 't' : flagType[0]}
@@ -239,11 +244,11 @@ export const PlayerNode = React.memo(function PlayerNode({ data, selected }: Nod
 
       <ContextMenuContent className="w-48">
         <ContextMenuItem onSelect={handleEdit}>
-          <Edit3 size={14} className="mr-2 text-df-npc-selected" /> Edit Node
+          <Edit3 size={14} className="mr-2 text-[var(--node-accent)]" /> Edit Node
         </ContextMenuItem>
         {node.id && (
           <ContextMenuItem onSelect={handleAddChoice}>
-            <Plus size={14} className="mr-2 text-df-player-selected" /> Add Choice
+            <Plus size={14} className="mr-2 text-[var(--node-accent)]" /> Add Choice
           </ContextMenuItem>
         )}
         {!isStartNode && node.id && (

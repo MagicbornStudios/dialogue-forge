@@ -64,16 +64,16 @@ export const PageNode = React.memo(function PageNode({ data, selected, id }: Nod
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-xs uppercase tracking-wide">Page</div>
-              <div className="text-sm font-semibold text-df-text-primary truncate">{title}</div>
+              <div className="text-sm font-semibold text-foreground truncate">{title}</div>
             </div>
           </div>
           <div className="px-3 py-2 space-y-2">
-            <div className="text-[10px] uppercase tracking-wide text-df-text-tertiary">ID</div>
-            <div className="text-xs font-mono text-df-text-secondary bg-df-base/40 border border-df-node-border rounded px-2 py-1">
+            <div className="text-[10px] uppercase tracking-wide text-[var(--color-df-text-tertiary)]">ID</div>
+            <div className="text-xs font-mono text-[var(--color-df-text-secondary)] bg-[color-mix(in_oklab,var(--color-df-base)_40%,transparent)] border border-border rounded px-2 py-1">
               {id}
             </div>
             {summary && (
-              <div className="text-xs text-df-text-secondary leading-relaxed">{summary}</div>
+              <div className="text-xs text-[var(--color-df-text-secondary)] leading-relaxed">{summary}</div>
             )}
           </div>
           <Handle
@@ -86,20 +86,20 @@ export const PageNode = React.memo(function PageNode({ data, selected, id }: Nod
 
       <ContextMenuContent className="w-56">
         <ContextMenuItem onSelect={handleAddPage}>
-          <FilePlus size={14} className="mr-2 text-df-page" /> Add Page
+          <FilePlus size={14} className="mr-2 text-[var(--node-page-accent)]" /> Add Page
         </ContextMenuItem>
         <ContextMenuItem onSelect={handleAddChapter}>
-          <BookPlus size={14} className="mr-2 text-df-chapter" /> Add Chapter
+          <BookPlus size={14} className="mr-2 text-[var(--node-chapter-accent)]" /> Add Chapter
         </ContextMenuItem>
         <ContextMenuItem onSelect={handleAddAct}>
-          <LayoutList size={14} className="mr-2 text-df-act" /> Add Act
+          <LayoutList size={14} className="mr-2 text-[var(--node-act-accent)]" /> Add Act
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={handleEditDialogue}>
-          <MessageSquareText size={14} className="mr-2 text-df-npc-selected" /> Edit Dialogue
+          <MessageSquareText size={14} className="mr-2 text-[var(--node-npc-accent)]" /> Edit Dialogue
         </ContextMenuItem>
         <ContextMenuItem onSelect={handleEditPage}>
-          <Edit3 size={14} className="mr-2 text-df-text-secondary" /> Edit Page Details
+          <Edit3 size={14} className="mr-2 text-[var(--color-df-text-secondary)]" /> Edit Page Details
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem 

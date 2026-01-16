@@ -1,6 +1,6 @@
 // src/forge/adapter/forge-data-adapter.ts
 import type { ForgeGraphDoc, ForgeReactFlowJson, ForgeGraphKind } from '@/forge/types/forge-graph';
-import { ForgeGameState } from '@/forge/types/forge-game-state';
+import { ForgeGameState, ForgeGameStateRecord } from '@/forge/types/forge-game-state';
 import { ForgeAct } from '@/forge/types/narrative';
 import type { ForgeCharacter } from '@/forge/types/characters';
 
@@ -67,11 +67,15 @@ export interface ForgeDataAdapter {
     summary?: string | null;
     order: number;
   }): Promise<ForgeAct>;
-  getGameState(projectId: number): Promise<ForgeGameState>;
-  updateGameState(projectId: number, patch: Partial<ForgeGameState>): Promise<ForgeGameState>;
+  listGameStates(projectId: number): Promise<ForgeGameStateRecord[]>;
+  getGameState(gameStateId: number): Promise<ForgeGameStateRecord>;
+  getActiveGameStateId(projectId: number): Promise<number | null>;
+  setActiveGameState(projectId: number, gameStateId: number): Promise<void>;
+  updateGameState(gameStateId: number, patch: Partial<ForgeGameState>): Promise<ForgeGameStateRecord>;
   createGameState(input: {
     projectId: number;
-    state: unknown;
-  }): Promise<ForgeGameState>;
-  deleteGameState(projectId: number): Promise<void>;
+    name: string;
+    state: ForgeGameState;
+  }): Promise<ForgeGameStateRecord>;
+  deleteGameState(gameStateId: number): Promise<void>;
 }

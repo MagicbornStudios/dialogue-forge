@@ -19,10 +19,11 @@ import {
   FileText,
   Layers,
 } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
 import { Button } from '@/shared/ui/button';
 import { ForgeProjectSwitcher } from './ForgeProjectSwitcher';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
+import type { ForgeGameStateRecord } from '@/forge/types/forge-game-state';
 
 type PanelId = 'sidebar' | 'narrative-editor' | 'storylet-editor';
 
@@ -57,6 +58,92 @@ export function ForgeWorkspaceMenuBar({
   onTogglePanel,
   headerLinks,
 }: ForgeWorkspaceMenuBarProps) {
+  const gameStatesById = useForgeWorkspaceStore((s) => s.gameStatesById);
+  const activeGameStateId = useForgeWorkspaceStore((s) => s.activeGameStateId);
+  const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
+  const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
+  const setActiveGameStateId = useForgeWorkspaceStore((s) => s.actions.setActiveGameStateId);
+  const upsertGameState = useForgeWorkspaceStore((s) => s.actions.upsertGameState);
+  const removeGameState = useForgeWorkspaceStore((s) => s.actions.removeGameState);
+
+  const sortedGameStates = React.useMemo(() => {
+    return Object.values(gameStatesById).sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (aTime !== bTime) {
+        return aTime - bTime;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [gameStatesById]);
+
+  const activeGameState = activeGameStateId ? gameStatesById[String(activeGameStateId)] : undefined;
+
+  const handleCreateGameState = async () => {
+    if (!selectedProjectId) return;
+    const name = window.prompt('Name your new game state');
+    if (!name) return;
+    try {
+      if (dataAdapter) {
+        const created = await dataAdapter.createGameState({
+          projectId: selectedProjectId,
+          name,
+          state: { flags: {} },
+        });
+        upsertGameState(created, selectedProjectId);
+        setActiveGameStateId(created.id, selectedProjectId);
+        await dataAdapter.setActiveGameState(selectedProjectId, created.id);
+      } else {
+        const localId = Date.now();
+        const record: ForgeGameStateRecord = {
+          id: localId,
+          projectId: selectedProjectId,
+          name,
+          createdAt: new Date().toISOString(),
+          state: { flags: {} },
+        };
+        upsertGameState(record, selectedProjectId);
+        setActiveGameStateId(record.id, selectedProjectId);
+      }
+    } catch (error) {
+      console.error('Failed to create game state:', error);
+    }
+  };
+
+  const handleSwitchGameState = async (gameStateId: number) => {
+    if (!selectedProjectId) return;
+    setActiveGameStateId(gameStateId, selectedProjectId);
+    if (!dataAdapter) return;
+    try {
+      await dataAdapter.setActiveGameState(selectedProjectId, gameStateId);
+    } catch (error) {
+      console.error('Failed to set active game state:', error);
+    }
+  };
+
+  const handleDeleteActiveGameState = async () => {
+    if (!selectedProjectId || !activeGameStateId) return;
+    if (sortedGameStates.length <= 1) return;
+    const confirmed = window.confirm(`Delete game state "${activeGameState?.name ?? 'Untitled'}"?`);
+    if (!confirmed) return;
+    try {
+      if (dataAdapter) {
+        await dataAdapter.deleteGameState(activeGameStateId);
+      }
+      removeGameState(activeGameStateId, selectedProjectId);
+      const remaining = sortedGameStates.filter((state) => state.id !== activeGameStateId);
+      const nextActive = remaining[0]?.id ?? null;
+      if (nextActive !== null && dataAdapter) {
+        await dataAdapter.setActiveGameState(selectedProjectId, nextActive);
+      }
+      if (nextActive !== null) {
+        setActiveGameStateId(nextActive, selectedProjectId);
+      }
+    } catch (error) {
+      console.error('Failed to delete game state:', error);
+    }
+  };
+
   return (
     <div className="flex items-center justify-between border-b border-border bg-background/80 px-2 py-1 hover:border-[var(--editor-border-hover)] transition-colors duration-200">
       {/* Left Section: Project Switcher + Menus */}
@@ -117,6 +204,41 @@ export function ForgeWorkspaceMenuBar({
                 <Layers size={14} className="mr-2" />
                 Storylet Editor
               </MenubarCheckboxItem>
+            </MenubarContent>
+          </MenubarMenu>
+
+          {/* Game State Menu */}
+          <MenubarMenu>
+            <MenubarTrigger className="px-3 py-1.5 text-sm font-medium border border-transparent hover:border-border hover:bg-muted rounded-sm transition-colors data-[state=open]:bg-muted data-[state=open]:border-border">
+              State
+            </MenubarTrigger>
+            <MenubarContent>
+              <MenubarItem onClick={handleCreateGameState} disabled={!selectedProjectId}>
+                Create Game State
+              </MenubarItem>
+              <MenubarSeparator />
+              {sortedGameStates.length === 0 ? (
+                <MenubarItem disabled>No game states yet</MenubarItem>
+              ) : (
+                <MenubarRadioGroup value={activeGameStateId ? String(activeGameStateId) : undefined}>
+                  {sortedGameStates.map((state) => (
+                    <MenubarRadioItem
+                      key={state.id}
+                      value={String(state.id)}
+                      onClick={() => handleSwitchGameState(state.id)}
+                    >
+                      {state.name}
+                    </MenubarRadioItem>
+                  ))}
+                </MenubarRadioGroup>
+              )}
+              <MenubarSeparator />
+              <MenubarItem
+                onClick={handleDeleteActiveGameState}
+                disabled={!activeGameStateId || sortedGameStates.length <= 1}
+              >
+                Delete Active State
+              </MenubarItem>
             </MenubarContent>
           </MenubarMenu>
         </Menubar>

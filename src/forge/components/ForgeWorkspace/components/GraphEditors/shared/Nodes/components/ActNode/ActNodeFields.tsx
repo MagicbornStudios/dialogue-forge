@@ -15,7 +15,7 @@ export function ActNodeFields({ act, onUpdate }: ActNodeFieldsProps) {
           type="text"
           value={act.title || ''}
           onChange={(event) => onUpdate({ title: event.target.value || undefined })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-act-accent)] outline-none"
           placeholder="Act title"
         />
       </div>
@@ -24,7 +24,7 @@ export function ActNodeFields({ act, onUpdate }: ActNodeFieldsProps) {
         <textarea
           value={act.summary || ''}
           onChange={(event) => onUpdate({ summary: event.target.value || undefined })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none min-h-[100px] resize-y"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-act-accent)] outline-none min-h-[100px] resize-y"
           placeholder="Act summary"
         />
       </div>

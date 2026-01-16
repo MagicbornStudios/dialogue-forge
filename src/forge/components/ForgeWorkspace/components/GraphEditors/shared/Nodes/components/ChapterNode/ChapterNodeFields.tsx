@@ -15,7 +15,7 @@ export function ChapterNodeFields({ chapter, onUpdate }: ChapterNodeFieldsProps)
           type="text"
           value={chapter.title || ''}
           onChange={(event) => onUpdate({ title: event.target.value || undefined })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-chapter-accent)] outline-none"
           placeholder="Chapter title"
         />
       </div>
@@ -24,7 +24,7 @@ export function ChapterNodeFields({ chapter, onUpdate }: ChapterNodeFieldsProps)
         <textarea
           value={chapter.summary || ''}
           onChange={(event) => onUpdate({ summary: event.target.value || undefined })}
-          className="w-full bg-df-elevated border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary focus:border-df-npc-selected outline-none min-h-[100px] resize-y"
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-chapter-accent)] outline-none min-h-[100px] resize-y"
           placeholder="Chapter summary"
         />
       </div>

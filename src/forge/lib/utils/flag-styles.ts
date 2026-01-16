@@ -7,13 +7,13 @@ import type { FlagType } from '@/forge/types/flags';
  * Uses design system color tokens (df-flag-*)
  */
 export const FLAG_COLOR_CLASSES: Record<FlagType, string> = {
-  [FLAG_TYPE.DIALOGUE]: 'bg-df-flag-dialogue-bg text-df-flag-dialogue border-df-flag-dialogue',
-  [FLAG_TYPE.QUEST]: 'bg-df-flag-quest-bg text-df-flag-quest border-df-flag-quest',
-  [FLAG_TYPE.ACHIEVEMENT]: 'bg-df-flag-achievement-bg text-df-flag-achievement border-df-flag-achievement',
-  [FLAG_TYPE.ITEM]: 'bg-df-flag-item-bg text-df-flag-item border-df-flag-item',
-  [FLAG_TYPE.STAT]: 'bg-df-flag-stat-bg text-df-flag-stat border-df-flag-stat',
-  [FLAG_TYPE.TITLE]: 'bg-df-flag-title-bg text-df-flag-title border-df-flag-title',
-  [FLAG_TYPE.GLOBAL]: 'bg-df-flag-global-bg text-df-flag-global border-df-flag-global',
+  [FLAG_TYPE.DIALOGUE]: 'bg-[var(--color-df-flag-dialogue-bg)] text-[var(--color-df-flag-dialogue)] border-[var(--color-df-flag-dialogue)]',
+  [FLAG_TYPE.QUEST]: 'bg-[var(--color-df-flag-quest-bg)] text-[var(--color-df-flag-quest)] border-[var(--color-df-flag-quest)]',
+  [FLAG_TYPE.ACHIEVEMENT]: 'bg-[var(--color-df-flag-achievement-bg)] text-[var(--color-df-flag-achievement)] border-[var(--color-df-flag-achievement)]',
+  [FLAG_TYPE.ITEM]: 'bg-[var(--color-df-flag-item-bg)] text-[var(--color-df-flag-item)] border-[var(--color-df-flag-item)]',
+  [FLAG_TYPE.STAT]: 'bg-[var(--color-df-flag-stat-bg)] text-[var(--color-df-flag-stat)] border-[var(--color-df-flag-stat)]',
+  [FLAG_TYPE.TITLE]: 'bg-[var(--color-df-flag-title-bg)] text-[var(--color-df-flag-title)] border-[var(--color-df-flag-title)]',
+  [FLAG_TYPE.GLOBAL]: 'bg-[var(--color-df-flag-global-bg)] text-[var(--color-df-flag-global)] border-[var(--color-df-flag-global)]',
 };
 
 /**

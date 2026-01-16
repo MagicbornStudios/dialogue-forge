@@ -34,14 +34,14 @@ export function ContextMenuBase({
     <ContextMenu onOpenChange={handleOpenChange}>
       <ContextMenuContent
         className={cn(
-          'bg-df-sidebar-bg border border-df-sidebar-border rounded-lg shadow-lg p-1 min-w-[150px]',
+          'bg-popover border border-border rounded-lg shadow-lg p-1 min-w-[150px]',
           className
         )}
         style={{ position: 'fixed', left: x, top: y, zIndex: 50 }}
         onCloseAutoFocus={(event) => event.preventDefault()}
       >
         {title && (
-          <ContextMenuLabel className="px-3 py-1 text-[10px] text-df-text-secondary uppercase border-b border-df-sidebar-border">
+          <ContextMenuLabel className="px-3 py-1 text-[10px] text-muted-foreground uppercase border-b border-border">
             {title}
           </ContextMenuLabel>
         )}
@@ -59,8 +59,8 @@ interface ContextMenuButtonProps {
 
 export function ContextMenuButton({ onClick, children, variant = 'primary' }: ContextMenuButtonProps) {
   const className = variant === 'primary'
-    ? 'w-full text-left px-3 py-2 text-sm text-df-text-primary hover:bg-df-elevated rounded'
-    : 'w-full text-left px-3 py-2 text-sm text-df-text-secondary hover:bg-df-elevated rounded';
+    ? 'w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded'
+    : 'w-full text-left px-3 py-2 text-sm text-muted-foreground hover:bg-accent rounded';
   
   return (
     <ContextMenuItem onSelect={onClick} className={className}>

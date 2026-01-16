@@ -8,7 +8,7 @@ import { devtools } from "zustand/middleware"
 import { immer } from "zustand/middleware/immer"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { FORGE_GRAPH_KIND, type ForgeGraphDoc } from "@/forge/types"
-import type { ForgeGameState } from "@/forge/types/forge-game-state"
+import type { ForgeGameState, ForgeGameStateRecord } from "@/forge/types/forge-game-state"
 import type { FlagSchema } from "@/forge/types/flags"
 import type { ForgeEvent } from "@/forge/events/events"
 import { createEvent } from "@/forge/events/events"
@@ -32,11 +32,13 @@ export interface ForgeWorkspaceState {
   
   // Game state slice
   activeFlagSchema: ReturnType<typeof createGameStateSlice>["activeFlagSchema"]
+  gameStatesById: ReturnType<typeof createGameStateSlice>["gameStatesById"]
+  activeGameStateId: ReturnType<typeof createGameStateSlice>["activeGameStateId"]
   activeGameState: ReturnType<typeof createGameStateSlice>["activeGameState"]
   gameStateDraft: ReturnType<typeof createGameStateSlice>["gameStateDraft"]
   gameStateError: ReturnType<typeof createGameStateSlice>["gameStateError"]
   loadedFlagSchemaProjectId: ReturnType<typeof createGameStateSlice>["loadedFlagSchemaProjectId"]
-  loadedGameStateProjectId: ReturnType<typeof createGameStateSlice>["loadedGameStateProjectId"]
+  loadedGameStatesProjectId: ReturnType<typeof createGameStateSlice>["loadedGameStatesProjectId"]
   
   // View state slice
   graphScope: ReturnType<typeof createViewStateSlice>["graphScope"]
@@ -73,7 +75,11 @@ export interface ForgeWorkspaceState {
     
     // Game state actions
     setActiveFlagSchema: ReturnType<typeof createGameStateSlice>["setActiveFlagSchema"]
+    setGameStates: ReturnType<typeof createGameStateSlice>["setGameStates"]
+    setActiveGameStateId: ReturnType<typeof createGameStateSlice>["setActiveGameStateId"]
     setActiveGameState: ReturnType<typeof createGameStateSlice>["setActiveGameState"]
+    upsertGameState: ReturnType<typeof createGameStateSlice>["upsertGameState"]
+    removeGameState: ReturnType<typeof createGameStateSlice>["removeGameState"]
     setGameStateDraft: ReturnType<typeof createGameStateSlice>["setGameStateDraft"]
     setGameStateError: ReturnType<typeof createGameStateSlice>["setGameStateError"]
     
@@ -108,6 +114,7 @@ export interface CreateForgeWorkspaceStoreOptions {
   initialStoryletGraphId?: string | null
   initialFlagSchema?: FlagSchema
   initialGameState?: ForgeGameState
+  initialGameStates?: ForgeGameStateRecord[]
   resolveGraph?: (id: string) => Promise<ForgeGraphDoc>
   dataAdapter?: ForgeDataAdapter
 }
@@ -118,7 +125,8 @@ export function createForgeWorkspaceStore(
 ) {
   const { 
     initialFlagSchema: flagSchema, 
-    initialGameState: gameState, 
+    initialGameState: gameState,
+    initialGameStates,
     initialNarrativeGraph, 
     initialStoryletGraph,
     initialNarrativeGraphId,
@@ -178,6 +186,9 @@ export function createForgeWorkspaceStore(
           graphSlice.setGraph(String(initialStoryletGraph.id), initialStoryletGraph)
         }
         const gameStateSlice = createGameStateSlice(set, get, flagSchema, gameState)
+        if (initialGameStates?.length) {
+          gameStateSlice.setGameStates(initialGameStates)
+        }
         const viewStateSlice = createViewStateSlice(set, get)
         const projectSlice = createProjectSlice(set, get)
 
@@ -248,7 +259,11 @@ export function createForgeWorkspaceStore(
             
             // Game state actions
             setActiveFlagSchema: gameStateSlice.setActiveFlagSchema,
+            setGameStates: gameStateSlice.setGameStates,
+            setActiveGameStateId: gameStateSlice.setActiveGameStateId,
             setActiveGameState: gameStateSlice.setActiveGameState,
+            upsertGameState: gameStateSlice.upsertGameState,
+            removeGameState: gameStateSlice.removeGameState,
             setGameStateDraft: gameStateSlice.setGameStateDraft,
             setGameStateError: gameStateSlice.setGameStateError,
             

@@ -195,32 +195,44 @@ function ForgeWorkspaceContent({
     setPanelVisibility(prev => ({ ...prev, [panelId]: !prev[panelId] }));
   }, []);
 
-  // Get dataAdapter from workspace store context (we'll need to pass it through)
-  // For now, we'll handle default graph creation in a useEffect
-  // TODO: Pass dataAdapter through context or props if needed for default creation
+  // Get store values at component level (not in callbacks to avoid hook violations)
+  const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
+  const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
+  const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
 
   const onNarrativeGraphChange = useCallback(
     async (next: ForgeGraphDoc) => {
-      const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
-      const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
-      
       // If graph has no ID (id === 0), it's a new graph that needs to be created in the database
       // This happens when the first node is added to a blank graph
       if (next.id === 0 && dataAdapter && selectedProjectId && next.flow.nodes.length > 0) {
         try {
+          // Create graph first without title (or use provided title)
           const createdGraph = await dataAdapter.createGraph({
             projectId: selectedProjectId,
             kind: next.kind,
-            title: next.title || 'Untitled Narrative',
+            title: next.title || '', // Will be set after creation if not provided
             flow: next.flow,
             startNodeId: next.startNodeId,
             endNodeIds: next.endNodeIds,
           });
-          // Update the graph with the new ID and open it
-          const updatedGraph = { ...next, id: createdGraph.id };
+          
+          // Generate default title with first 4 digits of graph ID
+          const graphIdStr = String(createdGraph.id);
+          const defaultTitle = `New Graph ${graphIdStr.slice(0, 4)}`;
+          const finalTitle = createdGraph.title || defaultTitle;
+          
+          // Update title in database if we generated a default
+          if (!createdGraph.title) {
+            await dataAdapter.updateGraph(createdGraph.id, { title: finalTitle });
+          }
+          
+          // Update the graph with the new ID and title, set it in store
+          const updatedGraph = { ...next, id: createdGraph.id, title: finalTitle };
           setGraph(String(createdGraph.id), updatedGraph);
-          const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
-          openGraphInScope('narrative', String(createdGraph.id));
+          
+          // Open the graph in the narrative scope - this will make it the active graph
+          // The graph is already in the store, so openGraphInScope will work
+          await openGraphInScope('narrative', String(createdGraph.id));
         } catch (error) {
           console.error('Failed to create graph:', error);
         }
@@ -228,31 +240,42 @@ function ForgeWorkspaceContent({
         setGraph(String(next.id), next);
       }
     },
-    [setGraph]
+    [dataAdapter, selectedProjectId, openGraphInScope, setGraph]
   );
 
   const onStoryletGraphChange = useCallback(
     async (next: ForgeGraphDoc) => {
-      const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
-      const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
-      
       // If graph has no ID (id === 0), it's a new graph that needs to be created in the database
       // This happens when the first node is added to a blank graph
       if (next.id === 0 && dataAdapter && selectedProjectId && next.flow.nodes.length > 0) {
         try {
+          // Create graph first without title (or use provided title)
           const createdGraph = await dataAdapter.createGraph({
             projectId: selectedProjectId,
             kind: next.kind,
-            title: next.title || 'Untitled Storylet',
+            title: next.title || '', // Will be set after creation if not provided
             flow: next.flow,
             startNodeId: next.startNodeId,
             endNodeIds: next.endNodeIds,
           });
-          // Update the graph with the new ID and open it
-          const updatedGraph = { ...next, id: createdGraph.id };
+          
+          // Generate default title with first 4 digits of graph ID
+          const graphIdStr = String(createdGraph.id);
+          const defaultTitle = `New Graph ${graphIdStr.slice(0, 4)}`;
+          const finalTitle = createdGraph.title || defaultTitle;
+          
+          // Update title in database if we generated a default
+          if (!createdGraph.title) {
+            await dataAdapter.updateGraph(createdGraph.id, { title: finalTitle });
+          }
+          
+          // Update the graph with the new ID and title, set it in store
+          const updatedGraph = { ...next, id: createdGraph.id, title: finalTitle };
           setGraph(String(createdGraph.id), updatedGraph);
-          const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
-          openGraphInScope('storylet', String(createdGraph.id));
+          
+          // Open the graph in the storylet scope - this will make it the active graph
+          // The graph is already in the store, so openGraphInScope will work
+          await openGraphInScope('storylet', String(createdGraph.id));
         } catch (error) {
           console.error('Failed to create graph:', error);
         }
@@ -260,7 +283,7 @@ function ForgeWorkspaceContent({
         setGraph(String(next.id), next);
       }
     },
-    [setGraph]
+    [dataAdapter, selectedProjectId, openGraphInScope, setGraph]
   );
 
   // Modal actions from store

@@ -27,6 +27,11 @@ export function InlineRenameInput({
   const [inputValue, setInputValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Sync with prop changes (important for breadcrumb rename)
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
   useEffect(() => {
     if (autoFocus && inputRef.current) {
       inputRef.current.focus();

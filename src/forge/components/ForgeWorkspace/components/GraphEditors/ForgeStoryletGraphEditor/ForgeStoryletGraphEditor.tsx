@@ -682,6 +682,7 @@ function ForgeStoryletGraphEditorContent({
                   graphY={shell.paneContextMenu.flowY}
                   onAddNode={(type, x, y) => actions.createNode(type as ForgeNodeType, x, y)}
                   onClose={() => shell.setPaneContextMenu(null)}
+                  open={!!shell.paneContextMenu}
                 />
               )}
 

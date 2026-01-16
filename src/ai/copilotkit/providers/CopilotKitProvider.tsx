@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { CopilotKit } from '@copilotkit/react-core';
 import { CopilotSidebar } from '@copilotkit/react-ui';
 
@@ -8,6 +8,20 @@ interface CopilotKitProviderProps {
   children: React.ReactNode;
   instructions?: string;
   defaultOpen?: boolean;
+}
+
+// Context to control sidebar visibility
+const CopilotSidebarContext = createContext<{
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+} | null>(null);
+
+export function useCopilotSidebar() {
+  const context = useContext(CopilotSidebarContext);
+  if (!context) {
+    throw new Error('useCopilotSidebar must be used within CopilotKitProvider');
+  }
+  return context;
 }
 
 /**
@@ -19,6 +33,8 @@ export function CopilotKitProvider({
   instructions = 'You are an AI assistant. Help users with their tasks.',
   defaultOpen = false,
 }: CopilotKitProviderProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  
   // publicApiKey is optional when using self-hosted runtime
   // If provided, it's used for CopilotKit Cloud features
   const publicApiKey = process.env.NEXT_PUBLIC_COPILOTKIT_API_KEY;
@@ -28,11 +44,15 @@ export function CopilotKitProvider({
       runtimeUrl="/api/copilotkit"
       {...(publicApiKey ? { publicApiKey } : {})}
     >
-      {children}
-      <CopilotSidebar
-        instructions={instructions}
-        defaultOpen={defaultOpen}
-      />
+      <CopilotSidebarContext.Provider value={{ isOpen, setIsOpen }}>
+        {children}
+        {/* Use key to force remount when isOpen changes to sync with controlled state */}
+        <CopilotSidebar
+          key={`sidebar-${isOpen}`}
+          instructions={instructions}
+          defaultOpen={isOpen}
+        />
+      </CopilotSidebarContext.Provider>
     </CopilotKit>
   );
 }

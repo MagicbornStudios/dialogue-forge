@@ -409,12 +409,19 @@ export function createEmptyForgeGraphDoc(opts: {
   projectId: number
   kind: ForgeGraphKind
   title?: string
+  graphId?: number // Optional ID for generating default title
 }): ForgeGraphDoc {
   const now = new Date().toISOString()
   const startNodeId = `start_${Date.now()}`
   
-  const defaultTitle = opts.title ?? 
-    (opts.kind === FORGE_GRAPH_KIND.NARRATIVE ? 'Untitled Narrative' : 'Untitled Storylet')
+  // Generate default title: "New Graph" + first 4 digits of ID (or timestamp if no ID)
+  const generateDefaultTitle = () => {
+    const idStr = opts.graphId ? String(opts.graphId) : String(Date.now())
+    const firstFour = idStr.slice(0, 4)
+    return `New Graph ${firstFour}`
+  }
+  
+  const defaultTitle = opts.title ?? generateDefaultTitle()
   
   const emptyFlow: ForgeReactFlowJson = {
     nodes: [],
@@ -423,7 +430,7 @@ export function createEmptyForgeGraphDoc(opts: {
   }
   
   return {
-    id: 0, // Will be assigned by backend when created
+    id: opts.graphId ?? 0, // Will be assigned by backend when created if 0
     project: opts.projectId,
     kind: opts.kind,
     title: defaultTitle,

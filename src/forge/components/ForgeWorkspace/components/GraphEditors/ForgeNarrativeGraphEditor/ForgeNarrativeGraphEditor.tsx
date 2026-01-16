@@ -500,7 +500,7 @@ function ForgeNarrativeGraphEditorContent({
                 actions.createNode(nodeType, position.x, position.y);
               }}
             >
-        <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+        <Background variant={BackgroundVariant.Lines} gap={20} size={1} color="rgba(255, 255, 255, 0.03)" />
         <GraphMiniMap showMiniMap={showMiniMap} />
         <GraphLeftToolbar
           layoutStrategy="dagre"
@@ -528,6 +528,7 @@ function ForgeNarrativeGraphEditorContent({
             graphY={shell.paneContextMenu.flowY}
             onAddNode={(type: ForgeNodeType, x: number, y: number) => actions.createNode(type, x, y)}
             onClose={() => shell.setPaneContextMenu(null)}
+            open={!!shell.paneContextMenu}
           />
         )}
 

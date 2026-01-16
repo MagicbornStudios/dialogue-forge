@@ -199,6 +199,17 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     sessionStore,
   });
 
+  const setContextNodeType = useForgeWorkspaceStore((s) => s.actions.setContextNodeType);
+  const selectedNodeType = shell.selectedNode?.type ?? null;
+
+  React.useEffect(() => {
+    setContextNodeType('storylet', selectedNodeType);
+  }, [selectedNodeType, setContextNodeType]);
+
+  React.useEffect(() => {
+    return () => setContextNodeType('storylet', null);
+  }, [setContextNodeType]);
+
   // Actions from dispatch (node/edge components consume this)
   const actions = React.useMemo(() => makeForgeEditorActions(shell.dispatch), [shell.dispatch]);
 

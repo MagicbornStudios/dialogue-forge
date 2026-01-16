@@ -42,6 +42,7 @@ export interface ForgeWorkspaceState {
   graphScope: ReturnType<typeof createViewStateSlice>["graphScope"]
   storyletFocusId: ReturnType<typeof createViewStateSlice>["storyletFocusId"]
   pendingFocusByScope: ReturnType<typeof createViewStateSlice>["pendingFocusByScope"]
+  contextNodeTypeByScope: ReturnType<typeof createViewStateSlice>["contextNodeTypeByScope"]
   panelLayout: ReturnType<typeof createViewStateSlice>["panelLayout"]
   focusedEditor: ReturnType<typeof createViewStateSlice>["focusedEditor"]
   modalState: ReturnType<typeof createViewStateSlice>["modalState"]
@@ -81,6 +82,7 @@ export interface ForgeWorkspaceState {
     setStoryletFocusId: ReturnType<typeof createViewStateSlice>["setStoryletFocusId"]
     requestFocus: ReturnType<typeof createViewStateSlice>["requestFocus"]
     clearFocus: ReturnType<typeof createViewStateSlice>["clearFocus"]
+    setContextNodeType: ReturnType<typeof createViewStateSlice>["setContextNodeType"]
     togglePanel: ReturnType<typeof createViewStateSlice>["togglePanel"]
     dockPanel: ReturnType<typeof createViewStateSlice>["dockPanel"]
     undockPanel: ReturnType<typeof createViewStateSlice>["undockPanel"]
@@ -255,6 +257,7 @@ export function createForgeWorkspaceStore(
             setStoryletFocusId: viewStateSlice.setStoryletFocusId,
             requestFocus: viewStateSlice.requestFocus,
             clearFocus: viewStateSlice.clearFocus,
+            setContextNodeType: viewStateSlice.setContextNodeType,
             togglePanel: viewStateSlice.togglePanel,
             dockPanel: viewStateSlice.dockPanel,
             undockPanel: viewStateSlice.undockPanel,

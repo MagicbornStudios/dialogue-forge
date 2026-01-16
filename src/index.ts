@@ -15,6 +15,7 @@ export { CharacterSelector } from '@/forge/components/ForgeWorkspace/components/
 import './styles/scrollbar.css';
 import './styles/graph.css';
 import './forge/styles/nodes.css';
+import './forge/styles/forge-context.css';
 import './styles/themes.css';
 
 // Export all types

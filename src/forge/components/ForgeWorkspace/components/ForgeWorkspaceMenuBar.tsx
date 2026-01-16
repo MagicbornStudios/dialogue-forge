@@ -58,14 +58,14 @@ export function ForgeWorkspaceMenuBar({
   headerLinks,
 }: ForgeWorkspaceMenuBarProps) {
   return (
-    <div className="flex items-center justify-between border-b border-df-sidebar-border bg-df-base/80 px-2 py-1 hover:border-[var(--color-df-border-hover)] transition-colors duration-200">
+    <div className="flex items-center justify-between border-b border-border bg-background/80 px-2 py-1 hover:border-[var(--editor-border-hover)] transition-colors duration-200">
       {/* Left Section: Project Switcher + Menus */}
       <div className="flex items-center gap-2">
         <ForgeProjectSwitcher />
         <Menubar className="border-0 bg-transparent p-0">
           {/* File Menu */}
           <MenubarMenu>
-            <MenubarTrigger className="px-3 py-1.5 text-sm font-medium border border-transparent hover:border-df-control-border hover:bg-df-control-hover rounded-sm transition-colors data-[state=open]:bg-df-control-hover data-[state=open]:border-df-control-border">
+            <MenubarTrigger className="px-3 py-1.5 text-sm font-medium border border-transparent hover:border-border hover:bg-muted rounded-sm transition-colors data-[state=open]:bg-muted data-[state=open]:border-border">
               File
             </MenubarTrigger>
             <MenubarContent>
@@ -88,7 +88,7 @@ export function ForgeWorkspaceMenuBar({
 
           {/* View Menu */}
           <MenubarMenu>
-            <MenubarTrigger className="px-3 py-1.5 text-sm font-medium border border-transparent hover:border-df-control-border hover:bg-df-control-hover rounded-sm transition-colors data-[state=open]:bg-df-control-hover data-[state=open]:border-df-control-border">
+            <MenubarTrigger className="px-3 py-1.5 text-sm font-medium border border-transparent hover:border-border hover:bg-muted rounded-sm transition-colors data-[state=open]:bg-muted data-[state=open]:border-border">
               View
             </MenubarTrigger>
             <MenubarContent>
@@ -123,7 +123,7 @@ export function ForgeWorkspaceMenuBar({
       </div>
 
       {/* Center Section: Status Bar */}
-      <div className="text-[11px] text-df-text-tertiary">
+      <div className="text-[11px] text-muted-foreground">
         {counts.actCount} acts · {counts.chapterCount} chapters · {counts.pageCount} pages · {counts.characterCount} characters
       </div>
 
@@ -146,7 +146,7 @@ export function ForgeWorkspaceMenuBar({
                 </Button>
               ))}
             </div>
-            <div className="h-4 w-px bg-df-control-border" />
+            <div className="h-4 w-px bg-border" />
           </>
         )}
         <ThemeSwitcher />

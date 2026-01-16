@@ -30,6 +30,18 @@ export interface ForgeGameState {
 }
 
 /**
+ * Persisted game state record with metadata.
+ */
+export interface ForgeGameStateRecord {
+  id: number;
+  projectId: number;
+  name: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  state: ForgeGameState;
+}
+
+/**
  * Result returned when a dialogue completes
  */
 export interface DialogueResult {

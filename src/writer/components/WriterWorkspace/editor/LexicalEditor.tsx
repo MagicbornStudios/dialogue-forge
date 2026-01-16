@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -18,6 +18,7 @@ import { AiSelectionPlugin } from '@/writer/components/WriterWorkspace/editor/le
 import { CopilotKitPlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/CopilotKitPlugin';
 import { WriterEditorSessionProvider, createWriterEditorSessionStore } from '@/writer/components/WriterWorkspace/editor/hooks/useWriterEditorSession';
 import type { WriterDraftContent } from '@/writer/components/WriterWorkspace/store/writer-workspace-types';
+import { BlockHandlePlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/BlockHandlePlugin';
 
 const parseSerializedEditorState = (editor: LexicalEditorType, value: string) => {
   try {
@@ -46,6 +47,7 @@ export function LexicalEditor({
 }: LexicalEditorProps) {
   const initialValueRef = useRef(value);
   const sessionStoreRef = useRef(createWriterEditorSessionStore());
+  const [contentElem, setContentElem] = useState<HTMLDivElement | null>(null);
 
   const initialConfig = useMemo(() => ({
     namespace: 'WriterEditor',
@@ -84,7 +86,10 @@ export function LexicalEditor({
             <div className="relative flex min-h-0 flex-1 flex-col">
               <RichTextPlugin
                 contentEditable={
-                  <ContentEditable className="min-h-[240px] flex-1 px-4 py-4 text-sm text-df-text-primary outline-none" />
+                  <ContentEditable
+                    ref={setContentElem}
+                    className="min-h-[240px] flex-1 px-4 py-4 text-sm text-df-text-primary outline-none"
+                  />
                 }
                 placeholder={
                   <div className="pointer-events-none absolute left-4 top-4 text-sm text-df-text-tertiary">
@@ -93,6 +98,7 @@ export function LexicalEditor({
                 }
                 ErrorBoundary={LexicalErrorBoundary}
               />
+              {contentElem ? <BlockHandlePlugin anchorElem={contentElem} /> : null}
               <HistoryPlugin />
               <ListPlugin />
               <CheckListPlugin />

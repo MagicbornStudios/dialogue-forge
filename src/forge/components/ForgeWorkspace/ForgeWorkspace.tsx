@@ -229,8 +229,20 @@ function ForgeWorkspaceContent({
     [setActiveGameState]
   );
 
+  const editorTokens = {
+    '--editor-border-hover': 'var(--color-df-border-hover)',
+    '--editor-border-active': 'var(--color-df-border-active)',
+    '--editor-info': 'var(--color-df-info)',
+    '--editor-edge-choice': 'var(--color-df-edge-choice-1)',
+    '--editor-warning': 'var(--color-df-warning)',
+    '--editor-npc-border': 'var(--color-df-npc-border)',
+    '--editor-player-border': 'var(--color-df-player-border)',
+    '--editor-conditional-border': 'var(--color-df-conditional-border)',
+    '--editor-muted-foreground': 'var(--color-df-text-tertiary)',
+  } as React.CSSProperties;
+
   return (
-    <div className={`flex h-full w-full flex-col ${className}`}>
+    <div className={`flex h-full w-full flex-col ${className}`} style={editorTokens}>
       <ForgeWorkspaceMenuBar
         counts={{ actCount: 0, chapterCount: 0, pageCount: 0, characterCount: Object.keys(characters ?? {}).length }}
         onGuideClick={openGuide}

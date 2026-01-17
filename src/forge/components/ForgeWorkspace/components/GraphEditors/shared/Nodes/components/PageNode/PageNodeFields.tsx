@@ -1,5 +1,5 @@
 import React from 'react';
-import { ForgePage } from '../../../../../../../../types/narrative';
+import { ForgePage } from '@/forge/types/narrative';
 
 interface PageNodeFieldsProps {
   page: ForgePage;

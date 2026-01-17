@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 import { Layers, Boxes, BookOpen } from 'lucide-react';
-import { StoryletList } from './StoryletList';
-import { ForgeNarrativeList } from './ForgeNarrativeList';
-import { NodePalette } from './NodePalette';
-import { useForgeWorkspaceStore } from '../../store/forge-workspace-store';
+import { StoryletList } from '@/forge/components/ForgeWorkspace/components/ForgeSideBar/StoryletList';
+import { ForgeNarrativeList } from '@/forge/components/ForgeWorkspace/components/ForgeSideBar/ForgeNarrativeList';
+import { NodePalette } from '@/forge/components/ForgeWorkspace/components/ForgeSideBar/NodePalette';
+import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { cn } from '@/shared/lib/utils';
 
 interface ForgeSidebarProps {

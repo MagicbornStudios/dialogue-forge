@@ -10,7 +10,7 @@
 
 import type { Parameter } from '@copilotkit/shared';
 import type { FrontendAction } from '@copilotkit/react-core';
-import { WRITER_ACTION_NAME } from '../../constants/writer-action-names';
+import { WRITER_ACTION_NAME } from '@/writer/copilotkit/constants/writer-action-names';
 
 /**
  * Create insertText action

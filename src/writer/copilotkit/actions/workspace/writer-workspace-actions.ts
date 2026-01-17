@@ -11,13 +11,7 @@ import { WRITER_SAVE_STATUS } from '@/writer/components/WriterWorkspace/store/wr
 import { getPlainTextFromSerializedContent } from '@/writer/components/WriterWorkspace/store/writer-workspace-types';
 import type { Parameter } from '@copilotkit/shared';
 import type { FrontendAction } from '@copilotkit/react-core';
-import { WRITER_ACTION_NAME } from '../../constants/writer-action-names';
-import type {
-  ProposeTextEditParameters,
-  GetCurrentPageParameters,
-  ListPagesParameters,
-  SwitchPageParameters,
-} from './types';
+import { WRITER_ACTION_NAME } from '@/writer/copilotkit/constants/writer-action-names';
 
 /**
  * Create proposeTextEdit action

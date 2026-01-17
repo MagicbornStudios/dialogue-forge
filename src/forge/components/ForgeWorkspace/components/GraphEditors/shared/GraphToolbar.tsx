@@ -2,7 +2,7 @@ import React from 'react';
 import { Info, Download } from 'lucide-react';
 import { GraphViewModeTabs } from './GraphViewModeTabs';
 import { Button } from '@/shared/ui/button';
-import type { ViewMode } from '../../../../../types/constants';
+import type { ViewMode } from '@/forge/types/constants';
 
 interface GraphToolbarProps {
   title: string;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ForgeAct } from '../../../../../../../../types/narrative';
+import { ForgeAct } from '@/forge/types/narrative';
 
 interface ActNodeFieldsProps {
   act: ForgeAct;

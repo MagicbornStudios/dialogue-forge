@@ -7,9 +7,9 @@
  * @see https://reactflow.dev/examples/layout/node-collisions
  */
 
-import { ForgeGraphDoc } from '../../../types';
-import { LAYOUT_CONSTANTS } from '../constants';
-import { ForgeReactFlowNode, ForgeNode } from '@/src/types/forge/forge-graph';
+import { ForgeGraphDoc } from '@/forge/types/forge-graph';
+import { LAYOUT_CONSTANTS } from '@/forge/lib/utils/constants';
+import { ForgeReactFlowNode, ForgeNode } from '@/forge/types/forge-graph';
 
 // ============================================================================
 // Local Layout Constants

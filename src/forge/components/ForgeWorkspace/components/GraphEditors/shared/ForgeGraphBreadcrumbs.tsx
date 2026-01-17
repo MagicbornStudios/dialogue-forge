@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronRight, Home, Edit } from 'lucide-react';
-import { useForgeWorkspaceStoreInstance } from '../../../store/forge-workspace-store';
+import { useForgeWorkspaceStoreInstance } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { useStore } from 'zustand';
 import { useShallow } from 'zustand/shallow';
-import type { BreadcrumbItem } from '../../../store/slices/graph.slice';
+import type { BreadcrumbItem } from '@/forge/components/ForgeWorkspace/store/slices/graph.slice';
 import { useHotkeys } from 'react-hotkeys-hook';
 import {
   ContextMenu,

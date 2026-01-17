@@ -29,7 +29,7 @@
  * @module layout
  */
 
-import { ForgeGraphDoc } from '../../../types';
+import { ForgeGraphDoc } from '@/forge/types/forge-graph';
 import { layoutRegistry } from './registry';
 import { LayoutOptions, LayoutResult, LayoutDirection } from './types';
 import { DagreLayoutStrategy, ForceLayoutStrategy, GridLayoutStrategy } from './strategies';

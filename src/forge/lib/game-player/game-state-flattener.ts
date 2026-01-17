@@ -11,7 +11,7 @@
  * - All values must be boolean | number | string (Yarn-compatible)
  */
 
-import type { ForgeFlagState } from '../../../types/forge-game-state';
+import type { ForgeFlagState } from '@/forge/types/forge-game-state';
 
 export interface FlattenConfig {
   /** Skip null/undefined values (default: true) */

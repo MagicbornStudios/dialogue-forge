@@ -16,6 +16,7 @@ import {
   FRAME_KIND,
   RUNTIME_DIRECTIVE_TYPE,
 } from './constants';
+import { resolvePresentationState } from './presentation-resolver';
 import type {
   ConditionEvaluator,
   ExecutionOptions,
@@ -23,6 +24,7 @@ import type {
   FlagMutation,
   Frame,
   PendingChoice,
+  PresentationState,
   ResolvedRuntimeDirective,
   RuntimeChoice,
   RuntimeDirectiveSource,
@@ -173,6 +175,7 @@ export const executeGraphToFrames = async (
   const maxSteps = options.maxSteps ?? DEFAULT_MAX_STEPS;
   const frames: Frame[] = [];
   const state = cloneState(initialState);
+  let presentationState: PresentationState | undefined;
 
   const graphStack: Array<{ graph: ForgeGraphDoc; returnNodeId?: string }> = [];
   let currentGraph = graph;
@@ -232,6 +235,14 @@ export const executeGraphToFrames = async (
     return true;
   };
 
+  const resolvePresentationForFrame = (
+    directives?: ResolvedRuntimeDirective[],
+  ): PresentationState => {
+    const resolved = resolvePresentationState(presentationState, directives);
+    presentationState = resolved.persistentState;
+    return resolved.frameState;
+  };
+
   while (currentNodeId && steps < maxSteps) {
     const node = graphIndex.nodesById.get(currentNodeId);
 
@@ -240,6 +251,7 @@ export const executeGraphToFrames = async (
         id: buildFrameId(currentGraph.id, currentNodeId, steps),
         kind: FRAME_KIND.SYSTEM,
         source: { graphId: currentGraph.id, nodeId: currentNodeId },
+        presentation: resolvePresentationForFrame(),
         content: 'Missing node reference',
       });
 
@@ -283,6 +295,7 @@ export const executeGraphToFrames = async (
           source: baseSource,
           directives,
           mutations: nodeMutations,
+          presentation: resolvePresentationForFrame(directives),
           content: 'No valid choices available',
         });
 
@@ -308,6 +321,7 @@ export const executeGraphToFrames = async (
           choices: availableChoices,
           directives,
           mutations: nodeMutations,
+          presentation: resolvePresentationForFrame(directives),
         });
 
         return {
@@ -329,6 +343,7 @@ export const executeGraphToFrames = async (
         selectedChoiceId: selectedChoice.id,
         directives,
         mutations: combinedMutations.length > 0 ? combinedMutations : undefined,
+        presentation: resolvePresentationForFrame(directives),
       });
 
       currentNodeId = selectedChoice.nextNodeId ?? getDefaultNextNodeId(
@@ -373,6 +388,7 @@ export const executeGraphToFrames = async (
           content: matchedBlock?.content,
           directives,
           mutations: combinedMutations.length > 0 ? combinedMutations : undefined,
+          presentation: resolvePresentationForFrame(directives),
         });
       }
 
@@ -392,6 +408,7 @@ export const executeGraphToFrames = async (
         source: baseSource,
         directives,
         mutations: nodeMutations,
+        presentation: resolvePresentationForFrame(directives),
         content: 'Entering storylet',
       });
 
@@ -411,6 +428,7 @@ export const executeGraphToFrames = async (
         content: nodeData.content,
         directives,
         mutations: nodeMutations,
+        presentation: resolvePresentationForFrame(directives),
       });
     } else if (nodeMutations || directives) {
       frames.push({
@@ -419,6 +437,7 @@ export const executeGraphToFrames = async (
         source: baseSource,
         directives,
         mutations: nodeMutations,
+        presentation: resolvePresentationForFrame(directives),
       });
     }
 
@@ -428,6 +447,7 @@ export const executeGraphToFrames = async (
           id: buildFrameId(currentGraph.id, currentNodeId, steps + 1),
           kind: FRAME_KIND.END,
           source: baseSource,
+          presentation: resolvePresentationForFrame(),
         });
 
         return {
@@ -479,6 +499,8 @@ export type {
   ExecutionResult,
   Frame,
   PendingChoice,
+  PresentationLayer,
+  PresentationState,
   RuntimeDirective,
   RuntimeDirectiveSource,
 } from './types';

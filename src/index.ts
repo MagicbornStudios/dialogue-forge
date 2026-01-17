@@ -25,6 +25,7 @@ export * from '@/forge/types/forge-game-state';
 export * from '@/forge/types/characters';
 export * from '@/forge/types/constants';
 export * from '@/video';
+export * from '@/forge/runtime/engine';
 
 // Export game state utilities
 export { 

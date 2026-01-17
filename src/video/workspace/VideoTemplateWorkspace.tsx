@@ -2,6 +2,8 @@ import type { VideoLayer } from '@/video/templates/types/video-layer';
 import type { VideoScene } from '@/video/templates/types/video-scene';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
 import type { VideoTemplateWorkspaceAdapter } from './video-template-workspace-contracts';
+import type { VideoTemplateMediaRequest, VideoTemplateMediaResolution } from './video-template-workspace-contracts';
+import { VIDEO_MEDIA_KIND } from './video-template-workspace-contracts';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
@@ -11,6 +13,7 @@ import { LayerInspector } from './components/LayerInspector';
 import { Preview } from './components/Preview';
 import { Timeline } from './components/Timeline';
 import { cn } from '@/shared/lib/utils';
+import { BINDING_KEY } from '@/shared/types/bindings';
 import * as React from 'react';
 
 interface VideoTemplateWorkspaceProps {
@@ -49,6 +52,8 @@ export function VideoTemplateWorkspace({
     resolvedScenes?.find((scene) => scene.id === activeSceneId) ?? resolvedScenes?.[0] ?? null;
   const resolvedLayers = layers ?? activeScene?.layers;
   const activeLayer = resolvedLayers?.find((layer) => layer.id === activeLayerId) ?? null;
+  const [resolvedMedia, setResolvedMedia] = React.useState<VideoTemplateMediaResolution | null>(null);
+  const [isMediaLoading, setIsMediaLoading] = React.useState(false);
 
   const workspaceTokens = React.useMemo(
     () =>
@@ -65,6 +70,46 @@ export function VideoTemplateWorkspace({
   );
 
   const adapterReady = adapter !== undefined;
+  const mediaRequest = React.useMemo(() => {
+    const inputGroups = [activeLayer?.inputs, activeScene?.inputs, template?.inputs];
+    for (const inputs of inputGroups) {
+      const imageBinding = inputs?.[BINDING_KEY.MEDIA_IMAGE];
+      if (imageBinding) {
+        return { mediaId: imageBinding, kind: VIDEO_MEDIA_KIND.IMAGE } satisfies VideoTemplateMediaRequest;
+      }
+      const videoBinding = inputs?.[BINDING_KEY.MEDIA_VIDEO];
+      if (videoBinding) {
+        return { mediaId: videoBinding, kind: VIDEO_MEDIA_KIND.VIDEO } satisfies VideoTemplateMediaRequest;
+      }
+    }
+    return null;
+  }, [activeLayer?.inputs, activeScene?.inputs, template?.inputs]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    if (!adapter?.resolveMedia || !mediaRequest) {
+      setResolvedMedia(null);
+      return;
+    }
+    setIsMediaLoading(true);
+    adapter
+      .resolveMedia(mediaRequest)
+      .then((resolved) => {
+        if (!isMounted) return;
+        setResolvedMedia(resolved ?? null);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setResolvedMedia(null);
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        setIsMediaLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [adapter, mediaRequest]);
 
   return (
     <div
@@ -112,7 +157,13 @@ export function VideoTemplateWorkspace({
           />
         </div>
 
-        <Preview template={template} isPlaying={isPlaying} onTogglePlayback={onTogglePlayback} />
+        <Preview
+          template={template}
+          isPlaying={isPlaying}
+          onTogglePlayback={onTogglePlayback}
+          resolvedMedia={resolvedMedia}
+          isMediaLoading={isMediaLoading}
+        />
 
         <LayerInspector layer={activeLayer ?? undefined} />
       </div>

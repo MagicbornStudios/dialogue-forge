@@ -1,4 +1,5 @@
 import type { VideoTemplate } from '@/video/templates/types/video-template';
+import type { VideoTemplateMediaRecord } from '@/video/lib/media-resolver';
 
 export const VIDEO_MEDIA_KIND = {
   IMAGE: 'image',
@@ -19,12 +20,8 @@ export interface VideoTemplateMediaRequest {
   kind: VideoMediaKind;
 }
 
-export interface VideoTemplateMediaResolution {
-  mediaId: string;
-  url: string;
+export interface VideoTemplateMediaResolution extends VideoTemplateMediaRecord {
   kind: VideoMediaKind;
-  width?: number;
-  height?: number;
   durationMs?: number;
 }
 

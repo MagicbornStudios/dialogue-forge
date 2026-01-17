@@ -11,6 +11,7 @@ import type { ForgeReactFlowNode, ForgeNodeType, ForgeGraphDoc } from '@/forge/t
 import type { YarnConverterContext, YarnNodeBlock, YarnTextBuilder } from '@/forge/lib/yarn-converter/types';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { defaultRegistry } from '@/forge/lib/yarn-converter/registry';
+import { logRuntimeExportDiagnostics, prepareGraphForYarnExport } from '@/forge/lib/yarn-converter/utils/runtime-export';
 
 export class StoryletHandler extends BaseNodeHandler {
   canHandle(nodeType: ForgeNodeType): boolean {
@@ -114,8 +115,10 @@ export class StoryletHandler extends BaseNodeHandler {
     context?: YarnConverterContext
   ): Promise<string> {
     let yarn = '';
+    const { nodes: exportableNodes, diagnostics } = prepareGraphForYarnExport(graph);
+    logRuntimeExportDiagnostics(graph, diagnostics);
 
-    for (const node of graph.flow.nodes) {
+    for (const node of exportableNodes) {
       if (!node.data?.type) continue;
 
       const handler = defaultRegistry.getHandler(node.data.type);

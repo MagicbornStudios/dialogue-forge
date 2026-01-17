@@ -21,6 +21,7 @@ import { StoryletHandler } from '@/forge/lib/yarn-converter/handlers/storylet-ha
 import { DetourHandler } from '@/forge/lib/yarn-converter/handlers/detour-handler';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { YARN_SYNTAX } from '@/forge/lib/yarn-converter/builders/yarn-text-builder';
+import { logRuntimeExportDiagnostics, prepareGraphForYarnExport } from '@/forge/lib/yarn-converter/utils/runtime-export';
 
 // Register all handlers
 const characterHandler = new CharacterHandler();
@@ -53,9 +54,11 @@ export async function exportToYarn(
   const conversionContext = context || createMinimalContext();
 
   let yarn = '';
+  const { nodes: exportableNodes, diagnostics } = prepareGraphForYarnExport(graph);
+  logRuntimeExportDiagnostics(graph, diagnostics);
 
   // Export each node
-  for (const node of graph.flow.nodes) {
+  for (const node of exportableNodes) {
     if (!node.data?.type) {
       console.warn(`Node ${node.id} has no type, skipping`);
       continue;

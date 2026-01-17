@@ -1,6 +1,12 @@
 import type { ForgeFlagValue, ForgeGameState } from '@/src/forge/types/forge-game-state';
 import type { ForgeChoice, ForgeCondition, ForgeGraphDoc, ForgeNode } from '@/src/forge/types/forge-graph';
-import type { ExecutionMode, ExecutionStatus, FrameKind, RuntimeDirectiveType } from './constants';
+import type {
+  ExecutionMode,
+  ExecutionStatus,
+  FrameKind,
+  RuntimeDirectiveApplyMode,
+  RuntimeDirectiveType,
+} from './constants';
 
 export type FlagMutation = {
   flagId: string;
@@ -18,6 +24,8 @@ export type RuntimeDirective = {
   type: RuntimeDirectiveType;
   refId?: string;
   payload?: Record<string, unknown>;
+  applyMode?: RuntimeDirectiveApplyMode;
+  priority?: number;
 };
 
 export type ResolvedRuntimeDirective = RuntimeDirective & {
@@ -44,7 +52,22 @@ export type Frame = {
   choices?: RuntimeChoice[];
   selectedChoiceId?: string;
   directives?: ResolvedRuntimeDirective[];
+  presentation?: PresentationState;
   mutations?: FlagMutation[];
+};
+
+export type PresentationLayer = {
+  key: string;
+  directive: ResolvedRuntimeDirective;
+  priority: number;
+  applyMode: RuntimeDirectiveApplyMode;
+};
+
+export type PresentationState = {
+  background?: PresentationLayer;
+  portraits: Record<string, PresentationLayer>;
+  overlays: Record<string, PresentationLayer>;
+  audioCues: Record<string, PresentationLayer>;
 };
 
 export type ExecutionOptions = {

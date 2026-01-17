@@ -26,6 +26,18 @@ export const RUNTIME_DIRECTIVE_TYPE = {
   SCENE: 'SCENE',
   MEDIA: 'MEDIA',
   CAMERA: 'CAMERA',
+  BACKGROUND: 'BACKGROUND',
+  PORTRAIT: 'PORTRAIT',
+  OVERLAY: 'OVERLAY',
+  AUDIO_CUE: 'AUDIO_CUE',
 } as const;
 
 export type RuntimeDirectiveType = typeof RUNTIME_DIRECTIVE_TYPE[keyof typeof RUNTIME_DIRECTIVE_TYPE];
+
+export const RUNTIME_DIRECTIVE_APPLY_MODE = {
+  ON_ENTER: 'ON_ENTER',
+  PERSIST_UNTIL_CHANGED: 'PERSIST_UNTIL_CHANGED',
+} as const;
+
+export type RuntimeDirectiveApplyMode =
+  typeof RUNTIME_DIRECTIVE_APPLY_MODE[keyof typeof RUNTIME_DIRECTIVE_APPLY_MODE];

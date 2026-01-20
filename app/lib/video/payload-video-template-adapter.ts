@@ -7,6 +7,7 @@ import type {
   VideoTemplateWorkspaceTemplateSummary,
 } from '@/video/workspace/video-template-workspace-contracts';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
+import { makePayloadMediaResolver } from '@/app/lib/video/payload-media-resolver';
 
 interface PayloadVideoTemplateDoc {
   id: number;
@@ -14,15 +15,6 @@ interface PayloadVideoTemplateDoc {
   project: number | { id: number };
   template: unknown;
   updatedAt?: string;
-}
-
-interface PayloadMediaDoc {
-  id: number;
-  url?: string | null;
-  width?: number | null;
-  height?: number | null;
-  externalUrl?: string | null;
-  secureUrl?: string | null;
 }
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
@@ -50,9 +42,6 @@ const mapVideoTemplate = (doc: PayloadVideoTemplateDoc): VideoTemplate => {
   };
 };
 
-const resolveMediaUrl = (doc: PayloadMediaDoc): string | null =>
-  doc.externalUrl ?? doc.secureUrl ?? doc.url ?? null;
-
 export function makePayloadVideoTemplateAdapter(opts?: {
   baseUrl?: string;
   projectId?: number;
@@ -62,6 +51,7 @@ export function makePayloadVideoTemplateAdapter(opts?: {
     baseURL: `${baseURL}/api`,
   });
   const projectId = opts?.projectId ?? null;
+  const resolvePayloadMedia = makePayloadMediaResolver({ payload });
 
   return {
     async listTemplates(): Promise<VideoTemplateWorkspaceTemplateSummary[]> {
@@ -123,24 +113,13 @@ export function makePayloadVideoTemplateAdapter(opts?: {
     },
 
     async resolveMedia(request: VideoTemplateMediaRequest): Promise<VideoTemplateMediaResolution | null> {
-      const parsedId = getTemplateId(request.mediaId);
-      if (!parsedId) {
-        return null;
-      }
-      const doc = (await payload.findByID({
-        collection: PAYLOAD_COLLECTIONS.MEDIA,
-        id: parsedId,
-      })) as PayloadMediaDoc;
-      const url = resolveMediaUrl(doc);
-      if (!url) {
+      const resolved = await resolvePayloadMedia(request.mediaId);
+      if (!resolved) {
         return null;
       }
       return {
-        mediaId: request.mediaId,
-        url,
+        ...resolved,
         kind: request.kind,
-        width: doc.width ?? undefined,
-        height: doc.height ?? undefined,
       };
     },
   };

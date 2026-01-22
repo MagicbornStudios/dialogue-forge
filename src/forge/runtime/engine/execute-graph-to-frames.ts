@@ -6,6 +6,7 @@ import {
   type ForgeConditionalBlock,
   type ForgeGraphDoc,
   type ForgeNode,
+  type ForgeChoice,
   type ForgeReactFlowEdge,
   type ForgeReactFlowNode,
 } from '@/src/forge/types/forge-graph';
@@ -95,6 +96,16 @@ const getOrderedEdges = (edges: ForgeReactFlowEdge[]): ForgeReactFlowEdge[] =>
     }
 
     return (a.id ?? '').localeCompare(b.id ?? '');
+  });
+
+const getOrderedChoices = (choices: ForgeChoice[]): ForgeChoice[] =>
+  [...choices].sort((first, second) => {
+    const idCompare = first.id.localeCompare(second.id);
+    if (idCompare !== 0) {
+      return idCompare;
+    }
+
+    return first.text.localeCompare(second.text);
   });
 
 const getDefaultNextNodeId = (
@@ -273,7 +284,8 @@ export const executeGraphToFrames = async (
 
     if (nodeType === FORGE_NODE_TYPE.PLAYER) {
       const rawChoices = nodeData.choices ?? [];
-      const availableChoices = rawChoices
+      const orderedChoices = getOrderedChoices(rawChoices);
+      const availableChoices = orderedChoices
         .filter((choice) => {
           if (!choice.conditions || choice.conditions.length === 0) {
             return true;
@@ -311,7 +323,7 @@ export const executeGraphToFrames = async (
           graphId: currentGraph.id,
           nodeId: currentNodeId,
           choices: availableChoices,
-          rawChoices,
+          rawChoices: orderedChoices,
         };
 
         frames.push({

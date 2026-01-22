@@ -26,6 +26,9 @@ export * from '@/forge/types/characters';
 export * from '@/forge/types/constants';
 export * from '@/video';
 export * from '@/forge/runtime/engine';
+export * from '@/forge/runtime/types';
+export * from '@/forge/runtime/execute-graph-to-frames';
+export { useForgeWorkspaceCompositionCompiler } from '@/forge/components/ForgeWorkspace/hooks/useForgeWorkspaceCompositionCompiler';
 
 // Export game state utilities
 export { 

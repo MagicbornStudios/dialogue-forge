@@ -4,6 +4,8 @@ export * from './templates/types/video-scene';
 export * from './templates/types/video-template';
 export * from './lib/media-resolver';
 export * from './templates/compile/frames-to-inputs';
+export * from './templates/compile/frames-to-template-inputs';
+export * from './templates/compile/compile-composition';
 export * from './workspace/VideoTemplateWorkspace';
 export * from './workspace/video-template-workspace-actions';
 export * from './workspace/video-template-workspace-contracts';

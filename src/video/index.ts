@@ -6,3 +6,8 @@ export * from './templates/compile/compile-template';
 export * from './templates/compile/normalize-timeline';
 export * from './templates/compile/resolve-bindings';
 export * from './templates/compile/stitch-scenes';
+export * from './lib/media-resolver';
+export * from './templates/compile/frames-to-inputs';
+export * from './workspace/VideoTemplateWorkspace';
+export * from './workspace/video-template-workspace-actions';
+export * from './workspace/video-template-workspace-contracts';

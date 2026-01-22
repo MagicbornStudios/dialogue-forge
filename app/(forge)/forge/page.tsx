@@ -2,7 +2,7 @@
 
 import { ForgeWorkspace } from '@/src/forge/components/ForgeWorkspace/ForgeWorkspace';
 import { useState } from 'react';
-import { makePayloadForgeAdapter } from '../../lib/forge/data-adapter/payload-forge-adapter';
+import { makePayloadForgeAdapter } from '@/host/forge/data-adapter/payload-forge-adapter';
 import { Settings, Code } from 'lucide-react';
 
 // Tell Next.js this page is static (no dynamic params/searchParams)

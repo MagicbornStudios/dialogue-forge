@@ -37,6 +37,15 @@ const sharedRestrictedPatterns = [
 
 module.exports = {
   root: true,
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    ecmaVersion: 2023,
+    sourceType: "module",
+    ecmaFeatures: {
+      jsx: true,
+    },
+  },
+  plugins: ["@typescript-eslint"],
   overrides: [
     {
       files: ["src/**/*.{js,jsx,ts,tsx}", "src/**/*.d.ts"],

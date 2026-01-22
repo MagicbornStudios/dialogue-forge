@@ -1,6 +1,6 @@
 import React from 'react';
-import { FORGE_NODE_TYPE, type ForgeNodeType } from '../../../../../../../../types';
-import { FORGE_NODE_TYPE_LABELS, AVAILABLE_STORYLET_NODE_TYPES } from '../../../../../../../../types/ui-constants';
+import { type ForgeNodeType } from '@/forge/types/forge-graph';
+import { FORGE_NODE_TYPE_LABELS, AVAILABLE_STORYLET_NODE_TYPES } from '@/forge/types/ui-constants';
 
 interface PlayerEdgeContextMenuProps {
   x: number;

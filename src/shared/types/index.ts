@@ -34,3 +34,4 @@ export const DOM_EVENT_TYPE = {
 export type KeyboardKey = typeof KEYBOARD_KEY[keyof typeof KEYBOARD_KEY];
 
 export * from './bindings';
+export * from './export-registry';

@@ -1,5 +1,5 @@
-import { exportToYarn } from '../../../lib/yarn-converter';
-import type { ForgeGraphDoc } from '../../../types/forge/forge-graph';
+import { exportToYarn } from '@/forge/lib/yarn-converter';
+import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
 
 export async function exportDialogueToYarn(graph: ForgeGraphDoc): Promise<void> {
   const yarn = await exportToYarn(graph);

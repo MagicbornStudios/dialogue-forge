@@ -12,7 +12,7 @@ import type { Parameter } from '@copilotkit/shared';
 import type { FrontendAction } from '@copilotkit/react-core';
 import type { ForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import type { ForgeNodeType, ForgeNode } from '@/forge/types/forge-graph';
-import { FORGE_ACTION_NAME } from '../../constants/forge-action-names';
+import { FORGE_ACTION_NAME } from '@/forge/copilotkit/constants/forge-action-names';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import type { ReactFlowInstance } from 'reactflow';
 

@@ -38,10 +38,10 @@
         "./*"
       ],
       "@magicborn/dialogue-forge": [
-        "."
+        "./src"
       ],
       "@magicborn/dialogue-forge/*": [
-        "./*"
+        "./src/*"
       ],
       "@payload-config": [
         "./app/payload.config.ts"

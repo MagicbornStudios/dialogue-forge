@@ -17,7 +17,7 @@
  * ```
  */
 
-import { ForgeGraphDoc } from '../../../types';
+import { ForgeGraphDoc } from '@/forge/types/forge-graph';
 import { LayoutStrategy, LayoutOptions, LayoutResult, LayoutStrategyEntry } from './types';
 
 // ============================================================================

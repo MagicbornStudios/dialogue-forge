@@ -9,7 +9,7 @@ import type { StoreApi } from 'zustand/vanilla';
 import type { ForgeWorkspaceState } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import type { Parameter } from '@copilotkit/shared';
 import type { FrontendAction } from '@copilotkit/react-core';
-import { FORGE_ACTION_NAME } from '../../constants/forge-action-names';
+import { FORGE_ACTION_NAME } from '@/forge/copilotkit/constants/forge-action-names';
 import { GRAPH_SCOPE } from '@/forge/types/constants';
 import { FORGE_GRAPH_KIND, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 

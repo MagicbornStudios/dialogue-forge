@@ -1,5 +1,5 @@
 import React from 'react';
-import { ForgeGraphDoc } from '../../../../../../types';
+import { ForgeGraphDoc } from '@/forge/types/forge-graph';
 import { EdgeIcon } from '../Nodes/components/shared/EdgeIcon';
 
 interface NextNodeSelectorProps {

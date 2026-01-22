@@ -1,7 +1,7 @@
 'use client';
 
 import { AiWorkspace } from '@/ai/components/AiWorkspace/AiWorkspace';
-import { makePayloadAiAdapter } from '../../lib/ai/data-adapter/payload-ai-adapter';
+import { makePayloadAiAdapter } from '@/host/ai/data-adapter/payload-ai-adapter';
 
 // Tell Next.js this page is static (no dynamic params/searchParams)
 export const dynamic = 'force-static';

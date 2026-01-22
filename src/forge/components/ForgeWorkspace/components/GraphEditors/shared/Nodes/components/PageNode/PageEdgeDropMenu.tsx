@@ -1,9 +1,8 @@
 import React from 'react';
 import { ForgeNodeType, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE_LABELS } from '@/forge/types/ui-constants';
-import { ContextMenuBase, ContextMenuButton } from '../../shared/ContextMenuBase';
+import { ContextMenuBase, ContextMenuButton } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ContextMenuBase';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
-import { useForgeEditorSessionStore } from '@/forge/lib/graph-editor/hooks/useForgeEditorSession';
 
 // PAGE nodes can create PAGE, CHAPTER, or ACT nodes
 const availableNodeTypes: ForgeNodeType[] = [

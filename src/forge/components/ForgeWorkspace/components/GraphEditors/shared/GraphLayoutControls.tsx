@@ -1,7 +1,7 @@
 import React from 'react';
 import { Panel } from 'reactflow';
 import { Layout, ArrowDown, ArrowRight, Magnet, Sparkles, Undo2, Flag, Home } from 'lucide-react';
-import { LayoutDirection } from '../../../../../lib/utils/layout/types';
+import { LayoutDirection } from '@/forge/lib/utils/layout/types';
 import { CopilotButton, CopilotButtonContainer } from '@/forge/components/ForgeWorkspace/components/CopilotButton';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 

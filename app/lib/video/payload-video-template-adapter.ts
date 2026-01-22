@@ -1,11 +1,11 @@
 import { PayloadSDK } from '@payloadcms/sdk';
-import type { VideoTemplate } from '@/video/templates/types/video-template';
+import type { VideoTemplate } from '@magicborn/dialogue-forge/video/templates/types/video-template';
 import type {
   VideoTemplateMediaRequest,
   VideoTemplateMediaResolution,
   VideoTemplateWorkspaceAdapter,
   VideoTemplateWorkspaceTemplateSummary,
-} from '@/video/workspace/video-template-workspace-contracts';
+} from '@magicborn/dialogue-forge/video/workspace/video-template-workspace-contracts';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
 import { makePayloadMediaResolver } from '@/app/lib/video/payload-media-resolver';
 

@@ -1,9 +1,6 @@
 import { PayloadSDK } from '@payloadcms/sdk';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
-import type {
-  VideoTemplateMediaRecord,
-  VideoTemplateMediaResolver,
-} from '@magicborn/dialogue-forge/video/lib/media-resolver';
+import type { VideoTemplateMediaRecord, VideoTemplateMediaResolver } from '@/video/lib/media-resolver';
 
 interface PayloadMediaDoc {
   id: number;

@@ -1,4 +1,6 @@
 import type { VideoTemplate } from '@/video/templates/types/video-template';
+import type { VideoTemplateMediaResolution } from '@/video/workspace/video-template-workspace-contracts';
+import { VIDEO_MEDIA_KIND } from '@/video/workspace/video-template-workspace-contracts';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/ui/card';
@@ -7,11 +9,16 @@ interface PreviewProps {
   template?: VideoTemplate | null;
   isPlaying?: boolean;
   onTogglePlayback?: () => void;
+  resolvedMedia?: VideoTemplateMediaResolution | null;
+  isMediaLoading?: boolean;
 }
 
-export function Preview({ template, isPlaying, onTogglePlayback }: PreviewProps) {
+export function Preview({ template, isPlaying, onTogglePlayback, resolvedMedia, isMediaLoading }: PreviewProps) {
   const hasBinding = template !== undefined;
   const ratio = template ? `${template.width} / ${template.height}` : undefined;
+  const hasTemplate = Boolean(template);
+  const hasMedia = Boolean(resolvedMedia?.url);
+  const previewLabel = resolvedMedia?.id ? `Media ${resolvedMedia.id}` : 'Media preview';
 
   return (
     <Card className="h-full border-[var(--video-workspace-border)] bg-[var(--video-workspace-panel)]">
@@ -37,7 +44,29 @@ export function Preview({ template, isPlaying, onTogglePlayback }: PreviewProps)
               className="flex items-center justify-center rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-preview)] text-xs text-[var(--video-workspace-text-muted)]"
               style={{ aspectRatio: ratio }}
             >
-              {template ? 'Video preview surface' : 'Select a template to preview'}
+              {!hasTemplate ? (
+                'Select a template to preview'
+              ) : isMediaLoading ? (
+                'Loading media preview...'
+              ) : hasMedia ? (
+                resolvedMedia?.kind === VIDEO_MEDIA_KIND.IMAGE ? (
+                  <img
+                    src={resolvedMedia.url ?? ''}
+                    alt={previewLabel}
+                    className="h-full w-full rounded-md object-contain"
+                  />
+                ) : resolvedMedia?.kind === VIDEO_MEDIA_KIND.AUDIO ? (
+                  <audio src={resolvedMedia?.url ?? ''} controls />
+                ) : (
+                  <video
+                    src={resolvedMedia?.url ?? ''}
+                    className="h-full w-full rounded-md object-contain"
+                    controls
+                  />
+                )
+              ) : (
+                'No media binding resolved yet.'
+              )}
             </div>
             <div className="flex items-center justify-between text-[11px] text-[var(--video-workspace-text-muted)]">
               <span>Frame rate</span>

@@ -1,36 +1,16 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
     "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
     "jsx": "react-jsx",
-    "incremental": true,
+    "noEmit": true,
     "plugins": [
       {
         "name": "next"
       }
-    ],
-    "paths": {
-      "@/shared/*": ["./src/shared/*"],
-      "@/ai/*": ["./src/ai/*"],
-      "@/forge/*": ["./src/forge/*"],
-      "@/writer/*": ["./src/writer/*"],
-      "@/host/*": ["./app/lib/*"],
-      "@/*": ["./*"],
-      "@magicborn/dialogue-forge/*": ["./src/*"]
-    }
+    ]
   },
   "include": [
     "next-env.d.ts",
@@ -39,9 +19,5 @@
     "styles/**/*",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src"
-  ]
+  "exclude": ["node_modules", "dist", "src"]
 }

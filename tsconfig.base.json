@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "esnext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "paths": {
+      "@/shared/*": ["./src/shared/*"],
+      "@/ai/*": ["./src/ai/*"],
+      "@/forge/*": ["./src/forge/*"],
+      "@/writer/*": ["./src/writer/*"],
+      "@/host/*": ["./app/lib/*"],
+      "@/*": ["./*"],
+      "@magicborn/dialogue-forge": ["./src"],
+      "@magicborn/dialogue-forge/*": ["./src/*"],
+      "@payload-config": ["./app/payload.config.ts"],
+      "@payloadcms/ui": ["./node_modules/@payloadcms/ui"],
+      "@payloadcms/ui/*": ["./node_modules/@payloadcms/ui/*"]
+    }
+  }
+}

@@ -28,6 +28,22 @@ const writerRestrictedPatterns = [
 
 const sharedRestrictedPatterns = [
   ...baseRestrictedPatterns,
+  "**/ai/**",
+  "**/forge/**",
+  "**/writer/**",
+  "@/src/ai/**",
+  "@/src/forge/**",
+  "@/src/writer/**",
+  "@magicborn/dialogue-forge/src/ai/**",
+  "@magicborn/dialogue-forge/src/forge/**",
+  "@magicborn/dialogue-forge/src/writer/**",
+  "src/ai/**",
+  "src/forge/**",
+  "src/writer/**",
+];
+
+const aiRestrictedPatterns = [
+  ...baseRestrictedPatterns,
   "**/forge/**",
   "**/writer/**",
   "@/src/forge/**",
@@ -90,6 +106,17 @@ module.exports = {
           "error",
           {
             patterns: sharedRestrictedPatterns,
+          },
+        ],
+      },
+    },
+    {
+      files: ["src/ai/**/*.{js,jsx,ts,tsx}", "src/ai/**/*.d.ts"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: aiRestrictedPatterns,
           },
         ],
       },

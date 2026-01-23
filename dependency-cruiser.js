@@ -30,13 +30,13 @@ module.exports = {
       }
     },
     {
-      name: 'src-no-app-payload-types',
+      name: 'src-no-payload-types',
       severity: 'error',
       from: {
         path: '^src/'
       },
       to: {
-        path: '^app/payload-types'
+        path: 'payload-types'
       }
     },
     {
@@ -50,23 +50,23 @@ module.exports = {
       }
     },
     {
-      name: 'forge-only-imports-shared',
+      name: 'forge-no-writer-dependency',
       severity: 'error',
       from: {
         path: '^src/forge/'
       },
       to: {
-        path: '^src/(writer|ai)/'
+        path: '^src/writer/'
       }
     },
     {
-      name: 'writer-only-imports-shared',
+      name: 'writer-no-forge-dependency',
       severity: 'error',
       from: {
         path: '^src/writer/'
       },
       to: {
-        path: '^src/(forge|ai)/'
+        path: '^src/forge/'
       }
     },
     {

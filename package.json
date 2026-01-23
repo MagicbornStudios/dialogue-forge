@@ -42,6 +42,8 @@
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
+    "typecheck:domains": "tsc -b --pretty false",
+    "typecheck:next": "tsc -p tsconfig.next.json --pretty false",
     "prepublishOnly": "npm run build:lib",
     "postinstall": "node scripts/patch-undici.js",
     "sync": "./sync-to-repo.sh",

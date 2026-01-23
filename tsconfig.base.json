@@ -4,6 +4,7 @@
     "module": "esnext",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "jsx": "preserve",
+    "baseUrl": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

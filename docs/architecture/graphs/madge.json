@@ -1,0 +1,1480 @@
+{
+  "../components/ThemeSwitcher.tsx": [],
+  "ai/adapters/types/ai-data-adapter.ts": [],
+  "ai/aiadapter/openrouter/config.ts": [],
+  "ai/aiadapter/openrouter/openrouter-adapter.ts": [
+    "ai/aiadapter/openrouter/config.ts",
+    "ai/aiadapter/types.ts"
+  ],
+  "ai/aiadapter/types.ts": [],
+  "ai/components/AiWorkspace/AiWorkspace.tsx": [
+    "ai/adapters/types/ai-data-adapter.ts",
+    "ai/components/AiWorkspace/components/AiWorkspaceConfig.tsx",
+    "ai/components/AiWorkspace/components/AiWorkspaceHistory.tsx",
+    "ai/components/AiWorkspace/components/AiWorkspaceRequest.tsx",
+    "ai/components/AiWorkspace/components/AiWorkspaceResponse.tsx",
+    "ai/components/AiWorkspace/store/ai-workspace-store.tsx"
+  ],
+  "ai/components/AiWorkspace/components/AiWorkspaceConfig.tsx": [
+    "ai/components/AiWorkspace/store/ai-workspace-store.tsx"
+  ],
+  "ai/components/AiWorkspace/components/AiWorkspaceHistory.tsx": [
+    "ai/components/AiWorkspace/store/ai-workspace-store.tsx"
+  ],
+  "ai/components/AiWorkspace/components/AiWorkspaceRequest.tsx": [
+    "ai/components/AiWorkspace/store/ai-workspace-store.tsx"
+  ],
+  "ai/components/AiWorkspace/components/AiWorkspaceResponse.tsx": [
+    "ai/components/AiWorkspace/store/ai-workspace-store.tsx"
+  ],
+  "ai/components/AiWorkspace/store/ai-workspace-store.tsx": [
+    "ai/adapters/types/ai-data-adapter.ts",
+    "ai/components/AiWorkspace/store/slices/config.slice.ts",
+    "ai/components/AiWorkspace/store/slices/requests.slice.ts",
+    "ai/components/AiWorkspace/store/slices/responses.slice.ts"
+  ],
+  "ai/components/AiWorkspace/store/ai-workspace-types.ts": [],
+  "ai/components/AiWorkspace/store/slices/config.slice.ts": [
+    "ai/adapters/types/ai-data-adapter.ts",
+    "ai/components/AiWorkspace/store/ai-workspace-types.ts"
+  ],
+  "ai/components/AiWorkspace/store/slices/requests.slice.ts": [
+    "ai/components/AiWorkspace/store/ai-workspace-types.ts"
+  ],
+  "ai/components/AiWorkspace/store/slices/responses.slice.ts": [
+    "ai/components/AiWorkspace/store/ai-workspace-types.ts"
+  ],
+  "ai/copilotkit/actions/base-actions.ts": [],
+  "ai/copilotkit/hooks/useCopilotKitActions.ts": [
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx",
+    "writer/copilotkit/index.ts"
+  ],
+  "ai/copilotkit/hooks/useCopilotKitContext.ts": [
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx"
+  ],
+  "ai/copilotkit/index.ts": [
+    "ai/copilotkit/hooks/useCopilotKitActions.ts",
+    "ai/copilotkit/hooks/useCopilotKitContext.ts",
+    "ai/copilotkit/providers/CopilotKitActionsProvider.tsx",
+    "ai/copilotkit/providers/CopilotKitContextProvider.tsx",
+    "ai/copilotkit/providers/CopilotKitProvider.tsx",
+    "ai/copilotkit/providers/CopilotKitWorkspaceProvider.tsx"
+  ],
+  "ai/copilotkit/providers/CopilotKitActionsProvider.tsx": [
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx",
+    "writer/copilotkit/index.ts"
+  ],
+  "ai/copilotkit/providers/CopilotKitContextProvider.tsx": [
+    "ai/copilotkit/hooks/useCopilotKitContext.ts",
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx"
+  ],
+  "ai/copilotkit/providers/CopilotKitProvider.tsx": [],
+  "ai/copilotkit/providers/CopilotKitWorkspaceProvider.tsx": [
+    "ai/copilotkit/providers/CopilotKitActionsProvider.tsx",
+    "ai/copilotkit/providers/CopilotKitContextProvider.tsx",
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx"
+  ],
+  "forge/adapters/forge-data-adapter.ts": [
+    "forge/types/characters.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts",
+    "forge/types/narrative.ts"
+  ],
+  "forge/components/ForgeWorkspace/ForgeWorkspace.tsx": [
+    "ai/copilotkit/providers/CopilotKitProvider.tsx",
+    "forge/adapters/forge-data-adapter.ts",
+    "forge/components/ForgeWorkspace/components/CommandBar/CommandBar.tsx",
+    "forge/components/ForgeWorkspace/components/CopilotChatModal.tsx",
+    "forge/components/ForgeWorkspace/components/ForgeWorkspaceLayout.tsx",
+    "forge/components/ForgeWorkspace/components/ForgeWorkspaceMenuBar.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeWorkspaceModals.tsx",
+    "forge/components/ForgeWorkspace/components/ProjectSync.tsx",
+    "forge/components/ForgeWorkspace/hooks/useNodeDrag.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/components/ForgeWorkspace/store/slices/subscriptions.ts",
+    "forge/copilotkit/hooks/useForgeCopilotContext.ts",
+    "forge/copilotkit/index.ts",
+    "forge/events/events.ts",
+    "forge/types/characters.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/CommandBar/CommandBar.tsx": [
+    "forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/forge-graph.ts",
+    "shared/lib/utils.ts",
+    "shared/ui/command.tsx",
+    "shared/ui/kbd.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/CopilotButton.tsx": [
+    "shared/lib/utils.ts",
+    "shared/ui/kbd.tsx",
+    "shared/ui/tooltip.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/CopilotChatModal.tsx": [
+    "ai/copilotkit/providers/CopilotKitProvider.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/ForgeProjectSwitcher.tsx": [
+    "forge/adapters/forge-data-adapter.ts",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "shared/ui/button.tsx",
+    "shared/ui/dialog.tsx",
+    "shared/ui/dropdown-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/ForgeSideBar/ForgeNarrativeList.tsx": [
+    "forge/components/ForgeWorkspace/components/ForgeSideBar/InlineRenameInput.tsx",
+    "forge/components/ForgeWorkspace/components/ForgeSideBar/SectionHeader.tsx",
+    "forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/lib/utils/forge-flow-helpers.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/context-menu.tsx",
+    "shared/ui/kbd.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/ForgeSideBar/ForgeSidebar.tsx": [
+    "forge/components/ForgeWorkspace/components/ForgeSideBar/ForgeNarrativeList.tsx",
+    "forge/components/ForgeWorkspace/components/ForgeSideBar/NodePalette.tsx",
+    "forge/components/ForgeWorkspace/components/ForgeSideBar/StoryletList.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "shared/lib/utils.ts",
+    "shared/ui/toggle-group.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/ForgeSideBar/InlineRenameInput.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/ForgeSideBar/NodePalette.tsx": [
+    "forge/components/ForgeWorkspace/components/ForgeSideBar/SectionHeader.tsx",
+    "forge/components/ForgeWorkspace/hooks/useNodeDrag.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts",
+    "shared/lib/utils.ts",
+    "shared/ui/tooltip.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/ForgeSideBar/SectionHeader.tsx": [
+    "forge/components/ForgeWorkspace/components/ForgeSideBar/SectionToolbar.tsx",
+    "shared/lib/utils.ts",
+    "shared/ui/SearchInput.tsx",
+    "shared/ui/badge.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/ForgeSideBar/SectionToolbar.tsx": [
+    "shared/lib/utils.ts",
+    "shared/ui/button.tsx",
+    "shared/ui/tooltip.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/ForgeSideBar/StoryletList.tsx": [
+    "forge/components/ForgeWorkspace/components/ForgeSideBar/InlineRenameInput.tsx",
+    "forge/components/ForgeWorkspace/components/ForgeSideBar/SectionHeader.tsx",
+    "forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/lib/utils/forge-flow-helpers.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/context-menu.tsx",
+    "shared/ui/kbd.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/ForgeWorkspaceLayout.tsx": [
+    "forge/components/ForgeWorkspace/components/ForgeWorkspacePanels.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/characters.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/ForgeWorkspaceMenuBar.tsx": [
+    "../components/ThemeSwitcher.tsx",
+    "forge/components/ForgeWorkspace/components/CopilotButton.tsx",
+    "forge/components/ForgeWorkspace/components/ForgeProjectSwitcher.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/forge-game-state.ts",
+    "shared/ui/button.tsx",
+    "shared/ui/menubar.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/ForgeWorkspacePanels.tsx": [
+    "forge/components/ForgeWorkspace/components/ForgeSideBar/ForgeSidebar.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/ForgeNarrativeGraphEditor.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditor.tsx",
+    "forge/types/characters.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/ForgeWorkspaceToolbar.tsx": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "shared/ui/button.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GamePlayer/GamePlayer.tsx": [
+    "forge/components/ForgeWorkspace/components/GamePlayer/VNStage.tsx",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GamePlayer/VNStage.tsx": [],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/ForgeNarrativeGraphEditor.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/NarrativeGraphEditorPaneContextMenu.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Edges/ForgeEdge.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/ForgeGraphBreadcrumbs.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorToolbar.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLeftToolbar.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphMiniMap.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ActNode/ActNode.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ChapterNode/ChapterNode.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNode.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode/index.ts",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PageNode/PageNode.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/StoryletNode/StoryletNode.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/copilotkit/index.ts",
+    "forge/lib/graph-editor/hooks/useFlowPathHighlighting.ts",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorSession.tsx",
+    "forge/lib/graph-editor/hooks/useForgeFlowEditorShell.ts",
+    "forge/lib/utils/forge-flow-helpers.ts",
+    "forge/lib/utils/layout/layout.ts",
+    "forge/types/characters.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts",
+    "shared/lib/utils.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/NarrativeGraphEditorPaneContextMenu.tsx": [
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts",
+    "shared/lib/utils.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditor.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditorPaneContextMenu.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Edges/ForgeEdge.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/ForgeGraphBreadcrumbs.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorToolbar.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLeftToolbar.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphMiniMap.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditor.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/CharacterNode/CharacterEdgeDropMenu.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/CharacterNode/CharacterNode.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalEdgeDropMenu.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNode.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode/index.ts",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PlayerNode/ChoiceEdge.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PlayerNode/PlayerEdgeDropMenu.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PlayerNode/PlayerNode.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/StoryletNode/StoryletEdgeDropMenu.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/StoryletNode/StoryletNode.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/copilotkit/index.ts",
+    "forge/lib/graph-editor/hooks/useFlowPathHighlighting.ts",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorSession.tsx",
+    "forge/lib/graph-editor/hooks/useForgeFlowEditorShell.ts",
+    "forge/lib/utils/forge-flow-helpers.ts",
+    "forge/types/characters.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts",
+    "shared/lib/utils.ts",
+    "shared/ui/toggle-group.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditorPaneContextMenu.tsx": [
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts",
+    "shared/lib/utils.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagCard.tsx": [
+    "forge/lib/flag-manager/utils/flag-constants.ts",
+    "forge/types/flags.ts",
+    "shared/ui/badge.tsx",
+    "shared/ui/button.tsx",
+    "shared/ui/card.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagEditor.tsx": [
+    "forge/lib/flag-manager/utils/flag-constants.ts",
+    "forge/types/constants.ts",
+    "forge/types/flags.ts",
+    "shared/lib/utils.ts",
+    "shared/ui/button.tsx",
+    "shared/ui/input.tsx",
+    "shared/ui/label.tsx",
+    "shared/ui/select.tsx",
+    "shared/ui/textarea.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagList.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagCard.tsx",
+    "forge/lib/flag-manager/utils/flag-constants.ts",
+    "forge/types/flags.ts",
+    "shared/ui/button.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagManager.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagEditor.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagList.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagNavigation.tsx",
+    "forge/lib/flag-manager/hooks/useFlagManager.ts",
+    "forge/lib/flag-manager/hooks/useUsedFlags.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/button.tsx",
+    "shared/ui/dialog.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagManagerModal.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagManager.tsx",
+    "forge/types/characters.ts",
+    "forge/types/constants.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagNavigation.tsx": [
+    "forge/lib/flag-manager/utils/flag-constants.ts",
+    "shared/lib/utils.ts",
+    "shared/ui/button.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/index.ts": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagCard.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagEditor.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagList.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagManager.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagNavigation.tsx",
+    "forge/lib/flag-manager/hooks/useFlagManager.ts",
+    "forge/lib/flag-manager/hooks/useUsedFlags.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgePlayModal.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/PlayView.tsx",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeWorkspaceModals.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagManagerModal.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgePlayModal.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeYarnModal.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/GuidePanel.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/characters.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeYarnModal.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/YarnView.tsx",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/CodeBlock.tsx": [],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Edges/ForgeEdge.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/EdgeSVGElements.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/utils/forge-edge-styles.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/context-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/ForgeGraphBreadcrumbs.tsx": [
+    "forge/components/ForgeWorkspace/components/ForgeSideBar/InlineRenameInput.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/components/ForgeWorkspace/store/slices/graph.slice.ts",
+    "shared/lib/utils.ts",
+    "shared/ui/context-menu.tsx",
+    "shared/ui/kbd.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorToolbar.tsx": [
+    "shared/lib/utils.ts",
+    "shared/ui/button.tsx",
+    "shared/ui/tooltip.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls.tsx": [
+    "forge/components/ForgeWorkspace/components/CopilotButton.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/lib/utils/layout/types.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLeftToolbar.tsx": [
+    "forge/components/ForgeWorkspace/components/CopilotButton.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/lib/utils/constants.ts",
+    "forge/lib/utils/layout/layout.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphMiniMap.tsx": [
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphToolbar.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphViewModeTabs.tsx",
+    "forge/types/constants.ts",
+    "shared/ui/button.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphViewModeTabs.tsx": [
+    "forge/types/constants.ts",
+    "shared/ui/tabs.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/GuidePanel.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/CodeBlock.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NextNodeSelector.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/EdgeIcon.tsx",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditor.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditorFields.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditorHeader.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditorIdField.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditorSetFlagsField.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditorStyles.tsx",
+    "forge/lib/node-editor/hooks/useChoices.ts",
+    "forge/lib/node-editor/hooks/useConditionInputs.ts",
+    "forge/lib/node-editor/utils/nodeTypeHelpers.ts",
+    "forge/types/characters.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditorFields.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/CharacterNode/CharacterNodeFields.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNodeFields.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode/DetourNodeFields.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PlayerNode/PlayerNodeFields.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/StoryletNode/StoryletNodeFields.tsx",
+    "forge/types/characters.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditorHeader.tsx": [
+    "forge/lib/node-editor/utils/nodeTypeHelpers.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/badge.tsx",
+    "shared/ui/button.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditorIdField.tsx": [
+    "forge/types/forge-graph.ts",
+    "shared/ui/input.tsx",
+    "shared/ui/label.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditorSetFlagsField.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/FlagSelector.tsx",
+    "forge/types/flags.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/label.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NodeEditorStyles.tsx": [],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ActNode/ActEdgeDropMenu.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ContextMenuBase.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorSession.tsx",
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ActNode/ActNode.tsx": [
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeFlowEditorShell.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/context-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ActNode/ActNodeFields.tsx": [
+    "forge/types/narrative.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ChapterNode/ChapterEdgeDropMenu.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ContextMenuBase.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorSession.tsx",
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ChapterNode/ChapterNode.tsx": [
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeFlowEditorShell.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/context-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ChapterNode/ChapterNodeFields.tsx": [
+    "forge/types/narrative.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/CharacterNode/CharacterEdgeContextMenu.tsx": [
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/CharacterNode/CharacterEdgeDropMenu.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ContextMenuBase.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorSession.tsx",
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/CharacterNode/CharacterNode.tsx": [
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeFlowEditorShell.ts",
+    "forge/lib/utils/flag-styles.ts",
+    "forge/lib/utils/layout/types.ts",
+    "forge/types/characters.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/context-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/CharacterNode/CharacterNodeFields.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NextNodeSelector.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/CharacterSelector.tsx",
+    "forge/types/characters.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalEdgeContextMenu.tsx": [
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalEdgeDropMenu.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ContextMenuBase.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorSession.tsx",
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNode.tsx": [
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/utils/flag-styles.ts",
+    "forge/lib/utils/layout/types.ts",
+    "forge/lib/yarn-converter/utils/condition-formatter.ts",
+    "forge/types/characters.ts",
+    "forge/types/constants.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/context-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNodeFields.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/CharacterSelector.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ConditionAutocomplete.tsx",
+    "forge/lib/yarn-converter/utils/condition-utils.ts",
+    "forge/types/characters.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode/DetourNode.tsx": [
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/utils/layout/types.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/context-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode/DetourNodeFields.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NextNodeSelector.tsx",
+    "forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/forge-graph.ts",
+    "shared/ui/button.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode/index.ts": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode/DetourNode.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PageNode/PageEdgeDropMenu.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ContextMenuBase.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PageNode/PageNode.tsx": [
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeFlowEditorShell.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/context-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PageNode/PageNodeFields.tsx": [
+    "forge/types/narrative.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PlayerNode/ChoiceEdge.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/EdgeSVGElements.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/types/forge-graph.ts",
+    "shared/ui/context-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PlayerNode/PlayerEdgeContextMenu.tsx": [
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PlayerNode/PlayerEdgeDropMenu.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ContextMenuBase.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorSession.tsx",
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PlayerNode/PlayerNode.tsx": [
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/utils/flag-styles.ts",
+    "forge/lib/utils/layout/types.ts",
+    "forge/types/characters.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/context-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PlayerNode/PlayerNodeFields.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/CharacterSelector.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ConditionAutocomplete.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/EdgeIcon.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/FlagSelector.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/yarn-converter/utils/condition-utils.ts",
+    "forge/types/characters.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/StoryletNode/StoryletEdgeContextMenu.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ContextMenuBase.tsx",
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/StoryletNode/StoryletEdgeDropMenu.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ContextMenuBase.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorSession.tsx",
+    "forge/types/forge-graph.ts",
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/StoryletNode/StoryletNode.tsx": [
+    "forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions.tsx",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/lib/utils/flag-styles.ts",
+    "forge/lib/utils/layout/types.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-graph.ts",
+    "shared/ui/context-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/StoryletNode/StoryletNodeFields.tsx": [
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/NodeEditor/NextNodeSelector.tsx",
+    "forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions.tsx",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/forge-graph.ts",
+    "shared/ui/button.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/CharacterSelector.tsx": [
+    "forge/types/characters.ts",
+    "shared/lib/utils.ts",
+    "shared/ui/button.tsx",
+    "shared/ui/dropdown-menu.tsx",
+    "shared/ui/input.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ConditionAutocomplete.tsx": [
+    "forge/lib/flag-manager/utils/flag-constants.ts",
+    "forge/types/constants.ts",
+    "forge/types/flags.ts",
+    "shared/lib/utils.ts",
+    "shared/types/index.ts",
+    "shared/ui/button.tsx",
+    "shared/ui/input.tsx",
+    "shared/ui/textarea.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/ContextMenuBase.tsx": [
+    "shared/lib/utils.ts",
+    "shared/ui/context-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/EdgeIcon.tsx": [],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/EdgeSVGElements.tsx": [],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/FlagSelector.tsx": [
+    "shared/types/index.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/PaneContextMenu.tsx": [
+    "shared/ui/context-menu.tsx"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/PlayView.tsx": [
+    "forge/components/ForgeWorkspace/components/GamePlayer/GamePlayer.tsx",
+    "forge/lib/flag-manager/utils/flag-constants.ts",
+    "forge/lib/flag-manager/utils/flag-manager.ts",
+    "forge/types/constants.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/GraphEditors/shared/YarnView.tsx": [
+    "forge/lib/yarn-converter/index.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/components/ProjectSync.tsx": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx"
+  ],
+  "forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions.tsx": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx"
+  ],
+  "forge/components/ForgeWorkspace/hooks/useForgeWorkspaceCompositionCompiler.ts": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/runtime/execute-graph-to-frames.ts",
+    "forge/runtime/types.ts",
+    "forge/types/constants.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/hooks/useNodeDrag.tsx": [],
+  "forge/components/ForgeWorkspace/hooks/usePanelPersistence.ts": [],
+  "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx": [
+    "forge/adapters/forge-data-adapter.ts",
+    "forge/components/ForgeWorkspace/store/slices/gameState.slice.ts",
+    "forge/components/ForgeWorkspace/store/slices/graph.slice.ts",
+    "forge/components/ForgeWorkspace/store/slices/project.slice.ts",
+    "forge/components/ForgeWorkspace/store/slices/viewState.slice.ts",
+    "forge/events/events.ts",
+    "forge/types/constants.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/index.ts"
+  ],
+  "forge/components/ForgeWorkspace/store/slices/gameState.slice.ts": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts"
+  ],
+  "forge/components/ForgeWorkspace/store/slices/graph.slice.ts": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/constants.ts",
+    "forge/types/index.ts"
+  ],
+  "forge/components/ForgeWorkspace/store/slices/project.slice.ts": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx"
+  ],
+  "forge/components/ForgeWorkspace/store/slices/subscriptions.ts": [
+    "forge/adapters/forge-data-adapter.ts",
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/store/slices/viewState.slice.ts": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/components/ForgeWorkspace/utils/forge-workspace-utils.ts": [
+    "forge/lib/yarn-converter/index.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/copilotkit/actions/editor/forge-graph-editor-actions.ts": [
+    "forge/copilotkit/constants/forge-action-names.ts",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/copilotkit/actions/editor/types.ts": [],
+  "forge/copilotkit/actions/workspace/forge-workspace-actions.ts": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/copilotkit/constants/forge-action-names.ts",
+    "forge/types/constants.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/copilotkit/actions/workspace/types.ts": [],
+  "forge/copilotkit/constants/forge-action-names.ts": [],
+  "forge/copilotkit/hooks/useForgeCopilotContext.ts": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/copilotkit/hooks/useForgeGraphEditorActions.ts": [
+    "forge/copilotkit/actions/editor/forge-graph-editor-actions.ts",
+    "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx"
+  ],
+  "forge/copilotkit/hooks/useForgeWorkspaceActions.ts": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/copilotkit/actions/workspace/forge-workspace-actions.ts"
+  ],
+  "forge/copilotkit/index.ts": [
+    "forge/copilotkit/actions/editor/forge-graph-editor-actions.ts",
+    "forge/copilotkit/actions/workspace/forge-workspace-actions.ts",
+    "forge/copilotkit/constants/forge-action-names.ts",
+    "forge/copilotkit/hooks/useForgeCopilotContext.ts",
+    "forge/copilotkit/hooks/useForgeGraphEditorActions.ts",
+    "forge/copilotkit/hooks/useForgeWorkspaceActions.ts"
+  ],
+  "forge/events/events.ts": [
+    "forge/types/constants.ts",
+    "forge/types/index.ts"
+  ],
+  "forge/lib/data-adapter/media.ts": [],
+  "forge/lib/flag-manager/hooks/useFlagManager.ts": [
+    "forge/lib/flag-manager/utils/flag-helpers.ts",
+    "forge/types/flags.ts"
+  ],
+  "forge/lib/flag-manager/hooks/useUsedFlags.ts": [],
+  "forge/lib/flag-manager/utils/flag-constants.ts": [
+    "forge/types/constants.ts",
+    "forge/types/flags.ts"
+  ],
+  "forge/lib/flag-manager/utils/flag-helpers.ts": [
+    "forge/lib/flag-manager/utils/flag-constants.ts",
+    "forge/types/constants.ts",
+    "forge/types/flags.ts"
+  ],
+  "forge/lib/flag-manager/utils/flag-manager.ts": [
+    "forge/types/constants.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts"
+  ],
+  "forge/lib/game-player/game-state-flattener.ts": [
+    "forge/types/forge-game-state.ts"
+  ],
+  "forge/lib/graph-editor/hooks/forge-commands.ts": [
+    "forge/lib/graph-editor/hooks/useForgeEditorSession.tsx",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/graph-editor/hooks/useEdgeDropBehavior.ts": [],
+  "forge/lib/graph-editor/hooks/useFlowPathHighlighting.ts": [],
+  "forge/lib/graph-editor/hooks/useForgeEditorActions.tsx": [
+    "forge/lib/graph-editor/hooks/forge-commands.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/graph-editor/hooks/useForgeEditorSession.tsx": [
+    "forge/lib/utils/forge-flow-helpers.ts"
+  ],
+  "forge/lib/graph-editor/hooks/useForgeFlowEditorShell.ts": [
+    "forge/lib/graph-editor/hooks/forge-commands.ts",
+    "forge/lib/graph-editor/hooks/useEdgeDropBehavior.ts",
+    "forge/lib/graph-editor/hooks/useForgeEditorSession.tsx",
+    "forge/lib/utils/constants.ts",
+    "forge/lib/utils/forge-flow-helpers.ts",
+    "forge/lib/utils/layout/layout.ts",
+    "forge/types/forge-graph.ts",
+    "shared/types/index.ts"
+  ],
+  "forge/lib/graph-editor/hooks/usePaneContextMenu.ts": [],
+  "forge/lib/node-editor/hooks/useChoices.ts": [],
+  "forge/lib/node-editor/hooks/useConditionInputs.ts": [
+    "forge/lib/yarn-converter/utils/condition-utils.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/node-editor/utils/nodeTypeHelpers.ts": [
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/lib/utils/constants.ts": [],
+  "forge/lib/utils/flag-styles.ts": [
+    "forge/types/constants.ts",
+    "forge/types/flags.ts"
+  ],
+  "forge/lib/utils/forge-edge-styles.ts": [],
+  "forge/lib/utils/forge-flow-helpers.ts": [
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/utils/layout/collision.ts": [
+    "forge/lib/utils/constants.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/utils/layout/layout.ts": [
+    "forge/lib/utils/layout/collision.ts",
+    "forge/lib/utils/layout/registry.ts",
+    "forge/lib/utils/layout/strategies/index.ts",
+    "forge/lib/utils/layout/types.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/utils/layout/registry.ts": [
+    "forge/lib/utils/layout/types.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/utils/layout/strategies/dagre.ts": [
+    "forge/lib/utils/layout/types.ts"
+  ],
+  "forge/lib/utils/layout/strategies/force.ts": [
+    "forge/lib/utils/layout/types.ts"
+  ],
+  "forge/lib/utils/layout/strategies/grid.ts": [
+    "forge/lib/utils/layout/types.ts"
+  ],
+  "forge/lib/utils/layout/strategies/index.ts": [
+    "forge/lib/utils/layout/strategies/dagre.ts",
+    "forge/lib/utils/layout/strategies/force.ts",
+    "forge/lib/utils/layout/strategies/grid.ts"
+  ],
+  "forge/lib/utils/layout/types.ts": [
+    "forge/types/index.ts"
+  ],
+  "forge/lib/yarn-converter/__tests__/builders.test.ts": [
+    "forge/lib/yarn-converter/builders/node-block-builder.ts",
+    "forge/lib/yarn-converter/builders/yarn-text-builder.ts",
+    "forge/types/constants.ts"
+  ],
+  "forge/lib/yarn-converter/__tests__/character-handler.test.ts": [
+    "forge/lib/yarn-converter/__tests__/helpers.ts",
+    "forge/lib/yarn-converter/builders/yarn-text-builder.ts",
+    "forge/lib/yarn-converter/handlers/character-handler.ts",
+    "forge/types/constants.ts"
+  ],
+  "forge/lib/yarn-converter/__tests__/conditional-handler.test.ts": [
+    "forge/lib/yarn-converter/__tests__/helpers.ts",
+    "forge/lib/yarn-converter/builders/yarn-text-builder.ts",
+    "forge/lib/yarn-converter/handlers/conditional-handler.ts",
+    "forge/lib/yarn-converter/index.ts",
+    "forge/types/constants.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/__tests__/detour-handler.test.ts": [
+    "forge/lib/yarn-converter/__tests__/helpers.ts",
+    "forge/lib/yarn-converter/builders/yarn-text-builder.ts",
+    "forge/lib/yarn-converter/handlers/detour-handler.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/__tests__/helpers.ts": [
+    "forge/lib/utils/forge-flow-helpers.ts",
+    "forge/lib/yarn-converter/types.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/__tests__/integration.test.ts": [
+    "forge/lib/yarn-converter/__tests__/helpers.ts",
+    "forge/lib/yarn-converter/index.ts",
+    "forge/types/constants.ts"
+  ],
+  "forge/lib/yarn-converter/__tests__/player-handler.test.ts": [
+    "forge/lib/yarn-converter/__tests__/helpers.ts",
+    "forge/lib/yarn-converter/builders/yarn-text-builder.ts",
+    "forge/lib/yarn-converter/handlers/player-handler.ts",
+    "forge/types/constants.ts"
+  ],
+  "forge/lib/yarn-converter/__tests__/round-trip.test.ts": [
+    "forge/lib/yarn-converter/__tests__/helpers.ts",
+    "forge/lib/yarn-converter/index.ts",
+    "forge/types/constants.ts"
+  ],
+  "forge/lib/yarn-converter/__tests__/storylet-handler.test.ts": [
+    "forge/lib/yarn-converter/__tests__/helpers.ts",
+    "forge/lib/yarn-converter/builders/yarn-text-builder.ts",
+    "forge/lib/yarn-converter/handlers/storylet-handler.ts"
+  ],
+  "forge/lib/yarn-converter/__tests__/utils.test.ts": [
+    "forge/lib/yarn-converter/utils/condition-formatter.ts",
+    "forge/lib/yarn-converter/utils/condition-parser/index.ts",
+    "forge/lib/yarn-converter/utils/content-formatter.ts",
+    "forge/lib/yarn-converter/utils/variable-handler.ts",
+    "forge/types/constants.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/builders/node-block-builder.ts": [
+    "forge/lib/yarn-converter/builders/yarn-text-builder.ts",
+    "forge/lib/yarn-converter/index.ts",
+    "forge/lib/yarn-converter/utils/condition-formatter.ts",
+    "forge/lib/yarn-converter/utils/content-formatter.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/builders/yarn-text-builder.ts": [
+    "forge/lib/yarn-converter/types.ts"
+  ],
+  "forge/lib/yarn-converter/handlers/base-handler.ts": [
+    "forge/lib/yarn-converter/builders/yarn-text-builder.ts",
+    "forge/lib/yarn-converter/types.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/handlers/character-handler.ts": [
+    "forge/lib/yarn-converter/builders/node-block-builder.ts",
+    "forge/lib/yarn-converter/handlers/base-handler.ts",
+    "forge/lib/yarn-converter/index.ts",
+    "forge/lib/yarn-converter/types.ts",
+    "forge/lib/yarn-converter/utils/condition-parser/index.ts",
+    "forge/lib/yarn-converter/utils/content-formatter.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/handlers/conditional-handler.ts": [
+    "forge/lib/yarn-converter/builders/node-block-builder.ts",
+    "forge/lib/yarn-converter/handlers/base-handler.ts",
+    "forge/lib/yarn-converter/index.ts",
+    "forge/lib/yarn-converter/types.ts",
+    "forge/lib/yarn-converter/utils/condition-parser/index.ts",
+    "forge/lib/yarn-converter/utils/content-formatter.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/handlers/detour-handler.ts": [
+    "forge/lib/yarn-converter/builders/node-block-builder.ts",
+    "forge/lib/yarn-converter/handlers/base-handler.ts",
+    "forge/lib/yarn-converter/registry.ts",
+    "forge/lib/yarn-converter/types.ts",
+    "forge/lib/yarn-converter/utils/runtime-export.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/handlers/player-handler.ts": [
+    "forge/lib/yarn-converter/builders/node-block-builder.ts",
+    "forge/lib/yarn-converter/handlers/base-handler.ts",
+    "forge/lib/yarn-converter/types.ts",
+    "forge/lib/yarn-converter/utils/condition-parser/index.ts",
+    "forge/lib/yarn-converter/utils/content-formatter.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/handlers/storylet-handler.ts": [
+    "forge/lib/yarn-converter/builders/node-block-builder.ts",
+    "forge/lib/yarn-converter/handlers/base-handler.ts",
+    "forge/lib/yarn-converter/registry.ts",
+    "forge/lib/yarn-converter/types.ts",
+    "forge/lib/yarn-converter/utils/runtime-export.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/index.ts": [
+    "forge/lib/yarn-converter/builders/node-block-builder.ts",
+    "forge/lib/yarn-converter/builders/yarn-text-builder.ts",
+    "forge/lib/yarn-converter/handlers/character-handler.ts",
+    "forge/lib/yarn-converter/handlers/conditional-handler.ts",
+    "forge/lib/yarn-converter/handlers/detour-handler.ts",
+    "forge/lib/yarn-converter/handlers/player-handler.ts",
+    "forge/lib/yarn-converter/handlers/storylet-handler.ts",
+    "forge/lib/yarn-converter/registry.ts",
+    "forge/lib/yarn-converter/types.ts",
+    "forge/lib/yarn-converter/utils/runtime-export.ts",
+    "forge/lib/yarn-converter/workspace-context.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/registry.ts": [
+    "forge/lib/yarn-converter/types.ts"
+  ],
+  "forge/lib/yarn-converter/types.ts": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/utils/condition-formatter.ts": [
+    "forge/types/constants.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/utils/condition-parser/index.ts": [
+    "forge/lib/yarn-converter/utils/condition-parser/patterns.ts",
+    "forge/lib/yarn-converter/utils/condition-parser/utils.ts",
+    "forge/types/constants.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/utils/condition-parser/patterns.ts": [],
+  "forge/lib/yarn-converter/utils/condition-parser/utils.ts": [
+    "forge/lib/yarn-converter/utils/condition-parser/patterns.ts"
+  ],
+  "forge/lib/yarn-converter/utils/condition-utils.ts": [
+    "forge/lib/yarn-converter/utils/condition-formatter.ts",
+    "forge/lib/yarn-converter/utils/condition-parser/index.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/lib/yarn-converter/utils/content-formatter.ts": [],
+  "forge/lib/yarn-converter/utils/runtime-export.ts": [
+    "forge/types/forge-graph.ts",
+    "shared/types/index.ts"
+  ],
+  "forge/lib/yarn-converter/utils/variable-handler.ts": [],
+  "forge/lib/yarn-converter/workspace-context.ts": [
+    "forge/components/ForgeWorkspace/store/forge-workspace-store.tsx",
+    "forge/lib/yarn-converter/types.ts",
+    "forge/types/constants.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/runtime/engine/constants.ts": [],
+  "forge/runtime/engine/execute-graph-to-frames.ts": [
+    "forge/runtime/engine/constants.ts",
+    "forge/runtime/engine/presentation-resolver.ts",
+    "forge/runtime/engine/types.ts",
+    "forge/types/constants.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/runtime/engine/index.ts": [
+    "forge/runtime/engine/constants.ts",
+    "forge/runtime/engine/execute-graph-to-frames.ts",
+    "forge/runtime/engine/presentation-resolver.ts",
+    "forge/runtime/engine/types.ts"
+  ],
+  "forge/runtime/engine/presentation-resolver.ts": [
+    "forge/runtime/engine/constants.ts",
+    "forge/runtime/engine/types.ts"
+  ],
+  "forge/runtime/engine/types.ts": [
+    "forge/runtime/engine/constants.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts"
+  ],
+  "forge/runtime/execute-graph-to-frames.ts": [
+    "forge/runtime/engine/execute-graph-to-frames.ts"
+  ],
+  "forge/runtime/types.ts": [
+    "forge/runtime/engine/constants.ts",
+    "forge/runtime/engine/types.ts"
+  ],
+  "forge/styles/forge-context.css": [],
+  "forge/styles/nodes.css": [],
+  "forge/types/characters.ts": [],
+  "forge/types/constants.ts": [],
+  "forge/types/flags.ts": [
+    "forge/types/constants.ts"
+  ],
+  "forge/types/forge-game-state.ts": [
+    "forge/types/characters.ts"
+  ],
+  "forge/types/forge-graph.ts": [
+    "forge/types/constants.ts"
+  ],
+  "forge/types/index.ts": [
+    "forge/types/constants.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-graph.ts",
+    "forge/types/narrative.ts",
+    "forge/types/ui-constants.ts"
+  ],
+  "forge/types/narrative.ts": [],
+  "forge/types/ui-constants.ts": [
+    "forge/types/forge-graph.ts"
+  ],
+  "index.ts": [
+    "forge/components/ForgeWorkspace/ForgeWorkspace.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditor.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/GuidePanel.tsx",
+    "forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/CharacterSelector.tsx",
+    "forge/components/ForgeWorkspace/hooks/useForgeWorkspaceCompositionCompiler.ts",
+    "forge/lib/data-adapter/media.ts",
+    "forge/lib/utils/forge-flow-helpers.ts",
+    "forge/lib/yarn-converter/index.ts",
+    "forge/runtime/engine/index.ts",
+    "forge/runtime/execute-graph-to-frames.ts",
+    "forge/runtime/types.ts",
+    "forge/styles/forge-context.css",
+    "forge/styles/nodes.css",
+    "forge/types/characters.ts",
+    "forge/types/constants.ts",
+    "forge/types/flags.ts",
+    "forge/types/forge-game-state.ts",
+    "forge/types/forge-graph.ts",
+    "styles/graph.css",
+    "styles/scrollbar.css",
+    "styles/themes.css"
+  ],
+  "shared/icons/ArthurIcon.tsx": [],
+  "shared/lib/utils.ts": [],
+  "shared/types/bindings.ts": [],
+  "shared/types/export-registry.ts": [
+    "forge/types/forge-graph.ts"
+  ],
+  "shared/types/index.ts": [
+    "shared/types/bindings.ts",
+    "shared/types/export-registry.ts"
+  ],
+  "shared/ui/SearchInput.tsx": [
+    "shared/lib/utils.ts",
+    "shared/ui/input.tsx"
+  ],
+  "shared/ui/badge.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/button.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/card.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/command.tsx": [
+    "shared/lib/utils.ts",
+    "shared/ui/dialog.tsx"
+  ],
+  "shared/ui/context-menu.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/dialog.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/dropdown-menu.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/input.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/kbd.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/label.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/menubar.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/resizable.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/select.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/tabs.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/textarea.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/toggle-group.tsx": [
+    "shared/lib/utils.ts",
+    "shared/ui/toggle.tsx"
+  ],
+  "shared/ui/toggle.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "shared/ui/tooltip.tsx": [
+    "shared/lib/utils.ts"
+  ],
+  "styles/graph.css": [],
+  "styles/scrollbar.css": [],
+  "styles/themes.css": [],
+  "video/index.ts": [
+    "video/lib/media-resolver.ts",
+    "video/templates/compile/compile-composition.ts",
+    "video/templates/compile/compile-template.ts",
+    "video/templates/compile/frames-to-inputs.ts",
+    "video/templates/compile/frames-to-template-inputs.ts",
+    "video/templates/compile/normalize-timeline.ts",
+    "video/templates/compile/resolve-bindings.ts",
+    "video/templates/compile/stitch-scenes.ts",
+    "video/templates/types/video-composition.ts",
+    "video/templates/types/video-layer.ts",
+    "video/templates/types/video-scene.ts",
+    "video/templates/types/video-template.ts",
+    "video/workspace/VideoTemplateWorkspace.tsx",
+    "video/workspace/video-template-workspace-actions.ts",
+    "video/workspace/video-template-workspace-contracts.ts"
+  ],
+  "video/lib/media-resolver.ts": [],
+  "video/templates/compile/compile-composition.ts": [
+    "forge/runtime/types.ts",
+    "shared/types/bindings.ts",
+    "video/templates/compile/frames-to-template-inputs.ts",
+    "video/templates/types/video-composition.ts",
+    "video/templates/types/video-layer.ts",
+    "video/templates/types/video-scene.ts",
+    "video/templates/types/video-template.ts"
+  ],
+  "video/templates/compile/compile-template.test.ts": [
+    "shared/types/bindings.ts",
+    "video/templates/compile/compile-template.ts",
+    "video/templates/types/video-template.ts"
+  ],
+  "video/templates/compile/compile-template.ts": [
+    "shared/types/bindings.ts",
+    "video/templates/compile/normalize-timeline.ts",
+    "video/templates/compile/resolve-bindings.ts",
+    "video/templates/compile/stitch-scenes.ts",
+    "video/templates/types/video-composition.ts",
+    "video/templates/types/video-template.ts"
+  ],
+  "video/templates/compile/frames-to-inputs.ts": [
+    "video/templates/compile/frames-to-template-inputs.ts"
+  ],
+  "video/templates/compile/frames-to-template-inputs.ts": [
+    "forge/runtime/types.ts",
+    "shared/types/bindings.ts"
+  ],
+  "video/templates/compile/normalize-timeline.ts": [
+    "video/templates/types/video-layer.ts",
+    "video/templates/types/video-scene.ts",
+    "video/templates/types/video-template.ts"
+  ],
+  "video/templates/compile/resolve-bindings.ts": [
+    "shared/types/bindings.ts"
+  ],
+  "video/templates/compile/stitch-scenes.ts": [
+    "video/templates/compile/normalize-timeline.ts",
+    "video/templates/types/video-composition.ts"
+  ],
+  "video/templates/types/video-composition.ts": [],
+  "video/templates/types/video-layer.ts": [],
+  "video/templates/types/video-scene.ts": [
+    "video/templates/types/video-layer.ts"
+  ],
+  "video/templates/types/video-template.ts": [
+    "video/templates/types/video-scene.ts"
+  ],
+  "video/workspace/VideoTemplateWorkspace.tsx": [
+    "shared/lib/utils.ts",
+    "shared/types/bindings.ts",
+    "shared/ui/badge.tsx",
+    "shared/ui/button.tsx",
+    "shared/ui/card.tsx",
+    "video/workspace/components/LayerInspector.tsx",
+    "video/workspace/components/LayerList.tsx",
+    "video/workspace/components/Preview.tsx",
+    "video/workspace/components/SceneList.tsx",
+    "video/workspace/components/Timeline.tsx",
+    "video/workspace/video-template-workspace-contracts.ts"
+  ],
+  "video/workspace/components/LayerInspector.tsx": [
+    "shared/ui/badge.tsx",
+    "shared/ui/card.tsx"
+  ],
+  "video/workspace/components/LayerList.tsx": [
+    "shared/lib/utils.ts",
+    "shared/ui/badge.tsx",
+    "shared/ui/button.tsx",
+    "shared/ui/card.tsx"
+  ],
+  "video/workspace/components/Preview.tsx": [
+    "shared/ui/badge.tsx",
+    "shared/ui/button.tsx",
+    "shared/ui/card.tsx"
+  ],
+  "video/workspace/components/SceneList.tsx": [
+    "shared/lib/utils.ts",
+    "shared/ui/badge.tsx",
+    "shared/ui/button.tsx",
+    "shared/ui/card.tsx"
+  ],
+  "video/workspace/components/Timeline.tsx": [
+    "shared/ui/badge.tsx",
+    "shared/ui/button.tsx",
+    "shared/ui/card.tsx"
+  ],
+  "video/workspace/video-template-workspace-actions.ts": [],
+  "video/workspace/video-template-workspace-contracts.ts": [],
+  "writer/components/WriterWorkspace/WriterWorkspace.tsx": [
+    "ai/copilotkit/providers/CopilotKitWorkspaceProvider.tsx",
+    "forge/types/narrative.ts",
+    "writer/components/WriterWorkspace/editor/WriterEditorPane.tsx",
+    "writer/components/WriterWorkspace/layout/WriterLayout.tsx",
+    "writer/components/WriterWorkspace/modals/WriterWorkspaceModals.tsx",
+    "writer/components/WriterWorkspace/sidebar/WriterTree.tsx",
+    "writer/components/WriterWorkspace/store/slices/subscriptions.ts",
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx",
+    "writer/copilotkit/index.ts",
+    "writer/events/writer-events.ts",
+    "writer/lib/data-adapter/writer-adapter.ts"
+  ],
+  "writer/components/WriterWorkspace/editor/LexicalEditor.tsx": [
+    "writer/components/WriterWorkspace/editor/hooks/useWriterEditorSession.tsx",
+    "writer/components/WriterWorkspace/editor/lexical/nodes.ts",
+    "writer/components/WriterWorkspace/editor/lexical/plugins/AiSelectionPlugin.tsx",
+    "writer/components/WriterWorkspace/editor/lexical/plugins/BlockHandlePlugin.tsx",
+    "writer/components/WriterWorkspace/editor/lexical/plugins/CopilotKitPlugin.tsx",
+    "writer/components/WriterWorkspace/editor/lexical/plugins/KeyboardShortcutsPlugin.tsx",
+    "writer/components/WriterWorkspace/editor/lexical/plugins/ToolbarPlugin.tsx",
+    "writer/components/WriterWorkspace/editor/lexical/plugins/WriterPlugins.tsx",
+    "writer/components/WriterWorkspace/editor/lexical/theme.ts",
+    "writer/components/WriterWorkspace/store/writer-workspace-types.ts"
+  ],
+  "writer/components/WriterWorkspace/editor/WriterEditorPane.tsx": [
+    "shared/types/index.ts",
+    "writer/components/WriterWorkspace/editor/LexicalEditor.tsx",
+    "writer/components/WriterWorkspace/editor/lexical/plugins/AutosavePlugin.tsx",
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx",
+    "writer/components/WriterWorkspace/store/writer-workspace-types.ts",
+    "writer/lib/editor/patches.ts"
+  ],
+  "writer/components/WriterWorkspace/editor/hooks/useWriterEditorSession.tsx": [],
+  "writer/components/WriterWorkspace/editor/lexical/nodes.ts": [
+    "writer/components/WriterWorkspace/editor/lexical/nodes/MediaNodes.tsx"
+  ],
+  "writer/components/WriterWorkspace/editor/lexical/nodes/MediaNodes.tsx": [
+    "writer/components/WriterWorkspace/editor/lexical/nodes/media-constants.ts",
+    "writer/components/WriterWorkspace/editor/lexical/plugins/MediaPlugin.tsx",
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx",
+    "writer/lib/data-adapter/media.ts"
+  ],
+  "writer/components/WriterWorkspace/editor/lexical/nodes/media-constants.ts": [],
+  "writer/components/WriterWorkspace/editor/lexical/plugins/AiSelectionPlugin.tsx": [
+    "writer/components/WriterWorkspace/editor/hooks/useWriterEditorSession.tsx",
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx"
+  ],
+  "writer/components/WriterWorkspace/editor/lexical/plugins/AutosavePlugin.tsx": [
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx"
+  ],
+  "writer/components/WriterWorkspace/editor/lexical/plugins/BlockHandlePlugin.tsx": [],
+  "writer/components/WriterWorkspace/editor/lexical/plugins/CopilotKitPlugin.tsx": [],
+  "writer/components/WriterWorkspace/editor/lexical/plugins/KeyboardShortcutsPlugin.tsx": [],
+  "writer/components/WriterWorkspace/editor/lexical/plugins/MarkdownPastePlugin.tsx": [],
+  "writer/components/WriterWorkspace/editor/lexical/plugins/MediaPlugin.tsx": [
+    "writer/components/WriterWorkspace/editor/lexical/nodes/MediaNodes.tsx",
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx",
+    "writer/lib/data-adapter/media.ts"
+  ],
+  "writer/components/WriterWorkspace/editor/lexical/plugins/SlashCommandPlugin.tsx": [
+    "writer/components/WriterWorkspace/editor/lexical/plugins/MediaPlugin.tsx",
+    "writer/lib/data-adapter/media.ts"
+  ],
+  "writer/components/WriterWorkspace/editor/lexical/plugins/TablePlugin.tsx": [],
+  "writer/components/WriterWorkspace/editor/lexical/plugins/ToolbarPlugin.tsx": [
+    "writer/components/WriterWorkspace/editor/lexical/plugins/MediaPlugin.tsx",
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx",
+    "writer/lib/data-adapter/media.ts"
+  ],
+  "writer/components/WriterWorkspace/editor/lexical/plugins/WriterPlugins.tsx": [
+    "writer/components/WriterWorkspace/editor/lexical/plugins/MarkdownPastePlugin.tsx",
+    "writer/components/WriterWorkspace/editor/lexical/plugins/MediaPlugin.tsx",
+    "writer/components/WriterWorkspace/editor/lexical/plugins/SlashCommandPlugin.tsx",
+    "writer/components/WriterWorkspace/editor/lexical/plugins/TablePlugin.tsx"
+  ],
+  "writer/components/WriterWorkspace/editor/lexical/theme.ts": [],
+  "writer/components/WriterWorkspace/layout/WriterLayout.tsx": [
+    "forge/types/forge-graph.ts",
+    "writer/components/WriterWorkspace/layout/WriterTopBar.tsx",
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx"
+  ],
+  "writer/components/WriterWorkspace/layout/WriterTopBar.tsx": [
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx"
+  ],
+  "writer/components/WriterWorkspace/modals/WriterWorkspaceModals.tsx": [
+    "forge/types/narrative.ts",
+    "writer/components/WriterWorkspace/modals/components/WriterPlayModal.tsx",
+    "writer/components/WriterWorkspace/modals/components/WriterYarnModal.tsx",
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx"
+  ],
+  "writer/components/WriterWorkspace/modals/components/WriterPlayModal.tsx": [
+    "forge/types/narrative.ts"
+  ],
+  "writer/components/WriterWorkspace/modals/components/WriterYarnModal.tsx": [
+    "forge/types/narrative.ts"
+  ],
+  "writer/components/WriterWorkspace/sidebar/WriterTree.tsx": [
+    "writer/components/WriterWorkspace/sidebar/WriterTreeRow.tsx",
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx"
+  ],
+  "writer/components/WriterWorkspace/sidebar/WriterTreeRow.tsx": [],
+  "writer/components/WriterWorkspace/store/slices/ai.slice.ts": [
+    "writer/components/WriterWorkspace/store/writer-workspace-types.ts",
+    "writer/lib/editor/patches.ts",
+    "writer/types/writer-ai-types.ts"
+  ],
+  "writer/components/WriterWorkspace/store/slices/content.slice.ts": [
+    "forge/types/narrative.ts",
+    "writer/components/WriterWorkspace/store/writer-workspace-types.ts"
+  ],
+  "writer/components/WriterWorkspace/store/slices/editor.slice.ts": [
+    "forge/types/narrative.ts",
+    "writer/components/WriterWorkspace/store/writer-workspace-types.ts"
+  ],
+  "writer/components/WriterWorkspace/store/slices/navigation.slice.ts": [
+    "writer/components/WriterWorkspace/store/writer-workspace-types.ts"
+  ],
+  "writer/components/WriterWorkspace/store/slices/subscriptions.ts": [
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx",
+    "writer/events/writer-events.ts",
+    "writer/lib/data-adapter/writer-adapter.ts"
+  ],
+  "writer/components/WriterWorkspace/store/slices/viewState.slice.ts": [
+    "writer/components/WriterWorkspace/store/writer-workspace-types.ts"
+  ],
+  "writer/components/WriterWorkspace/store/writer-workspace-store.tsx": [
+    "forge/types/narrative.ts",
+    "writer/components/WriterWorkspace/store/slices/ai.slice.ts",
+    "writer/components/WriterWorkspace/store/slices/content.slice.ts",
+    "writer/components/WriterWorkspace/store/slices/editor.slice.ts",
+    "writer/components/WriterWorkspace/store/slices/navigation.slice.ts",
+    "writer/components/WriterWorkspace/store/slices/viewState.slice.ts",
+    "writer/components/WriterWorkspace/store/writer-workspace-types.ts",
+    "writer/events/events.ts",
+    "writer/events/writer-events.ts",
+    "writer/lib/data-adapter/writer-adapter.ts",
+    "writer/types/writer-ai-types.ts"
+  ],
+  "writer/components/WriterWorkspace/store/writer-workspace-types.ts": [
+    "forge/types/narrative.ts"
+  ],
+  "writer/copilotkit/actions/editor/types.ts": [],
+  "writer/copilotkit/actions/editor/writer-editor-actions.ts": [
+    "writer/copilotkit/constants/writer-action-names.ts"
+  ],
+  "writer/copilotkit/actions/workspace/types.ts": [],
+  "writer/copilotkit/actions/workspace/writer-workspace-actions.ts": [
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx",
+    "writer/components/WriterWorkspace/store/writer-workspace-types.ts",
+    "writer/copilotkit/constants/writer-action-names.ts"
+  ],
+  "writer/copilotkit/constants/writer-action-names.ts": [],
+  "writer/copilotkit/hooks/useWriterEditorActions.ts": [
+    "writer/copilotkit/actions/editor/writer-editor-actions.ts"
+  ],
+  "writer/copilotkit/hooks/useWriterWorkspaceActions.ts": [
+    "writer/components/WriterWorkspace/store/writer-workspace-store.tsx",
+    "writer/copilotkit/actions/workspace/writer-workspace-actions.ts"
+  ],
+  "writer/copilotkit/index.ts": [
+    "writer/copilotkit/actions/editor/writer-editor-actions.ts",
+    "writer/copilotkit/actions/workspace/writer-workspace-actions.ts",
+    "writer/copilotkit/constants/writer-action-names.ts",
+    "writer/copilotkit/hooks/useWriterEditorActions.ts",
+    "writer/copilotkit/hooks/useWriterWorkspaceActions.ts"
+  ],
+  "writer/events/events.ts": [
+    "writer/events/writer-events.ts"
+  ],
+  "writer/events/writer-events.ts": [],
+  "writer/lib/data-adapter/media.ts": [],
+  "writer/lib/data-adapter/writer-adapter.ts": [
+    "forge/types/narrative.ts",
+    "writer/lib/data-adapter/media.ts"
+  ],
+  "writer/lib/editor/patches.ts": [
+    "writer/types/writer-ai-types.ts"
+  ],
+  "writer/types/writer-ai-types.ts": []
+}

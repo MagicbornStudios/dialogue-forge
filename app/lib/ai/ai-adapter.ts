@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { createOpenRouterAdapter } from '@/ai/aiadapter/openrouter/openrouter-adapter';
+import { createOpenRouterAdapter } from '@/app/lib/ai/aiadapter/openrouter/openrouter-adapter';
 import { getOpenRouterConfig } from '@/ai/aiadapter/openrouter/config';
 import type {
   AiAdapter,

@@ -2,7 +2,7 @@
   "../components/ThemeSwitcher.tsx": [],
   "ai/adapters/types/ai-data-adapter.ts": [],
   "ai/aiadapter/openrouter/config.ts": [],
-  "ai/aiadapter/openrouter/openrouter-adapter.ts": [
+  "app/lib/ai/aiadapter/openrouter/openrouter-adapter.ts": [
     "ai/aiadapter/openrouter/config.ts",
     "ai/aiadapter/types.ts"
   ],

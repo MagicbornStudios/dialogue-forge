@@ -1,7 +1,10 @@
 const baseRestrictedPatterns = [
   "app/**",
+  "app/payload-types",
   "@/app/**",
+  "@/app/payload-types",
   "@magicborn/dialogue-forge/app/**",
+  "@magicborn/dialogue-forge/app/payload-types",
   "payload-types",
   "**/payload-types",
   "**/payload-types/**",
@@ -51,7 +54,7 @@ module.exports = {
       files: ["src/**/*.{js,jsx,ts,tsx}", "src/**/*.d.ts"],
       rules: {
         "no-restricted-imports": [
-          "warn",
+          "error",
           {
             patterns: baseRestrictedPatterns,
           },
@@ -62,7 +65,7 @@ module.exports = {
       files: ["src/forge/**/*.{js,jsx,ts,tsx}", "src/forge/**/*.d.ts"],
       rules: {
         "no-restricted-imports": [
-          "warn",
+          "error",
           {
             patterns: forgeRestrictedPatterns,
           },
@@ -73,7 +76,7 @@ module.exports = {
       files: ["src/writer/**/*.{js,jsx,ts,tsx}", "src/writer/**/*.d.ts"],
       rules: {
         "no-restricted-imports": [
-          "warn",
+          "error",
           {
             patterns: writerRestrictedPatterns,
           },
@@ -84,7 +87,7 @@ module.exports = {
       files: ["src/shared/**/*.{js,jsx,ts,tsx}", "src/shared/**/*.d.ts"],
       rules: {
         "no-restricted-imports": [
-          "warn",
+          "error",
           {
             patterns: sharedRestrictedPatterns,
           },

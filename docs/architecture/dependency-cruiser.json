@@ -28,7 +28,7 @@
         }
       ],
       "dependents": [
-        "src/ai/aiadapter/openrouter/openrouter-adapter.ts"
+        "app/lib/ai/aiadapter/openrouter/openrouter-adapter.ts"
       ],
       "orphan": false,
       "valid": true
@@ -45,16 +45,16 @@
       "dependencies": [],
       "dependents": [
         "src/ai/aiadapter/openrouter/config.ts",
-        "src/ai/aiadapter/openrouter/openrouter-adapter.ts"
+        "app/lib/ai/aiadapter/openrouter/openrouter-adapter.ts"
       ],
       "orphan": false,
       "valid": true
     },
     {
-      "source": "src/ai/aiadapter/openrouter/openrouter-adapter.ts",
+      "source": "app/lib/ai/aiadapter/openrouter/openrouter-adapter.ts",
       "dependencies": [
         {
-          "module": "./config",
+          "module": "@/ai/aiadapter/openrouter/config",
           "moduleSystem": "es6",
           "dynamic": false,
           "exoticallyRequired": false,
@@ -150,7 +150,7 @@
       ],
       "dependencies": [],
       "dependents": [
-        "src/ai/aiadapter/openrouter/openrouter-adapter.ts"
+        "app/lib/ai/aiadapter/openrouter/openrouter-adapter.ts"
       ],
       "orphan": false,
       "valid": true
@@ -166,7 +166,7 @@
       ],
       "dependencies": [],
       "dependents": [
-        "src/ai/aiadapter/openrouter/openrouter-adapter.ts"
+        "app/lib/ai/aiadapter/openrouter/openrouter-adapter.ts"
       ],
       "orphan": false,
       "valid": true
@@ -182,7 +182,7 @@
       ],
       "dependencies": [],
       "dependents": [
-        "src/ai/aiadapter/openrouter/openrouter-adapter.ts"
+        "app/lib/ai/aiadapter/openrouter/openrouter-adapter.ts"
       ],
       "orphan": false,
       "valid": true

@@ -14,7 +14,7 @@ import type {
   AiResponse,
   AiStreamResponse,
 } from '@/ai/aiadapter/types';
-import { getOpenRouterConfig, type OpenRouterConfig } from './config';
+import { getOpenRouterConfig, type OpenRouterConfig } from '@/ai/aiadapter/openrouter/config';
 
 const OPENROUTER_MODEL_MODE = {
   FAST: 'fast',

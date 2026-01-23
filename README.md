@@ -530,6 +530,8 @@ cp .env.example .env.local
 
 - **[docs/architecture/BOUNDARIES.md](./docs/architecture/BOUNDARIES.md)** - Layer boundaries and import rules
 - **[docs/architecture/FILE-PLACEMENT.md](./docs/architecture/FILE-PLACEMENT.md)** - File placement decision tree
+- **[docs/architecture/GLOSSARY.md](./docs/architecture/GLOSSARY.md)** - Architecture glossary
+- **[docs/architecture/PATTERNS.md](./docs/architecture/PATTERNS.md)** - Architecture patterns and recommended practices
 - **[ARCHITECTURE_REVIEW.md](./ARCHITECTURE_REVIEW.md)** - Architecture review and cleanup priorities
 
 ### Integration
@@ -542,6 +544,14 @@ cp .env.example .env.local
 
 - **[agents.md](./agents.md)** - AI agent guide (coding preferences, conventions)
 - **[docs/nodes-and-editors.md](./docs/nodes-and-editors.md)** - Node types and editor architecture
+
+### Domain Docs
+
+- **[docs/forge.md](./docs/forge.md)** - Forge domain overview
+- **[docs/writer.md](./docs/writer.md)** - Writer domain overview
+- **[docs/shared.md](./docs/shared.md)** - Shared domain overview
+- **[docs/ai.md](./docs/ai.md)** - AI domain overview
+- **[docs/runtime.md](./docs/runtime.md)** - Runtime systems overview
 
 ## 🧪 Development
 

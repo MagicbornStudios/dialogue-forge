@@ -178,6 +178,30 @@ sequenceDiagram
 
 ## 🚦 Architecture Boundaries
 
+### Element Types & Allowed Dependency Edges
+
+The dependency graph uses the following element types (by directory scope):
+
+- **shared**: `src/shared/` (cross-domain types, utilities, UI primitives)
+- **ai**: `src/ai/` (AI adapters and AI infrastructure)
+- **runtime**: `src/forge/runtime/` (graph execution engine and runtime utilities)
+- **forge**: `src/forge/` (graph editor UI and forge domain utilities, excluding `runtime/`)
+- **writer**: `src/writer/` (writer/editor domain)
+- **video**: `src/video/` (video domain components and utilities)
+- **app**: Demo app surface (`app/`, `components/`, `middleware.ts`, `styles/`, `public/`)
+
+**Allowed edges** (source → dependency):
+
+- **shared** → external libraries only
+- **ai** → shared
+- **runtime** → shared
+- **forge** → shared
+- **writer** → shared
+- **video** → shared
+- **app** → shared, ai, runtime, forge, writer, video
+
+All other cross-domain imports are disallowed (e.g., forge → writer, writer → ai, runtime → forge, etc.).
+
 ### Import Direction Rules (Non-Negotiable)
 
 ```

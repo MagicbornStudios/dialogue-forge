@@ -14,21 +14,74 @@ Dialogue Forge is a **toolkit for narrative teams** that provides:
 - **Runtime Player** - Test dialogues exactly as players will experience them
 - **AI Integration** - CopilotKit-powered assistance across all workspaces
 
-## 🚀 Quick Start
+## 🏗️ Architecture Analysis & CI/CD Pipeline
 
-### Run the Application (Development)
+### 🔧 **Updated Scripts**
 
 ```bash
-# Install dependencies
-npm install
+# Architecture Analysis & Validation
+npm run arch:analyze    # Comprehensive codebase analysis
+npm run arch:check     # Validate architecture rules
+npm run arch:report     # Generate detailed reports
+npm run arch:fix        # Auto-fix common issues
+npm run arch:ci         # Full CI pipeline with validation
 
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your API keys (see Environment Variables section)
+# Development
+npm run lint           # ESLint with architecture rules
+npm run lint:deps       # Dependency boundary checking
+npm run typecheck       # TypeScript compilation
+npm run test             # Run test suite
 
-# Start development server
-npm run dev
+# CI/CD
+npm run arch:ci        # Automated architecture validation pipeline
 ```
+
+### 📊 **Architecture Monitoring**
+
+The project now includes automated architecture analysis that:
+
+1. **Validates domain boundaries** - Prevents forbidden imports
+2. **Ensures type safety** - Checks for string literals and any types
+3. **Detects circular dependencies** - Prevents architectural debt
+4. **Monitors performance** - Identifies large files and deep nesting
+5. **Security scanning** - Checks for hardcoded secrets
+
+### 🚀 **CI/CD Integration**
+
+```bash
+npm run arch:ci
+```
+
+This pipeline:
+- Runs comprehensive architecture validation
+- Fails build on critical violations
+- Generates detailed reports and artifacts
+- Provides actionable remediation recommendations
+- Maintains architecture quality over time
+
+### 📋 **Usage Examples**
+
+```bash
+# Quick analysis
+npm run arch:analyze
+
+# Check specific rules
+npm run arch:check
+
+# Generate full report
+npm run arch:report
+
+# Auto-fix common issues
+npm run arch:fix
+```
+
+### 🎯 **Benefits**
+
+✅ **Proactive Architecture Enforcement** - Catch issues before they reach production
+✅ **Continuous Quality Monitoring** - Automated validation in CI/CD
+✅ **Developer-Friendly Tools** - Clear error messages and actionable fixes
+✅ **Documentation Generation** - Living architecture documentation
+✅ **Team Alignment** - Consistent architecture understanding across team
 
 The application will be available at `http://localhost:3000` with routes:
 - `/forge` - Visual dialogue editor

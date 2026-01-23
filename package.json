@@ -45,6 +45,7 @@
     "prepublishOnly": "npm run build:lib",
     "postinstall": "node scripts/patch-undici.js",
     "sync": "./sync-to-repo.sh",
+    "arch:sync": "node scripts/sync-architecture-docs.js",
     "pack": "npm pack --dry-run",
     "vendor:opencode:install": "cd vendor/opencode && bun install",
     "vendor:opencode:dev": "cd vendor/opencode/packages/console/app && bun run dev",

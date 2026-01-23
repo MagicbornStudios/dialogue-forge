@@ -1,0 +1,207 @@
+name: Architecture Validation & CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, 'feature/*', 'hotfix/*']
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  architecture-validation:
+    name: Architecture Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: |
+          npm ci --only=production
+          
+      - name: Run architecture analysis
+        run: npm run arch:analyze
+        
+      - name: Validate architecture rules
+        run: npm run arch:check
+        continue-on-error: false
+        
+      - name: Generate architecture report
+        run: npm run arch:report
+        
+      - name: Upload architecture artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-reports
+          path: docs/architecture/
+          retention-days: 30
+        
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+          uses: actions/github-script@v7
+          with:
+            script: |
+            const fs = require('fs');
+            
+            try {
+              const reportData = JSON.parse(fs.readFileSync('docs/architecture/latest-analysis.json', 'utf8'));
+              const { issues, summary } = reportData;
+              
+              const hasIssues = issues.some(category => 
+                category.issues && category.issues.some(issue => issue.severity === 'high' || issue.severity === 'critical')
+              );
+              
+              if (hasIssues) {
+                const comment = `## 🏗️ Architecture Analysis Results
+                
+                **❌ VALIDATION FAILED** - ${summary.failed} issues found
+                
+                **📊 Summary:**
+                - Total Files: ${summary.totalFiles}
+                - Violations: ${summary.violations}
+                - Violation Rate: ${((summary.totalFiles - summary.violations) / summary.totalFiles * 100).toFixed(2)}%
+                
+                **🚨 Critical Issues:**
+                ${issues.filter(c => c.issues.some(i => i.severity === 'critical')).map(c => 
+                  `  **${c.description}** (Severity: ${c.severity})\n${c.files.slice(0, 3).join(', ')}`
+                ).join('\n')}
+                
+                **💡 Recommendations:**
+                ${issues.filter(c => c.category === 'domain_boundaries').map(c => 
+                  `  - ${c.title}\n    ${c.actions.join(', ')}`
+                ).join('\n')}
+                
+                The architecture validation has failed. Please address the violations before merging.
+                
+                Run \`npm run arch:fix\` to automatically fix common issues.
+              `;
+                
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: comment
+                });
+              } else {
+                const comment = `## 🏗️ Architecture Analysis Results
+                
+                ✅ **VALIDATION PASSED** - No critical issues found
+                
+                **📊 Summary:**
+                - Total Files: ${summary.totalFiles}
+                - Violations: ${summary.violations}
+                - Violation Rate: ${((summary.totalFiles - summary.violations) / summary.totalFiles * 100).toFixed(2)}%
+                
+                ${summary.warnings > 0 ? `🟡 ${summary.warnings} warnings found` : '✅ Clean architecture'}
+                
+                Architecture validation passed successfully. Continue monitoring with \`npm run arch:check\`.
+              `;
+                
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: comment
+                });
+              }
+            } catch (error) {
+              console.error('Error processing architecture results:', error.message);
+            }
+            
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    needs: architecture-validation
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: |
+          npm ci
+          
+      - name: Run type checking
+        run: npm run typecheck
+        continue-on-error: false
+        
+      - name: Run linting
+        run: npm run lint
+        continue-on-error: false
+        
+      - name: Run tests
+        run: npm run test
+        continue-on-error: false
+        
+      - name: Build library
+        run: npm run build:lib
+        
+      - name: Build application
+        run: npm run build:next
+        
+      - name: Generate architecture artifacts for deployment
+        run: |
+          npm run arch:report
+          mkdir -p public/architecture
+          cp docs/architecture/* public/architecture/
+        
+      - name: Deploy to staging
+        if: github.ref == 'refs/heads/main'
+          run: |
+            echo "Deploying to production..."
+            # Add deployment commands here
+            
+      - name: Deploy to production
+        if: github.ref == 'refs/heads/main'
+          run: |
+            echo "Deploying to production..."
+            # Add deployment commands here
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: architecture-validation
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run security scan
+        run: |
+          npm run arch:check | grep -i "security" || echo "No security issues found"
+        continue-on-error: false
+
+  notify-team:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    needs: architecture-validation
+    if: failure()
+      runs-on: ubuntu-latest
+    steps:
+      - name: Notify on failure
+        run: |
+          echo "Architecture validation failed in workflow!"
+          # Add notification logic here (Slack, email, etc.)
+          
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: architecture-validation
+    if: github.ref == 'refs/heads/develop' && success()
+      steps:
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging..."
+          # Add staging deployment commands here

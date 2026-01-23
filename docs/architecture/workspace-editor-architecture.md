@@ -38,6 +38,24 @@ The workspace architecture consists of four main layers:
 
 **Example**: See `src/forge/components/ForgeWorkspace/store/forge-workspace-store.tsx`
 
+### 1.5 Workspace Contracts (Host ↔ Workspace Boundary)
+
+**Purpose**: Define the stable, typed interface between a workspace and the host app. Contracts describe what the workspace expects from its host (adapters, data loaders, callbacks) without importing host-specific types.
+
+**Location**: `src/{domain}/workspace/{domain}-workspace-contracts.ts` (or another domain-appropriate contracts file).
+
+**Characteristics**:
+- Pure TypeScript interfaces/types (no runtime dependencies).
+- Imported by the workspace UI and adapters to keep the boundary explicit.
+- Must not import host app types (keep library independence intact).
+
+**Example**: See `src/video/workspace/video-template-workspace-contracts.ts` for a concrete adapter contract used by the Video workspace.
+
+**How to Use**:
+1. Define the contract in a `*-workspace-contracts.ts` file (interfaces, types, constants).
+2. Use the contract types in the workspace component props and adapter implementations.
+3. Keep the contract stable—breaking changes should be intentional and versioned.
+
 ### 2. Editor Session Store (Per-Instance UI State)
 
 **Purpose**: Manages ephemeral UI state specific to a single editor instance.

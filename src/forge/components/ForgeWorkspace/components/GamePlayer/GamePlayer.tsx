@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Player } from '@remotion/player';
 import { executeGraphToFrames } from '@/forge/runtime/execute-graph-to-frames';
 import {
   EXECUTION_MODE,
@@ -13,6 +14,9 @@ import {
 import { FORGE_EDGE_KIND, type ForgeGraphDoc } from '@/forge/types/forge-graph';
 import { FlagSchema } from '@/forge/types/flags';
 import { DialogueResult, ForgeFlagState, type ForgeGameState } from '@/forge/types/forge-game-state';
+import { VideoCompositionRenderer } from '@/video/player/VideoCompositionRenderer';
+import { compileCompositionFromFrames } from '@/video/templates/compile/compile-composition';
+import type { VideoTemplate } from '@/video/templates/types/video-template';
 import { VNStage } from './VNStage';
 
 export interface GamePlayerProps {
@@ -20,6 +24,7 @@ export interface GamePlayerProps {
   startNodeId?: string;
   flagSchema?: FlagSchema;
   gameStateFlags?: ForgeFlagState;
+  videoTemplate?: VideoTemplate | null;
   onComplete?: (result: DialogueResult) => void;
   onFlagsChange?: (flags: ForgeFlagState) => void;
 }
@@ -44,11 +49,14 @@ const sortEdges = (edges: Array<{ id?: string | null; target?: string | null }>)
     return (first.id ?? '').localeCompare(second.id ?? '');
   });
 
+const msToFrames = (ms: number, fps: number) => Math.max(1, Math.ceil((ms / 1000) * fps));
+
 export function GamePlayer({
   dialogue,
   startNodeId,
   flagSchema,
   gameStateFlags,
+  videoTemplate,
   onComplete,
   onFlagsChange,
 }: GamePlayerProps) {
@@ -58,6 +66,16 @@ export function GamePlayer({
     flags: gameStateFlags ?? {},
   });
   const [status, setStatus] = useState<ExecutionStatus | undefined>();
+  const composition = useMemo(() => {
+    if (!videoTemplate || frames.length === 0) {
+      return null;
+    }
+
+    return compileCompositionFromFrames(videoTemplate, frames);
+  }, [frames, videoTemplate]);
+  const compositionDurationFrames = composition
+    ? msToFrames(composition.durationMs, composition.frameRate)
+    : 1;
 
   const graphIndex = useMemo(() => {
     const nodesById = new Map<string, ForgeGraphDoc['flow']['nodes'][number]>();
@@ -197,36 +215,63 @@ export function GamePlayer({
     activeFrame?.presentation?.background?.directive?.refId ??
     activeFrame?.presentation?.background?.directive?.payload?.label ??
     '';
+  const hasVideoTemplate = Boolean(videoTemplate);
+  const hasVideoComposition = Boolean(composition && composition.durationMs > 0);
 
   return (
     <div className="relative border border-[#1a1a2e] rounded-3xl overflow-hidden bg-[#0f0f1a] h-full min-h-[480px] flex flex-col">
-      <div className="relative flex-1">
-        <VNStage backgroundLabel={backgroundLabel} />
-        <div className="absolute inset-x-6 bottom-6">
-          <div className="backdrop-blur bg-black/60 border border-[#2a2a3e] rounded-2xl p-4 text-sm text-gray-200 shadow-lg">
-            <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-gray-400">
-              <span>{frameSpeaker ?? 'Narrator'}</span>
-              <span>{activeFrame?.kind ?? FRAME_KIND.DIALOGUE}</span>
-            </div>
-            <div className="mt-3 text-base text-white min-h-[64px]">
-              {frameContent ?? (hasChoices ? 'Make a selection to continue.' : 'Awaiting dialogue...')}
-            </div>
-            {frameDirectives.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {frameDirectives.map((directive, index) => {
-                  const label = directive.refId
-                    ? `${directive.type}: ${directive.refId}`
-                    : directive.type;
+      <div className="relative flex-1 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="relative flex-1">
+          <VNStage backgroundLabel={backgroundLabel} />
+          <div className="absolute inset-x-6 bottom-6">
+            <div className="backdrop-blur bg-black/60 border border-[#2a2a3e] rounded-2xl p-4 text-sm text-gray-200 shadow-lg">
+              <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-gray-400">
+                <span>{frameSpeaker ?? 'Narrator'}</span>
+                <span>{activeFrame?.kind ?? FRAME_KIND.DIALOGUE}</span>
+              </div>
+              <div className="mt-3 text-base text-white min-h-[64px]">
+                {frameContent ?? (hasChoices ? 'Make a selection to continue.' : 'Awaiting dialogue...')}
+              </div>
+              {frameDirectives.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {frameDirectives.map((directive, index) => {
+                    const label = directive.refId
+                      ? `${directive.type}: ${directive.refId}`
+                      : directive.type;
 
-                  return (
-                    <span
-                      key={`${directive.type}-${directive.refId ?? index}`}
-                      className="text-[10px] uppercase tracking-[0.2em] text-gray-300 bg-[#1a1a2e] border border-[#2a2a3e] px-2 py-1 rounded-full"
-                    >
-                      {label}
-                    </span>
-                  );
-                })}
+                    return (
+                      <span
+                        key={`${directive.type}-${directive.refId ?? index}`}
+                        className="text-[10px] uppercase tracking-[0.2em] text-gray-300 bg-[#1a1a2e] border border-[#2a2a3e] px-2 py-1 rounded-full"
+                      >
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col border-t border-[#1a1a2e] bg-[#0b0b16] px-4 py-4 xl:border-t-0 xl:border-l">
+          <div className="text-xs uppercase tracking-[0.3em] text-gray-500 mb-3">Remotion Player</div>
+          <div className="flex-1 flex items-center justify-center">
+            {hasVideoTemplate && composition && hasVideoComposition ? (
+              <Player
+                component={VideoCompositionRenderer}
+                durationInFrames={compositionDurationFrames}
+                compositionWidth={composition.width}
+                compositionHeight={composition.height}
+                fps={composition.frameRate}
+                inputProps={{ composition }}
+                style={{ width: '100%', borderRadius: 16, overflow: 'hidden' }}
+                controls
+              />
+            ) : (
+              <div className="text-sm text-gray-500 text-center px-4">
+                {hasVideoTemplate
+                  ? 'Waiting for compiled composition frames...'
+                  : 'Select a video template to preview the Remotion output.'}
               </div>
             )}
           </div>

@@ -1,9 +1,9 @@
 // src/writer/lib/sync/narrative-graph-sync.ts
-import type { ForgeGraphDoc, ForgeNode, ForgeReactFlowNode } from '@/forge/types/forge-graph';
-import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
-import type { ForgeAct, ForgeChapter, ForgePage } from '@/forge/types/narrative';
+import type { ForgeGraphDoc, ForgeNode, ForgeReactFlowNode } from '@/shared/types/forge-graph';
+import { FORGE_NODE_TYPE } from '@/shared/types/forge-graph';
+import type { ForgeAct, ForgeChapter, ForgePage } from '@/shared/types/narrative';
 import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
-import type { ForgeDataAdapter } from '@/forge/adapters/forge-data-adapter';
+import type { WriterForgeDataAdapter } from '@/writer/types/forge-data-adapter';
 
 export type NarrativeHierarchy = {
   // Connected hierarchy
@@ -398,7 +398,7 @@ export function findConditionalPageConnections(graph: ForgeGraphDoc): Map<number
 export async function syncGraphToDatabase(
   graph: ForgeGraphDoc,
   dataAdapter: WriterDataAdapter,
-  forgeDataAdapter: ForgeDataAdapter
+  forgeDataAdapter: WriterForgeDataAdapter
 ): Promise<void> {
   const projectId = graph.project;
   
@@ -425,9 +425,9 @@ export async function syncGraphToDatabase(
           // Database entry doesn't exist - this is an error state
           console.warn(`Act node references non-existent act ID: ${nodeData.actId}`);
         }
-      } else {
+      } else if (forgeDataAdapter.createAct) {
         // Create new act in database
-        const act = await forgeDataAdapter.createAct({
+        await forgeDataAdapter.createAct({
           projectId,
           name: nodeData?.label || 'New Act',
           summary: nodeData?.content || null,
@@ -435,6 +435,8 @@ export async function syncGraphToDatabase(
         });
         // Note: We can't update the node here - that would require updating the graph
         // This will be handled by the Forge editor when nodes are created
+      } else {
+        console.warn('ForgeDataAdapter does not implement createAct.');
       }
     } else if (nodeType === FORGE_NODE_TYPE.CHAPTER) {
       if (nodeData?.chapterId) {

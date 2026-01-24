@@ -1,4 +1,4 @@
-import type { ForgePage } from '@/forge/types/narrative';
+import type { ForgePage } from '@/shared/types/narrative';
 import type { WriterMediaRecord, WriterMediaUploadResult } from './media';
 
 export type WriterPageDoc = ForgePage;

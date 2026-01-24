@@ -1,10 +1,10 @@
 import type { StoreApi } from 'zustand/vanilla';
 import type { WriterWorkspaceState } from '../writer-workspace-store';
 import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
-import type { ForgeDataAdapter } from '@/forge/adapters/forge-data-adapter';
+import type { WriterForgeDataAdapter } from '@/writer/types/forge-data-adapter';
 import type { EventSink } from '@/writer/events/writer-events';
 import { extractNarrativeHierarchySync } from '@/writer/lib/sync/narrative-graph-sync';
-import { PAGE_TYPE } from '@/forge/types/narrative';
+import { PAGE_TYPE } from '@/shared/types/narrative';
 
 /**
  * Setup subscriptions for side-effect events.
@@ -14,7 +14,7 @@ export function setupWriterWorkspaceSubscriptions(
   domainStore: StoreApi<WriterWorkspaceState>,
   eventSink: EventSink,
   dataAdapter?: WriterDataAdapter,
-  forgeDataAdapter?: ForgeDataAdapter
+  forgeDataAdapter?: WriterForgeDataAdapter
 ) {
   if (!dataAdapter) return;
 

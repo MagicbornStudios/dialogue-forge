@@ -5,12 +5,12 @@ import { BookOpen, FileText, File, Plus } from 'lucide-react';
 import { Tree } from 'react-arborist';
 import { WriterTreeRow } from './WriterTreeRow';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
-import { PAGE_TYPE, buildNarrativeHierarchy, type ForgePage, type PageType } from '@/forge/types/narrative';
+import { PAGE_TYPE, buildNarrativeHierarchy, type ForgePage, type PageType } from '@/shared/types/narrative';
 import { useGraphPageSync } from '@/writer/hooks/use-graph-page-sync';
 import { useToast } from '@/shared/ui/toast';
-import { validateNarrativeGraph } from '@/forge/lib/graph-validation';
-import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
-import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
+import { validateNarrativeGraph } from '@/shared/lib/graph-validation';
+import type { ForgeGraphDoc } from '@/shared/types/forge-graph';
+import { FORGE_NODE_TYPE } from '@/shared/types/forge-graph';
 
 interface WriterTreeProps {
   className?: string;

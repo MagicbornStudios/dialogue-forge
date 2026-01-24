@@ -1,10 +1,10 @@
 // src/components/WriterWorkspace/WriterWorkspace.tsx
 import React, { useRef, useEffect } from 'react';
-import type { ForgePage } from '@/forge/types/narrative';
+import type { ForgePage } from '@/shared/types/narrative';
 import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
-import type { ForgeDataAdapter } from '@/forge/adapters/forge-data-adapter';
+import type { WriterForgeDataAdapter } from '@/writer/types/forge-data-adapter';
 import type { WriterEvent } from '@/writer/events/writer-events';
-import { FORGE_GRAPH_KIND } from '@/forge/types/forge-graph';
+import { FORGE_GRAPH_KIND } from '@/shared/types/forge-graph';
 import {
   WriterWorkspaceStoreProvider,
   createWriterWorkspaceStore,
@@ -18,7 +18,7 @@ import { WriterWorkspaceModalsRenderer } from '@/writer/components/WriterWorkspa
 import { CopilotKitWorkspaceProvider } from '@/ai/copilotkit/providers/CopilotKitWorkspaceProvider';
 import { useWriterWorkspaceActions } from '@/writer/copilotkit';
 import { Toaster } from '@/shared/ui/toast';
-import { validateNarrativeGraph } from '@/forge/lib/graph-validation';
+import { validateNarrativeGraph } from '@/shared/lib/graph-validation';
 import { toast } from 'sonner';
 
 interface WriterWorkspaceProps {
@@ -28,7 +28,7 @@ interface WriterWorkspaceProps {
   onActivePageChange?: (pageId: number | null) => void;
   onEvent?: (event: WriterEvent) => void;
   dataAdapter?: WriterDataAdapter;
-  forgeDataAdapter?: ForgeDataAdapter;
+  forgeDataAdapter?: WriterForgeDataAdapter;
   projectId?: number | null;
   onProjectChange?: (projectId: number | null) => void;
 }

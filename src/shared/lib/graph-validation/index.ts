@@ -4,4 +4,4 @@ export {
   findNodeByPageId,
   type GraphValidationError,
   type GraphValidationResult,
-} from '@/shared/lib/graph-validation';
+} from './narrative-graph-validator';

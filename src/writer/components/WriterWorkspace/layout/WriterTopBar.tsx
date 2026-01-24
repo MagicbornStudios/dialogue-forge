@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
-import { PAGE_TYPE } from '@/forge/types/narrative';
+import { PAGE_TYPE } from '@/shared/types/narrative';
 
 export function WriterTopBar() {
   const pageMap = useWriterWorkspaceStore((state) => state.pageMap);

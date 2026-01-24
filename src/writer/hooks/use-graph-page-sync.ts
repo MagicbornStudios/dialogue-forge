@@ -1,12 +1,12 @@
 import { useCallback } from 'react';
-import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
-import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
-import type { ForgePage, PageType } from '@/forge/types/narrative';
-import { PAGE_TYPE } from '@/forge/types/narrative';
+import type { ForgeGraphDoc } from '@/shared/types/forge-graph';
+import { FORGE_NODE_TYPE } from '@/shared/types/forge-graph';
+import type { ForgePage, PageType } from '@/shared/types/narrative';
+import { PAGE_TYPE } from '@/shared/types/narrative';
 import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
-import type { ForgeDataAdapter } from '@/forge/adapters/forge-data-adapter';
-import { createFlowNode } from '@/forge/lib/utils/forge-flow-helpers';
-import { findLastNodeInHierarchy, findNodeByPageId } from '@/forge/lib/graph-validation';
+import type { WriterForgeDataAdapter } from '@/writer/types/forge-data-adapter';
+import { createFlowNode } from '@/shared/utils/forge-graph-helpers';
+import { findLastNodeInHierarchy, findNodeByPageId } from '@/shared/lib/graph-validation';
 import { useToast } from '@/shared/ui/toast';
 
 export interface UseGraphPageSyncOptions {
@@ -14,7 +14,7 @@ export interface UseGraphPageSyncOptions {
   pages: ForgePage[];
   projectId: number | null;
   dataAdapter?: WriterDataAdapter;
-  forgeDataAdapter?: ForgeDataAdapter;
+  forgeDataAdapter?: WriterForgeDataAdapter;
   onGraphUpdate: (graph: ForgeGraphDoc) => void;
   onPagesUpdate: (pages: ForgePage[]) => void;
 }

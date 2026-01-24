@@ -1,6 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import type { ForgePage } from '@/forge/types/narrative';
+import type { ForgePage } from '@/shared/types/narrative';
 
 interface WriterYarnModalProps {
   isOpen: boolean;

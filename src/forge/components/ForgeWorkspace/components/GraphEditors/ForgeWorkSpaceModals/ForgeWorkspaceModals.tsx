@@ -8,6 +8,8 @@ import { ForgeYarnModal } from '@/forge/components/ForgeWorkspace/components/Gra
 import { GuidePanel } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GuidePanel';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { ForgeFlagManagerModal } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagManagerModal';
+import { GRAPH_SCOPE } from '@/forge/types/constants';
+import { FORGE_GRAPH_KIND } from '@/forge/types/forge-graph';
 interface ForgeWorkspaceModalsProps {
   narrativeGraph: ForgeGraphDoc | null;
   storyletGraph: ForgeGraphDoc | null;
@@ -34,14 +36,24 @@ export function ForgeWorkspaceModalsRenderer({
   const closeYarnModal = useForgeWorkspaceStore((s) => s.actions.closeYarnModal);
   const closeFlagModal = useForgeWorkspaceStore((s) => s.actions.closeFlagModal);
   const closeGuide = useForgeWorkspaceStore((s) => s.actions.closeGuide);
+  const focusedEditor = useForgeWorkspaceStore((s) => s.focusedEditor);
+  const graphScope = useForgeWorkspaceStore((s) => s.graphScope);
+  const resolvedScope = focusedEditor ?? graphScope;
+  const scopedGraph = resolvedScope === GRAPH_SCOPE.NARRATIVE ? narrativeGraph : storyletGraph;
+  const fallbackGraph = narrativeGraph ?? storyletGraph;
   
   // Determine which graph to use for modals (prefer narrative, fallback to storylet)
-  const playGraph = narrativeGraph ?? storyletGraph;
-  const playTitle = narrativeGraph ? 'Narrative' : storyletGraph ? 'Storylet' : '';
+  const playGraph = scopedGraph ?? fallbackGraph;
+  const playTitle =
+    playGraph?.kind === FORGE_GRAPH_KIND.NARRATIVE
+      ? 'Narrative'
+      : playGraph?.kind === FORGE_GRAPH_KIND.STORYLET
+        ? 'Storylet'
+        : '';
   const playSubtitle = playGraph?.title ?? '';
 
-  const yarnGraph = narrativeGraph ?? storyletGraph;
-  const flagGraph = narrativeGraph ?? storyletGraph;
+  const yarnGraph = scopedGraph ?? fallbackGraph;
+  const flagGraph = scopedGraph ?? fallbackGraph;
   
   // Get graph change handler from workspace if available
   const setGraph = useForgeWorkspaceStore((s) => s.actions.setGraph);
@@ -59,7 +71,7 @@ export function ForgeWorkspaceModalsRenderer({
           onClose={closePlayModal}
           graph={playGraph}
           flagSchema={flagSchema}
-          gameStateFlags={gameState?.flags}
+          gameState={gameState}
           title={playTitle}
           subtitle={playSubtitle}
         />

@@ -20,6 +20,7 @@ import { createGameStateSlice } from "@/forge/components/ForgeWorkspace/store/sl
 import { createViewStateSlice } from "@/forge/components/ForgeWorkspace/store/slices/viewState.slice"
 import { createProjectSlice } from "@/forge/components/ForgeWorkspace/store/slices/project.slice"
 import type { ForgeDataAdapter } from "@/forge/adapters/forge-data-adapter"
+import type { VideoTemplateWorkspaceAdapter } from "@/video/workspace/video-template-workspace-contracts"
 
 export interface EventSink {
   emit(event: ForgeEvent): void
@@ -57,6 +58,7 @@ export interface ForgeWorkspaceState {
 
   // Data adapter
   dataAdapter?: ForgeDataAdapter
+  videoTemplateAdapter?: VideoTemplateWorkspaceAdapter
 
   actions: {
     // Graph actions
@@ -123,6 +125,7 @@ export interface CreateForgeWorkspaceStoreOptions {
   initialGameStates?: ForgeGameStateRecord[]
   resolveGraph?: (id: string) => Promise<ForgeGraphDoc>
   dataAdapter?: ForgeDataAdapter
+  videoTemplateAdapter?: VideoTemplateWorkspaceAdapter
 }
 
 export function createForgeWorkspaceStore(
@@ -138,7 +141,8 @@ export function createForgeWorkspaceStore(
     initialNarrativeGraphId,
     initialStoryletGraphId,
     resolveGraph,
-    dataAdapter
+    dataAdapter,
+    videoTemplateAdapter,
   } = options
 
   // Extract IDs from provided graphs if IDs not explicitly provided
@@ -250,6 +254,7 @@ export function createForgeWorkspaceStore(
           ...viewStateSlice,
           ...projectSlice,
           dataAdapter,
+          videoTemplateAdapter,
           actions: {
             // Graph actions
             setGraph: setGraphWithEvents,

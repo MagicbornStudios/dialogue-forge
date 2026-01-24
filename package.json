@@ -141,7 +141,6 @@
     "next": "^15.5.9",
     "patch-package": "^8.0.1",
     "postcss": "^8.4.0",
-    "postinstall-postinstall": "^2.1.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "tailwindcss": "^4.0.0",

@@ -216,8 +216,8 @@ function WriterWorkspaceContent({
   projectId,
 }: Pick<WriterWorkspaceProps, 'className' | 'onActivePageChange' | 'projectId'>) {
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
-  const pages = useWriterWorkspaceStore((state) => state.pages);
-  const activePage = activePageId ? pages.find((p) => p.id === activePageId) ?? null : null;
+  const pageMap = useWriterWorkspaceStore((state) => state.pageMap);
+  const activePage = activePageId ? pageMap.get(activePageId) ?? null : null;
 
   useEffect(() => {
     if (onActivePageChange) {

@@ -38,7 +38,7 @@ export function createEditorSlice(
       set((state) => {
         const draft = state.drafts[pageId];
         if (!draft) {
-          const page = state.pages.find((entry) => entry.id === pageId);
+          const page = state.pageMap.get(pageId);
           if (!page) {
             return state;
           }
@@ -71,7 +71,7 @@ export function createEditorSlice(
       set((state) => {
         const draft = state.drafts[pageId];
         if (!draft) {
-          const page = state.pages.find((entry) => entry.id === pageId);
+          const page = state.pageMap.get(pageId);
           if (!page) {
             return state;
           }
@@ -145,8 +145,14 @@ export function createEditorSlice(
             ? { ...page, title: draft.title, bookBody: draft.content.serialized }
             : page
         );
+        // Rebuild pageMap to keep it in sync
+        const nextPageMap = new Map<number, ForgePage>();
+        for (const page of nextPages) {
+          nextPageMap.set(page.id, page);
+        }
         return {
           pages: nextPages,
+          pageMap: nextPageMap,
           drafts: {
             ...state.drafts,
             [targetId]: {

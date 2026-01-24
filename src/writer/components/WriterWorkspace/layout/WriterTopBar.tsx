@@ -4,7 +4,7 @@ import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/sto
 import { PAGE_TYPE } from '@/forge/types/narrative';
 
 export function WriterTopBar() {
-  const pages = useWriterWorkspaceStore((state) => state.pages);
+  const pageMap = useWriterWorkspaceStore((state) => state.pageMap);
   const drafts = useWriterWorkspaceStore((state) => state.drafts);
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const pageLayout = useWriterWorkspaceStore((state) => state.pageLayout);
@@ -12,8 +12,8 @@ export function WriterTopBar() {
   const setActivePageId = useWriterWorkspaceStore((state) => state.actions.setActivePageId);
 
   const activePage = useMemo(
-    () => pages.find((page) => page.id === activePageId) ?? null,
-    [pages, activePageId]
+    () => activePageId ? pageMap.get(activePageId) ?? null : null,
+    [pageMap, activePageId]
   );
 
   // Build breadcrumb path by walking up the parent chain
@@ -23,9 +23,9 @@ export function WriterTopBar() {
     const path = [activePage];
     let current = activePage;
     
-    // Walk up parent chain
+    // Walk up parent chain using O(1) lookup
     while (current.parent) {
-      const parent = pages.find(p => p.id === current.parent);
+      const parent = pageMap.get(current.parent);
       if (parent) {
         path.unshift(parent);
         current = parent;
@@ -35,7 +35,7 @@ export function WriterTopBar() {
     }
     
     return path;
-  }, [activePage, pages]);
+  }, [activePage, pageMap]);
   
   const draftTitle = activePageId ? drafts[activePageId]?.title ?? '' : '';
   const pageTitle =

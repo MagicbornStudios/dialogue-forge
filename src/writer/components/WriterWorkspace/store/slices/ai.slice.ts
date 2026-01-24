@@ -63,7 +63,7 @@ export function createAiSlice(
       if (!targetId) {
         return;
       }
-      const page = state.pages.find((entry) => entry.id === targetId);
+      const page = state.pageMap.get(targetId);
       if (!page) {
         return;
       }
@@ -164,7 +164,7 @@ export function createAiSlice(
       if (!targetId || !state.aiPreview || state.aiPreview.length === 0) {
         return;
       }
-      const page = state.pages.find((entry) => entry.id === targetId);
+      const page = state.pageMap.get(targetId);
       if (!page) {
         return;
       }

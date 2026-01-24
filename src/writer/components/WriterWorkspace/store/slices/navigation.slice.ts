@@ -32,7 +32,8 @@ export function createNavigationSlice(
         if (state.drafts[pageId]) {
           return { activePageId: pageId };
         }
-        const page = state.pages.find((entry) => entry.id === pageId);
+        // Use O(1) lookup map instead of O(n) find
+        const page = state.pageMap.get(pageId);
         if (!page) {
           return { activePageId: pageId };
         }

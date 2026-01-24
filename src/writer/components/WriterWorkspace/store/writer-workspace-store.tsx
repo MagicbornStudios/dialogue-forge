@@ -204,6 +204,7 @@ export function createWriterWorkspaceStore(
           ...aiSlice,
           ...navigationSlice,
           ...viewStateSlice,
+          pageMap: contentSlice.pageMap, // Include pageMap from content slice
           narrativeGraphs: [],
           selectedNarrativeGraphId: null,
           narrativeGraph: null,

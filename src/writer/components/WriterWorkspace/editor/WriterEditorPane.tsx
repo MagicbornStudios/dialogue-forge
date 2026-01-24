@@ -17,7 +17,7 @@ interface WriterEditorPaneProps {
 }
 
 export function WriterEditorPane({ className }: WriterEditorPaneProps) {
-  const pages = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.pages);
+  const pageMap = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.pageMap);
   const activePageId = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.activePageId);
   
   const draft = useWriterWorkspaceStore((state: WriterWorkspaceState) =>
@@ -35,7 +35,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
   const applyAiEdits = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.applyAiEdits);
   const revertAiDraft = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.revertAiDraft);
 
-  const activePage = pages.find((page) => page.id === activePageId) ?? null;
+  const activePage = activePageId ? pageMap.get(activePageId) ?? null : null;
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -120,7 +120,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
       <div className="flex min-h-0 flex-1 flex-col bg-df-editor-bg">
         {activePage ? (
           <>
-            <LexicalEditor
+            {/* <LexicalEditor
               key={activePageId}
               value={draft?.content.serialized ?? activePage.bookBody ?? ''}
               placeholder="Start writing..."
@@ -130,7 +130,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
                 }
                 setDraftContent(activePageId, nextValue);
               }}
-            />
+            /> */}
             <AutosavePlugin />
           </>
         ) : (

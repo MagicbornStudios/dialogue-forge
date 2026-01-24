@@ -4,6 +4,7 @@ import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter
 import type { ForgeDataAdapter } from '@/forge/adapters/forge-data-adapter';
 import type { EventSink } from '@/writer/events/writer-events';
 import { extractNarrativeHierarchySync } from '@/writer/lib/sync/narrative-graph-sync';
+import { PAGE_TYPE } from '@/forge/types/narrative';
 
 /**
  * Setup subscriptions for side-effect events.
@@ -53,11 +54,17 @@ export function setupWriterWorkspaceSubscriptions(
       
       if (narrativeGraph && dataAdapter) {
         // Extract hierarchy from graph using current database state
+        // Note: acts and chapters are now part of unified pages collection
+        // Filter pages by type for backward compatibility
+        const acts = state.pages?.filter(p => p.pageType === PAGE_TYPE.ACT) ?? [];
+        const chapters = state.pages?.filter(p => p.pageType === PAGE_TYPE.CHAPTER) ?? [];
+        const pages = state.pages?.filter(p => p.pageType === PAGE_TYPE.PAGE) ?? [];
+        
         const hierarchy = extractNarrativeHierarchySync(
           narrativeGraph,
-          state.acts,
-          state.chapters,
-          state.pages
+          acts,
+          chapters,
+          pages
         );
         
         // Update store with hierarchy

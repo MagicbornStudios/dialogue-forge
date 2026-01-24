@@ -86,6 +86,8 @@ export type WriterAiPreviewMeta = {
 export interface WriterWorkspaceState {
   // Unified pages array
   pages: ForgePage[];
+  // O(1) lookup map for pages by ID
+  pageMap: Map<number, ForgePage>;
   
   contentError: string | null;
   drafts: Record<number, WriterDraftState>;

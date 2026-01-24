@@ -1,15 +1,10 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { BookOpen, FileText, File, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { BookOpen, FileText, File, Plus } from 'lucide-react';
 import { Tree } from 'react-arborist';
 import { WriterTreeRow } from './WriterTreeRow';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
-import {
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-} from '@/shared/ui/context-menu';
 import { PAGE_TYPE, buildNarrativeHierarchy, type ForgePage, type PageType } from '@/forge/types/narrative';
 import { useGraphPageSync } from '@/writer/hooks/use-graph-page-sync';
 import { useToast } from '@/shared/ui/toast';
@@ -77,6 +72,18 @@ function findNodeIdByPageId(graph: ForgeGraphDoc | null, pageId: number): string
   if (!graph) return null;
   const node = graph.flow.nodes.find(n => n.data?.pageId === pageId);
   return node?.id || null;
+}
+
+// Helper to get all node IDs recursively for initial expansion
+function getAllNodeIds(nodes: TreeNode[]): string[] {
+  const ids: string[] = [];
+  for (const node of nodes) {
+    ids.push(node.id);
+    if (node.children && node.children.length > 0) {
+      ids.push(...getAllNodeIds(node.children));
+    }
+  }
+  return ids;
 }
 
 function buildTreeData(pages: ForgePage[], graph: ForgeGraphDoc | null): TreeNode[] {
@@ -152,7 +159,70 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
   });
 
   // Build tree data from pages with graph metadata
-  const treeData = useMemo(() => buildTreeData(pages || [], narrativeGraph), [pages, narrativeGraph]);
+  const treeNodes = useMemo(() => buildTreeData(pages || [], narrativeGraph), [pages, narrativeGraph]);
+  
+  // Convert to react-arborist format
+  const treeData = useMemo(() => {
+    const convertNode = (node: TreeNode): any => ({
+      id: node.id,
+      name: node.name,
+      page: node.page,
+      hasDetour: node.hasDetour,
+      isEndNode: node.isEndNode,
+      children: node.children?.map(convertNode) || [],
+    });
+    return treeNodes.map(convertNode);
+  }, [treeNodes]);
+  
+  // Find the node ID for the active page
+  const selectedNodeId: string | undefined = useMemo(() => {
+    if (!activePageId) return undefined;
+    const findNodeId = (nodes: TreeNode[]): string | undefined => {
+      for (const node of nodes) {
+        if (node.page.id === activePageId) {
+          return node.id;
+        }
+        if (node.children) {
+          const found = findNodeId(node.children);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    };
+    return findNodeId(treeNodes);
+  }, [activePageId, treeNodes]);
+  
+  // Track tree height dynamically - update when container size changes
+  useEffect(() => {
+    const updateHeight = () => {
+      if (treeContainerRef.current) {
+        const height = treeContainerRef.current.clientHeight;
+        if (height > 0) {
+          setTreeHeight(height);
+        }
+      }
+    };
+    
+    // Initial update
+    updateHeight();
+    
+    // Use ResizeObserver for more accurate size tracking
+    const resizeObserver = new ResizeObserver(() => {
+      updateHeight();
+    });
+    
+    if (treeContainerRef.current) {
+      resizeObserver.observe(treeContainerRef.current);
+    }
+    
+    // Fallback to window resize
+    window.addEventListener('resize', updateHeight);
+    
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, [treeData.length]); // Re-run when tree data changes
 
   // Validate graph on load
   React.useEffect(() => {
@@ -373,9 +443,9 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
   }, [handleAddChild]);
 
   return (
-    <aside className={`flex min-h-0 flex-col gap-2 ${className ?? ''}`}>
+    <div className={`flex h-full min-h-0 flex-col gap-2 ${className ?? ''}`}>
       {/* Graph Selector - Always show */}
-      <div className="px-3 pt-3">
+      <div className="flex-shrink-0 px-3 pt-3">
         <label className="text-[11px] font-semibold uppercase tracking-wide text-df-text-tertiary">
           Narrative Graph
         </label>
@@ -407,14 +477,14 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
       </div>
 
       {/* Header */}
-      <div className="px-3">
+      <div className="flex-shrink-0 px-3">
         <h2 className="text-[11px] font-semibold uppercase tracking-wide text-df-text-tertiary">
           NARRATIVE OUTLINE
         </h2>
       </div>
 
       {/* Tree */}
-      <div ref={treeContainerRef} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div ref={treeContainerRef} className="flex min-h-0 flex-1 flex-col">
         {treeData.length === 0 ? (
           // Empty state with placeholder section
           <div className="px-2 py-2">
@@ -438,102 +508,59 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
           </div>
         ) : (
           <Tree
-            data={treeData}
-            openByDefault={true}
-            width="100%"
+            initialData={treeData}
             height={treeHeight}
+            width="100%"
             indent={24}
             rowHeight={32}
-            overscanCount={8}
-            padding={8}
+            overscanCount={5}
+            openByDefault={true}
+            disableMultiSelection={true}
+            selection={selectedNodeId || undefined}
+            onSelect={(nodes) => {
+              if (nodes && nodes.length > 0) {
+                const selectedNode = nodes[0];
+                const pageId = selectedNode.data?.page?.id;
+                if (pageId) {
+                  setActivePageId(pageId);
+                }
+              }
+            }}
           >
-            {({ node, style, dragHandle }) => {
-              const treeNode = node.data as TreeNode;
-              const page = treeNode.page;
-              const hasChildren = node.children && node.children.length > 0;
-              const isEmpty = !hasChildren && page.pageType !== PAGE_TYPE.PAGE;
-
+            {(props) => {
+              const page = props.node.data?.page;
+              const pageId = page?.id;
+              const isSelected = pageId === activePageId;
+              const hasDetour = props.node.data?.hasDetour ?? false;
+              const isEndNode = props.node.data?.isEndNode ?? false;
+              const canAddChild = page?.pageType !== PAGE_TYPE.PAGE;
+              
               return (
-                <>
-                  <WriterTreeRow
-                    node={node}
-                    style={style}
-                    dragHandle={dragHandle}
-                    icon={getIconForPageType(page.pageType)}
-                    isSelected={page.id === activePageId}
-                    onSelect={() => setActivePageId(page.id)}
-                    onAddChild={() => handleAddChild(page)}
-                    canAddChild={page.pageType !== PAGE_TYPE.PAGE}
-                    hasDetour={treeNode.hasDetour ?? false}
-                    isEndNode={treeNode.isEndNode ?? false}
-                    contextMenu={
-                      <>
-                        <ContextMenuItem
-                          onClick={() => handleRenamePage(page)}
-                          className="text-df-text-primary hover:bg-df-control-hover focus:bg-df-control-hover"
-                        >
-                          <Edit2 size={14} className="mr-2" />
-                          Rename
-                        </ContextMenuItem>
-                        {page.pageType !== PAGE_TYPE.PAGE && (
-                          <ContextMenuItem
-                            onClick={() => handleAddChild(page)}
-                            className="text-df-text-primary hover:bg-df-control-hover focus:bg-df-control-hover"
-                          >
-                            <Plus size={14} className="mr-2" />
-                            Add {page.pageType === PAGE_TYPE.ACT ? 'Chapter' : 'Page'}
-                          </ContextMenuItem>
-                        )}
-                        <ContextMenuSeparator className="bg-df-node-border" />
-                        <ContextMenuItem
-                          onClick={() => handleDeletePage(page)}
-                          className="text-df-error hover:bg-df-error-bg focus:bg-df-error-bg"
-                        >
-                          <Trash2 size={14} className="mr-2" />
-                          Delete
-                        </ContextMenuItem>
-                      </>
+                <WriterTreeRow
+                  node={props.node}
+                  style={props.style}
+                  dragHandle={props.dragHandle}
+                  icon={page ? getIconForPageType(page.pageType) : null}
+                  isSelected={isSelected}
+                  onSelect={() => {
+                    if (pageId) {
+                      setActivePageId(pageId);
                     }
-                  />
-                  {/* Show placeholder for empty sections */}
-                  {isEmpty && node.isOpen && (
-                    <div
-                      style={{
-                        paddingLeft: `${(node.level + 1) * 24 + 8}px`,
-                        height: '32px',
-                      }}
-                      className="group flex items-center gap-1 px-2"
-                    >
-                      <div className="flex h-6 w-6 items-center justify-center">
-                        {page.pageType === PAGE_TYPE.ACT ? (
-                          <FileText size={14} className="text-df-text-tertiary" />
-                        ) : (
-                          <File size={14} className="text-df-text-tertiary" />
-                        )}
-                      </div>
-                      <div className="flex flex-1 items-center gap-2 text-xs text-df-text-tertiary italic">
-                        {page.pageType === PAGE_TYPE.ACT ? 'No chapters yet' : 'No pages yet'}
-                      </div>
-                      <button
-                        type="button"
-                        className="flex h-6 w-6 items-center justify-center rounded-md text-df-text-tertiary opacity-0 group-hover:opacity-100 hover:bg-df-control-bg hover:text-df-text-primary transition-all"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddChild(page);
-                        }}
-                        disabled={isCreating}
-                        title={`Add ${page.pageType === PAGE_TYPE.ACT ? 'Chapter' : 'Page'}`}
-                      >
-                        <Plus size={12} />
-                      </button>
-                    </div>
-                  )}
-                </>
+                  }}
+                  onAddChild={() => {
+                    if (page) {
+                      handleAddChild(page);
+                    }
+                  }}
+                  canAddChild={canAddChild}
+                  hasDetour={hasDetour}
+                  isEndNode={isEndNode}
+                />
               );
             }}
           </Tree>
         )}
       </div>
-    </aside>
+    </div>
   );
 }

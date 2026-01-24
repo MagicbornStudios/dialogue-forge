@@ -30,6 +30,7 @@ export function validateNarrativeGraph(graph: ForgeGraphDoc): GraphValidationRes
   // Check 2: All nodes except start must have incoming edges (no orphans)
   if (nodeCount > 1) {
     const nodesWithIncoming = new Set(graph.flow.edges.map(e => e.target));
+    const nodesWithOutgoing = new Set(graph.flow.edges.map(e => e.source));
     const orphanedNodes = nodes
       .filter(node => !nodesWithIncoming.has(node.id) && node.id !== graph.startNodeId)
       .map(n => n.id);
@@ -39,6 +40,24 @@ export function validateNarrativeGraph(graph: ForgeGraphDoc): GraphValidationRes
         type: 'orphaned_node',
         message: `Found ${orphanedNodes.length} disconnected node(s)`,
         nodeIds: orphanedNodes,
+        severity: 'error',
+      });
+    }
+    
+    // Check for nodes with no edges at all (completely isolated)
+    const nodesWithNoEdges = nodes
+      .filter(node => 
+        !nodesWithIncoming.has(node.id) && 
+        !nodesWithOutgoing.has(node.id) && 
+        node.id !== graph.startNodeId
+      )
+      .map(n => n.id);
+    
+    if (nodesWithNoEdges.length > 0) {
+      errors.push({
+        type: 'orphaned_node',
+        message: `Found ${nodesWithNoEdges.length} node(s) with no edges (completely isolated)`,
+        nodeIds: nodesWithNoEdges,
         severity: 'error',
       });
     }

@@ -26,22 +26,38 @@ export type NarrativeHierarchy = {
 
 /**
  * Synchronous version that works with pre-loaded data
- * Use this when you already have acts/chapters/pages loaded
+ * Use this when you already have pages loaded (unified Pages model)
+ * Acts and chapters are now just pages with different types
  */
 export function extractNarrativeHierarchySync(
-  graph: ForgeGraphDoc,
-  acts: ForgeAct[],
-  chapters: ForgeChapter[],
-  pages: ForgePage[]
+  graph: ForgeGraphDoc | null,
+  acts: ForgeAct[] | undefined,
+  chapters: ForgeChapter[] | undefined,
+  pages: ForgePage[] | undefined
 ): NarrativeHierarchy {
+  // Handle null/undefined inputs safely
+  if (!graph || !graph.flow || !Array.isArray(graph.flow.nodes)) {
+    return {
+      acts: new Map(),
+      disconnectedActs: [],
+      disconnectedChapters: [],
+      disconnectedPages: Array.isArray(pages) ? pages : [],
+      conditionalPageConnections: new Map(),
+    };
+  }
+
+  const safeActs = Array.isArray(acts) ? acts : [];
+  const safeChapters = Array.isArray(chapters) ? chapters : [];
+  const safePages = Array.isArray(pages) ? pages : [];
+
   const nodeMap = new Map<string, ForgeReactFlowNode>(
     graph.flow.nodes.map(n => [n.id, n])
   );
   
   // Build maps for quick lookup
-  const actMap = new Map(acts.map(a => [a.id, a]));
-  const chapterMap = new Map(chapters.map(c => [c.id, c]));
-  const pageMap = new Map(pages.map(p => [p.id, p]));
+  const actMap = new Map(safeActs.map(a => [a.id, a]));
+  const chapterMap = new Map(safeChapters.map(c => [c.id, c]));
+  const pageMap = new Map(safePages.map(p => [p.id, p]));
   
   // Build edge maps
   const incomingEdges = new Map<string, string[]>(); // nodeId -> source nodeIds
@@ -132,12 +148,12 @@ export function extractNarrativeHierarchySync(
     const chaptersMap = new Map<number, { chapter: ForgeChapter; pages: Map<number, ForgePage> }>();
     
     // Find chapters for this act
-    for (const chapter of chapters) {
+    for (const chapter of safeChapters) {
       if (chapter.act === actId && connectedChapterIds.has(chapter.id)) {
         const pagesMap = new Map<number, ForgePage>();
         
         // Find pages for this chapter
-        for (const page of pages) {
+        for (const page of safePages) {
           if (page.chapter === chapter.id && connectedPageIds.has(page.id)) {
             pagesMap.set(page.id, page);
           }
@@ -151,9 +167,9 @@ export function extractNarrativeHierarchySync(
   }
   
   // Find disconnected items
-  const disconnectedActsList = acts.filter(a => !connectedActIds.has(a.id));
-  const disconnectedChaptersList = chapters.filter(c => !connectedChapterIds.has(c.id));
-  const disconnectedPagesList = pages.filter(p => !connectedPageIds.has(p.id));
+  const disconnectedActsList = safeActs.filter(a => !connectedActIds.has(a.id));
+  const disconnectedChaptersList = safeChapters.filter(c => !connectedChapterIds.has(c.id));
+  const disconnectedPagesList = safePages.filter(p => !connectedPageIds.has(p.id));
   
   return {
     acts: actsMap,

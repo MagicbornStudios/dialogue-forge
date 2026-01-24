@@ -1,23 +1,24 @@
 import * as React from 'react';
 import type { ReactNode } from 'react';
 import type { NodeRendererProps } from 'react-arborist';
-import { ChevronDown, ChevronRight, Plus, Circle, Flag } from 'lucide-react';
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuTrigger,
-} from '@/shared/ui/context-menu';
+import { Plus, Circle, Flag } from 'lucide-react';
 
 interface WriterTreeRowProps {
-  node: NodeRendererProps<any>['node'];
-  style: React.CSSProperties;
-  dragHandle?: NodeRendererProps<any>['dragHandle'];
+  node: {
+    id: string;
+    data: any;
+    isOpen?: boolean;
+    isLeaf?: boolean;
+    level?: number;
+    toggle?: () => void;
+  };
+  style?: React.CSSProperties;
+  dragHandle?: ((el: HTMLDivElement | null) => void) | React.RefObject<HTMLDivElement>;
   icon?: ReactNode;
   isSelected?: boolean;
   onSelect?: () => void;
   onAddChild?: () => void;
   canAddChild?: boolean;
-  contextMenu?: ReactNode;
   hasDetour?: boolean;
   isEndNode?: boolean;
 }
@@ -31,7 +32,8 @@ export function WriterTreeRow({
   onSelect,
   onAddChild,
   canAddChild = false,
-  contextMenu,
+  hasDetour = false,
+  isEndNode = false,
 }: WriterTreeRowProps) {
   const rowContent = (
     <div
@@ -39,17 +41,6 @@ export function WriterTreeRow({
       style={style}
       className="group flex items-center gap-1 px-2"
     >
-      {/* Expand/Collapse button */}
-      <button
-        type="button"
-        className="flex h-6 w-6 items-center justify-center rounded-md text-df-text-tertiary hover:text-df-text-primary transition-colors"
-        onClick={() => node.toggle()}
-        aria-label={node.isOpen ? 'Collapse' : 'Expand'}
-        style={{ visibility: node.isLeaf ? 'hidden' : 'visible' }}
-      >
-        {node.isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-      </button>
-
       {/* Label */}
       <button
         type="button"
@@ -61,7 +52,7 @@ export function WriterTreeRow({
         onClick={onSelect}
       >
         {icon ? <span className="text-df-text-tertiary flex-shrink-0">{icon}</span> : null}
-        <span className="truncate flex-1">{node.data.name}</span>
+        <span className="truncate flex-1">{node.data?.name || ''}</span>
         {/* Detour indicator - orange/brown bullet */}
         {hasDetour && (
           <Circle 
@@ -96,19 +87,6 @@ export function WriterTreeRow({
       )}
     </div>
   );
-
-  if (contextMenu) {
-    return (
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
-          {rowContent}
-        </ContextMenuTrigger>
-        <ContextMenuContent className="min-w-[160px]">
-          {contextMenu}
-        </ContextMenuContent>
-      </ContextMenu>
-    );
-  }
 
   return rowContent;
 }

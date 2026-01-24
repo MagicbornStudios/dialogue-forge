@@ -4,6 +4,7 @@ import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
 import type { ForgeGameState } from '@/forge/types/forge-game-state';
 import type { ForgeCharacter } from '@/forge/types/characters';
 import type { FlagSchema } from '@/forge/types/flags';
+import type { VideoTemplateWorkspaceAdapter } from '@/video/workspace/video-template-workspace-contracts';
 
 import { ForgeWorkspaceMenuBar } from '@/forge/components/ForgeWorkspace/components/ForgeWorkspaceMenuBar';
 import { ProjectSync } from '@/forge/components/ForgeWorkspace/components/ProjectSync';
@@ -53,6 +54,7 @@ interface ForgeWorkspaceProps {
 
   // Persistence surface (already implemented)
   dataAdapter?: ForgeDataAdapter;
+  videoTemplateAdapter?: VideoTemplateWorkspaceAdapter;
 
   // Project selection sync
   selectedProjectId?: number | null;
@@ -72,6 +74,7 @@ export function ForgeWorkspace({
   onEvent,
   resolveGraph,
   dataAdapter,
+  videoTemplateAdapter,
   selectedProjectId,
   onProjectChange,
   headerLinks,
@@ -93,6 +96,7 @@ export function ForgeWorkspace({
         initialGameState: initialGameState,
         resolveGraph,
         dataAdapter,
+        videoTemplateAdapter,
       },
       eventSinkRef.current
     )
@@ -101,6 +105,10 @@ export function ForgeWorkspace({
   React.useEffect(() => {
     setupForgeWorkspaceSubscriptions(storeRef.current, eventSinkRef.current, dataAdapter);
   }, [dataAdapter]);
+
+  React.useEffect(() => {
+    storeRef.current.setState({ videoTemplateAdapter });
+  }, [videoTemplateAdapter]);
 
   return (
     <CopilotKitProvider

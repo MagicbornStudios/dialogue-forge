@@ -2,15 +2,20 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ForgeGraphDoc } from '@/forge/types/forge-graph';
 import { FLAG_TYPE } from '@/forge/types/constants';
 import { FlagSchema } from '@/forge/types/flags';
-import { DialogueResult, ForgeFlagState, ForgeGameFlagState } from '@/forge/types/forge-game-state';
+import { DialogueResult, ForgeFlagState, ForgeGameFlagState, ForgeGameState } from '@/forge/types/forge-game-state';
 import { GamePlayer } from '@/forge/components/ForgeWorkspace/components/GamePlayer/GamePlayer';
 import { flagTypeColors } from '@/forge/lib/flag-manager/utils/flag-constants';
 import { initializeFlags } from '@/forge/lib/flag-manager/utils/flag-manager';
+import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
+import type { VideoTemplate } from '@/video/templates/types/video-template';
+import type { VideoTemplateWorkspaceTemplateSummary } from '@/video/workspace/video-template-workspace-contracts';
 
 interface PlayViewProps {
   graph: ForgeGraphDoc;
   startNodeId?: string;
   flagSchema?: FlagSchema;
+  gameState?: ForgeGameState;
   gameStateFlags?: ForgeGameFlagState;
 }
 
@@ -18,16 +23,36 @@ export function PlayView({
   graph,
   startNodeId,
   flagSchema,
+  gameState,
   gameStateFlags,
 }: PlayViewProps) {
-  // Initialize game flags with defaults from schema, then merge with gameStateFlags
-  const resolvedGameStateFlags = useMemo(() => {
+  const videoTemplateAdapter = useForgeWorkspaceStore((s) => s.videoTemplateAdapter);
+  const [templateSummaries, setTemplateSummaries] = useState<VideoTemplateWorkspaceTemplateSummary[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<VideoTemplate | null>(null);
+  const [templateListError, setTemplateListError] = useState<string | null>(null);
+  const [templateLoadError, setTemplateLoadError] = useState<string | null>(null);
+  const [isTemplateListLoading, setIsTemplateListLoading] = useState(false);
+  const [isTemplateLoading, setIsTemplateLoading] = useState(false);
+
+  // Initialize game flags with defaults from schema, then merge with gameState
+  const resolvedGameState = useMemo(() => {
+    const baseState: ForgeGameState = gameState ?? { flags: gameStateFlags ?? {} };
+    const baseFlags = baseState.flags ?? {};
     if (flagSchema) {
       const defaults = initializeFlags(flagSchema);
-      return { ...defaults, ...gameStateFlags };
+      return {
+        ...baseState,
+        flags: { ...defaults, ...baseFlags },
+      };
     }
-    return gameStateFlags || {};
-  }, [flagSchema, gameStateFlags]);
+    return {
+      ...baseState,
+      flags: baseFlags,
+    };
+  }, [flagSchema, gameState, gameStateFlags]);
+
+  const resolvedGameStateFlags = resolvedGameState.flags;
   
   const [currentFlags, setCurrentFlags] = useState<ForgeFlagState>(resolvedGameStateFlags);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
@@ -44,6 +69,94 @@ export function PlayView({
     setCurrentFlags(resolvedGameStateFlags);
     setFlagsSetDuringRun(new Set());
   }, [resolvedGameStateFlags]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!videoTemplateAdapter) {
+      setTemplateSummaries([]);
+      setSelectedTemplateId('');
+      setSelectedTemplate(null);
+      setTemplateListError(null);
+      setIsTemplateListLoading(false);
+      return;
+    }
+
+    setIsTemplateListLoading(true);
+    setTemplateListError(null);
+
+    videoTemplateAdapter
+      .listTemplates()
+      .then((templates) => {
+        if (!isActive) {
+          return;
+        }
+        setTemplateSummaries(templates);
+        setSelectedTemplateId((prev) =>
+          templates.some((template) => template.id === prev) ? prev : ''
+        );
+      })
+      .catch((error) => {
+        if (!isActive) {
+          return;
+        }
+        console.error('Failed to load video templates:', error);
+        setTemplateSummaries([]);
+        setSelectedTemplateId('');
+        setTemplateListError('Unable to load templates.');
+      })
+      .finally(() => {
+        if (!isActive) {
+          return;
+        }
+        setIsTemplateListLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [videoTemplateAdapter]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!videoTemplateAdapter || !selectedTemplateId) {
+      setSelectedTemplate(null);
+      setTemplateLoadError(null);
+      setIsTemplateLoading(false);
+      return;
+    }
+
+    setIsTemplateLoading(true);
+    setTemplateLoadError(null);
+
+    videoTemplateAdapter
+      .loadTemplate(selectedTemplateId)
+      .then((template) => {
+        if (!isActive) {
+          return;
+        }
+        setSelectedTemplate(template);
+      })
+      .catch((error) => {
+        if (!isActive) {
+          return;
+        }
+        console.error('Failed to load video template:', error);
+        setSelectedTemplate(null);
+        setTemplateLoadError('Unable to load template.');
+      })
+      .finally(() => {
+        if (!isActive) {
+          return;
+        }
+        setIsTemplateLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedTemplateId, videoTemplateAdapter]);
 
   const handleComplete = (result: DialogueResult) => {
     // Update flags from result
@@ -79,6 +192,43 @@ export function PlayView({
 
   return (
     <main className="flex-1 flex flex-col relative">
+      <div className="flex items-center justify-between border-b border-[#1a1a2e] bg-[#0b0b16] px-4 py-3 text-xs text-gray-400">
+        <div className="uppercase tracking-[0.25em]">Video Template</div>
+        <div className="flex items-center gap-3">
+          {templateListError && (
+            <span className="text-[10px] text-[#e94560]">{templateListError}</span>
+          )}
+          {templateLoadError && (
+            <span className="text-[10px] text-[#e94560]">{templateLoadError}</span>
+          )}
+          <Select
+            value={selectedTemplateId}
+            onValueChange={setSelectedTemplateId}
+            disabled={!videoTemplateAdapter || isTemplateListLoading}
+          >
+            <SelectTrigger className="h-8 w-56 border-[#2a2a3e] bg-[#12121a] text-xs text-white">
+              <SelectValue
+                placeholder={
+                  videoTemplateAdapter
+                    ? isTemplateListLoading
+                      ? 'Loading templates...'
+                      : 'Select template...'
+                    : 'Template adapter unavailable'
+                }
+              />
+            </SelectTrigger>
+            <SelectContent className="bg-[#12121a] text-white border-[#2a2a3e]">
+              <SelectItem value="">No template</SelectItem>
+              {templateSummaries.map((template) => (
+                <SelectItem key={template.id} value={template.id}>
+                  {template.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {isTemplateLoading && <span className="text-[10px] text-gray-500">Loading...</span>}
+        </div>
+      </div>
       {/* Debug Toggle Button */}
       {flagSchema && (
         <button
@@ -191,7 +341,9 @@ export function PlayView({
         dialogue={graph}
         startNodeId={startNodeId}
         flagSchema={flagSchema}
+        gameState={resolvedGameState}
         gameStateFlags={resolvedGameStateFlags}
+        videoTemplate={selectedTemplate}
         onComplete={handleComplete}
         onFlagsChange={handleFlagUpdate}
       />

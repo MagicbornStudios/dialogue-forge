@@ -23,6 +23,7 @@ export interface GamePlayerProps {
   dialogue: ForgeGraphDoc;
   startNodeId?: string;
   flagSchema?: FlagSchema;
+  gameState?: ForgeGameState;
   gameStateFlags?: ForgeFlagState;
   videoTemplate?: VideoTemplate | null;
   onComplete?: (result: DialogueResult) => void;
@@ -55,15 +56,27 @@ export function GamePlayer({
   dialogue,
   startNodeId,
   flagSchema,
+  gameState,
   gameStateFlags,
   videoTemplate,
   onComplete,
   onFlagsChange,
 }: GamePlayerProps) {
+  const resolvedGameState = useMemo<ForgeGameState>(() => {
+    if (gameState) {
+      return {
+        ...gameState,
+        flags: gameState.flags ?? {},
+      };
+    }
+    return {
+      flags: gameStateFlags ?? {},
+    };
+  }, [gameState, gameStateFlags]);
   const [frames, setFrames] = useState<Frame[]>([]);
   const [pendingChoice, setPendingChoice] = useState<PendingChoice | undefined>();
   const [executionState, setExecutionState] = useState<ForgeGameState>({
-    flags: gameStateFlags ?? {},
+    flags: resolvedGameState.flags,
   });
   const [status, setStatus] = useState<ExecutionStatus | undefined>();
   const composition = useMemo(() => {
@@ -154,7 +167,8 @@ export function GamePlayer({
 
   useEffect(() => {
     const initialState: ForgeGameState = {
-      flags: gameStateFlags ?? {},
+      ...resolvedGameState,
+      flags: { ...resolvedGameState.flags },
     };
 
     setFrames([]);
@@ -166,7 +180,7 @@ export function GamePlayer({
       startingNodeId: startNodeId,
       state: initialState,
     });
-  }, [flagSchema, gameStateFlags, runExecution, startNodeId]);
+  }, [flagSchema, resolvedGameState, runExecution, startNodeId]);
 
   const handleChoiceSelect = useCallback(
     async (choice: RuntimeChoice) => {

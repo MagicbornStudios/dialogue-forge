@@ -10,7 +10,7 @@ interface ForgePlayModalProps {
   onClose: () => void;
   graph: ForgeGraphDoc;
   flagSchema?: FlagSchema;
-  gameStateFlags?: ForgeGameState['flags'];
+  gameState?: ForgeGameState;
   title: string;
   subtitle: string;
 }
@@ -20,7 +20,7 @@ export function ForgePlayModal({
   onClose,
   graph: graph,
   flagSchema,
-  gameStateFlags,
+  gameState,
   title,
   subtitle,
 }: ForgePlayModalProps) {
@@ -49,7 +49,7 @@ export function ForgePlayModal({
             graph={graph}
             startNodeId={graph.startNodeId}
             flagSchema={flagSchema}
-            gameStateFlags={gameStateFlags}
+            gameState={gameState}
           />
         </div>
       </div>

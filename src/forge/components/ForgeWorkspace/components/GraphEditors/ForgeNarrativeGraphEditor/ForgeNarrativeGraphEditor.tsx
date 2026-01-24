@@ -33,6 +33,7 @@ import { cn } from '@/shared/lib/utils';
 
 import type { ForgeGraphDoc, ForgeNode, ForgeNodeType, ForgeReactFlowNode } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
+import { PAGE_TYPE } from '@/forge/types/narrative';
 import type { ForgeReactFlowNode as ForgeReactFlowNodeType } from '@/forge/types/forge-graph';
 
 import { useForgeFlowEditorShell, type ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
@@ -173,18 +174,19 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     
     try {
       if (nodeType === FORGE_NODE_TYPE.ACT) {
-        // Create act in database
-        const act = await dataAdapter.createAct({
+        // Create ACT page in database
+        const actPage = await dataAdapter.createPage({
           projectId: selectedProjectId,
-          name: nodeData?.label || 'New Act',
-          summary: nodeData?.content || null,
+          pageType: PAGE_TYPE.ACT,
+          title: nodeData?.label || 'New Act',
           order: 0, // TODO: Calculate from graph position or existing acts count
+          parent: null, // Acts have no parent
         });
         
-        // Update the graph node with the actId
+        // Update the graph node with the pageId
         const updatedNodes = effectiveGraph.flow.nodes.map(n => 
           n.id === node.id 
-            ? { ...n, data: { ...(n.data ?? {}), actId: act.id } as ForgeNode }
+            ? { ...n, data: { ...(n.data ?? {}), pageId: actPage.id, title: actPage.title } as ForgeNode }
             : n
         );
         
@@ -194,25 +196,80 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
         });
       } else if (nodeType === FORGE_NODE_TYPE.CHAPTER) {
         // Find parent act from edges
-        const parentActId = findParentActIdFromGraph(effectiveGraph, node.id);
-        if (parentActId) {
-          // TODO: Need to add createChapter to ForgeDataAdapter
-          // For now, log a warning
-          console.warn('createChapter not yet implemented in ForgeDataAdapter');
+        const parentActNode = findParentNodeByType(effectiveGraph, node.id, FORGE_NODE_TYPE.ACT);
+        const parentActPageId = parentActNode?.data?.pageId as number | undefined;
+        
+        if (parentActPageId) {
+          const chapterPage = await dataAdapter.createPage({
+            projectId: selectedProjectId,
+            pageType: PAGE_TYPE.CHAPTER,
+            title: nodeData?.label || 'New Chapter',
+            order: 0, // TODO: Calculate from siblings
+            parent: parentActPageId,
+          });
+          
+          const updatedNodes = effectiveGraph.flow.nodes.map(n => 
+            n.id === node.id 
+              ? { ...n, data: { ...(n.data ?? {}), pageId: chapterPage.id, title: chapterPage.title } as ForgeNode }
+              : n
+          );
+          
+          onChange({
+            ...effectiveGraph,
+            flow: { ...effectiveGraph.flow, nodes: updatedNodes },
+          });
+        } else {
+          console.warn('Cannot create chapter page: no parent act found');
         }
       } else if (nodeType === FORGE_NODE_TYPE.PAGE) {
         // Find parent chapter from edges
-        const parentChapterId = findParentChapterIdFromGraph(effectiveGraph, node.id);
-        if (parentChapterId) {
-          // TODO: Need to add createPage to ForgeDataAdapter or use WriterDataAdapter
-          // For now, log a warning
-          console.warn('createPage for narrative nodes not yet implemented');
+        const parentChapterNode = findParentNodeByType(effectiveGraph, node.id, FORGE_NODE_TYPE.CHAPTER);
+        const parentChapterPageId = parentChapterNode?.data?.pageId as number | undefined;
+        
+        if (parentChapterPageId) {
+          const contentPage = await dataAdapter.createPage({
+            projectId: selectedProjectId,
+            pageType: PAGE_TYPE.PAGE,
+            title: nodeData?.label || 'New Page',
+            order: 0, // TODO: Calculate from siblings
+            parent: parentChapterPageId,
+          });
+          
+          const updatedNodes = effectiveGraph.flow.nodes.map(n => 
+            n.id === node.id 
+              ? { ...n, data: { ...(n.data ?? {}), pageId: contentPage.id, title: contentPage.title } as ForgeNode }
+              : n
+          );
+          
+          onChange({
+            ...effectiveGraph,
+            flow: { ...effectiveGraph.flow, nodes: updatedNodes },
+          });
+        } else {
+          console.warn('Cannot create content page: no parent chapter found');
         }
       }
     } catch (error) {
       console.error('Failed to create database entry for node:', error);
     }
-  }, [dataAdapter, selectedProjectId, effectiveGraph, onChange, findParentActIdFromGraph, findParentChapterIdFromGraph]);
+  }, [dataAdapter, selectedProjectId, effectiveGraph, onChange]);
+
+  // Helper to find parent node of a specific type
+  const findParentNodeByType = React.useCallback((graph: ForgeGraphDoc, nodeId: string, parentType: ForgeNodeType): ForgeReactFlowNode | null => {
+    const incomingEdges = graph.flow.edges.filter(edge => edge.target === nodeId);
+    for (const edge of incomingEdges) {
+      const sourceNode = graph.flow.nodes.find(n => n.id === edge.source);
+      if (sourceNode && sourceNode.type === parentType) {
+        return sourceNode;
+      }
+      // Recursively check parent's parents
+      const parentOfParent = findParentNodeByType(graph, edge.source, parentType);
+      if (parentOfParent) {
+        return parentOfParent;
+      }
+    }
+    return null;
+  }, []);
 
   const shell = useForgeFlowEditorShell({
     graph: effectiveGraph,

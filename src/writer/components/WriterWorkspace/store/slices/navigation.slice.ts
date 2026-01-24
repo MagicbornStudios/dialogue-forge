@@ -4,15 +4,13 @@ import { createWriterDraftContent, WRITER_SAVE_STATUS } from '../writer-workspac
 
 export interface NavigationSlice {
   activePageId: number | null;
-  expandedActIds: Set<number>;
-  expandedChapterIds: Set<number>;
+  expandedPageIds: Set<number>;
   navigationError: string | null;
 }
 
 export interface NavigationActions {
   setActivePageId: (pageId: number | null) => void;
-  toggleActExpanded: (actId: number) => void;
-  toggleChapterExpanded: (chapterId: number) => void;
+  togglePageExpanded: (pageId: number) => void;
   setNavigationError: (error: string | null) => void;
 }
 
@@ -23,8 +21,7 @@ export function createNavigationSlice(
 ): NavigationSlice & NavigationActions {
   return {
     activePageId: initialActivePageId ?? null,
-    expandedActIds: new Set<number>(),
-    expandedChapterIds: new Set<number>(),
+    expandedPageIds: new Set<number>(),
     navigationError: null,
     setActivePageId: (pageId) =>
       set((state) => {
@@ -55,25 +52,15 @@ export function createNavigationSlice(
           },
         };
       }),
-    toggleActExpanded: (actId) =>
+    togglePageExpanded: (pageId) =>
       set((state) => {
-        const nextExpanded = new Set(state.expandedActIds);
-        if (nextExpanded.has(actId)) {
-          nextExpanded.delete(actId);
+        const nextExpanded = new Set(state.expandedPageIds);
+        if (nextExpanded.has(pageId)) {
+          nextExpanded.delete(pageId);
         } else {
-          nextExpanded.add(actId);
+          nextExpanded.add(pageId);
         }
-        return { expandedActIds: nextExpanded };
-      }),
-    toggleChapterExpanded: (chapterId) =>
-      set((state) => {
-        const nextExpanded = new Set(state.expandedChapterIds);
-        if (nextExpanded.has(chapterId)) {
-          nextExpanded.delete(chapterId);
-        } else {
-          nextExpanded.add(chapterId);
-        }
-        return { expandedChapterIds: nextExpanded };
+        return { expandedPageIds: nextExpanded };
       }),
     setNavigationError: (error) => set({ navigationError: error }),
   };

@@ -22,11 +22,29 @@ export const Pages: CollectionConfig = {
       index: true,
     },
     {
-      name: 'chapter',
-      type: 'relationship',
-      relationTo: PAYLOAD_COLLECTIONS.CHAPTERS,
+      name: 'pageType',
+      type: 'select',
+      options: [
+        { label: 'Act', value: 'ACT' },
+        { label: 'Chapter', value: 'CHAPTER' },
+        { label: 'Page', value: 'PAGE' },
+      ],
       required: true,
       index: true,
+      admin: {
+        description: 'Type of page in narrative hierarchy',
+      },
+    },
+    {
+      name: 'parent',
+      type: 'relationship',
+      relationTo: PAYLOAD_COLLECTIONS.PAGES,
+      required: false,
+      index: true,
+      admin: {
+        description: 'Parent page (Chapter for Page, Act for Chapter, null for Act)',
+        condition: (data) => data.pageType !== 'ACT',
+      },
     },
     {
       name: 'title',
@@ -40,6 +58,9 @@ export const Pages: CollectionConfig = {
     {
       name: 'content',
       type: 'json',
+      admin: {
+        description: 'Rich content/metadata (optional)',
+      },
     },
     {
       name: 'order',
@@ -49,21 +70,35 @@ export const Pages: CollectionConfig = {
       index: true,
     },
     {
-      name: 'dialogueGraph',
-      type: 'relationship',
-      relationTo: PAYLOAD_COLLECTIONS.FORGE_GRAPHS as any,
-      required: false,
+      name: 'bookHeading',
+      type: 'text',
       admin: {
-        description: 'Forge dialogue graph (kind=DIALOGUE) for this page.',
+        description: 'Optional heading for book export',
       },
     },
     {
       name: 'bookBody',
       type: 'textarea',
+      admin: {
+        description: 'Main text content for this page',
+      },
+    },
+    {
+      name: 'dialogueGraph',
+      type: 'relationship',
+      relationTo: PAYLOAD_COLLECTIONS.FORGE_GRAPHS as any,
+      required: false,
+      admin: {
+        description: 'Dialogue graph for PAGE type',
+        condition: (data) => data.pageType === 'PAGE',
+      },
     },
     {
       name: 'archivedAt',
       type: 'date',
+      admin: {
+        description: 'Timestamp when page was archived',
+      },
     },
     {
       name: '_status',
@@ -77,5 +112,6 @@ export const Pages: CollectionConfig = {
   ],
   versions: {
     drafts: true,
+    maxPerDoc: 50,
   },
 }

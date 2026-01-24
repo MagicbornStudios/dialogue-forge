@@ -2,6 +2,7 @@
 
 import { ProjectSwitcher } from '@/components/ProjectSwitcher';
 import { makePayloadWriterAdapter } from '@/host/writer/data-adapter/payload-writer-adapter';
+import { makePayloadForgeAdapter } from '@/host/forge/data-adapter/payload-forge-adapter';
 import { WriterWorkspace } from '@/writer/components/WriterWorkspace/WriterWorkspace';
 import { useState } from 'react';
 
@@ -11,11 +12,13 @@ export const dynamic = 'force-static';
 export default function WriterApp() {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
-  makePayloadWriterAdapter
   const writerAdapter = makePayloadWriterAdapter({
     baseUrl: 'http://localhost:3000',
   });
 
+  const forgeDataAdapter = makePayloadForgeAdapter({
+    baseUrl: 'http://localhost:3000',
+  });
 
   return (
     <div className="w-full h-screen flex flex-col">
@@ -28,6 +31,7 @@ export default function WriterApp() {
         <WriterWorkspace
           className="h-full"
           dataAdapter={writerAdapter}
+          forgeDataAdapter={forgeDataAdapter}
           projectId={selectedProjectId}
           onProjectChange={setSelectedProjectId}
         />

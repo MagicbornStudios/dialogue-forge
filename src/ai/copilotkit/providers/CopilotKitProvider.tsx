@@ -46,12 +46,14 @@ export function CopilotKitProvider({
     >
       <CopilotSidebarContext.Provider value={{ isOpen, setIsOpen }}>
         {children}
-        {/* Use key to force remount when isOpen changes to sync with controlled state */}
-        <CopilotSidebar
-          key={`sidebar-${isOpen}`}
-          instructions={instructions}
-          defaultOpen={isOpen}
-        />
+        {/* Only render sidebar when it should be open to avoid DOM issues */}
+        {isOpen && (
+          <CopilotSidebar
+            key={`sidebar-${isOpen}`}
+            instructions={instructions}
+            defaultOpen={true}
+          />
+        )}
       </CopilotSidebarContext.Provider>
     </CopilotKit>
   );

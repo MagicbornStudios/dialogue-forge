@@ -8,10 +8,10 @@ import type { StoreApi } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { ForgeAct, ForgeChapter, ForgePage } from '@/forge/types/narrative';
+import type { ForgePage } from '@/forge/types/narrative';
 import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
 import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
-import type { NarrativeHierarchy } from '@/writer/lib/sync/narrative-graph-sync';
+import type { NarrativeHierarchy } from '@/forge/types/narrative';
 import { createContentSlice } from './slices/content.slice';
 import { createEditorSlice } from './slices/editor.slice';
 import { createAiSlice } from './slices/ai.slice';
@@ -31,6 +31,7 @@ import {
   WRITER_SAVE_STATUS,
   WRITER_AI_PROPOSAL_STATUS,
 } from './writer-workspace-types';
+import { ForgeDataAdapter } from '@/forge/adapters/forge-data-adapter';
 
 // Re-export types for convenience
 export type { WriterDocSnapshot, WriterPatchOp, WriterSelectionSnapshot } from '@/writer/types/writer-ai-types';
@@ -44,9 +45,7 @@ export type {
 export { WRITER_SAVE_STATUS, WRITER_AI_PROPOSAL_STATUS } from './writer-workspace-types';
 
 export interface WriterWorkspaceState {
-  // Content slice
-  acts: ForgeAct[];
-  chapters: ForgeChapter[];
+  // Unified content slice
   pages: ForgePage[];
   contentError: string | null;
 
@@ -63,10 +62,9 @@ export interface WriterWorkspaceState {
   aiSnapshot: import('@/writer/types/writer-ai-types').WriterDocSnapshot | null;
   aiUndoSnapshot: import('@/writer/types/writer-ai-types').WriterDocSnapshot | null;
 
-  // Navigation slice
+  // Navigation slice - unified
   activePageId: number | null;
-  expandedActIds: Set<number>;
-  expandedChapterIds: Set<number>;
+  expandedPageIds: Set<number>;
   navigationError: string | null;
 
   // View state slice
@@ -74,13 +72,18 @@ export interface WriterWorkspaceState {
   panelLayout: ReturnType<typeof createViewStateSlice>['panelLayout'];
   pageLayout: ReturnType<typeof createViewStateSlice>['pageLayout'];
 
-  // Data adapter
+  // Narrative graph sync
+  narrativeGraphs: ForgeGraphDoc[];
+  selectedNarrativeGraphId: number | null;
+  narrativeGraph: ForgeGraphDoc | null;
+  narrativeHierarchy: NarrativeHierarchy | null;
+
+  // Data adapters
   dataAdapter?: WriterDataAdapter;
+  forgeDataAdapter?: ForgeDataAdapter;
 
   actions: {
     // Content actions
-    setActs: (acts: ForgeAct[]) => void;
-    setChapters: (chapters: ForgeChapter[]) => void;
     setPages: (pages: ForgePage[]) => void;
     updatePage: (pageId: number, patch: Partial<ForgePage>) => void;
     setContentError: (error: string | null) => void;
@@ -98,10 +101,9 @@ export interface WriterWorkspaceState {
     applyAiEdits: () => void;
     revertAiDraft: () => void;
 
-    // Navigation actions
+    // Navigation actions - unified
     setActivePageId: (pageId: number | null) => void;
-    toggleActExpanded: (actId: number) => void;
-    toggleChapterExpanded: (chapterId: number) => void;
+    togglePageExpanded: (pageId: number) => void;
     setNavigationError: (error: string | null) => void;
 
     // View state actions
@@ -118,17 +120,19 @@ export interface WriterWorkspaceState {
     togglePageFullWidth: (pageId: number) => void;
     
     // Narrative graph actions
+    setNarrativeGraphs: (graphs: ForgeGraphDoc[]) => void;
+    setSelectedNarrativeGraphId: (graphId: number | null) => void;
     setNarrativeGraph: (graph: ForgeGraphDoc | null) => void;
     setNarrativeHierarchy: (hierarchy: NarrativeHierarchy | null) => void;
+    createNarrativeGraph: (projectId: number) => Promise<ForgeGraphDoc>;
   };
 }
 
 export interface CreateWriterWorkspaceStoreOptions {
-  initialActs?: ForgeAct[];
-  initialChapters?: ForgeChapter[];
   initialPages?: ForgePage[];
   initialActivePageId?: number | null;
   dataAdapter?: WriterDataAdapter;
+  forgeDataAdapter?: ForgeDataAdapter;
 }
 
 export function createWriterWorkspaceStore(
@@ -136,11 +140,10 @@ export function createWriterWorkspaceStore(
   eventSink: EventSink
 ) {
   const {
-    initialActs = [],
-    initialChapters = [],
     initialPages = [],
     initialActivePageId = null,
     dataAdapter,
+    forgeDataAdapter,
   } = options;
 
   return createStore<WriterWorkspaceState>()(
@@ -151,7 +154,7 @@ export function createWriterWorkspaceStore(
         const setTyped = set as Parameters<typeof createContentSlice>[0];
         const getTyped = get as Parameters<typeof createContentSlice>[1];
         
-        const contentSlice = createContentSlice(setTyped, getTyped, initialActs, initialChapters, initialPages);
+        const contentSlice = createContentSlice(setTyped, getTyped, initialPages);
         const editorSlice = createEditorSlice(setTyped, getTyped, initialPages);
         const aiSlice = createAiSlice(setTyped, getTyped, { setDraftContent: editorSlice.setDraftContent, setDraftTitle: editorSlice.setDraftTitle });
         const navigationSlice = createNavigationSlice(setTyped, getTyped, initialActivePageId);
@@ -201,21 +204,14 @@ export function createWriterWorkspaceStore(
           ...aiSlice,
           ...navigationSlice,
           ...viewStateSlice,
+          narrativeGraphs: [],
+          selectedNarrativeGraphId: null,
+          narrativeGraph: null,
+          narrativeHierarchy: null,
           dataAdapter,
+          forgeDataAdapter,
           actions: {
             // Content actions
-            setActs: (acts) => {
-              contentSlice.setActs(acts);
-              eventSink.emit(
-                createEvent(WRITER_EVENT_TYPE.CONTENT_CHANGE, { acts }, 'USER_ACTION')
-              );
-            },
-            setChapters: (chapters) => {
-              contentSlice.setChapters(chapters);
-              eventSink.emit(
-                createEvent(WRITER_EVENT_TYPE.CONTENT_CHANGE, { chapters }, 'USER_ACTION')
-              );
-            },
             setPages: setPagesWithEvents,
             updatePage: (pageId, patch) => {
               contentSlice.updatePage(pageId, patch);
@@ -224,8 +220,45 @@ export function createWriterWorkspaceStore(
               );
             },
             setContentError: contentSlice.setContentError,
+            setNarrativeGraphs: (graphs: ForgeGraphDoc[]) => set({ narrativeGraphs: graphs }),
+            setSelectedNarrativeGraphId: (graphId: number | null) => set({ selectedNarrativeGraphId: graphId }),
             setNarrativeGraph: (graph: ForgeGraphDoc | null) => set({ narrativeGraph: graph }),
             setNarrativeHierarchy: (hierarchy: NarrativeHierarchy | null) => set({ narrativeHierarchy: hierarchy }),
+            createNarrativeGraph: async (projectId: number) => {
+              const adapter = get().forgeDataAdapter;
+              if (!adapter) {
+                throw new Error('ForgeDataAdapter not available');
+              }
+              
+              const { createGraphWithStartEnd } = await import('@/forge/lib/utils/forge-flow-helpers');
+              const { FORGE_GRAPH_KIND } = await import('@/forge/types/forge-graph');
+              
+              const { flow, startNodeId, endNodeIds } = createGraphWithStartEnd({
+                projectId,
+                kind: FORGE_GRAPH_KIND.NARRATIVE,
+                title: 'Narrative Graph',
+              });
+              
+              const graph = await adapter.createGraph({
+                projectId,
+                kind: FORGE_GRAPH_KIND.NARRATIVE,
+                title: 'Narrative Graph',
+                flow,
+                startNodeId,
+                endNodeIds,
+              });
+              
+              // Add to graphs list and select it
+              set((state) => ({
+                narrativeGraphs: [...state.narrativeGraphs, graph],
+                selectedNarrativeGraphId: graph.id,
+              }));
+              
+              // Also set as the active narrative graph
+              set({ narrativeGraph: graph });
+              
+              return graph;
+            },
 
             // Editor actions
             setDraftTitle: editorSlice.setDraftTitle,
@@ -244,8 +277,7 @@ export function createWriterWorkspaceStore(
 
             // Navigation actions
             setActivePageId: setActivePageIdWithEvents,
-            toggleActExpanded: navigationSlice.toggleActExpanded,
-            toggleChapterExpanded: navigationSlice.toggleChapterExpanded,
+            togglePageExpanded: navigationSlice.togglePageExpanded,
             setNavigationError: navigationSlice.setNavigationError,
 
             // View state actions

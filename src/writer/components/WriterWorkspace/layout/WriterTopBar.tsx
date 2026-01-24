@@ -1,33 +1,47 @@
 import React, { useMemo } from 'react';
 import { ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
+import { PAGE_TYPE } from '@/forge/types/narrative';
 
 export function WriterTopBar() {
-  const acts = useWriterWorkspaceStore((state) => state.acts);
-  const chapters = useWriterWorkspaceStore((state) => state.chapters);
   const pages = useWriterWorkspaceStore((state) => state.pages);
   const drafts = useWriterWorkspaceStore((state) => state.drafts);
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const pageLayout = useWriterWorkspaceStore((state) => state.pageLayout);
   const togglePageFullWidth = useWriterWorkspaceStore((state) => state.actions.togglePageFullWidth);
+  const setActivePageId = useWriterWorkspaceStore((state) => state.actions.setActivePageId);
 
   const activePage = useMemo(
     () => pages.find((page) => page.id === activePageId) ?? null,
     [pages, activePageId]
   );
-  const activeChapter = useMemo(
-    () => chapters.find((chapter) => chapter.id === activePage?.chapter) ?? null,
-    [chapters, activePage?.chapter]
-  );
-  const activeAct = useMemo(
-    () => acts.find((act) => act.id === activeChapter?.act) ?? null,
-    [acts, activeChapter?.act]
-  );
+
+  // Build breadcrumb path by walking up the parent chain
+  const breadcrumbPath = useMemo(() => {
+    if (!activePage) return [];
+    
+    const path = [activePage];
+    let current = activePage;
+    
+    // Walk up parent chain
+    while (current.parent) {
+      const parent = pages.find(p => p.id === current.parent);
+      if (parent) {
+        path.unshift(parent);
+        current = parent;
+      } else {
+        break;
+      }
+    }
+    
+    return path;
+  }, [activePage, pages]);
+  
   const draftTitle = activePageId ? drafts[activePageId]?.title ?? '' : '';
   const pageTitle =
     draftTitle.trim() ||
     activePage?.title ||
-    (activePageId ? 'Untitled page' : 'Select a page');
+    (activePageId ? 'Untitled' : 'Select a page');
   const isFullWidth = activePageId
     ? pageLayout.fullWidthByPageId[activePageId] ?? false
     : false;
@@ -43,6 +57,9 @@ export function WriterTopBar() {
       activePage.summary
         ? { label: 'Summary', value: activePage.summary }
         : null,
+      activePage.pageType
+        ? { label: 'Type', value: activePage.pageType }
+        : null,
     ].filter(Boolean) as Array<{ label: string; value: string }>;
   }, [activePage]);
 
@@ -51,23 +68,26 @@ export function WriterTopBar() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <nav className="flex flex-wrap items-center gap-2 text-xs text-df-text-tertiary">
-            {activeAct ? (
-              <span className="truncate">{activeAct.title}</span>
+            {breadcrumbPath.length > 0 ? (
+              breadcrumbPath.map((page, index) => (
+                <React.Fragment key={page.id}>
+                  {index > 0 && <ChevronRight size={12} className="text-df-text-tertiary" />}
+                  <button
+                    type="button"
+                    onClick={() => setActivePageId(page.id)}
+                    className={`truncate transition-colors ${
+                      page.id === activePageId
+                        ? 'text-df-text-primary font-medium'
+                        : 'hover:text-df-text-primary'
+                    }`}
+                  >
+                    {page.title}
+                  </button>
+                </React.Fragment>
+              ))
             ) : (
               <span className="text-df-text-tertiary">Workspace</span>
             )}
-            {activeChapter ? (
-              <>
-                <ChevronRight size={12} className="text-df-text-tertiary" />
-                <span className="truncate">{activeChapter.title}</span>
-              </>
-            ) : null}
-            {activePage ? (
-              <>
-                <ChevronRight size={12} className="text-df-text-tertiary" />
-                <span className="truncate">{activePage.title}</span>
-              </>
-            ) : null}
           </nav>
           <div className="mt-1 text-base font-semibold text-df-text-primary">
             {pageTitle}

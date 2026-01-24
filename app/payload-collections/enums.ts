@@ -10,8 +10,6 @@ export const PAYLOAD_COLLECTIONS = {
   MEDIA: 'media',
   CHARACTERS: 'characters',
   DIALOGUES: 'dialogues',
-  ACTS: 'acts',
-  CHAPTERS: 'chapters',
   PAGES: 'pages',
   STORYLET_TEMPLATES: 'storylet-templates',
   STORYLET_POOLS: 'storylet-pools',

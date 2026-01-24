@@ -19,6 +19,7 @@ interface WriterEditorPaneProps {
 export function WriterEditorPane({ className }: WriterEditorPaneProps) {
   const pages = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.pages);
   const activePageId = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.activePageId);
+  
   const draft = useWriterWorkspaceStore((state: WriterWorkspaceState) =>
     activePageId ? state.drafts[activePageId] ?? null : null
   );
@@ -97,7 +98,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
             <input
               type="text"
               className="w-full bg-transparent text-sm font-medium text-df-text-primary outline-none placeholder:text-df-text-tertiary"
-              placeholder="Untitled page"
+              placeholder="Untitled"
               value={draft?.title ?? activePage?.title ?? ''}
               onChange={(event) => {
                 if (!activePageId) {
@@ -120,7 +121,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
         {activePage ? (
           <>
             <LexicalEditor
-              key={activePage.id}
+              key={activePageId}
               value={draft?.content.serialized ?? activePage.bookBody ?? ''}
               placeholder="Start writing..."
               onChange={(nextValue) => {
@@ -139,91 +140,6 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
         )}
       </div>
 
-      {activePage ? (
-        <div className="bg-df-editor-bg p-4 mt-2">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="text-sm font-semibold text-df-text-primary">
-                AI Patch Preview
-              </h3>
-              <p className="text-xs text-df-text-tertiary">
-                {isLoading
-                  ? 'Generating a rewrite preview…'
-                  : 'Review changes before applying them to the draft.'}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-1 text-xs text-df-text-secondary transition hover:text-df-text-primary disabled:opacity-50"
-                onClick={revertAiDraft}
-                disabled={!aiUndoSnapshot}
-              >
-                Undo
-              </button>
-              <button
-                type="button"
-                className="rounded-md border border-emerald-500/70 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200 transition hover:bg-emerald-500/20 disabled:opacity-50"
-                onClick={applyAiEdits}
-                disabled={!hasPreview || isLoading}
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-4 grid gap-3 text-xs text-df-text-secondary md:grid-cols-[1fr,1fr]">
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-df-text-tertiary">
-                Summary
-              </div>
-              <div className="mt-1 text-sm text-df-text-primary">
-                {previewSummary}
-              </div>
-            </div>
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-df-text-tertiary">
-                Rationale
-              </div>
-              <div className="mt-1 text-sm text-df-text-primary">
-                {previewRationale}
-              </div>
-            </div>
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-df-text-tertiary">
-                Risk
-              </div>
-              <div className="mt-1 text-sm text-df-text-primary">
-                {previewRisk}
-              </div>
-            </div>
-            {aiError ? (
-              <div className="rounded-md border border-red-500/50 bg-red-500/10 p-2 text-xs text-red-200">
-                {aiError}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <div className="rounded-md border border-df-control-border bg-df-control-bg p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-df-text-tertiary">
-                Before
-              </div>
-              <pre className="mt-2 max-h-48 whitespace-pre-wrap text-xs text-df-text-primary">
-                {beforeContent || 'No content to preview.'}
-              </pre>
-            </div>
-            <div className="rounded-md border border-df-control-border bg-df-control-bg p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-df-text-tertiary">
-                After
-              </div>
-              <pre className="mt-2 max-h-48 whitespace-pre-wrap text-xs text-df-text-primary">
-                {hasPreview ? afterContent || 'No changes returned.' : 'No preview yet.'}
-              </pre>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

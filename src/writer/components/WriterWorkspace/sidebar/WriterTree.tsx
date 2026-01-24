@@ -1,362 +1,482 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { Book, BookOpen, FileText, Plus, Search, AlertCircle } from 'lucide-react';
-import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
+'use client';
+
+import React, { useState, useMemo, useCallback } from 'react';
+import { BookOpen, FileText, File, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { Tree } from 'react-arborist';
 import { WriterTreeRow } from './WriterTreeRow';
-import type { NarrativeHierarchy } from '@/writer/lib/sync/narrative-graph-sync';
+import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
+import {
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+} from '@/shared/ui/context-menu';
+import { PAGE_TYPE, buildNarrativeHierarchy, type ForgePage, type PageType } from '@/forge/types/narrative';
+import { useGraphPageSync } from '@/writer/hooks/use-graph-page-sync';
+import { useToast } from '@/shared/ui/toast';
+import { validateNarrativeGraph } from '@/forge/lib/graph-validation';
 
 interface WriterTreeProps {
   className?: string;
+  projectId?: number | null;
 }
 
-export function WriterTree({ className }: WriterTreeProps) {
-  const acts = useWriterWorkspaceStore((state) => state.acts);
-  const chapters = useWriterWorkspaceStore((state) => state.chapters);
+type TreeNode = {
+  id: string;
+  name: string;
+  page: ForgePage;
+  children?: TreeNode[];
+};
+
+function getIconForPageType(pageType: string) {
+  switch (pageType) {
+    case PAGE_TYPE.ACT:
+      return <BookOpen size={14} />;
+    case PAGE_TYPE.CHAPTER:
+      return <FileText size={14} />;
+    case PAGE_TYPE.PAGE:
+      return <File size={14} />;
+    default:
+      return <File size={14} />;
+  }
+}
+
+function buildTreeData(pages: ForgePage[]): TreeNode[] {
+  if (!pages || !Array.isArray(pages) || pages.length === 0) {
+    return [];
+  }
+  
+  const hierarchy = buildNarrativeHierarchy(pages);
+  
+  return hierarchy.acts.map(({ page: actPage, chapters }) => ({
+    id: `page-${actPage.id}`,
+    name: actPage.title,
+    page: actPage,
+    children: chapters.map(({ page: chapterPage, pages: contentPages }) => ({
+      id: `page-${chapterPage.id}`,
+      name: chapterPage.title,
+      page: chapterPage,
+      children: contentPages.map(page => ({
+        id: `page-${page.id}`,
+        name: page.title,
+        page,
+      })),
+    })),
+  }));
+}
+
+export function WriterTree({ className, projectId: projectIdProp }: WriterTreeProps) {
+  const [isCreating, setIsCreating] = useState(false);
+  const [treeHeight, setTreeHeight] = useState(400);
+  const treeContainerRef = React.useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  
   const pages = useWriterWorkspaceStore((state) => state.pages);
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const dataAdapter = useWriterWorkspaceStore((state) => state.dataAdapter);
-  const narrativeHierarchy = useWriterWorkspaceStore((state) => state.narrativeHierarchy);
+  const forgeDataAdapter = useWriterWorkspaceStore((state) => state.forgeDataAdapter);
+  const narrativeGraphs = useWriterWorkspaceStore((state) => state.narrativeGraphs);
+  const selectedNarrativeGraphId = useWriterWorkspaceStore((state) => state.selectedNarrativeGraphId);
+  const narrativeGraph = useWriterWorkspaceStore((state) => state.narrativeGraph);
+  
   const setActivePageId = useWriterWorkspaceStore((state) => state.actions.setActivePageId);
   const setPages = useWriterWorkspaceStore((state) => state.actions.setPages);
+  const setNarrativeGraph = useWriterWorkspaceStore((state) => state.actions.setNarrativeGraph);
+  const setSelectedNarrativeGraphId = useWriterWorkspaceStore((state) => state.actions.setSelectedNarrativeGraphId);
+  const createNarrativeGraph = useWriterWorkspaceStore((state) => state.actions.createNarrativeGraph);
 
-  const [expandedActIds, setExpandedActIds] = useState<Set<number>>(() => new Set());
-  const [expandedChapterIds, setExpandedChapterIds] = useState<Set<number>>(() => new Set());
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
+  const projectId = projectIdProp ?? pages[0]?.project ?? null;
 
-  const sortedActs = useMemo(
-    () => [...acts].sort((a, b) => a.order - b.order),
-    [acts]
-  );
+  // Graph-page sync hook
+  const { createPageWithNode } = useGraphPageSync({
+    graph: narrativeGraph,
+    pages,
+    projectId,
+    dataAdapter,
+    forgeDataAdapter,
+    onGraphUpdate: setNarrativeGraph,
+    onPagesUpdate: setPages,
+  });
 
-  const sortedChapters = useMemo(
-    () => [...chapters].sort((a, b) => a.order - b.order),
-    [chapters]
-  );
+  // Build tree data from pages
+  const treeData = useMemo(() => buildTreeData(pages), [pages]);
 
-  const sortedPages = useMemo(
-    () => [...pages].sort((a, b) => a.order - b.order),
-    [pages]
-  );
-
-  const normalizedQuery = searchQuery.trim().toLowerCase();
-  const isSearching = normalizedQuery.length > 0;
-  const matchesQuery = (value: string) => value.toLowerCase().includes(normalizedQuery);
-  const hasSearchMatches = isSearching
-    ? sortedActs.some((act) => matchesQuery(act.title)) ||
-      sortedChapters.some((chapter) => matchesQuery(chapter.title)) ||
-      sortedPages.some((page) => matchesQuery(page.title))
-    : true;
-
-  useEffect(() => {
-    if (sortedActs.length > 0 && expandedActIds.size === 0) {
-      setExpandedActIds(new Set(sortedActs.map((act) => act.id)));
-    }
-  }, [sortedActs, expandedActIds.size]);
-
-  useEffect(() => {
-    if (sortedChapters.length > 0 && expandedChapterIds.size === 0) {
-      setExpandedChapterIds(new Set(sortedChapters.map((chapter) => chapter.id)));
-    }
-  }, [sortedChapters, expandedChapterIds.size]);
-
-  useEffect(() => {
-    if (!activePageId) {
-      return;
-    }
-
-    const page = pages.find((item) => item.id === activePageId);
-    if (!page) {
-      return;
-    }
-
-    const chapter = chapters.find((item) => item.id === page.chapter);
-    if (!chapter) {
-      return;
-    }
-
-    const act = acts.find((item) => item.id === chapter.act);
-    if (!act) {
-      return;
-    }
-
-    setExpandedActIds((prev) => new Set(prev).add(act.id));
-    setExpandedChapterIds((prev) => new Set(prev).add(chapter.id));
-  }, [activePageId, acts, chapters, pages]);
-
-  const toggleAct = (actId: number) => {
-    setExpandedActIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(actId)) {
-        next.delete(actId);
-      } else {
-        next.add(actId);
+  // Validate graph on load
+  React.useEffect(() => {
+    if (narrativeGraph && pages.length > 0) {
+      const validation = validateNarrativeGraph(narrativeGraph);
+      
+      if (!validation.valid) {
+        validation.errors.forEach(error => {
+          toast.error(error.message);
+        });
       }
-      return next;
-    });
-  };
-
-  const toggleChapter = (chapterId: number) => {
-    setExpandedChapterIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(chapterId)) {
-        next.delete(chapterId);
-      } else {
-        next.add(chapterId);
-      }
-      return next;
-    });
-  };
-
-  const handleCreatePage = async () => {
-    console.log('handleCreatePage called', { hasCreatePage: !!dataAdapter?.createPage, isCreating, chaptersLength: chapters.length });
-    if (!dataAdapter?.createPage || isCreating) {
-      console.log('Early return: missing createPage or isCreating');
-      return;
-    }
-    const activePage = pages.find((page) => page.id === activePageId) ?? null;
-    const targetChapter =
-      chapters.find((chapter) => chapter.id === activePage?.chapter) ??
-      sortedChapters[0] ??
-      null;
-    if (!targetChapter) {
-      console.warn('Cannot create page: No chapters available. Please create a chapter first.');
-      return;
-    }
-    const chapterPages = sortedPages.filter((page) => page.chapter === targetChapter.id);
-    const nextOrder =
-      chapterPages.length > 0
-        ? Math.max(...chapterPages.map((page) => page.order)) + 1
-        : 1;
-
-    setIsCreating(true);
-    try {
-      console.log('Creating page', targetChapter);
-      const newPage = await dataAdapter.createPage({
-        title: 'New page',
-        project: targetChapter.project,
-        chapter: targetChapter.id,
-        order: nextOrder,
-        bookBody: '',
+      
+      validation.warnings.forEach(warning => {
+        toast.warning(warning.message);
       });
-      setPages([...pages, newPage]);
-      setActivePageId(newPage.id);
-      setExpandedChapterIds((prev) => new Set(prev).add(targetChapter.id));
-      if (targetChapter.act) {
-        setExpandedActIds((prev) => new Set(prev).add(targetChapter.act));
+    }
+  }, [narrativeGraph, pages.length, toast]);
+
+  // Handle creating first Act when empty
+  const handleCreateFirstAct = useCallback(async () => {
+    if (!projectId || !dataAdapter || !forgeDataAdapter || isCreating) return;
+
+    try {
+      setIsCreating(true);
+
+      // Get or create narrative graph
+      let graph = narrativeGraph;
+      if (!graph) {
+        graph = await createNarrativeGraph(projectId);
       }
+
+      if (!graph) {
+        throw new Error('Failed to create narrative graph');
+      }
+
+      // Use sync hook to create Act with node
+      await createPageWithNode({
+        pageType: PAGE_TYPE.ACT,
+        title: 'Act I',
+        parentPageId: null,
+      });
+    } catch (error) {
+      console.error('[WriterTree] Failed to create first act:', error);
+      toast.error('Failed to create first act');
     } finally {
       setIsCreating(false);
     }
-  };
+  }, [projectId, dataAdapter, forgeDataAdapter, isCreating, narrativeGraph, createNarrativeGraph, createPageWithNode, toast]);
 
-  const canCreatePage = Boolean(dataAdapter?.createPage);
+  // Handle adding child page
+  const handleAddChild = useCallback(async (parentPage: ForgePage | null, pageType?: PageType) => {
+    if (isCreating || !projectId || !dataAdapter || !forgeDataAdapter) return;
 
-  useEffect(() => {
-    console.log('Button state:', { canCreatePage, isCreating, hasDataAdapter: !!dataAdapter, hasCreatePage: !!dataAdapter?.createPage, chaptersLength: chapters.length });
-  }, [canCreatePage, isCreating, dataAdapter, chapters.length]);
+    try {
+      setIsCreating(true);
+
+      // Ensure we have a narrative graph
+      let graph = narrativeGraph;
+      if (!graph) {
+        graph = await createNarrativeGraph(projectId);
+        if (graph) {
+          setNarrativeGraph(graph);
+        }
+      }
+
+      if (!graph) {
+        toast.error('Failed to create or load narrative graph');
+        return;
+      }
+
+      // If no parent, we're adding a top-level Act
+      if (!parentPage) {
+        const actCount = pages.filter(p => p.pageType === PAGE_TYPE.ACT).length;
+        const result = await createPageWithNode({
+          pageType: PAGE_TYPE.ACT,
+          title: `Act ${actCount + 1}`,
+          parentPageId: null,
+        });
+        return;
+      }
+
+      // Determine child type from parent or explicit type
+      const childType = pageType || (parentPage.pageType === PAGE_TYPE.ACT 
+        ? PAGE_TYPE.CHAPTER 
+        : PAGE_TYPE.PAGE);
+      
+      const childCount = pages.filter(p => 
+        p.pageType === childType && p.parent === parentPage.id
+      ).length;
+      
+      const title = childType === PAGE_TYPE.CHAPTER 
+        ? `Chapter ${childCount + 1}`
+        : `Page ${childCount + 1}`;
+
+      const result = await createPageWithNode({
+        pageType: childType,
+        title,
+        parentPageId: parentPage.id,
+      });
+
+      if (result && result.page.pageType === PAGE_TYPE.PAGE) {
+        setActivePageId(result.page.id);
+      }
+    } catch (error) {
+      console.error('[WriterTree] Failed to add child:', error);
+      toast.error('Failed to add page');
+    } finally {
+      setIsCreating(false);
+    }
+  }, [isCreating, projectId, dataAdapter, forgeDataAdapter, pages, narrativeGraph, createNarrativeGraph, createPageWithNode, setActivePageId, setNarrativeGraph, toast]);
+
+  // Handle page rename
+  const handleRenamePage = useCallback(async (page: ForgePage) => {
+    const newTitle = prompt('Rename page:', page.title);
+    if (!newTitle || newTitle === page.title) return;
+
+    try {
+      if (dataAdapter?.updatePage) {
+        await dataAdapter.updatePage(page.id, { title: newTitle });
+        
+        const updatedPages = pages.map(p =>
+          p.id === page.id ? { ...p, title: newTitle } : p
+        );
+        setPages(updatedPages);
+
+        // Update graph node if it exists
+        if (narrativeGraph && forgeDataAdapter) {
+          const nodeToUpdate = Object.values(narrativeGraph.flow.nodes).find(
+            n => n.data?.pageId === page.id
+          );
+          if (nodeToUpdate) {
+            const updatedNodes = {
+              ...narrativeGraph.flow.nodes,
+              [nodeToUpdate.id]: {
+                ...nodeToUpdate,
+                data: { ...nodeToUpdate.data, title: newTitle, label: newTitle },
+              },
+            };
+            
+            const updatedGraph = await forgeDataAdapter.updateGraph(narrativeGraph.id, {
+              flow: {
+                ...narrativeGraph.flow,
+                nodes: updatedNodes,
+              },
+            });
+            
+            setNarrativeGraph(updatedGraph);
+          }
+        }
+        
+        toast.success('Page renamed');
+      }
+    } catch (error) {
+      console.error('Failed to rename page:', error);
+      toast.error('Failed to rename page');
+    }
+  }, [dataAdapter, forgeDataAdapter, narrativeGraph, pages, setPages, setNarrativeGraph, toast]);
+
+  // Handle page deletion
+  const handleDeletePage = useCallback(async (page: ForgePage) => {
+    // Check if page has children
+    const hasChildren = pages.some(p => p.parent === page.id);
+    
+    if (hasChildren) {
+      toast.warning('Cannot delete page with children. Delete children first.');
+      return;
+    }
+    
+    if (!confirm(`Delete "${page.title}"?`)) return;
+
+    try {
+      if (dataAdapter?.deletePage) {
+        await dataAdapter.deletePage(page.id);
+        
+        const updatedPages = pages.filter(p => p.id !== page.id);
+        setPages(updatedPages);
+
+        if (activePageId === page.id) {
+          setActivePageId(null);
+        }
+
+        // Remove from graph
+        if (narrativeGraph && forgeDataAdapter) {
+          const nodeToDelete = Object.values(narrativeGraph.flow.nodes).find(
+            n => n.data?.pageId === page.id
+          );
+          
+          if (nodeToDelete) {
+            const updatedNodes: Record<string, typeof narrativeGraph.flow.nodes[string]> = { ...narrativeGraph.flow.nodes };
+            delete updatedNodes[nodeToDelete.id];
+            
+            const updatedEdges = narrativeGraph.flow.edges.filter(
+              e => e.source !== nodeToDelete.id && e.target !== nodeToDelete.id
+            );
+            
+            const updatedGraph = await forgeDataAdapter.updateGraph(narrativeGraph.id, {
+              flow: {
+                nodes: updatedNodes,
+                edges: updatedEdges,
+              },
+            });
+            
+            setNarrativeGraph(updatedGraph);
+          }
+        }
+        
+        toast.success('Page deleted');
+      }
+    } catch (error) {
+      console.error('Failed to delete page:', error);
+      toast.error('Failed to delete page');
+    }
+  }, [dataAdapter, forgeDataAdapter, narrativeGraph, pages, setPages, activePageId, setActivePageId, setNarrativeGraph, toast]);
+
+  // Handle adding Act at top level
+  const handleAddAct = useCallback(async () => {
+    await handleAddChild(null, PAGE_TYPE.ACT);
+  }, [handleAddChild]);
 
   return (
-    <div className={`flex min-h-0 flex-1 flex-col gap-2 ${className ?? ''}`}>
-      <div className="p-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-xs font-semibold uppercase tracking-wide text-df-text-tertiary">
-            Narrative Outline
-          </div>
-          <button
-            type="button"
-            className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-df-text-secondary transition hover:bg-df-control-bg hover:text-df-text-primary disabled:opacity-50"
-            onClick={(e) => {
-              console.log('Button clicked', { canCreatePage, isCreating, disabled: !canCreatePage || isCreating });
-              e.preventDefault();
-              e.stopPropagation();
-              void handleCreatePage();
-            }}
-            disabled={!canCreatePage || isCreating}
-          >
-            <Plus size={12} />
-            New page
-          </button>
-        </div>
-        <div className="mt-2 flex items-center gap-2 rounded-md bg-df-control-bg px-2 py-1.5 text-xs text-df-text-secondary">
-          <Search size={14} />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search acts, chapters, pages..."
-            className="w-full bg-transparent text-xs text-df-text-primary outline-none placeholder:text-df-text-tertiary"
-          />
-        </div>
+    <aside className={`flex min-h-0 flex-col gap-2 ${className ?? ''}`}>
+      {/* Graph Selector - Always show */}
+      <div className="px-3 pt-3">
+        <label className="text-[11px] font-semibold uppercase tracking-wide text-df-text-tertiary">
+          Narrative Graph
+        </label>
+        <select
+          className="mt-1 w-full rounded-md border border-df-node-border bg-df-control-bg px-2 py-1 text-xs text-df-text-primary"
+          value={selectedNarrativeGraphId ?? ''}
+          onChange={(e) => {
+            const graphId = e.target.value ? Number(e.target.value) : null;
+            setSelectedNarrativeGraphId(graphId);
+            if (graphId) {
+              const selected = narrativeGraphs.find(g => g.id === graphId);
+              if (selected) {
+                setNarrativeGraph(selected);
+              }
+            }
+          }}
+          disabled={narrativeGraphs.length === 0}
+        >
+          {narrativeGraphs.length === 0 ? (
+            <option value="">No graphs available</option>
+          ) : (
+            narrativeGraphs.map((graph) => (
+              <option key={graph.id} value={String(graph.id)}>
+                {graph.title}
+              </option>
+            ))
+          )}
+        </select>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2">
-        {sortedActs.length === 0 ? (
-          <div className="rounded-md bg-df-control-bg p-3 text-xs text-df-text-tertiary">
-            No acts available.
+
+      {/* Header */}
+      <div className="px-3">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-df-text-tertiary">
+          NARRATIVE OUTLINE
+        </h2>
+      </div>
+
+      {/* Tree */}
+      <div ref={treeContainerRef} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {treeData.length === 0 ? (
+          // Empty state with placeholder section
+          <div className="px-2 py-2">
+            <div className="group flex items-center gap-1 px-2 py-1">
+              <div className="flex h-6 w-6 items-center justify-center">
+                <BookOpen size={14} className="text-df-text-tertiary" />
+              </div>
+              <div className="flex flex-1 items-center gap-2 text-xs text-df-text-tertiary italic">
+                No acts yet
+              </div>
+              <button
+                type="button"
+                className="flex h-6 w-6 items-center justify-center rounded-md text-df-text-tertiary opacity-0 group-hover:opacity-100 hover:bg-df-control-bg hover:text-df-text-primary transition-all"
+                onClick={handleAddAct}
+                disabled={isCreating}
+                title="Add Act"
+              >
+                <Plus size={12} />
+              </button>
+            </div>
           </div>
         ) : (
-          sortedActs
-            .filter((act) => {
-              if (!isSearching) {
-                return true;
-              }
-              if (matchesQuery(act.title)) {
-                return true;
-              }
-              const actChapters = sortedChapters.filter((chapter) => chapter.act === act.id);
-              return actChapters.some((chapter) => {
-                if (matchesQuery(chapter.title)) {
-                  return true;
-                }
-                return sortedPages.some(
-                  (page) => page.chapter === chapter.id && matchesQuery(page.title)
-                );
-              });
-            })
-            .map((act) => {
-              const actChapters = sortedChapters.filter((chapter) => chapter.act === act.id);
-              const actMatches = isSearching && matchesQuery(act.title);
-              const visibleChapters = actMatches
-                ? actChapters
-                : actChapters.filter((chapter) => {
-                    if (!isSearching) {
-                      return true;
-                    }
-                    if (matchesQuery(chapter.title)) {
-                      return true;
-                    }
-                    return sortedPages.some(
-                      (page) => page.chapter === chapter.id && matchesQuery(page.title)
-                    );
-                  });
-              const isActExpanded = isSearching || expandedActIds.has(act.id);
+          <Tree
+            data={treeData}
+            openByDefault={true}
+            width="100%"
+            height={treeHeight}
+            indent={24}
+            rowHeight={32}
+            overscanCount={8}
+            padding={8}
+          >
+            {({ node, style, dragHandle }) => {
+              const page = node.data.page as ForgePage;
+              const hasChildren = node.children && node.children.length > 0;
+              const isEmpty = !hasChildren && page.pageType !== PAGE_TYPE.PAGE;
 
               return (
-                <div key={act.id} className="space-y-1">
+                <>
                   <WriterTreeRow
-                    label={act.title}
-                    depth={0}
-                    icon={<BookOpen size={14} />}
-                    hasChildren={actChapters.length > 0}
-                    isExpanded={isActExpanded}
-                    onToggle={() => toggleAct(act.id)}
-                    onSelect={() => toggleAct(act.id)}
+                    node={node}
+                    style={style}
+                    dragHandle={dragHandle}
+                    icon={getIconForPageType(page.pageType)}
+                    isSelected={page.id === activePageId}
+                    onSelect={() => setActivePageId(page.id)}
+                    onAddChild={() => handleAddChild(page)}
+                    canAddChild={page.pageType !== PAGE_TYPE.PAGE}
+                    contextMenu={
+                      <>
+                        <ContextMenuItem
+                          onClick={() => handleRenamePage(page)}
+                          className="text-df-text-primary hover:bg-df-control-hover focus:bg-df-control-hover"
+                        >
+                          <Edit2 size={14} className="mr-2" />
+                          Rename
+                        </ContextMenuItem>
+                        {page.pageType !== PAGE_TYPE.PAGE && (
+                          <ContextMenuItem
+                            onClick={() => handleAddChild(page)}
+                            className="text-df-text-primary hover:bg-df-control-hover focus:bg-df-control-hover"
+                          >
+                            <Plus size={14} className="mr-2" />
+                            Add {page.pageType === PAGE_TYPE.ACT ? 'Chapter' : 'Page'}
+                          </ContextMenuItem>
+                        )}
+                        <ContextMenuSeparator className="bg-df-node-border" />
+                        <ContextMenuItem
+                          onClick={() => handleDeletePage(page)}
+                          className="text-df-error hover:bg-df-error-bg focus:bg-df-error-bg"
+                        >
+                          <Trash2 size={14} className="mr-2" />
+                          Delete
+                        </ContextMenuItem>
+                      </>
+                    }
                   />
-
-                  {isActExpanded &&
-                    visibleChapters.map((chapter) => {
-                      const chapterPages = sortedPages.filter(
-                        (page) => page.chapter === chapter.id
-                      );
-                      const chapterMatches =
-                        actMatches || (isSearching && matchesQuery(chapter.title));
-                      const visiblePages = chapterMatches
-                        ? chapterPages
-                        : chapterPages.filter((page) => matchesQuery(page.title));
-                      const isChapterExpanded = isSearching || expandedChapterIds.has(chapter.id);
-
-                      return (
-                        <div key={chapter.id} className="space-y-1">
-                          <WriterTreeRow
-                            label={chapter.title}
-                            depth={1}
-                            icon={<Book size={14} />}
-                            hasChildren={chapterPages.length > 0}
-                            isExpanded={isChapterExpanded}
-                            onToggle={() => toggleChapter(chapter.id)}
-                            onSelect={() => toggleChapter(chapter.id)}
-                          />
-
-                          {isChapterExpanded &&
-                            visiblePages.map((page) => {
-                              const hasConditionalAccess = conditionalPageConnections.has(page.id);
-                              return (
-                                <div key={page.id} className="flex items-center gap-1">
-                                  <WriterTreeRow
-                                    label={page.title}
-                                    depth={2}
-                                    icon={<FileText size={14} />}
-                                    isSelected={activePageId === page.id}
-                                    onSelect={() => setActivePageId(page.id)}
-                                  />
-                                  {hasConditionalAccess && (
-                                    <AlertCircle 
-                                      size={12} 
-                                      className="text-amber-500 flex-shrink-0" 
-                                      title="Accessible via conditional node"
-                                    />
-                                  )}
-                                </div>
-                              );
-                            })}
-                        </div>
-                      );
-                    })}
-                </div>
-              );
-            })
-        )}
-        {isSearching && sortedActs.length > 0 && !hasSearchMatches && (
-          <div className="rounded-md bg-df-control-bg p-3 text-xs text-df-text-tertiary">
-            No matching pages found.
-          </div>
-        )}
-        
-        {/* Show disconnected items */}
-        {narrativeHierarchy && (
-          <>
-            {(narrativeHierarchy.disconnectedActs.length > 0 ||
-              narrativeHierarchy.disconnectedChapters.length > 0 ||
-              narrativeHierarchy.disconnectedPages.length > 0) && (
-              <div className="mt-4 pt-4 border-t border-df-node-border">
-                <div className="text-xs font-semibold uppercase tracking-wide text-df-text-tertiary mb-2 px-2">
-                  Unconnected
-                </div>
-                {narrativeHierarchy.disconnectedActs.map((act) => (
-                  <WriterTreeRow
-                    key={act.id}
-                    label={act.title}
-                    depth={0}
-                    icon={<BookOpen size={14} />}
-                    isSelected={false}
-                    onSelect={() => {}}
-                  />
-                ))}
-                {narrativeHierarchy.disconnectedChapters.map((chapter) => (
-                  <WriterTreeRow
-                    key={chapter.id}
-                    label={chapter.title}
-                    depth={1}
-                    icon={<Book size={14} />}
-                    isSelected={false}
-                    onSelect={() => {}}
-                  />
-                ))}
-                {narrativeHierarchy.disconnectedPages.map((page) => {
-                  const hasConditionalAccess = conditionalPageConnections.has(page.id);
-                  return (
-                    <div key={page.id} className="flex items-center gap-1">
-                      <WriterTreeRow
-                        label={page.title}
-                        depth={2}
-                        icon={<FileText size={14} />}
-                        isSelected={activePageId === page.id}
-                        onSelect={() => setActivePageId(page.id)}
-                      />
-                      {hasConditionalAccess && (
-                        <AlertCircle 
-                          size={12} 
-                          className="text-amber-500 flex-shrink-0" 
-                          title="Accessible via conditional node"
-                        />
-                      )}
+                  {/* Show placeholder for empty sections */}
+                  {isEmpty && node.isOpen && (
+                    <div
+                      style={{
+                        paddingLeft: `${(node.level + 1) * 24 + 8}px`,
+                        height: '32px',
+                      }}
+                      className="group flex items-center gap-1 px-2"
+                    >
+                      <div className="flex h-6 w-6 items-center justify-center">
+                        {page.pageType === PAGE_TYPE.ACT ? (
+                          <FileText size={14} className="text-df-text-tertiary" />
+                        ) : (
+                          <File size={14} className="text-df-text-tertiary" />
+                        )}
+                      </div>
+                      <div className="flex flex-1 items-center gap-2 text-xs text-df-text-tertiary italic">
+                        {page.pageType === PAGE_TYPE.ACT ? 'No chapters yet' : 'No pages yet'}
+                      </div>
+                      <button
+                        type="button"
+                        className="flex h-6 w-6 items-center justify-center rounded-md text-df-text-tertiary opacity-0 group-hover:opacity-100 hover:bg-df-control-bg hover:text-df-text-primary transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddChild(page);
+                        }}
+                        disabled={isCreating}
+                        title={`Add ${page.pageType === PAGE_TYPE.ACT ? 'Chapter' : 'Page'}`}
+                      >
+                        <Plus size={12} />
+                      </button>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </>
+                  )}
+                </>
+              );
+            }}
+          </Tree>
         )}
       </div>
-    </div>
+    </aside>
   );
 }

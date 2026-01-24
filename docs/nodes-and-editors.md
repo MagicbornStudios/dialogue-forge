@@ -25,18 +25,6 @@ This document describes the node types, editor structure, and recommended patter
 - **Editor:** `StoryletNodeFields` in `src/components/NodeEditor.tsx`.
 - **Node UI:** `StoryletDialogueNodeV2` in `src/components/StoryletDialogueNodeV2.tsx`.
 
-### Storylet Node Groups (Randomizer Node Type)
-- **Purpose:** A node group that selects the most salient storylet entry, aligned with Yarn’s node-group behavior (not weighted random).
-- **Core fields:** `randomizerBranches[]` with `label`, `nextNodeId`, and optional `storyletPoolId` as a group ID.
-- **Editor:** `StoryletNodeGroupBranches` in `src/components/NodeEditor.tsx`.
-- **Recommendation:** Avoid weights or seeds; rely on saliency strategies for ordering.
-
-### Storylet Pool Nodes (Legacy)
-- **Purpose:** Historical node type that overlaps with storylet node groups.
-- **Recommendation:** Prefer storylet node groups and keep pools as narrative data structures instead of node types.
-- **Editor:** `StoryletNodeGroupFields` in `src/components/NodeEditor.tsx`.
-- **Node UI:** `StoryletNodeGroupDialogueNodeV2` in `src/components/StoryletNodeGroupDialogueNodeV2.tsx`.
-
 ## Storylet Call Wiring
 
 `DialogueNode.storyletCall` stores the wiring metadata used when invoking a storylet or storylet node group:

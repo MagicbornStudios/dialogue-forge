@@ -1,7 +1,7 @@
 // src/forge/adapter/forge-data-adapter.ts
 import type { ForgeGraphDoc, ForgeReactFlowJson, ForgeGraphKind } from '@/forge/types/forge-graph';
 import { ForgeGameState, ForgeGameStateRecord } from '@/forge/types/forge-game-state';
-import { ForgeAct } from '@/forge/types/narrative';
+import type { ForgePage } from '@/forge/types/narrative';
 import type { ForgeCharacter } from '@/forge/types/characters';
 
 export type ForgeProjectSummary = {
@@ -58,15 +58,20 @@ export interface ForgeDataAdapter {
     schema: unknown;
   }): Promise<ForgeFlagSchema>;
   deleteFlagSchema(flagSchemaId: number): Promise<void>;
-  getAct(actId: number): Promise<ForgeAct>;
-  updateAct(actId: number, patch: Partial<ForgeAct>): Promise<ForgeAct>;
-  deleteAct(actId: number): Promise<void>;
-  createAct(input: {
+  
+  // Unified page operations (for ACT, CHAPTER, PAGE nodes)
+  getPage(pageId: number): Promise<ForgePage>;
+  createPage(input: {
     projectId: number;
-    name: string;
-    summary?: string | null;
+    pageType: 'ACT' | 'CHAPTER' | 'PAGE';
+    title: string;
     order: number;
-  }): Promise<ForgeAct>;
+    parent?: number | null;
+  }): Promise<ForgePage>;
+  updatePage(pageId: number, patch: Partial<ForgePage>): Promise<ForgePage>;
+  deletePage(pageId: number): Promise<void>;
+  
+  // Game state operations
   listGameStates(projectId: number): Promise<ForgeGameStateRecord[]>;
   getGameState(gameStateId: number): Promise<ForgeGameStateRecord>;
   getActiveGameStateId(projectId: number): Promise<number | null>;

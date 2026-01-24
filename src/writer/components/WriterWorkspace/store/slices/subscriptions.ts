@@ -20,6 +20,28 @@ export function setupWriterWorkspaceSubscriptions(
   // Track in-flight requests to prevent duplicates
   const inFlightRequests = new Set<string>();
 
+  // Subscribe to selected graph ID changes and load the graph
+  domainStore.subscribe(
+    async (state, prevState) => {
+      const selectedId = state.selectedNarrativeGraphId;
+      const prevId = prevState.selectedNarrativeGraphId;
+      
+      if (selectedId === prevId) return;
+      
+      if (selectedId && forgeDataAdapter) {
+        try {
+          const graph = await forgeDataAdapter.getGraph(selectedId);
+          domainStore.getState().actions.setNarrativeGraph(graph);
+        } catch (error) {
+          console.error('Failed to load selected narrative graph:', error);
+          domainStore.getState().actions.setNarrativeGraph(null);
+        }
+      } else {
+        domainStore.getState().actions.setNarrativeGraph(null);
+      }
+    }
+  );
+
   // Subscribe to narrative graph changes and sync hierarchy
   domainStore.subscribe(
     async (state, prevState) => {

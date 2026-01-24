@@ -1,17 +1,13 @@
 import type { StateCreator } from 'zustand';
-import type { ForgeAct, ForgeChapter, ForgePage } from '@/forge/types/narrative';
+import type { ForgePage } from '@/forge/types/narrative';
 import type { WriterWorkspaceState } from '../writer-workspace-types';
 
 export interface ContentSlice {
-  acts: ForgeAct[];
-  chapters: ForgeChapter[];
   pages: ForgePage[];
   contentError: string | null;
 }
 
 export interface ContentActions {
-  setActs: (acts: ForgeAct[]) => void;
-  setChapters: (chapters: ForgeChapter[]) => void;
   setPages: (pages: ForgePage[]) => void;
   updatePage: (pageId: number, patch: Partial<ForgePage>) => void;
   setContentError: (error: string | null) => void;
@@ -19,18 +15,12 @@ export interface ContentActions {
 
 export function createContentSlice(
   set: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[0],
-  get: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[1],
-  initialActs?: ForgeAct[],
-  initialChapters?: ForgeChapter[],
+  _get: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[1],
   initialPages?: ForgePage[]
 ): ContentSlice & ContentActions {
   return {
-    acts: initialActs ?? [],
-    chapters: initialChapters ?? [],
     pages: initialPages ?? [],
     contentError: null,
-    setActs: (acts) => set({ acts }),
-    setChapters: (chapters) => set({ chapters }),
     setPages: (pages) => set({ pages }),
     updatePage: (pageId, patch) =>
       set((state) => ({

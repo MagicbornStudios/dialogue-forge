@@ -1,5 +1,5 @@
-import type { ForgeAct, ForgeChapter, ForgePage } from '@/forge/types/narrative';
 import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
+import type { ForgePage, NarrativeHierarchy } from '@/forge/types/narrative';
 
 export const WRITER_SAVE_STATUS = {
   DIRTY: 'dirty',
@@ -84,9 +84,9 @@ export type WriterAiPreviewMeta = {
 
 // Forward declaration for WriterWorkspaceState to break circular dependency
 export interface WriterWorkspaceState {
-  acts: ForgeAct[];
-  chapters: ForgeChapter[];
+  // Unified pages array
   pages: ForgePage[];
+  
   contentError: string | null;
   drafts: Record<number, WriterDraftState>;
   editorError: string | null;
@@ -97,14 +97,21 @@ export interface WriterWorkspaceState {
   aiSelection: unknown | null;
   aiSnapshot: unknown | null;
   aiUndoSnapshot: unknown | null;
+  
+  // Single active page ID
   activePageId: number | null;
-  expandedActIds: Set<number>;
-  expandedChapterIds: Set<number>;
+  
+  // Expanded state for tree navigation
+  expandedPageIds: Set<number>;
+  
   navigationError: string | null;
   modalState: unknown;
   panelLayout: unknown;
   pageLayout: unknown;
   dataAdapter?: unknown;
+  forgeDataAdapter?: unknown;
+  narrativeGraphs: ForgeGraphDoc[];
+  selectedNarrativeGraphId: number | null;
   narrativeGraph: ForgeGraphDoc | null;
   narrativeHierarchy: NarrativeHierarchy | null;
   actions: Record<string, unknown>;

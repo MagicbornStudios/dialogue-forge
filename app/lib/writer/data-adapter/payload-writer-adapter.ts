@@ -1,7 +1,8 @@
 import { PayloadSDK } from '@payloadcms/sdk';
-import type { WriterDataAdapter, WriterActDoc, WriterChapterDoc, WriterPageDoc } from '@/writer/lib/data-adapter/writer-adapter';
-import type { Act, Chapter, Page } from '@/app/payload-types';
+import type { WriterDataAdapter, WriterPageDoc } from '@/writer/lib/data-adapter/writer-adapter';
+import type { Page } from '@/app/payload-types';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
+import { PAGE_TYPE } from '@/forge/types/narrative';
 
 const normalizeBookBody = (value: unknown): string | null => {
   if (!value) {
@@ -13,33 +14,6 @@ const normalizeBookBody = (value: unknown): string | null => {
   return JSON.stringify(value);
 };
 
-function mapAct(doc: Act): WriterActDoc {
-  return {
-    id: doc.id,
-    title: doc.title,
-    summary: doc.summary ?? null,
-    order: doc.order,
-    project: typeof doc.project === 'number' ? doc.project : doc.project.id,
-    bookHeading: doc.bookHeading ?? null,
-    bookBody: normalizeBookBody(doc.bookBody),
-    _status: doc._status as 'draft' | 'published' | null,
-  };
-}
-
-function mapChapter(doc: Chapter): WriterChapterDoc {
-  return {
-    id: doc.id,
-    title: doc.title,
-    summary: doc.summary ?? null,
-    order: doc.order,
-    project: typeof doc.project === 'number' ? doc.project : doc.project.id,
-    act: typeof doc.act === 'number' ? doc.act : doc.act.id,
-    bookHeading: doc.bookHeading ?? null,
-    bookBody: normalizeBookBody(doc.bookBody),
-    _status: doc._status as 'draft' | 'published' | null,
-  };
-}
-
 function mapPage(doc: Page): WriterPageDoc {
   const dialogueGraphValue = doc.dialogueGraph;
   const dialogueGraphId = 
@@ -49,15 +23,26 @@ function mapPage(doc: Page): WriterPageDoc {
       ? dialogueGraphValue
       : dialogueGraphValue.id;
 
+  const parentValue = doc.parent;
+  const parentId =
+    parentValue === null || parentValue === undefined
+      ? null
+      : typeof parentValue === 'number'
+      ? parentValue
+      : parentValue.id;
+
   return {
     id: doc.id,
+    pageType: doc.pageType as 'ACT' | 'CHAPTER' | 'PAGE',
     title: doc.title,
     summary: doc.summary ?? null,
     order: doc.order,
     project: typeof doc.project === 'number' ? doc.project : doc.project.id,
-    chapter: typeof doc.chapter === 'number' ? doc.chapter : doc.chapter.id,
+    parent: parentId,
     dialogueGraph: dialogueGraphId,
+    bookHeading: doc.bookHeading ?? null,
     bookBody: normalizeBookBody(doc.bookBody),
+    content: doc.content ?? null,
     archivedAt: doc.archivedAt ?? null,
     _status: doc._status as 'draft' | 'published' | null,
   };
@@ -76,78 +61,18 @@ export function makePayloadWriterAdapter(opts?: {
   });
 
   return {
-    async listActs(projectId: number): Promise<WriterActDoc[]> {
+    async listPages(projectId: number): Promise<WriterPageDoc[]> {
       const result = await payload.find({
-        collection: PAYLOAD_COLLECTIONS.ACTS,
+        collection: PAYLOAD_COLLECTIONS.PAGES,
         where: {
           project: {
             equals: projectId,
           },
         },
-        limit: 200,
-      });
-      const acts = result.docs.map((doc) => mapAct(doc as Act));
-      return sortByOrder(acts);
-    },
-
-    async listChapters(projectId: number, actId?: number): Promise<WriterChapterDoc[]> {
-      const where: Record<string, unknown> = {
-        project: {
-          equals: projectId,
-        },
-      };
-
-      if (actId) {
-        where.act = {
-          equals: actId,
-        };
-      }
-
-      const result = await payload.find({
-        collection: PAYLOAD_COLLECTIONS.CHAPTERS,
-        where: where as any,
-        limit: 200,
-      });
-      const chapters = result.docs.map((doc) => mapChapter(doc as Chapter));
-      return sortByOrder(chapters);
-    },
-
-    async listPages(projectId: number, chapterId?: number): Promise<WriterPageDoc[]> {
-      const where: Record<string, unknown> = {
-        project: {
-          equals: projectId,
-        },
-      };
-
-      if (chapterId) {
-        where.chapter = {
-          equals: chapterId,
-        };
-      }
-
-      const result = await payload.find({
-        collection: PAYLOAD_COLLECTIONS.PAGES,
-        where: where as any,
-        limit: 200,
+        limit: 1000,
       });
       const pages = result.docs.map((doc) => mapPage(doc as Page));
       return sortByOrder(pages);
-    },
-
-    async getAct(actId: number): Promise<WriterActDoc> {
-      const doc = await payload.findByID({
-        collection: PAYLOAD_COLLECTIONS.ACTS,
-        id: actId,
-      }) as Act;
-      return mapAct(doc);
-    },
-
-    async getChapter(chapterId: number): Promise<WriterChapterDoc> {
-      const doc = await payload.findByID({
-        collection: PAYLOAD_COLLECTIONS.CHAPTERS,
-        id: chapterId,
-      }) as Chapter;
-      return mapChapter(doc);
     },
 
     async getPage(pageId: number): Promise<WriterPageDoc> {
@@ -158,22 +83,27 @@ export function makePayloadWriterAdapter(opts?: {
       return mapPage(doc);
     },
 
-    async updateAct(actId: number, patch: Partial<WriterActDoc>): Promise<WriterActDoc> {
-      const doc = await payload.update({
-        collection: PAYLOAD_COLLECTIONS.ACTS,
-        id: actId,
-        data: patch,
-      }) as Act;
-      return mapAct(doc);
-    },
-
-    async updateChapter(chapterId: number, patch: Partial<WriterChapterDoc>): Promise<WriterChapterDoc> {
-      const doc = await payload.update({
-        collection: PAYLOAD_COLLECTIONS.CHAPTERS,
-        id: chapterId,
-        data: patch,
-      }) as Chapter;
-      return mapChapter(doc);
+    async createPage(input: {
+      projectId: number;
+      pageType: 'ACT' | 'CHAPTER' | 'PAGE';
+      title: string;
+      order: number;
+      parent?: number | null;
+      bookBody?: string | null;
+    }): Promise<WriterPageDoc> {
+      const doc = await payload.create({
+        collection: PAYLOAD_COLLECTIONS.PAGES,
+        data: {
+          project: input.projectId,
+          pageType: input.pageType,
+          title: input.title,
+          order: input.order,
+          parent: input.parent ?? null,
+          bookBody: input.bookBody ?? null,
+          _status: 'draft',
+        },
+      }) as Page;
+      return mapPage(doc);
     },
 
     async updatePage(pageId: number, patch: Partial<WriterPageDoc>): Promise<WriterPageDoc> {
@@ -184,24 +114,12 @@ export function makePayloadWriterAdapter(opts?: {
       }) as Page;
       return mapPage(doc);
     },
-    async createPage(input: {
-      title: string;
-      project: number;
-      chapter: number;
-      order: number;
-      bookBody?: string | null;
-    }): Promise<WriterPageDoc> {
-      const doc = await payload.create({
+
+    async deletePage(pageId: number): Promise<void> {
+      await payload.delete({
         collection: PAYLOAD_COLLECTIONS.PAGES,
-        data: {
-          title: input.title,
-          project: input.project,
-          chapter: input.chapter,
-          order: input.order,
-          bookBody: input.bookBody ?? null,
-        },
-      }) as Page;
-      return mapPage(doc);
+        id: pageId,
+      });
     },
   };
 }

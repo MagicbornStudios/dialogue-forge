@@ -71,8 +71,6 @@ export interface Config {
     projects: Project;
     media: Media;
     characters: Character;
-    acts: Act;
-    chapters: Chapter;
     pages: Page;
     'forge-graphs': ForgeGraph;
     'flag-schemas': FlagSchema;
@@ -89,8 +87,6 @@ export interface Config {
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     characters: CharactersSelect<false> | CharactersSelect<true>;
-    acts: ActsSelect<false> | ActsSelect<true>;
-    chapters: ChaptersSelect<false> | ChaptersSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     'forge-graphs': ForgeGraphsSelect<false> | ForgeGraphsSelect<true>;
     'flag-schemas': FlagSchemasSelect<false> | FlagSchemasSelect<true>;
@@ -285,67 +281,24 @@ export interface Character {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "acts".
- */
-export interface Act {
-  id: number;
-  project: number | Project;
-  title: string;
-  summary?: string | null;
-  content?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  order: number;
-  bookHeading?: string | null;
-  bookBody?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "chapters".
- */
-export interface Chapter {
-  id: number;
-  project: number | Project;
-  act: number | Act;
-  title: string;
-  summary?: string | null;
-  content?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  order: number;
-  bookHeading?: string | null;
-  bookBody?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "pages".
  */
 export interface Page {
   id: number;
   project: number | Project;
-  chapter: number | Chapter;
+  /**
+   * Type of page in narrative hierarchy
+   */
+  pageType: 'ACT' | 'CHAPTER' | 'PAGE';
+  /**
+   * Parent page (Chapter for Page, Act for Chapter, null for Act)
+   */
+  parent?: (number | null) | Page;
   title: string;
   summary?: string | null;
+  /**
+   * Rich content/metadata (optional)
+   */
   content?:
     | {
         [k: string]: unknown;
@@ -357,15 +310,25 @@ export interface Page {
     | null;
   order: number;
   /**
-   * Forge dialogue graph (kind=DIALOGUE) for this page.
+   * Optional heading for book export
+   */
+  bookHeading?: string | null;
+  /**
+   * Main text content for this page
+   */
+  bookBody?: string | null;
+  /**
+   * Dialogue graph for PAGE type
    */
   dialogueGraph?: (number | null) | ForgeGraph;
-  bookBody?: string | null;
+  /**
+   * Timestamp when page was archived
+   */
   archivedAt?: string | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
-  _status?: ('draft' | 'published') | null;
+  _status?: ('draft' | 'published' | 'draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -470,14 +433,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'characters';
         value: number | Character;
-      } | null)
-    | ({
-        relationTo: 'acts';
-        value: number | Act;
-      } | null)
-    | ({
-        relationTo: 'chapters';
-        value: number | Chapter;
       } | null)
     | ({
         relationTo: 'pages';
@@ -644,52 +599,19 @@ export interface CharactersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "acts_select".
- */
-export interface ActsSelect<T extends boolean = true> {
-  project?: T;
-  title?: T;
-  summary?: T;
-  content?: T;
-  order?: T;
-  bookHeading?: T;
-  bookBody?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  deletedAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "chapters_select".
- */
-export interface ChaptersSelect<T extends boolean = true> {
-  project?: T;
-  act?: T;
-  title?: T;
-  summary?: T;
-  content?: T;
-  order?: T;
-  bookHeading?: T;
-  bookBody?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  deletedAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "pages_select".
  */
 export interface PagesSelect<T extends boolean = true> {
   project?: T;
-  chapter?: T;
+  pageType?: T;
+  parent?: T;
   title?: T;
   summary?: T;
   content?: T;
   order?: T;
-  dialogueGraph?: T;
+  bookHeading?: T;
   bookBody?: T;
+  dialogueGraph?: T;
   archivedAt?: T;
   updatedAt?: T;
   createdAt?: T;

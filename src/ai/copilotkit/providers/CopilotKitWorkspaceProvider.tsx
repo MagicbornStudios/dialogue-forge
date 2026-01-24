@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { CopilotKit } from '@copilotkit/react-core';
 import { CopilotSidebar } from '@copilotkit/react-ui';
 import type { StoreApi } from 'zustand/vanilla';
@@ -17,6 +17,8 @@ export function CopilotKitWorkspaceProvider({
   workspaceStore,
   children,
 }: CopilotKitWorkspaceProviderProps) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
     <CopilotKit
       runtimeUrl="/api/copilotkit"
@@ -25,10 +27,14 @@ export function CopilotKitWorkspaceProvider({
       <CopilotKitContextProvider workspaceStore={workspaceStore} />
       <CopilotKitActionsProvider workspaceStore={workspaceStore} />
       {children}
-      <CopilotSidebar
-        instructions="You are an AI assistant for the Writer workspace. Help users edit and improve their writing."
-        defaultOpen={false}
-      />
+      {/* Only render sidebar when it should be open to avoid DOM issues */}
+      {isSidebarOpen && (
+        <CopilotSidebar
+          instructions="You are an AI assistant for the Writer workspace. Help users edit and improve their writing."
+          defaultOpen={true}
+          onSetOpen={setIsSidebarOpen}
+        />
+      )}
     </CopilotKit>
   );
 }

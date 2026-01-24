@@ -7,6 +7,31 @@
 @import '../src/forge/styles/forge-context.css';
 @import './scrollbar.css';
 
+/* Hide CopilotKit clutter - debug menu, help button */
+.copilotKitDebugMenuTriggerButton,
+.copilotKitHelpModalTriggerButton {
+  display: none !important;
+}
+
+/* Hide "Powered by CopilotKit" text - always hidden */
+.poweredBy,
+.copilotKitInputContainer .poweredBy,
+[class*="poweredBy"],
+p.poweredBy,
+div[class*="poweredBy"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Hide the floating button when sidebar is closed */
+.copilotKitButton:not(.open) {
+  display: none !important;
+}
+
 /* Source paths for Tailwind content detection */
 @source "./app/**/*.{js,ts,jsx,tsx,mdx}";
 @source "./components/**/*.{js,ts,jsx,tsx,mdx}";

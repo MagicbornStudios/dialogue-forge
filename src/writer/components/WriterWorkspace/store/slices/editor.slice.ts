@@ -100,8 +100,8 @@ export function createEditorSlice(
           },
         };
       }),
-    saveNow: async (pageId) => {
-      const targetId = pageId ?? get().activePageId;
+    saveNow: async (itemId) => {
+      const targetId = itemId ?? get().activePageId;
       if (!targetId) {
         return;
       }
@@ -139,6 +139,7 @@ export function createEditorSlice(
             },
           };
         }
+        // Update the page (works for all pageTypes: ACT, CHAPTER, PAGE)
         const nextPages = state.pages.map((page) =>
           page.id === targetId
             ? { ...page, title: draft.title, bookBody: draft.content.serialized }

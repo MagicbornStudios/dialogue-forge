@@ -1,9 +1,10 @@
 // src/components/WriterWorkspace/WriterWorkspace.tsx
 import React, { useRef, useEffect } from 'react';
-import type { ForgeAct, ForgeChapter, ForgePage } from '@/forge/types/narrative';
+import type { ForgePage } from '@/forge/types/narrative';
 import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
 import type { ForgeDataAdapter } from '@/forge/adapters/forge-data-adapter';
 import type { WriterEvent } from '@/writer/events/writer-events';
+import { FORGE_GRAPH_KIND } from '@/forge/types/forge-graph';
 import {
   WriterWorkspaceStoreProvider,
   createWriterWorkspaceStore,
@@ -16,23 +17,23 @@ import { WriterEditorPane } from '@/writer/components/WriterWorkspace/editor/Wri
 import { WriterWorkspaceModalsRenderer } from '@/writer/components/WriterWorkspace/modals/WriterWorkspaceModals';
 import { CopilotKitWorkspaceProvider } from '@/ai/copilotkit/providers/CopilotKitWorkspaceProvider';
 import { useWriterWorkspaceActions } from '@/writer/copilotkit';
+import { Toaster } from '@/shared/ui/toast';
+import { validateNarrativeGraph } from '@/forge/lib/graph-validation';
+import { toast } from 'sonner';
 
 interface WriterWorkspaceProps {
-  acts?: ForgeAct[];
-  chapters?: ForgeChapter[];
   pages?: ForgePage[];
   className?: string;
   initialActivePageId?: number | null;
   onActivePageChange?: (pageId: number | null) => void;
   onEvent?: (event: WriterEvent) => void;
   dataAdapter?: WriterDataAdapter;
+  forgeDataAdapter?: ForgeDataAdapter;
   projectId?: number | null;
   onProjectChange?: (projectId: number | null) => void;
 }
 
 export function WriterWorkspace({
-  acts = [],
-  chapters = [],
   pages = [],
   className = '',
   initialActivePageId = null,
@@ -54,35 +55,34 @@ export function WriterWorkspace({
   const storeRef = useRef(
     createWriterWorkspaceStore(
       {
-        initialActs: acts,
-        initialChapters: chapters,
         initialPages: pages,
         initialActivePageId,
         dataAdapter,
+        forgeDataAdapter,
       },
       eventSinkRef.current
     )
   );
 
   React.useEffect(() => {
-    setupWriterWorkspaceSubscriptions(storeRef.current, eventSinkRef.current, dataAdapter);
-  }, [dataAdapter]);
+    setupWriterWorkspaceSubscriptions(storeRef.current, eventSinkRef.current, dataAdapter, forgeDataAdapter);
+  }, [dataAdapter, forgeDataAdapter]);
 
   useEffect(() => {
     const store = storeRef.current;
-    store.getState().actions.setActs(acts);
-    store.getState().actions.setChapters(chapters);
     store.getState().actions.setPages(pages);
-  }, [acts, chapters, pages]);
+  }, [pages]);
 
   useEffect(() => {
     storeRef.current.getState().actions.setActivePageId(initialActivePageId ?? null);
   }, [initialActivePageId]);
 
-  // Load narrative graph when project changes
+  // Load all narrative graphs when project changes
   useEffect(() => {
     if (!projectId || !forgeDataAdapter) {
       const store = storeRef.current;
+      store.getState().actions.setNarrativeGraphs([]);
+      store.getState().actions.setSelectedNarrativeGraphId(null);
       store.getState().actions.setNarrativeGraph(null);
       return;
     }
@@ -90,31 +90,53 @@ export function WriterWorkspace({
     let cancelled = false;
     const store = storeRef.current;
 
-    async function loadNarrativeGraph() {
+    async function loadNarrativeGraphs() {
       if (!forgeDataAdapter || !projectId) {
         return;
       }
       try {
         const project = await forgeDataAdapter.getProject(projectId);
-        if (project.narrativeGraph) {
-          const graph = await forgeDataAdapter.getGraph(project.narrativeGraph);
-          if (!cancelled) {
-            store.getState().actions.setNarrativeGraph(graph);
-          }
-        } else {
-          if (!cancelled) {
-            store.getState().actions.setNarrativeGraph(null);
+        const graphs = await forgeDataAdapter.listGraphs(projectId, FORGE_GRAPH_KIND.NARRATIVE);
+        
+        if (!cancelled) {
+          store.getState().actions.setNarrativeGraphs(graphs);
+          
+          // Set default: use project.narrativeGraph if it exists and is in list, otherwise first graph
+          const defaultGraphId = project.narrativeGraph && 
+            graphs.find(g => g.id === project.narrativeGraph) 
+              ? project.narrativeGraph 
+              : graphs[0]?.id ?? null;
+          
+          store.getState().actions.setSelectedNarrativeGraphId(defaultGraphId);
+          
+          // Validate the selected graph
+          const selectedGraph = graphs.find(g => g.id === defaultGraphId);
+          if (selectedGraph) {
+            const validation = validateNarrativeGraph(selectedGraph);
+            
+            if (!validation.valid) {
+              validation.errors.forEach(error => {
+                toast.error(error.message);
+              });
+            }
+            
+            validation.warnings.forEach(warning => {
+              toast.warning(warning.message);
+            });
           }
         }
       } catch (error) {
-        console.error('Failed to load narrative graph:', error);
+        console.error('Failed to load narrative graphs:', error);
         if (!cancelled) {
+          store.getState().actions.setNarrativeGraphs([]);
+          store.getState().actions.setSelectedNarrativeGraphId(null);
           store.getState().actions.setNarrativeGraph(null);
+          toast.error('Failed to load narrative graph');
         }
       }
     }
 
-    void loadNarrativeGraph();
+    void loadNarrativeGraphs();
 
     return () => {
       cancelled = true;
@@ -125,8 +147,6 @@ export function WriterWorkspace({
   useEffect(() => {
     if (!projectId || !dataAdapter) {
       const store = storeRef.current;
-      store.getState().actions.setActs([]);
-      store.getState().actions.setChapters([]);
       store.getState().actions.setPages([]);
       store.getState().actions.setActivePageId(null);
       return;
@@ -140,15 +160,9 @@ export function WriterWorkspace({
         return;
       }
       try {
-        const [actsData, chaptersData, pagesData] = await Promise.all([
-          dataAdapter.listActs(projectId),
-          dataAdapter.listChapters(projectId),
-          dataAdapter.listPages(projectId),
-        ]);
+        const pagesData = await dataAdapter.listPages(projectId);
 
         if (!cancelled) {
-          store.getState().actions.setActs(actsData);
-          store.getState().actions.setChapters(chaptersData);
           store.getState().actions.setPages(pagesData);
         }
       } catch (error) {
@@ -167,16 +181,20 @@ export function WriterWorkspace({
   }, [projectId, dataAdapter]);
 
   return (
-    <WriterWorkspaceStoreProvider store={storeRef.current}>
-      <CopilotKitWorkspaceProvider workspaceStore={storeRef.current}>
-        <WriterWorkspaceActionsWrapper store={storeRef.current}>
-          <WriterWorkspaceContent
-            className={className}
-            onActivePageChange={onActivePageChange}
-          />
-        </WriterWorkspaceActionsWrapper>
-      </CopilotKitWorkspaceProvider>
-    </WriterWorkspaceStoreProvider>
+    <>
+      <WriterWorkspaceStoreProvider store={storeRef.current}>
+        <CopilotKitWorkspaceProvider workspaceStore={storeRef.current}>
+          <WriterWorkspaceActionsWrapper store={storeRef.current}>
+            <WriterWorkspaceContent
+              className={className}
+              onActivePageChange={onActivePageChange}
+              projectId={projectId}
+            />
+          </WriterWorkspaceActionsWrapper>
+        </CopilotKitWorkspaceProvider>
+      </WriterWorkspaceStoreProvider>
+      <Toaster />
+    </>
   );
 }
 
@@ -195,7 +213,8 @@ function WriterWorkspaceActionsWrapper({
 function WriterWorkspaceContent({
   className,
   onActivePageChange,
-}: Pick<WriterWorkspaceProps, 'className' | 'onActivePageChange'>) {
+  projectId,
+}: Pick<WriterWorkspaceProps, 'className' | 'onActivePageChange' | 'projectId'>) {
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const pages = useWriterWorkspaceStore((state) => state.pages);
   const activePage = activePageId ? pages.find((p) => p.id === activePageId) ?? null : null;
@@ -210,7 +229,7 @@ function WriterWorkspaceContent({
     <>
       <div className={`flex h-full w-full flex-col ${className}`}>
         <WriterLayout
-          sidebar={<WriterTree />}
+          sidebar={<WriterTree projectId={projectId} />}
           editor={<WriterEditorPane />}
         />
       </div>

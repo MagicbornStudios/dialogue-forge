@@ -344,55 +344,140 @@ export function makePayloadForgeAdapter(opts?: {
             _status: result._status as 'draft' | 'published' | null,
         };
     },
-    async updateAct(actId: number, patch: Partial<ForgeAct>): Promise<ForgeAct> {
-        const result = await payload.update({
-            collection: PAYLOAD_COLLECTIONS.ACTS,
-            id: actId,
-            data: patch,
-        }) as Act;
+    // Unified page operations (for ACT, CHAPTER, PAGE nodes)
+    async getPage(pageId: number): Promise<ForgePage> {
+        const result = await payload.findByID({
+            collection: PAYLOAD_COLLECTIONS.PAGES,
+            id: pageId,
+        }) as Page;
+        
+        const parentValue = result.parent;
+        const parentId = parentValue === null || parentValue === undefined
+          ? null
+          : typeof parentValue === 'number'
+          ? parentValue
+          : parentValue.id;
+
+        const dialogueGraphValue = result.dialogueGraph;
+        const dialogueGraphId = dialogueGraphValue === null || dialogueGraphValue === undefined
+          ? null
+          : typeof dialogueGraphValue === 'number'
+          ? dialogueGraphValue
+          : dialogueGraphValue.id;
+
         return {
             id: result.id,
+            pageType: result.pageType as 'ACT' | 'CHAPTER' | 'PAGE',
             title: result.title,
             summary: result.summary ?? null,
             order: result.order,
             project: typeof result.project === 'number' ? result.project : result.project.id,
+            parent: parentId,
+            dialogueGraph: dialogueGraphId,
             bookHeading: result.bookHeading ?? null,
             bookBody: result.bookBody ?? null,
+            content: result.content ?? null,
+            archivedAt: result.archivedAt ?? null,
             _status: result._status as 'draft' | 'published' | null,
         };
     },
-    async deleteAct(actId: number): Promise<void> {
-        await payload.delete({
-            collection: PAYLOAD_COLLECTIONS.ACTS,
-            id: actId,
-        });
-    },
-    async createAct(input: {
+    
+    async createPage(input: {
         projectId: number;
-        name: string;
-        summary?: string | null;
+        pageType: 'ACT' | 'CHAPTER' | 'PAGE';
+        title: string;
         order: number;
-    }): Promise<ForgeAct> {
+        parent?: number | null;
+    }): Promise<ForgePage> {
         const result = await payload.create({
-            collection: PAYLOAD_COLLECTIONS.ACTS,
+            collection: PAYLOAD_COLLECTIONS.PAGES,
             data: {
                 project: input.projectId,
-                name: input.name,
-                summary: input.summary ?? null,
+                pageType: input.pageType,
+                title: input.title,
                 order: input.order,
+                parent: input.parent ?? null,
+                _status: 'draft',
             },
-        }) as Act;
+        }) as Page;
+        
+        const parentValue = result.parent;
+        const parentId = parentValue === null || parentValue === undefined
+          ? null
+          : typeof parentValue === 'number'
+          ? parentValue
+          : parentValue.id;
+
+        const dialogueGraphValue = result.dialogueGraph;
+        const dialogueGraphId = dialogueGraphValue === null || dialogueGraphValue === undefined
+          ? null
+          : typeof dialogueGraphValue === 'number'
+          ? dialogueGraphValue
+          : dialogueGraphValue.id;
+
         return {
             id: result.id,
+            pageType: result.pageType as 'ACT' | 'CHAPTER' | 'PAGE',
             title: result.title,
             summary: result.summary ?? null,
             order: result.order,
             project: typeof result.project === 'number' ? result.project : result.project.id,
+            parent: parentId,
+            dialogueGraph: dialogueGraphId,
             bookHeading: result.bookHeading ?? null,
             bookBody: result.bookBody ?? null,
+            content: result.content ?? null,
+            archivedAt: result.archivedAt ?? null,
             _status: result._status as 'draft' | 'published' | null,
         };
-    },  
+    },
+    
+    async updatePage(pageId: number, patch: Partial<ForgePage>): Promise<ForgePage> {
+        const result = await payload.update({
+            collection: PAYLOAD_COLLECTIONS.PAGES,
+            id: pageId,
+            data: patch,
+        }) as Page;
+        
+        const parentValue = result.parent;
+        const parentId = parentValue === null || parentValue === undefined
+          ? null
+          : typeof parentValue === 'number'
+          ? parentValue
+          : parentValue.id;
+
+        const dialogueGraphValue = result.dialogueGraph;
+        const dialogueGraphId = dialogueGraphValue === null || dialogueGraphValue === undefined
+          ? null
+          : typeof dialogueGraphValue === 'number'
+          ? dialogueGraphValue
+          : dialogueGraphValue.id;
+
+        return {
+            id: result.id,
+            pageType: result.pageType as 'ACT' | 'CHAPTER' | 'PAGE',
+            title: result.title,
+            summary: result.summary ?? null,
+            order: result.order,
+            project: typeof result.project === 'number' ? result.project : result.project.id,
+            parent: parentId,
+            dialogueGraph: dialogueGraphId,
+            bookHeading: result.bookHeading ?? null,
+            bookBody: result.bookBody ?? null,
+            content: result.content ?? null,
+            archivedAt: result.archivedAt ?? null,
+            _status: result._status as 'draft' | 'published' | null,
+        };
+    },
+    
+    async deletePage(pageId: number): Promise<void> {
+        await payload.delete({
+            collection: PAYLOAD_COLLECTIONS.PAGES,
+            id: pageId,
+        });
+    },
+    
+    // Game state operations
     async listGameStates(projectId: number): Promise<ForgeGameStateRecord[]> {
         const result = await payload.find({
             collection: PAYLOAD_COLLECTIONS.GAME_STATES,

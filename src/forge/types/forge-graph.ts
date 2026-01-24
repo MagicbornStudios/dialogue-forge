@@ -1,5 +1,6 @@
 import type { Node, Edge, Viewport } from 'reactflow';
 import { CONDITION_OPERATOR, type ConditionOperator } from '@/forge/types/constants';
+import type { RuntimeDirectiveApplyMode, RuntimeDirectiveType } from '@/forge/runtime/engine/constants';
 
 /**
  * Forge graph kind constants
@@ -77,6 +78,14 @@ export const CONDITION_VALUE_TYPE = {
 
 export type ConditionValueType = typeof CONDITION_VALUE_TYPE[keyof typeof CONDITION_VALUE_TYPE];
 
+export type ForgeRuntimeDirective = {
+  type: RuntimeDirectiveType;
+  refId?: string;
+  payload?: Record<string, unknown>;
+  applyMode?: RuntimeDirectiveApplyMode;
+  priority?: number;
+};
+
 /**
  * Condition for evaluating flags
  */
@@ -126,6 +135,12 @@ export type ForgeStoryletCall = {
   returnGraphId?: number;
 };
 
+export type ForgeNodePresentation = {
+  imageId?: string;
+  backgroundId?: string;
+  portraitId?: string;
+};
+
 export type ForgeNode = {
   // shared
   id?: string;
@@ -154,6 +169,12 @@ export type ForgeNode = {
 
   // optional semantics for deterministic "book path"
   defaultNextNodeId?: string; // optional: explicitly mark default path
+
+  // optional media fields for presentation
+  presentation?: ForgeNodePresentation;
+
+  // runtime-only directives for scene/media/camera/overlay/etc.
+  runtimeDirectives?: ForgeRuntimeDirective[];
 };
 
 export type ForgeReactFlowEdge = Edge & {

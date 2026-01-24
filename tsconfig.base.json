@@ -19,6 +19,7 @@
       "@/shared/*": ["./src/shared/*"],
       "@/ai/*": ["./src/ai/*"],
       "@/forge/*": ["./src/forge/*"],
+      "@/video/*": ["./src/video/*"],
       "@/writer/*": ["./src/writer/*"],
       "@/host/*": ["./app/lib/*"],
       "@/*": ["./*"],

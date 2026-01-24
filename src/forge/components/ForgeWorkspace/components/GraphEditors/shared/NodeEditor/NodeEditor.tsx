@@ -10,6 +10,7 @@ import { NodeEditorHeader } from './NodeEditorHeader';
 import { NodeEditorIdField } from './NodeEditorIdField';
 import { NodeEditorFields } from './NodeEditorFields';
 import { NodeEditorSetFlagsField } from './NodeEditorSetFlagsField';
+import { NodeEditorRuntimeDirectivesField } from './NodeEditorRuntimeDirectivesField';
 
 interface NodeEditorProps {
   node: ForgeNode;
@@ -95,6 +96,7 @@ export function NodeEditor({
             onUpdateStoryletCall={handleStoryletCallUpdate}
           />
           <NodeEditorSetFlagsField node={node} flagSchema={flagSchema} onUpdate={onUpdate} />
+          <NodeEditorRuntimeDirectivesField node={node} />
         </div>
       </aside>
     </>

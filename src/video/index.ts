@@ -13,3 +13,5 @@ export * from './templates/compile/compile-composition';
 export * from './workspace/VideoTemplateWorkspace';
 export * from './workspace/video-template-workspace-actions';
 export * from './workspace/video-template-workspace-contracts';
+export * from './templates/presets';
+export * from './player/VideoCompositionRenderer';

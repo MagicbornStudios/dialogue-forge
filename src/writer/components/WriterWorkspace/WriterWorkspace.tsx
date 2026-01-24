@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import type { ForgeAct, ForgeChapter, ForgePage } from '@/forge/types/narrative';
 import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
+import type { ForgeDataAdapter } from '@/forge/adapters/forge-data-adapter';
 import type { WriterEvent } from '@/writer/events/writer-events';
 import {
   WriterWorkspaceStoreProvider,
@@ -38,6 +39,7 @@ export function WriterWorkspace({
   onActivePageChange,
   onEvent,
   dataAdapter,
+  forgeDataAdapter,
   projectId,
   onProjectChange,
 }: WriterWorkspaceProps) {
@@ -76,6 +78,48 @@ export function WriterWorkspace({
   useEffect(() => {
     storeRef.current.getState().actions.setActivePageId(initialActivePageId ?? null);
   }, [initialActivePageId]);
+
+  // Load narrative graph when project changes
+  useEffect(() => {
+    if (!projectId || !forgeDataAdapter) {
+      const store = storeRef.current;
+      store.getState().actions.setNarrativeGraph(null);
+      return;
+    }
+
+    let cancelled = false;
+    const store = storeRef.current;
+
+    async function loadNarrativeGraph() {
+      if (!forgeDataAdapter || !projectId) {
+        return;
+      }
+      try {
+        const project = await forgeDataAdapter.getProject(projectId);
+        if (project.narrativeGraph) {
+          const graph = await forgeDataAdapter.getGraph(project.narrativeGraph);
+          if (!cancelled) {
+            store.getState().actions.setNarrativeGraph(graph);
+          }
+        } else {
+          if (!cancelled) {
+            store.getState().actions.setNarrativeGraph(null);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load narrative graph:', error);
+        if (!cancelled) {
+          store.getState().actions.setNarrativeGraph(null);
+        }
+      }
+    }
+
+    void loadNarrativeGraph();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, forgeDataAdapter]);
 
   // Load data when project changes
   useEffect(() => {

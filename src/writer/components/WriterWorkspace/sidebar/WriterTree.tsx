@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Book, BookOpen, FileText, Plus, Search } from 'lucide-react';
+import { Book, BookOpen, FileText, Plus, Search, AlertCircle } from 'lucide-react';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 import { WriterTreeRow } from './WriterTreeRow';
+import type { NarrativeHierarchy } from '@/writer/lib/sync/narrative-graph-sync';
 
 interface WriterTreeProps {
   className?: string;
@@ -13,6 +14,7 @@ export function WriterTree({ className }: WriterTreeProps) {
   const pages = useWriterWorkspaceStore((state) => state.pages);
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const dataAdapter = useWriterWorkspaceStore((state) => state.dataAdapter);
+  const narrativeHierarchy = useWriterWorkspaceStore((state) => state.narrativeHierarchy);
   const setActivePageId = useWriterWorkspaceStore((state) => state.actions.setActivePageId);
   const setPages = useWriterWorkspaceStore((state) => state.actions.setPages);
 
@@ -106,7 +108,9 @@ export function WriterTree({ className }: WriterTreeProps) {
   };
 
   const handleCreatePage = async () => {
+    console.log('handleCreatePage called', { hasCreatePage: !!dataAdapter?.createPage, isCreating, chaptersLength: chapters.length });
     if (!dataAdapter?.createPage || isCreating) {
+      console.log('Early return: missing createPage or isCreating');
       return;
     }
     const activePage = pages.find((page) => page.id === activePageId) ?? null;
@@ -115,6 +119,7 @@ export function WriterTree({ className }: WriterTreeProps) {
       sortedChapters[0] ??
       null;
     if (!targetChapter) {
+      console.warn('Cannot create page: No chapters available. Please create a chapter first.');
       return;
     }
     const chapterPages = sortedPages.filter((page) => page.chapter === targetChapter.id);
@@ -144,7 +149,11 @@ export function WriterTree({ className }: WriterTreeProps) {
     }
   };
 
-  const canCreatePage = Boolean(dataAdapter?.createPage && chapters.length > 0);
+  const canCreatePage = Boolean(dataAdapter?.createPage);
+
+  useEffect(() => {
+    console.log('Button state:', { canCreatePage, isCreating, hasDataAdapter: !!dataAdapter, hasCreatePage: !!dataAdapter?.createPage, chaptersLength: chapters.length });
+  }, [canCreatePage, isCreating, dataAdapter, chapters.length]);
 
   return (
     <div className={`flex min-h-0 flex-1 flex-col gap-2 ${className ?? ''}`}>
@@ -156,7 +165,12 @@ export function WriterTree({ className }: WriterTreeProps) {
           <button
             type="button"
             className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-df-text-secondary transition hover:bg-df-control-bg hover:text-df-text-primary disabled:opacity-50"
-            onClick={() => void handleCreatePage()}
+            onClick={(e) => {
+              console.log('Button clicked', { canCreatePage, isCreating, disabled: !canCreatePage || isCreating });
+              e.preventDefault();
+              e.stopPropagation();
+              void handleCreatePage();
+            }}
             disabled={!canCreatePage || isCreating}
           >
             <Plus size={12} />
@@ -253,16 +267,27 @@ export function WriterTree({ className }: WriterTreeProps) {
                           />
 
                           {isChapterExpanded &&
-                            visiblePages.map((page) => (
-                              <WriterTreeRow
-                                key={page.id}
-                                label={page.title}
-                                depth={2}
-                                icon={<FileText size={14} />}
-                                isSelected={activePageId === page.id}
-                                onSelect={() => setActivePageId(page.id)}
-                              />
-                            ))}
+                            visiblePages.map((page) => {
+                              const hasConditionalAccess = conditionalPageConnections.has(page.id);
+                              return (
+                                <div key={page.id} className="flex items-center gap-1">
+                                  <WriterTreeRow
+                                    label={page.title}
+                                    depth={2}
+                                    icon={<FileText size={14} />}
+                                    isSelected={activePageId === page.id}
+                                    onSelect={() => setActivePageId(page.id)}
+                                  />
+                                  {hasConditionalAccess && (
+                                    <AlertCircle 
+                                      size={12} 
+                                      className="text-amber-500 flex-shrink-0" 
+                                      title="Accessible via conditional node"
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
                         </div>
                       );
                     })}
@@ -274,6 +299,62 @@ export function WriterTree({ className }: WriterTreeProps) {
           <div className="rounded-md bg-df-control-bg p-3 text-xs text-df-text-tertiary">
             No matching pages found.
           </div>
+        )}
+        
+        {/* Show disconnected items */}
+        {narrativeHierarchy && (
+          <>
+            {(narrativeHierarchy.disconnectedActs.length > 0 ||
+              narrativeHierarchy.disconnectedChapters.length > 0 ||
+              narrativeHierarchy.disconnectedPages.length > 0) && (
+              <div className="mt-4 pt-4 border-t border-df-node-border">
+                <div className="text-xs font-semibold uppercase tracking-wide text-df-text-tertiary mb-2 px-2">
+                  Unconnected
+                </div>
+                {narrativeHierarchy.disconnectedActs.map((act) => (
+                  <WriterTreeRow
+                    key={act.id}
+                    label={act.title}
+                    depth={0}
+                    icon={<BookOpen size={14} />}
+                    isSelected={false}
+                    onSelect={() => {}}
+                  />
+                ))}
+                {narrativeHierarchy.disconnectedChapters.map((chapter) => (
+                  <WriterTreeRow
+                    key={chapter.id}
+                    label={chapter.title}
+                    depth={1}
+                    icon={<Book size={14} />}
+                    isSelected={false}
+                    onSelect={() => {}}
+                  />
+                ))}
+                {narrativeHierarchy.disconnectedPages.map((page) => {
+                  const hasConditionalAccess = conditionalPageConnections.has(page.id);
+                  return (
+                    <div key={page.id} className="flex items-center gap-1">
+                      <WriterTreeRow
+                        label={page.title}
+                        depth={2}
+                        icon={<FileText size={14} />}
+                        isSelected={activePageId === page.id}
+                        onSelect={() => setActivePageId(page.id)}
+                      />
+                      {hasConditionalAccess && (
+                        <AlertCircle 
+                          size={12} 
+                          className="text-amber-500 flex-shrink-0" 
+                          title="Accessible via conditional node"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

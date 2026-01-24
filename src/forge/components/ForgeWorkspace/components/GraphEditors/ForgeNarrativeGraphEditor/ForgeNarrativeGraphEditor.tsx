@@ -33,6 +33,7 @@ import { cn } from '@/shared/lib/utils';
 
 import type { ForgeGraphDoc, ForgeNode, ForgeNodeType, ForgeReactFlowNode } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
+import type { ForgeReactFlowNode as ForgeReactFlowNodeType } from '@/forge/types/forge-graph';
 
 import { useForgeFlowEditorShell, type ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
 import { createForgeEditorSessionStore, ForgeEditorSessionProvider, useForgeEditorSession, useForgeEditorSessionStore } from '@/forge/lib/graph-editor/hooks/useForgeEditorSession';
@@ -150,6 +151,8 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
 
   // Create a default empty graph if none exists, with correct kind for narrative
   const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
+  const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
+  
   const effectiveGraph = React.useMemo(() => {
     if (graph) return graph;
     const { createEmptyForgeGraphDoc } = require('@/forge/lib/utils/forge-flow-helpers');
@@ -161,11 +164,62 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     });
   }, [graph, selectedProjectId]);
 
+  // Handler to create database entries when ACT/CHAPTER/PAGE nodes are created
+  const handleNodeAdd = React.useCallback(async (node: ForgeReactFlowNode) => {
+    if (!dataAdapter || !selectedProjectId || !effectiveGraph) return;
+    
+    const nodeData = node.data as ForgeNode | undefined;
+    const nodeType = nodeData?.type ?? node.type;
+    
+    try {
+      if (nodeType === FORGE_NODE_TYPE.ACT) {
+        // Create act in database
+        const act = await dataAdapter.createAct({
+          projectId: selectedProjectId,
+          name: nodeData?.label || 'New Act',
+          summary: nodeData?.content || null,
+          order: 0, // TODO: Calculate from graph position or existing acts count
+        });
+        
+        // Update the graph node with the actId
+        const updatedNodes = effectiveGraph.flow.nodes.map(n => 
+          n.id === node.id 
+            ? { ...n, data: { ...(n.data ?? {}), actId: act.id } as ForgeNode }
+            : n
+        );
+        
+        onChange({
+          ...effectiveGraph,
+          flow: { ...effectiveGraph.flow, nodes: updatedNodes },
+        });
+      } else if (nodeType === FORGE_NODE_TYPE.CHAPTER) {
+        // Find parent act from edges
+        const parentActId = findParentActIdFromGraph(effectiveGraph, node.id);
+        if (parentActId) {
+          // TODO: Need to add createChapter to ForgeDataAdapter
+          // For now, log a warning
+          console.warn('createChapter not yet implemented in ForgeDataAdapter');
+        }
+      } else if (nodeType === FORGE_NODE_TYPE.PAGE) {
+        // Find parent chapter from edges
+        const parentChapterId = findParentChapterIdFromGraph(effectiveGraph, node.id);
+        if (parentChapterId) {
+          // TODO: Need to add createPage to ForgeDataAdapter or use WriterDataAdapter
+          // For now, log a warning
+          console.warn('createPage for narrative nodes not yet implemented');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to create database entry for node:', error);
+    }
+  }, [dataAdapter, selectedProjectId, effectiveGraph, onChange, findParentActIdFromGraph, findParentChapterIdFromGraph]);
+
   const shell = useForgeFlowEditorShell({
     graph: effectiveGraph,
     onChange,
     reactFlow,
     sessionStore,
+    onNodeAdd: handleNodeAdd,
   });
 
   const selectedNodeType = shell.selectedNode?.type ?? null;

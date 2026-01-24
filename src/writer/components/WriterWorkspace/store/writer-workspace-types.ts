@@ -1,4 +1,5 @@
 import type { ForgeAct, ForgeChapter, ForgePage } from '@/forge/types/narrative';
+import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
 
 export const WRITER_SAVE_STATUS = {
   DIRTY: 'dirty',
@@ -104,5 +105,7 @@ export interface WriterWorkspaceState {
   panelLayout: unknown;
   pageLayout: unknown;
   dataAdapter?: unknown;
+  narrativeGraph: ForgeGraphDoc | null;
+  narrativeHierarchy: NarrativeHierarchy | null;
   actions: Record<string, unknown>;
 }

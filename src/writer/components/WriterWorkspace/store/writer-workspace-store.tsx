@@ -9,7 +9,9 @@ import { useStore } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { ForgeAct, ForgeChapter, ForgePage } from '@/forge/types/narrative';
+import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
 import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
+import type { NarrativeHierarchy } from '@/writer/lib/sync/narrative-graph-sync';
 import { createContentSlice } from './slices/content.slice';
 import { createEditorSlice } from './slices/editor.slice';
 import { createAiSlice } from './slices/ai.slice';
@@ -114,6 +116,10 @@ export interface WriterWorkspaceState {
     undockPanel: (panel: 'sidebar' | 'editor') => void;
     setPageFullWidth: (pageId: number, value: boolean) => void;
     togglePageFullWidth: (pageId: number) => void;
+    
+    // Narrative graph actions
+    setNarrativeGraph: (graph: ForgeGraphDoc | null) => void;
+    setNarrativeHierarchy: (hierarchy: NarrativeHierarchy | null) => void;
   };
 }
 
@@ -218,6 +224,8 @@ export function createWriterWorkspaceStore(
               );
             },
             setContentError: contentSlice.setContentError,
+            setNarrativeGraph: (graph: ForgeGraphDoc | null) => set({ narrativeGraph: graph }),
+            setNarrativeHierarchy: (hierarchy: NarrativeHierarchy | null) => set({ narrativeHierarchy: hierarchy }),
 
             // Editor actions
             setDraftTitle: editorSlice.setDraftTitle,

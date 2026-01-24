@@ -445,10 +445,8 @@ export function createEmptyForgeGraphDoc(opts: {
 
 /**
  * Create a graph with proper start and end nodes.
- * This ensures all graphs have valid startNodeId and endNodeIds.
- * 
- * NOTE: This function now creates EMPTY graphs (no nodes/edges) as requested.
- * The graph will be created in the database when the first node is added.
+ * This ensures all graphs have valid startNodeId and endNodeIds that pass validation.
+ * Creates placeholder start and end nodes so the graph can be saved immediately.
  */
 export function createGraphWithStartEnd(opts: {
   projectId: number
@@ -461,10 +459,22 @@ export function createGraphWithStartEnd(opts: {
 } {
   const timestamp = Date.now()
   const startNodeId = `start_${timestamp}`
+  const endNodeId = `end_${timestamp}`
   
-  // Create empty flow - graph will be populated when first node is added
+  // Determine start node type based on graph kind
+  const startNodeType: ForgeNodeType = opts.kind === FORGE_GRAPH_KIND.NARRATIVE
+    ? FORGE_NODE_TYPE.PAGE
+    : FORGE_NODE_TYPE.CHARACTER
+  
+  // Create start node
+  const startNode = createFlowNode(startNodeType, startNodeId, 0, 0)
+  
+  // Create end node
+  const endNode = createFlowNode(FORGE_NODE_TYPE.END, endNodeId, 300, 0)
+  
+  // Create flow with start and end nodes
   const flow: ForgeReactFlowJson = {
-    nodes: [],
+    nodes: [startNode, endNode],
     edges: [],
     viewport: { x: 0, y: 0, zoom: 1 },
   }
@@ -472,6 +482,6 @@ export function createGraphWithStartEnd(opts: {
   return {
     flow,
     startNodeId,
-    endNodeIds: [],
+    endNodeIds: [{ nodeId: endNodeId }],
   }
 }

@@ -77,6 +77,7 @@ export interface Config {
     'forge-graphs': ForgeGraph;
     'flag-schemas': FlagSchema;
     'game-states': GameState;
+    'video-templates': VideoTemplate;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -94,6 +95,7 @@ export interface Config {
     'forge-graphs': ForgeGraphsSelect<false> | ForgeGraphsSelect<true>;
     'flag-schemas': FlagSchemasSelect<false> | FlagSchemasSelect<true>;
     'game-states': GameStatesSelect<false> | GameStatesSelect<true>;
+    'video-templates': VideoTemplatesSelect<false> | VideoTemplatesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -220,6 +222,12 @@ export interface ForgeGraph {
 export interface Media {
   id: number;
   alt?: string | null;
+  externalProvider?: string | null;
+  externalId?: string | null;
+  externalUrl?: string | null;
+  secureUrl?: string | null;
+  format?: string | null;
+  resourceType?: string | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -405,6 +413,26 @@ export interface GameState {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "video-templates".
+ */
+export interface VideoTemplate {
+  id: number;
+  project: number | Project;
+  title: string;
+  template:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -466,6 +494,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'game-states';
         value: number | GameState;
+      } | null)
+    | ({
+        relationTo: 'video-templates';
+        value: number | VideoTemplate;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -552,6 +584,12 @@ export interface ProjectsSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  externalProvider?: T;
+  externalId?: T;
+  externalUrl?: T;
+  secureUrl?: T;
+  format?: T;
+  resourceType?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -704,6 +742,17 @@ export interface GameStatesSelect<T extends boolean = true> {
   createdAt?: T;
   deletedAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "video-templates_select".
+ */
+export interface VideoTemplatesSelect<T extends boolean = true> {
+  project?: T;
+  title?: T;
+  template?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

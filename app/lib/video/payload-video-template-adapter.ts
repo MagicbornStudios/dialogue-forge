@@ -8,6 +8,7 @@ import type {
 } from '@magicborn/dialogue-forge/video/workspace/video-template-workspace-contracts';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
 import { makePayloadMediaResolver } from '@/app/lib/video/payload-media-resolver';
+import { VIDEO_TEMPLATE_PRESET_BY_ID, VIDEO_TEMPLATE_PRESETS } from '@/video/templates/presets';
 
 interface PayloadVideoTemplateDoc {
   id: number;
@@ -67,10 +68,20 @@ export function makePayloadVideoTemplateAdapter(opts?: {
         where: where as any,
         limit: 200,
       });
-      return result.docs.map((doc) => mapTemplateSummary(doc as PayloadVideoTemplateDoc));
+      return [
+        ...VIDEO_TEMPLATE_PRESETS.map((preset) => ({
+          id: preset.id,
+          name: preset.name,
+        })),
+        ...result.docs.map((doc) => mapTemplateSummary(doc as PayloadVideoTemplateDoc)),
+      ];
     },
 
     async loadTemplate(templateId: string): Promise<VideoTemplate | null> {
+      const preset = VIDEO_TEMPLATE_PRESET_BY_ID[templateId];
+      if (preset) {
+        return preset;
+      }
       const parsedId = getTemplateId(templateId);
       if (!parsedId) {
         return null;

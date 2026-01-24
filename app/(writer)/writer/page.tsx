@@ -27,9 +27,9 @@ export default function WriterApp() {
       <div className="flex-1 w-full min-h-0">
         <WriterWorkspace
           className="h-full"
-          // dataAdapter={writerAdapter}
-          // selectedProjectId={selectedProjectId}
-          // onProjectChange={setSelectedProjectId}
+          dataAdapter={writerAdapter}
+          projectId={selectedProjectId}
+          onProjectChange={setSelectedProjectId}
         />
       </div>
     </div>

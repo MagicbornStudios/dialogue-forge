@@ -89,32 +89,34 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
     aiPreviewMeta?.risk ?? 'Review AI edits for accuracy before applying.';
 
   return (
-    <div className={`flex min-h-0 flex-1 flex-col gap-2 ${className ?? ''}`}>
-      <div className="flex items-center justify-between rounded-lg border border-df-node-border bg-df-editor-bg px-3 py-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <FileText size={14} className="text-df-text-tertiary" />
-          <input
-            type="text"
-            className="w-full bg-transparent text-sm font-medium text-df-text-primary outline-none placeholder:text-df-text-tertiary"
-            placeholder={activePage ? 'Untitled page' : 'Select a page'}
-            value={draft?.title ?? activePage?.title ?? ''}
-            onChange={(event) => {
-              if (!activePageId) {
-                return;
-              }
-              setDraftTitle(activePageId, event.target.value);
-            }}
-            disabled={!activePageId}
-          />
+    <div className={`flex min-h-0 flex-1 flex-col ${className ?? ''}`}>
+      {activePage && (
+        <div className="flex items-center justify-between px-3 py-2 mb-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <FileText size={14} className="text-df-text-tertiary" />
+            <input
+              type="text"
+              className="w-full bg-transparent text-sm font-medium text-df-text-primary outline-none placeholder:text-df-text-tertiary"
+              placeholder="Untitled page"
+              value={draft?.title ?? activePage?.title ?? ''}
+              onChange={(event) => {
+                if (!activePageId) {
+                  return;
+                }
+                setDraftTitle(activePageId, event.target.value);
+              }}
+              disabled={!activePageId}
+            />
+          </div>
+          <span
+            className={`rounded-full px-3 py-1 text-[11px] uppercase tracking-wide ${saveStatus.tone}`}
+          >
+            {saveStatus.label}
+          </span>
         </div>
-        <span
-          className={`rounded-full border border-df-control-border px-3 py-1 text-[11px] uppercase tracking-wide ${saveStatus.tone}`}
-        >
-          {saveStatus.label}
-        </span>
-      </div>
+      )}
 
-      <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-df-node-border bg-df-editor-bg">
+      <div className="flex min-h-0 flex-1 flex-col bg-df-editor-bg">
         {activePage ? (
           <>
             <LexicalEditor
@@ -138,7 +140,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
       </div>
 
       {activePage ? (
-        <div className="rounded-lg border border-df-node-border bg-df-editor-bg p-4">
+        <div className="bg-df-editor-bg p-4 mt-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold text-df-text-primary">

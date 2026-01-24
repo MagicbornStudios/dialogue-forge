@@ -47,7 +47,7 @@ export function WriterTopBar() {
   }, [activePage]);
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-df-node-border bg-df-editor-bg px-4 py-3">
+    <div className="flex flex-col gap-2 px-4 py-3 mb-2">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <nav className="flex flex-wrap items-center gap-2 text-xs text-df-text-tertiary">

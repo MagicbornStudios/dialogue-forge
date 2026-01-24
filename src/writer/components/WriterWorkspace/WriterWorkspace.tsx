@@ -77,6 +77,48 @@ export function WriterWorkspace({
     storeRef.current.getState().actions.setActivePageId(initialActivePageId ?? null);
   }, [initialActivePageId]);
 
+  // Load data when project changes
+  useEffect(() => {
+    if (!projectId || !dataAdapter) {
+      const store = storeRef.current;
+      store.getState().actions.setActs([]);
+      store.getState().actions.setChapters([]);
+      store.getState().actions.setPages([]);
+      store.getState().actions.setActivePageId(null);
+      return;
+    }
+
+    let cancelled = false;
+    const store = storeRef.current;
+
+    async function loadData() {
+      try {
+        const [actsData, chaptersData, pagesData] = await Promise.all([
+          dataAdapter.listActs(projectId),
+          dataAdapter.listChapters(projectId),
+          dataAdapter.listPages(projectId),
+        ]);
+
+        if (!cancelled) {
+          store.getState().actions.setActs(actsData);
+          store.getState().actions.setChapters(chaptersData);
+          store.getState().actions.setPages(pagesData);
+        }
+      } catch (error) {
+        console.error('Failed to load writer data:', error);
+        if (!cancelled) {
+          store.getState().actions.setContentError('Failed to load data');
+        }
+      }
+    }
+
+    void loadData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, dataAdapter]);
+
   return (
     <WriterWorkspaceStoreProvider store={storeRef.current}>
       <CopilotKitWorkspaceProvider workspaceStore={storeRef.current}>

@@ -147,14 +147,14 @@ export function WriterTree({ className }: WriterTreeProps) {
 
   return (
     <div className={`flex min-h-0 flex-1 flex-col gap-2 ${className ?? ''}`}>
-      <div className="rounded-lg border border-df-node-border bg-df-editor-bg p-3">
+      <div className="p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="text-xs font-semibold uppercase tracking-wide text-df-text-tertiary">
             Narrative Outline
           </div>
           <button
             type="button"
-            className="flex items-center gap-1 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-[11px] text-df-text-secondary transition hover:text-df-text-primary disabled:opacity-50"
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-df-text-secondary transition hover:bg-df-control-bg hover:text-df-text-primary disabled:opacity-50"
             onClick={() => void handleCreatePage()}
             disabled={!canCreatePage || isCreating}
           >
@@ -162,7 +162,7 @@ export function WriterTree({ className }: WriterTreeProps) {
             New page
           </button>
         </div>
-        <div className="mt-2 flex items-center gap-2 rounded-md border border-df-control-border bg-df-control-bg px-2 py-1 text-xs text-df-text-secondary">
+        <div className="mt-2 flex items-center gap-2 rounded-md bg-df-control-bg px-2 py-1.5 text-xs text-df-text-secondary">
           <Search size={14} />
           <input
             type="text"
@@ -173,9 +173,9 @@ export function WriterTree({ className }: WriterTreeProps) {
           />
         </div>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-lg border border-df-node-border bg-df-editor-bg p-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2">
         {sortedActs.length === 0 ? (
-          <div className="rounded-md border border-df-control-border bg-df-control-bg p-3 text-xs text-df-text-tertiary">
+          <div className="rounded-md bg-df-control-bg p-3 text-xs text-df-text-tertiary">
             No acts available.
           </div>
         ) : (
@@ -270,7 +270,7 @@ export function WriterTree({ className }: WriterTreeProps) {
             })
         )}
         {isSearching && sortedActs.length > 0 && !hasSearchMatches && (
-          <div className="rounded-md border border-df-control-border bg-df-control-bg p-3 text-xs text-df-text-tertiary">
+          <div className="rounded-md bg-df-control-bg p-3 text-xs text-df-text-tertiary">
             No matching pages found.
           </div>
         )}

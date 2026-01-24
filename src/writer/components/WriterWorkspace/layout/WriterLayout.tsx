@@ -23,17 +23,17 @@ export function WriterLayout({ sidebar, editor, className }: WriterLayoutProps) 
 
   return (
     <div
-      className={`flex min-h-0 flex-1 gap-2 p-2 ${className ?? ''}`}
+      className={`flex min-h-0 flex-1 ${className ?? ''}`}
       data-domain="writer"
       data-editor-scope="writer"
       data-context-node-type={contextNodeType ?? undefined}
       data-focused={hasActivePage ? 'true' : 'false'}
     >
-      <aside className="flex min-h-0 w-[320px] min-w-[260px] flex-col">
+      <aside className="flex min-h-0 w-[320px] min-w-[260px] flex-col border-r border-df-node-border pr-2">
         {sidebar}
       </aside>
-      <section className="flex min-h-0 flex-1 flex-col">
-        <div className={`flex min-h-0 flex-1 flex-col gap-2 ${contentClassName}`}>
+      <section className="flex min-h-0 flex-1 flex-col pl-2">
+        <div className={`flex min-h-0 flex-1 flex-col ${contentClassName}`}>
           <WriterTopBar />
           <div className="flex min-h-0 flex-1 flex-col">
             {editor}

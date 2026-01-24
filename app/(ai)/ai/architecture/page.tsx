@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
 
 export const dynamic = 'force-static';
 
@@ -40,6 +41,17 @@ type SvgChart = {
   href: string;
 };
 
+type OpenCodeRangePosition = {
+  line?: number;
+  column?: number;
+};
+
+type OpenCodeFileRange = {
+  path: string;
+  start?: OpenCodeRangePosition;
+  end?: OpenCodeRangePosition;
+};
+
 const chartHeight = 160;
 const chartWidth = 640;
 
@@ -48,6 +60,118 @@ const getRuleLabel = (group: RuleViolationGroup) =>
 
 const getViolationCount = (group: RuleViolationGroup) =>
   group.violationCount ?? group.violations?.length ?? 0;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const getString = (value: unknown) =>
+  typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+
+const getNumber = (value: unknown) =>
+  typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+
+const buildOpenCodeUrl = (
+  ruleId: string,
+  violation: unknown,
+  fileRanges: OpenCodeFileRange[]
+) => {
+  const params = new URLSearchParams();
+  if (ruleId) {
+    params.set('ruleId', ruleId);
+  }
+  if (violation !== undefined) {
+    params.set('violation', JSON.stringify(violation));
+  }
+  if (fileRanges.length > 0) {
+    params.set('fileRanges', JSON.stringify(fileRanges));
+  }
+
+  const query = params.toString();
+  return query.length > 0 ? `/opencode?${query}` : '/opencode';
+};
+
+const extractFileRanges = (violation: unknown): OpenCodeFileRange[] => {
+  if (!isRecord(violation)) {
+    return [];
+  }
+
+  const segments = [violation.from, violation.to];
+  const ranges = segments
+    .map((segment) => {
+      if (typeof segment === 'string') {
+        return { path: segment };
+      }
+
+      if (!isRecord(segment)) {
+        return null;
+      }
+
+      const path =
+        getString(segment.path) ||
+        getString(segment.file) ||
+        getString(segment.filename) ||
+        getString(segment.source) ||
+        getString(segment.target);
+
+      if (!path) {
+        return null;
+      }
+
+      const location = isRecord(segment.location) ? segment.location : {};
+      const start =
+        isRecord(location.start) && (location.start as Record<string, unknown>)
+          ? (location.start as Record<string, unknown>)
+          : {};
+      const end =
+        isRecord(location.end) && (location.end as Record<string, unknown>)
+          ? (location.end as Record<string, unknown>)
+          : {};
+
+      const startLine =
+        getNumber(segment.startLine) ??
+        getNumber(segment.line) ??
+        getNumber(location.startLine) ??
+        getNumber(start.line) ??
+        getNumber(location.line);
+      const startColumn =
+        getNumber(segment.startColumn) ??
+        getNumber(segment.column) ??
+        getNumber(location.startColumn) ??
+        getNumber(start.column) ??
+        getNumber(location.column);
+      const endLine =
+        getNumber(segment.endLine) ??
+        getNumber(location.endLine) ??
+        getNumber(end.line);
+      const endColumn =
+        getNumber(segment.endColumn) ??
+        getNumber(location.endColumn) ??
+        getNumber(end.column);
+
+      return {
+        path,
+        start:
+          startLine !== undefined || startColumn !== undefined
+            ? { line: startLine, column: startColumn }
+            : undefined,
+        end:
+          endLine !== undefined || endColumn !== undefined
+            ? { line: endLine, column: endColumn }
+            : undefined,
+      };
+    })
+    .filter((range): range is OpenCodeFileRange => Boolean(range));
+
+  const uniqueRanges = new Map<string, OpenCodeFileRange>();
+  ranges.forEach((range) => {
+    const key = `${range.path}:${range.start?.line ?? ''}:${
+      range.start?.column ?? ''
+    }:${range.end?.line ?? ''}:${range.end?.column ?? ''}`;
+    uniqueRanges.set(key, range);
+  });
+
+  return Array.from(uniqueRanges.values());
+};
 
 const buildViolationChart = (groups: RuleViolationGroup[]) => {
   if (groups.length === 0) {
@@ -301,12 +425,27 @@ export default async function ArchitectureReportPage() {
                       </div>
                       {Array.isArray(group.violations) &&
                       group.violations.length > 0 ? (
-                        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                        <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                           {group.violations.map((violation, index) => (
                             <li key={`${getRuleLabel(group)}-${index}`}>
-                              {typeof violation === 'string'
-                                ? violation
-                                : JSON.stringify(violation)}
+                              <div className="flex flex-wrap items-start justify-between gap-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2">
+                                <div className="flex-1">
+                                  {typeof violation === 'string'
+                                    ? violation
+                                    : JSON.stringify(violation)}
+                                </div>
+                                <Button asChild size="sm" variant="outline">
+                                  <a
+                                    href={buildOpenCodeUrl(
+                                      getRuleLabel(group),
+                                      violation,
+                                      extractFileRanges(violation)
+                                    )}
+                                  >
+                                    Open in OpenCode
+                                  </a>
+                                </Button>
+                              </div>
                             </li>
                           ))}
                         </ul>

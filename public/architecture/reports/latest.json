@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-01-23T21:59:03.748Z",
+  "source": "/workspace/dialogue-forge/docs/architecture/dependency-cruiser.json",
+  "metrics": {
+    "totalModules": 1274,
+    "totalDependencies": 2785,
+    "totalViolations": 0,
+    "violationRate": 100,
+    "dependencyCruiser": {
+      "violations": [],
+      "error": 0,
+      "warn": 0,
+      "info": 0,
+      "ignore": 0,
+      "totalCruised": 1274,
+      "totalDependenciesCruised": 2785,
+      "optionsUsed": {
+        "baseDir": "/workspace/dialogue-forge",
+        "combinedDependencies": false,
+        "detectJSDocImports": false,
+        "detectProcessBuiltinModuleCalls": false,
+        "exoticRequireStrings": [],
+        "externalModuleResolutionStrategy": "node_modules",
+        "metrics": false,
+        "moduleSystems": [
+          "es6",
+          "cjs",
+          "tsd",
+          "amd"
+        ],
+        "outputTo": "docs/architecture/dependency-cruiser.json",
+        "outputType": "json",
+        "preserveSymlinks": false,
+        "skipAnalysisNotInRules": false,
+        "tsPreCompilationDeps": false,
+        "args": "src"
+      }
+    }
+  },
+  "violations": {
+    "bySeverity": {},
+    "byRule": []
+  }
+}

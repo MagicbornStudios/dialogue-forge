@@ -1,3 +1,4 @@
+import type { TemplateInputKey } from '@/shared/types/bindings';
 import type { VideoLayer } from './video-layer';
 
 export interface VideoScene {
@@ -5,5 +6,5 @@ export interface VideoScene {
   name?: string;
   durationMs: number;
   layers: VideoLayer[];
-  inputs?: Record<string, string>;
+  inputs?: Record<string, TemplateInputKey>;
 }

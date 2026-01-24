@@ -1,3 +1,4 @@
+import type { TemplateInputKey } from '@/shared/types/bindings';
 import type { VideoScene } from './video-scene';
 
 export interface VideoTemplate {
@@ -7,5 +8,5 @@ export interface VideoTemplate {
   height: number;
   frameRate: number;
   scenes: VideoScene[];
-  inputs?: Record<string, string>;
+  inputs?: Record<string, TemplateInputKey>;
 }

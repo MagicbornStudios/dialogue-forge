@@ -23,6 +23,7 @@ const sanitizeRuntimeLinks = (
   }
 
   const data = { ...node.data };
+  data.runtimeDirectives = undefined;
 
   if (data.defaultNextNodeId && runtimeNodeIds.has(data.defaultNextNodeId)) {
     data.defaultNextNodeId = undefined;

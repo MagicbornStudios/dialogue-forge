@@ -17,6 +17,7 @@ export type {
   ForgeStoryletCall,
   ForgeNode,
   ForgeNodePresentation,
+  ForgeRuntimeDirective,
   ForgeNodeType,
   ForgeGraphKind,
   ForgeEdgeKind,

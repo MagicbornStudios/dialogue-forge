@@ -1,13 +1,39 @@
 {
+  "extends": "./tsconfig.base.json",
   "files": [],
   "references": [
-    { "path": "./tsconfig.lib.json" },
-    { "path": "./tsconfig.next.json" },
-    { "path": "./src/ai" },
-    { "path": "./src/forge" },
-    { "path": "./src/shared" },
-    { "path": "./src/styles" },
-    { "path": "./src/video" },
-    { "path": "./src/writer" }
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.next.json"
+    },
+    {
+      "path": "./src/ai"
+    },
+    {
+      "path": "./src/forge"
+    },
+    {
+      "path": "./src/shared"
+    },
+    {
+      "path": "./src/styles"
+    },
+    {
+      "path": "./src/video"
+    },
+    {
+      "path": "./src/writer"
+    }
+  ],
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }

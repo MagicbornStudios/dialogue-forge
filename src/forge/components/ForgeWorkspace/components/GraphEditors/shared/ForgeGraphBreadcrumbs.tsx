@@ -14,6 +14,7 @@ import {
 import { Kbd } from '@/shared/ui/kbd';
 import { InlineRenameInput } from '@/forge/components/ForgeWorkspace/components/ForgeSideBar/InlineRenameInput';
 import { cn } from '@/shared/lib/utils';
+import { EditorExpandControls } from './EditorExpandControls';
 
 interface ForgeGraphBreadcrumbsProps {
   scope: "narrative" | "storylet";
@@ -74,6 +75,7 @@ export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
   // Always show home icon and current graph name, even when no breadcrumbs exist
   if (storeState.breadcrumbHistory.length === 0) {
     const isRenaming = renamingGraphId === storeState.activeGraphId;
+    const editorType = scope === 'narrative' ? 'narrativeEditor' : 'storyletEditor';
     
     return (
       <div className="flex items-center gap-1 text-xs text-df-text-secondary">
@@ -117,6 +119,7 @@ export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
             </ContextMenuContent>
           </ContextMenu>
         )}
+        <EditorExpandControls editorType={editorType} className="ml-auto" />
       </div>
     );
   }
@@ -210,6 +213,7 @@ export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
           </React.Fragment>
         );
       })}
+      <EditorExpandControls editorType={editorType} className="ml-auto" />
     </div>
   );
 }

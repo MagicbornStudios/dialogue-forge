@@ -16,6 +16,8 @@ export const FORGE_ACTION_NAME = {
     GET_ACTS: 'forge.workspace.getActs',
     GET_PAGES: 'forge.workspace.getPages',
     GET_GRAPH: 'forge.workspace.getGraph',
+    EXPAND_EDITOR: 'forge.workspace.expandEditor',
+    MINIMIZE_EDITOR: 'forge.workspace.minimizeEditor',
   },
   EDITOR: {
     CREATE_NODE: 'forge.editor.createNode',

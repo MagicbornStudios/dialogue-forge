@@ -370,6 +370,58 @@ export function createGetGraphAction(
 }
 
 /**
+ * Create expand editor action
+ */
+export function createExpandEditorAction(
+  workspaceStore: StoreApi<ForgeWorkspaceState>
+): FrontendAction<Parameter[]> {
+  return {
+    name: FORGE_ACTION_NAME.WORKSPACE.EXPAND_EDITOR,
+    description: 'Expand an editor (narrative, storylet, or node editor) to fullscreen mode',
+    parameters: [
+      {
+        name: 'editorType',
+        type: 'string',
+        description: 'The type of editor to expand: "narrativeEditor", "storyletEditor", or "nodeEditor"',
+        required: true,
+        enum: ['narrativeEditor', 'storyletEditor', 'nodeEditor'],
+      },
+    ],
+    handler: async ({ editorType }: { editorType: 'narrativeEditor' | 'storyletEditor' | 'nodeEditor' }) => {
+      const state = workspaceStore.getState();
+      state.actions.dockPanel(editorType);
+      return { success: true, message: `Expanded ${editorType} to fullscreen` };
+    },
+  };
+}
+
+/**
+ * Create minimize editor action
+ */
+export function createMinimizeEditorAction(
+  workspaceStore: StoreApi<ForgeWorkspaceState>
+): FrontendAction<Parameter[]> {
+  return {
+    name: FORGE_ACTION_NAME.WORKSPACE.MINIMIZE_EDITOR,
+    description: 'Minimize an editor (narrative, storylet, or node editor) from fullscreen mode back to normal view',
+    parameters: [
+      {
+        name: 'editorType',
+        type: 'string',
+        description: 'The type of editor to minimize: "narrativeEditor", "storyletEditor", or "nodeEditor"',
+        required: true,
+        enum: ['narrativeEditor', 'storyletEditor', 'nodeEditor'],
+      },
+    ],
+    handler: async ({ editorType }: { editorType: 'narrativeEditor' | 'storyletEditor' | 'nodeEditor' }) => {
+      const state = workspaceStore.getState();
+      state.actions.undockPanel(editorType);
+      return { success: true, message: `Minimized ${editorType} from fullscreen` };
+    },
+  };
+}
+
+/**
  * Create all workspace actions
  */
 export function createForgeWorkspaceActions(
@@ -385,5 +437,7 @@ export function createForgeWorkspaceActions(
     createGetActsAction(workspaceStore),
     createGetPagesAction(workspaceStore),
     createGetGraphAction(workspaceStore),
+    createExpandEditorAction(workspaceStore),
+    createMinimizeEditorAction(workspaceStore),
   ];
 }

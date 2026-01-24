@@ -28,6 +28,8 @@ export function useForgeWorkspaceActions(
     getActsAction,
     getPagesAction,
     getGraphAction,
+    expandEditorAction,
+    minimizeEditorAction,
   ] = actions;
   
   useCopilotAction(getCurrentGraphAction);
@@ -39,4 +41,6 @@ export function useForgeWorkspaceActions(
   useCopilotAction(getActsAction);
   useCopilotAction(getPagesAction);
   useCopilotAction(getGraphAction);
+  useCopilotAction(expandEditorAction);
+  useCopilotAction(minimizeEditorAction);
 }

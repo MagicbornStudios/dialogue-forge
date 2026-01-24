@@ -15,12 +15,17 @@ export interface PanelLayoutState {
     visible: boolean;
     isDocked: boolean; // Whether panel is in fullscreen docked mode
   };
+  nodeEditor: {
+    visible: boolean;
+    isDocked: boolean; // Whether panel is in fullscreen docked mode
+  };
 }
 
 const defaultPanelLayout: PanelLayoutState = {
   sidebar: { visible: true, isDocked: false },
   narrativeEditor: { visible: true, isDocked: false },
   storyletEditor: { visible: true, isDocked: false },
+  nodeEditor: { visible: false, isDocked: false },
 };
 
 export interface ModalState {
@@ -62,9 +67,9 @@ export interface ViewStateActions {
   requestFocus: (scope: "narrative" | "storylet", graphId: string, nodeId?: string) => void
   clearFocus: (scope: "narrative" | "storylet") => void
   setContextNodeType: (scope: "narrative" | "storylet", nodeType: ForgeNodeType | null) => void
-  togglePanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor') => void
-  dockPanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor') => void
-  undockPanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor') => void
+  togglePanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor' | 'nodeEditor') => void
+  dockPanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor' | 'nodeEditor') => void
+  undockPanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor' | 'nodeEditor') => void
   setFocusedEditor: (editor: "narrative" | "storylet" | null) => void
   openPlayModal: () => void
   closePlayModal: () => void
@@ -132,15 +137,21 @@ export function createViewStateSlice(
       }))
     },
     dockPanel: (panel) => {
-      set((state) => ({
-        panelLayout: {
-          ...state.panelLayout,
-          [panel]: {
-            ...state.panelLayout[panel],
-            isDocked: true,
-          },
-        },
-      }))
+      set((state) => {
+        // When docking a panel, undock all others
+        const updatedLayout: PanelLayoutState = {
+          sidebar: { ...state.panelLayout.sidebar, isDocked: panel === 'sidebar' },
+          narrativeEditor: { ...state.panelLayout.narrativeEditor, isDocked: panel === 'narrativeEditor' },
+          storyletEditor: { ...state.panelLayout.storyletEditor, isDocked: panel === 'storyletEditor' },
+          nodeEditor: { ...state.panelLayout.nodeEditor, isDocked: panel === 'nodeEditor' },
+        };
+        updatedLayout[panel] = {
+          ...updatedLayout[panel],
+          isDocked: true,
+          visible: true, // Ensure panel is visible when docking
+        };
+        return { panelLayout: updatedLayout };
+      })
     },
     undockPanel: (panel) => {
       set((state) => ({

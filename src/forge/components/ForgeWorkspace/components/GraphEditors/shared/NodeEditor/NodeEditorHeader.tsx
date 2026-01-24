@@ -4,6 +4,7 @@ import { ForgeNode } from '@/forge/types/forge-graph';
 import { Button } from '@/shared/ui/button';
 import { Badge } from '@/shared/ui/badge';
 import { getNodeTypeBadge, getNodeTypeLabel } from '@/forge/lib/node-editor/utils/nodeTypeHelpers';
+import { EditorExpandControls } from '../EditorExpandControls';
 
 interface NodeEditorHeaderProps {
   node: ForgeNode;
@@ -18,6 +19,7 @@ export function NodeEditorHeader({ node, onDelete, onClose }: NodeEditorHeaderPr
         {getNodeTypeLabel(node.type)}
       </Badge>
       <div className="flex gap-1">
+        <EditorExpandControls editorType="nodeEditor" />
         <Button
           type="button"
           variant="ghost"

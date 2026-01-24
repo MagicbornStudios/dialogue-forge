@@ -313,6 +313,7 @@ export function createForgeWorkspaceStore(
               sidebar: { visible: state.panelLayout.sidebar.visible, isDocked: false },
               narrativeEditor: { visible: state.panelLayout.narrativeEditor.visible, isDocked: false },
               storyletEditor: { visible: state.panelLayout.storyletEditor.visible, isDocked: false },
+              nodeEditor: { visible: state.panelLayout.nodeEditor?.visible ?? false, isDocked: false },
             },
           }),
         }

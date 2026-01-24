@@ -1,11 +1,16 @@
 import type { ForgeFlagValue, ForgeGameState } from '@/forge/types/forge-game-state';
-import type { ForgeChoice, ForgeCondition, ForgeGraphDoc, ForgeNode } from '@/forge/types/forge-graph';
+import type {
+  ForgeChoice,
+  ForgeCondition,
+  ForgeGraphDoc,
+  ForgeNode,
+  ForgeRuntimeDirective,
+} from '@/forge/types/forge-graph';
 import type {
   ExecutionMode,
   ExecutionStatus,
   FrameKind,
   RuntimeDirectiveApplyMode,
-  RuntimeDirectiveType,
 } from './constants';
 
 export type { RuntimeDirectiveApplyMode };
@@ -22,13 +27,7 @@ export type RuntimeChoice = {
   mutations?: FlagMutation[];
 };
 
-export type RuntimeDirective = {
-  type: RuntimeDirectiveType;
-  refId?: string;
-  payload?: Record<string, unknown>;
-  applyMode?: RuntimeDirectiveApplyMode;
-  priority?: number;
-};
+export type RuntimeDirective = ForgeRuntimeDirective;
 
 export type ResolvedRuntimeDirective = RuntimeDirective & {
   resolved?: unknown;

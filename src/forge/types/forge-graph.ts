@@ -1,5 +1,6 @@
 import type { Node, Edge, Viewport } from 'reactflow';
 import { CONDITION_OPERATOR, type ConditionOperator } from '@/forge/types/constants';
+import type { RuntimeDirectiveApplyMode, RuntimeDirectiveType } from '@/forge/runtime/engine/constants';
 
 /**
  * Forge graph kind constants
@@ -76,6 +77,14 @@ export const CONDITION_VALUE_TYPE = {
 } as const;
 
 export type ConditionValueType = typeof CONDITION_VALUE_TYPE[keyof typeof CONDITION_VALUE_TYPE];
+
+export type ForgeRuntimeDirective = {
+  type: RuntimeDirectiveType;
+  refId?: string;
+  payload?: Record<string, unknown>;
+  applyMode?: RuntimeDirectiveApplyMode;
+  priority?: number;
+};
 
 /**
  * Condition for evaluating flags
@@ -163,6 +172,9 @@ export type ForgeNode = {
 
   // optional media fields for presentation
   presentation?: ForgeNodePresentation;
+
+  // runtime-only directives for scene/media/camera/overlay/etc.
+  runtimeDirectives?: ForgeRuntimeDirective[];
 };
 
 export type ForgeReactFlowEdge = Edge & {

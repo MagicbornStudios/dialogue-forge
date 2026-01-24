@@ -218,9 +218,9 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
   const handleCreateNewGraph = React.useCallback(async () => {
     if (!dataAdapter || !selectedProjectId) return;
     
-    const { createGraphWithStartEnd } = await import('@/forge/lib/utils/forge-flow-helpers');
+    const { createEmptyForgeGraphDoc } = await import('@/forge/lib/utils/forge-flow-helpers');
     const { FORGE_GRAPH_KIND } = await import('@/forge/types/forge-graph');
-    const { flow, startNodeId, endNodeIds } = createGraphWithStartEnd({
+    const emptyGraph = createEmptyForgeGraphDoc({
       projectId: selectedProjectId,
       kind: FORGE_GRAPH_KIND.STORYLET,
       title: 'New Storylet'
@@ -230,9 +230,9 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
       projectId: selectedProjectId,
       kind: FORGE_GRAPH_KIND.STORYLET,
       title: 'New Storylet',
-      flow,
-      startNodeId,
-      endNodeIds,
+      flow: emptyGraph.flow,
+      startNodeId: emptyGraph.startNodeId,
+      endNodeIds: emptyGraph.endNodeIds,
     });
     
     openGraphInScope('storylet', String(createdGraph.id));

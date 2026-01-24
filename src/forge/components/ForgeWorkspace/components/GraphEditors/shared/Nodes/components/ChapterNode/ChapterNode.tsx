@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
-import { BookOpen, Edit3, Trash2, Plus } from 'lucide-react';
+import { BookOpen, Edit3, Trash2, Plus, Home } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -11,10 +11,11 @@ import {
 import type { ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
+import { StandardNodeContextMenuItems } from '../shared/StandardNodeContextMenuItems';
 
 export const ChapterNode = React.memo(function ChapterNode({ data, selected, id }: NodeProps<ShellNodeData>) {
   const { node, ui = {} } = data;
-  const { isDimmed = false, isInPath = false } = ui;
+  const { isDimmed = false, isInPath = false, isStartNode = false } = ui;
   
   const title = node.label || id;
   const summary = node.content;
@@ -25,6 +26,9 @@ export const ChapterNode = React.memo(function ChapterNode({ data, selected, id 
   }, [actions, id]);
   const handleAddPage = useCallback(() => {
     if (id) actions.openNodeEditor(id);
+  }, [actions, id]);
+  const handleSetAsStart = useCallback(() => {
+    if (id) actions.setStartNode(id);
   }, [actions, id]);
   const handleDelete = useCallback(() => {
     if (id) actions.deleteNode(id);
@@ -76,19 +80,19 @@ export const ChapterNode = React.memo(function ChapterNode({ data, selected, id 
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={handleEdit}>
-          <Edit3 size={14} className="mr-2 text-[var(--node-accent)]" /> Edit Chapter
-        </ContextMenuItem>
-        <ContextMenuItem onSelect={handleAddPage}>
-          <Plus size={14} className="mr-2 text-[var(--node-page-accent)]" /> Add Page
-        </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem 
-          onSelect={handleDelete}
-          className="text-destructive focus:text-destructive"
-        >
-          <Trash2 size={14} className="mr-2" /> Delete
-        </ContextMenuItem>
+        <StandardNodeContextMenuItems
+          nodeId={id}
+          isStartNode={isStartNode}
+          onEdit={handleEdit}
+          onSetAsStart={handleSetAsStart}
+          onDelete={handleDelete}
+          editLabel="Edit Chapter"
+          afterEditItems={
+            <ContextMenuItem onSelect={handleAddPage}>
+              <Plus size={14} className="mr-2 text-[var(--node-page-accent)]" /> Add Page
+            </ContextMenuItem>
+          }
+        />
       </ContextMenuContent>
     </ContextMenu>
   );

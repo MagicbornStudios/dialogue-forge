@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
-import { Files, Edit3, Trash2, FilePlus, BookPlus, LayoutList, MessageSquareText } from 'lucide-react';
+import { Files, FilePlus, BookPlus, LayoutList, MessageSquareText } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -11,10 +11,11 @@ import {
 import type { ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
+import { StandardNodeContextMenuItems } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/StandardNodeContextMenuItems';
 
 export const PageNode = React.memo(function PageNode({ data, selected, id }: NodeProps<ShellNodeData>) {
   const { node, ui = {} } = data;
-  const { isDimmed = false, isInPath = false } = ui;
+  const { isDimmed = false, isInPath = false, isStartNode = false } = ui;
   
   const title = node.label || id;
   const summary = node.content;
@@ -34,6 +35,9 @@ export const PageNode = React.memo(function PageNode({ data, selected, id }: Nod
   }, [actions, id]);
   const handleEditPage = useCallback(() => {
     if (id) actions.openNodeEditor(id);
+  }, [actions, id]);
+  const handleSetAsStart = useCallback(() => {
+    if (id) actions.setStartNode(id);
   }, [actions, id]);
   const handleDelete = useCallback(() => {
     if (id) actions.deleteNode(id);
@@ -85,29 +89,31 @@ export const PageNode = React.memo(function PageNode({ data, selected, id }: Nod
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-56">
-        <ContextMenuItem onSelect={handleAddPage}>
-          <FilePlus size={14} className="mr-2 text-[var(--node-page-accent)]" /> Add Page
-        </ContextMenuItem>
-        <ContextMenuItem onSelect={handleAddChapter}>
-          <BookPlus size={14} className="mr-2 text-[var(--node-chapter-accent)]" /> Add Chapter
-        </ContextMenuItem>
-        <ContextMenuItem onSelect={handleAddAct}>
-          <LayoutList size={14} className="mr-2 text-[var(--node-act-accent)]" /> Add Act
-        </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem onSelect={handleEditDialogue}>
-          <MessageSquareText size={14} className="mr-2 text-[var(--node-npc-accent)]" /> Edit Dialogue
-        </ContextMenuItem>
-        <ContextMenuItem onSelect={handleEditPage}>
-          <Edit3 size={14} className="mr-2 text-[var(--color-df-text-secondary)]" /> Edit Page Details
-        </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem 
-          onSelect={handleDelete}
-          className="text-destructive focus:text-destructive"
-        >
-          <Trash2 size={14} className="mr-2" /> Delete
-        </ContextMenuItem>
+        <StandardNodeContextMenuItems
+          nodeId={id}
+          isStartNode={isStartNode}
+          onEdit={handleEditPage}
+          onSetAsStart={handleSetAsStart}
+          onDelete={handleDelete}
+          editLabel="Edit Page Details"
+          beforeStandardItems={
+            <>
+              <ContextMenuItem onSelect={handleAddPage}>
+                <FilePlus size={14} className="mr-2 text-[var(--node-page-accent)]" /> Add Page
+              </ContextMenuItem>
+              <ContextMenuItem onSelect={handleAddChapter}>
+                <BookPlus size={14} className="mr-2 text-[var(--node-chapter-accent)]" /> Add Chapter
+              </ContextMenuItem>
+              <ContextMenuItem onSelect={handleAddAct}>
+                <LayoutList size={14} className="mr-2 text-[var(--node-act-accent)]" /> Add Act
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+              <ContextMenuItem onSelect={handleEditDialogue}>
+                <MessageSquareText size={14} className="mr-2 text-[var(--node-npc-accent)]" /> Edit Dialogue
+              </ContextMenuItem>
+            </>
+          }
+        />
       </ContextMenuContent>
     </ContextMenu>
   );

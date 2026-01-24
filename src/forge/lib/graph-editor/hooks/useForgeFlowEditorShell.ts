@@ -472,9 +472,14 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
 
       onNodeAdd?.(newFlowNode);
 
+      const isFirstNode = effectiveGraph.flow.nodes.length === 0;
+      
       let next: ForgeGraphDoc = {
         ...effectiveGraph,
-        startNodeId: effectiveGraph.startNodeId || newId,
+        // Auto-set first node as start node if graph is empty
+        startNodeId: isFirstNode ? newId : (effectiveGraph.startNodeId || newId),
+        // Auto-set first node as end node if graph is empty
+        endNodeIds: isFirstNode ? [{ nodeId: newId }] : effectiveGraph.endNodeIds,
         flow: { ...effectiveGraph.flow, nodes: [...effectiveGraph.flow.nodes, newFlowNode] },
       };
 
@@ -548,6 +553,14 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
         case FORGE_COMMAND.GRAPH.EDGE_CREATE:
           onConnect(cmd.connection);
           break;
+        case FORGE_COMMAND.GRAPH.SET_START_NODE: {
+          const next = {
+            ...effectiveGraph,
+            startNodeId: cmd.nodeId,
+          };
+          onChange(next);
+          break;
+        }
       }
     },
     [

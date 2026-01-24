@@ -88,26 +88,42 @@ export const ForgeGraphs: CollectionConfig = {
       required: true,
       validate: (value: unknown, { data }: { data: unknown }) => {
         const start = typeof value === 'string' ? value : '';
-        if (!start) return 'startNodeId is required';
-        return nodeIdExists((data as any)?.flow, start) ? true : 'startNodeId must match a node.id in flow.nodes';
+        const flow = (data as any)?.flow;
+        const nodes = Array.isArray(flow?.nodes) ? flow.nodes : [];
+        
+        // Allow empty startNodeId if graph has no nodes
+        if (nodes.length === 0) {
+          return start === '' ? true : 'startNodeId must be empty when graph has no nodes';
+        }
+        
+        if (!start) return 'startNodeId is required when graph has nodes';
+        return nodeIdExists(flow, start) ? true : 'startNodeId must match a node.id in flow.nodes';
       },
     },
     {
       name: 'endNodeIds',
       type: 'array',
       required: true,
-      minRows: 1,
+      minRows: 0,
       fields: [
         { name: 'nodeId', type: 'text', required: true },
         { name: 'exitKey', type: 'text', required: false },
       ],
       validate: (value: unknown, { data }: { data: unknown }) => {
         const arr = Array.isArray(value) ? value : [];
-        if (arr.length < 1) return 'At least one end node is required';
+        const flow = (data as any)?.flow;
+        const nodes = Array.isArray(flow?.nodes) ? flow.nodes : [];
+        
+        // Allow empty endNodeIds array if graph has no nodes
+        if (nodes.length === 0) {
+          return arr.length === 0 ? true : 'endNodeIds must be empty when graph has no nodes';
+        }
+        
+        if (arr.length < 1) return 'At least one end node is required when graph has nodes';
         for (const row of arr) {
           const nodeId = (row as { nodeId?: string }).nodeId;
           if (!nodeId || typeof nodeId !== 'string') return 'Each endNodeIds row must contain nodeId';
-          if (!nodeIdExists((data as any)?.flow, nodeId)) return `End nodeId "${nodeId}" must exist in flow.nodes`;
+          if (!nodeIdExists(flow, nodeId)) return `End nodeId "${nodeId}" must exist in flow.nodes`;
         }
         return true;
       },

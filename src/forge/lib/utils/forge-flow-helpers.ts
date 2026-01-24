@@ -404,6 +404,7 @@ export function edgeStrokeColor(edge: ForgeReactFlowEdge, sourceType?: string): 
 /**
  * Create an empty ForgeGraphDoc with minimal valid structure.
  * Used for initializing default graphs when none exist.
+ * Creates a truly empty graph with no nodes - the first node added will become the start node.
  */
 export function createEmptyForgeGraphDoc(opts: {
   projectId: number
@@ -412,7 +413,6 @@ export function createEmptyForgeGraphDoc(opts: {
   graphId?: number // Optional ID for generating default title
 }): ForgeGraphDoc {
   const now = new Date().toISOString()
-  const startNodeId = `start_${Date.now()}`
   
   // Generate default title: "New Graph" + first 4 digits of ID (or timestamp if no ID)
   const generateDefaultTitle = () => {
@@ -434,8 +434,8 @@ export function createEmptyForgeGraphDoc(opts: {
     project: opts.projectId,
     kind: opts.kind,
     title: defaultTitle,
-    startNodeId,
-    endNodeIds: [],
+    startNodeId: '', // Empty string for empty graphs - will be set when first node is added
+    endNodeIds: [], // Empty array for empty graphs - will be set when first node is added
     flow: emptyFlow,
     compiledYarn: null,
     updatedAt: now,
@@ -447,6 +447,9 @@ export function createEmptyForgeGraphDoc(opts: {
  * Create a graph with proper start and end nodes.
  * This ensures all graphs have valid startNodeId and endNodeIds that pass validation.
  * Creates placeholder start and end nodes so the graph can be saved immediately.
+ * 
+ * @deprecated Use createEmptyForgeGraphDoc() instead. This function creates placeholder nodes
+ * which is not desired for new graphs. The first node added should become the start node.
  */
 export function createGraphWithStartEnd(opts: {
   projectId: number

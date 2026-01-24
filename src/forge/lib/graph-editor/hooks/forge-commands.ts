@@ -19,6 +19,7 @@ export const FORGE_COMMAND = {
     NODE_INSERT_ON_EDGE: 'GRAPH.NODE_INSERT_ON_EDGE',
     EDGE_DELETE: 'GRAPH.EDGE_DELETE',
     EDGE_CREATE: 'GRAPH.EDGE_CREATE',
+    SET_START_NODE: 'GRAPH.SET_START_NODE',
   },
   WORKSPACE: {
     RENAME_GRAPH: 'WORKSPACE.RENAME_GRAPH',
@@ -39,5 +40,6 @@ export type ForgeCommand =
   | { type: typeof FORGE_COMMAND.GRAPH.NODE_INSERT_ON_EDGE; edgeId: string; nodeType: ForgeNodeType; x: number; y: number }
   | { type: typeof FORGE_COMMAND.GRAPH.EDGE_DELETE; edgeId: string }
   | { type: typeof FORGE_COMMAND.GRAPH.EDGE_CREATE; connection: Connection }
+  | { type: typeof FORGE_COMMAND.GRAPH.SET_START_NODE; nodeId: string }
   | { type: typeof FORGE_COMMAND.WORKSPACE.RENAME_GRAPH; graphId: string }
   | { type: typeof FORGE_COMMAND.WORKSPACE.OPEN_COMMAND_BAR };

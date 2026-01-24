@@ -536,9 +536,9 @@ function ForgeNarrativeGraphEditorContent({
                 const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
                 if (!dataAdapter || !selectedProjectId) return;
                 
-                const { createGraphWithStartEnd } = await import('@/forge/lib/utils/forge-flow-helpers');
+                const { createEmptyForgeGraphDoc } = await import('@/forge/lib/utils/forge-flow-helpers');
                 const { FORGE_GRAPH_KIND } = await import('@/forge/types/forge-graph');
-                const { flow, startNodeId, endNodeIds } = createGraphWithStartEnd({
+                const emptyGraph = createEmptyForgeGraphDoc({
                   projectId: selectedProjectId,
                   kind: FORGE_GRAPH_KIND.NARRATIVE,
                   title: 'New Narrative'
@@ -548,9 +548,9 @@ function ForgeNarrativeGraphEditorContent({
                   projectId: selectedProjectId,
                   kind: FORGE_GRAPH_KIND.NARRATIVE,
                   title: 'New Narrative',
-                  flow,
-                  startNodeId,
-                  endNodeIds,
+                  flow: emptyGraph.flow,
+                  startNodeId: emptyGraph.startNodeId,
+                  endNodeIds: emptyGraph.endNodeIds,
                 });
                 
                 openGraphInScope('narrative', String(createdGraph.id));

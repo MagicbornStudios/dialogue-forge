@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { CornerDownRight, Hash, ArrowLeftCircle, Edit3, Trash2 } from 'lucide-react';
+import { CornerDownRight, Hash, ArrowLeftCircle, Edit3, Trash2, Home } from 'lucide-react';
 import type { LayoutDirection } from '@/forge/lib/utils/layout/types';
 import {
   ContextMenu,
@@ -12,6 +12,7 @@ import {
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import type { ForgeNode } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
+import { StandardNodeContextMenuItems } from '../shared/StandardNodeContextMenuItems';
 
 interface DetourNodeData {
   node: ForgeNode;
@@ -45,6 +46,9 @@ export const DetourNode = React.memo(function DetourNode({ data, selected }: Nod
   const handleDoubleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();
     if (node.id) actions.openNodeEditor(node.id);
+  }, [actions, node.id]);
+  const handleSetAsStart = useCallback(() => {
+    if (node.id) actions.setStartNode(node.id);
   }, [actions, node.id]);
   const handleDelete = useCallback(() => {
     if (node.id) actions.deleteNode(node.id);
@@ -138,20 +142,13 @@ export const DetourNode = React.memo(function DetourNode({ data, selected }: Nod
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={handleEdit}>
-          <Edit3 size={14} className="mr-2 text-[var(--node-accent)]" /> Edit Node
-        </ContextMenuItem>
-        {!isStartNode && node.id && (
-          <>
-            <ContextMenuSeparator />
-            <ContextMenuItem 
-              onSelect={handleDelete}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 size={14} className="mr-2" /> Delete
-            </ContextMenuItem>
-          </>
-        )}
+        <StandardNodeContextMenuItems
+          nodeId={node.id}
+          isStartNode={isStartNode}
+          onEdit={handleEdit}
+          onSetAsStart={handleSetAsStart}
+          onDelete={handleDelete}
+        />
       </ContextMenuContent>
     </ContextMenu>
   );

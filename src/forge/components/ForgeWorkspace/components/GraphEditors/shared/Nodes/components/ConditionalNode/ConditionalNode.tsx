@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
 import type { ForgeCondition, ForgeConditionalBlock, ForgeNode } from '@/forge/types/forge-graph';
 import { FORGE_CONDITIONAL_BLOCK_TYPE, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
-import { GitBranch, Play, Flag, Hash, Code, Edit3, Trash2, Plus } from 'lucide-react';
+import { GitBranch, Play, Flag, Hash, Code, Edit3, Trash2, Plus, Home } from 'lucide-react';
 import { FlagSchema } from '@/forge/types/flags';
 import { ForgeCharacter } from '@/forge/types/characters';
 import { LayoutDirection } from '@/forge/lib/utils/layout/types';
@@ -15,6 +15,7 @@ import {
 } from '@/shared/ui/context-menu';
 import { getFlagColorClass } from '@/forge/lib/utils/flag-styles';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
+import { StandardNodeContextMenuItems } from '../shared/StandardNodeContextMenuItems';
 import { CONDITION_OPERATOR } from '@/forge/types/constants';
 import { CONDITION_OPERATOR_SYMBOLS } from '@/forge/types/constants';
 import { formatCondition } from '@/forge/lib/yarn-converter/utils/condition-formatter';
@@ -251,24 +252,18 @@ export const ConditionalNode = React.memo(function ConditionalNode({ data, selec
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={handleEdit}>
-          <Edit3 size={14} className="mr-2 text-[var(--node-accent)]" /> Edit Node
-        </ContextMenuItem>
-        {!isStartNode && node.id && (
-          <>
-            <ContextMenuSeparator />
-            <ContextMenuItem
-              onSelect={handleDelete}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 size={14} className="mr-2" /> Delete
+        <StandardNodeContextMenuItems
+          nodeId={node.id}
+          isStartNode={isStartNode}
+          onEdit={handleEdit}
+          onSetAsStart={handleSetAsStart}
+          onDelete={handleDelete}
+          afterEditItems={
+            <ContextMenuItem onSelect={handleAddBlock}>
+              <Plus size={14} className="mr-2 text-[var(--node-accent)]" /> Add Conditional Block
             </ContextMenuItem>
-          </>
-        )}
-        <ContextMenuSeparator />
-        <ContextMenuItem onSelect={handleAddBlock}>
-          <Plus size={14} className="mr-2 text-[var(--node-accent)]" /> Add Conditional Block
-        </ContextMenuItem>
+          }
+        />
       </ContextMenuContent>
     </ContextMenu>
   );

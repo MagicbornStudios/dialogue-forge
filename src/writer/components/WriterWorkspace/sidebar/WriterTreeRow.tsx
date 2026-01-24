@@ -1,7 +1,7 @@
 import * as React from 'react';
 import type { ReactNode } from 'react';
 import type { NodeRendererProps } from 'react-arborist';
-import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Circle, Flag } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -18,6 +18,8 @@ interface WriterTreeRowProps {
   onAddChild?: () => void;
   canAddChild?: boolean;
   contextMenu?: ReactNode;
+  hasDetour?: boolean;
+  isEndNode?: boolean;
 }
 
 export function WriterTreeRow({
@@ -59,7 +61,23 @@ export function WriterTreeRow({
         onClick={onSelect}
       >
         {icon ? <span className="text-df-text-tertiary flex-shrink-0">{icon}</span> : null}
-        <span className="truncate">{node.data.name}</span>
+        <span className="truncate flex-1">{node.data.name}</span>
+        {/* Detour indicator - orange/brown bullet */}
+        {hasDetour && (
+          <Circle 
+            size={8} 
+            fill="currentColor" 
+            className="text-orange-600 dark:text-orange-500 flex-shrink-0" 
+            title="Has detour connection"
+          />
+        )}
+        {/* End node label */}
+        {isEndNode && (
+          <span className="text-[10px] text-df-text-tertiary flex items-center gap-1 flex-shrink-0" title="End node">
+            <Flag size={10} />
+            <span>End</span>
+          </span>
+        )}
       </button>
 
       {/* Inline add button - shows on hover */}

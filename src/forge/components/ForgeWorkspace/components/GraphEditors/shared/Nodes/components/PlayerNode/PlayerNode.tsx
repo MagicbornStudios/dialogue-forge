@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from 'reactflow';
 import { ForgeChoice, ForgeNode, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { ForgeCharacter } from '@/forge/types/characters';
-import { GitBranch, Play, Flag, Hash, Edit3, Plus, Trash2 } from 'lucide-react';
+import { GitBranch, Play, Flag, Hash, Plus } from 'lucide-react';
 import { FlagSchema } from '@/forge/types/flags';
 import { LayoutDirection } from '@/forge/lib/utils/layout/types';
 import {
@@ -14,6 +14,7 @@ import {
 } from '@/shared/ui/context-menu';
 import { getFlagColorClass } from '@/forge/lib/utils/flag-styles';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
+import { StandardNodeContextMenuItems } from '../shared/StandardNodeContextMenuItems';
 
 interface PlayerNodeData {
   node: ForgeNode;
@@ -53,6 +54,9 @@ export const PlayerNode = React.memo(function PlayerNode({ data, selected }: Nod
     const updatedChoices = [...(node.choices || []), newChoice];
     actions.patchNode(node.id, { choices: updatedChoices });
   }, [actions, node.choices, node.id]);
+  const handleSetAsStart = useCallback(() => {
+    if (node.id) actions.setStartNode(node.id);
+  }, [actions, node.id]);
   const handleDelete = useCallback(() => {
     if (node.id) actions.deleteNode(node.id);
   }, [actions, node.id]);
@@ -243,25 +247,20 @@ export const PlayerNode = React.memo(function PlayerNode({ data, selected }: Nod
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={handleEdit}>
-          <Edit3 size={14} className="mr-2 text-[var(--node-accent)]" /> Edit Node
-        </ContextMenuItem>
-        {node.id && (
-          <ContextMenuItem onSelect={handleAddChoice}>
-            <Plus size={14} className="mr-2 text-[var(--node-accent)]" /> Add Choice
-          </ContextMenuItem>
-        )}
-        {!isStartNode && node.id && (
-          <>
-            <ContextMenuSeparator />
-            <ContextMenuItem 
-              onSelect={handleDelete}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 size={14} className="mr-2" /> Delete
-            </ContextMenuItem>
-          </>
-        )}
+        <StandardNodeContextMenuItems
+          nodeId={node.id}
+          isStartNode={isStartNode}
+          onEdit={handleEdit}
+          onSetAsStart={handleSetAsStart}
+          onDelete={handleDelete}
+          afterEditItems={
+            node.id ? (
+              <ContextMenuItem onSelect={handleAddChoice}>
+                <Plus size={14} className="mr-2 text-[var(--node-accent)]" /> Add Choice
+              </ContextMenuItem>
+            ) : undefined
+          }
+        />
       </ContextMenuContent>
     </ContextMenu>
   );

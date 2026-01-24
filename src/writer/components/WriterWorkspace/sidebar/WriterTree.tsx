@@ -14,6 +14,8 @@ import { PAGE_TYPE, buildNarrativeHierarchy, type ForgePage, type PageType } fro
 import { useGraphPageSync } from '@/writer/hooks/use-graph-page-sync';
 import { useToast } from '@/shared/ui/toast';
 import { validateNarrativeGraph } from '@/forge/lib/graph-validation';
+import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
+import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 
 interface WriterTreeProps {
   className?: string;
@@ -25,6 +27,8 @@ type TreeNode = {
   name: string;
   page: ForgePage;
   children?: TreeNode[];
+  hasDetour?: boolean;
+  isEndNode?: boolean;
 };
 
 function getIconForPageType(pageType: string) {
@@ -40,28 +44,78 @@ function getIconForPageType(pageType: string) {
   }
 }
 
-function buildTreeData(pages: ForgePage[]): TreeNode[] {
+/**
+ * Check if a node has outgoing edges to DETOUR nodes
+ */
+function hasDetourConnection(graph: ForgeGraphDoc | null, nodeId: string | null): boolean {
+  if (!graph || !nodeId) return false;
+  
+  const node = graph.flow.nodes.find(n => n.id === nodeId);
+  if (!node) return false;
+  
+  const outgoingEdges = graph.flow.edges.filter(e => e.source === nodeId);
+  return outgoingEdges.some(edge => {
+    const targetNode = graph.flow.nodes.find(n => n.id === edge.target);
+    return targetNode?.type === FORGE_NODE_TYPE.DETOUR;
+  });
+}
+
+/**
+ * Check if a node has no outgoing edges (is an end node)
+ */
+function isEndNode(graph: ForgeGraphDoc | null, nodeId: string | null): boolean {
+  if (!graph || !nodeId) return false;
+  
+  const hasOutgoing = graph.flow.edges.some(e => e.source === nodeId);
+  return !hasOutgoing;
+}
+
+/**
+ * Find the graph node ID for a given page ID
+ */
+function findNodeIdByPageId(graph: ForgeGraphDoc | null, pageId: number): string | null {
+  if (!graph) return null;
+  const node = graph.flow.nodes.find(n => n.data?.pageId === pageId);
+  return node?.id || null;
+}
+
+function buildTreeData(pages: ForgePage[], graph: ForgeGraphDoc | null): TreeNode[] {
   if (!pages || !Array.isArray(pages) || pages.length === 0) {
     return [];
   }
   
   const hierarchy = buildNarrativeHierarchy(pages);
   
-  return hierarchy.acts.map(({ page: actPage, chapters }) => ({
-    id: `page-${actPage.id}`,
-    name: actPage.title,
-    page: actPage,
-    children: chapters.map(({ page: chapterPage, pages: contentPages }) => ({
-      id: `page-${chapterPage.id}`,
-      name: chapterPage.title,
-      page: chapterPage,
-      children: contentPages.map(page => ({
-        id: `page-${page.id}`,
-        name: page.title,
-        page,
-      })),
-    })),
-  }));
+  return hierarchy.acts.map(({ page: actPage, chapters }) => {
+    const actNodeId = findNodeIdByPageId(graph, actPage.id);
+    return {
+      id: `page-${actPage.id}`,
+      name: actPage.title,
+      page: actPage,
+      hasDetour: hasDetourConnection(graph, actNodeId),
+      isEndNode: isEndNode(graph, actNodeId),
+      children: chapters.map(({ page: chapterPage, pages: contentPages }) => {
+        const chapterNodeId = findNodeIdByPageId(graph, chapterPage.id);
+        return {
+          id: `page-${chapterPage.id}`,
+          name: chapterPage.title,
+          page: chapterPage,
+          hasDetour: hasDetourConnection(graph, chapterNodeId),
+          isEndNode: isEndNode(graph, chapterNodeId),
+          children: contentPages.map(page => {
+            const pageNodeId = findNodeIdByPageId(graph, page.id);
+            return {
+              id: `page-${page.id}`,
+              name: page.title,
+              page,
+              hasDetour: hasDetourConnection(graph, pageNodeId),
+              isEndNode: isEndNode(graph, pageNodeId),
+            };
+          }),
+        };
+      }),
+    };
+  });
 }
 
 export function WriterTree({ className, projectId: projectIdProp }: WriterTreeProps) {
@@ -97,8 +151,8 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
     onPagesUpdate: setPages,
   });
 
-  // Build tree data from pages
-  const treeData = useMemo(() => buildTreeData(pages), [pages]);
+  // Build tree data from pages with graph metadata
+  const treeData = useMemo(() => buildTreeData(pages || [], narrativeGraph), [pages, narrativeGraph]);
 
   // Validate graph on load
   React.useEffect(() => {
@@ -282,13 +336,12 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
 
         // Remove from graph
         if (narrativeGraph && forgeDataAdapter) {
-          const nodeToDelete = Object.values(narrativeGraph.flow.nodes).find(
+          const nodeToDelete = narrativeGraph.flow.nodes.find(
             n => n.data?.pageId === page.id
           );
           
           if (nodeToDelete) {
-            const updatedNodes: Record<string, typeof narrativeGraph.flow.nodes[string]> = { ...narrativeGraph.flow.nodes };
-            delete updatedNodes[nodeToDelete.id];
+            const updatedNodes = narrativeGraph.flow.nodes.filter(n => n.id !== nodeToDelete.id);
             
             const updatedEdges = narrativeGraph.flow.edges.filter(
               e => e.source !== nodeToDelete.id && e.target !== nodeToDelete.id
@@ -298,6 +351,7 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
               flow: {
                 nodes: updatedNodes,
                 edges: updatedEdges,
+                viewport: narrativeGraph.flow.viewport,
               },
             });
             
@@ -394,7 +448,8 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
             padding={8}
           >
             {({ node, style, dragHandle }) => {
-              const page = node.data.page as ForgePage;
+              const treeNode = node.data as TreeNode;
+              const page = treeNode.page;
               const hasChildren = node.children && node.children.length > 0;
               const isEmpty = !hasChildren && page.pageType !== PAGE_TYPE.PAGE;
 
@@ -409,6 +464,8 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
                     onSelect={() => setActivePageId(page.id)}
                     onAddChild={() => handleAddChild(page)}
                     canAddChild={page.pageType !== PAGE_TYPE.PAGE}
+                    hasDetour={treeNode.hasDetour ?? false}
+                    isEndNode={treeNode.isEndNode ?? false}
                     contextMenu={
                       <>
                         <ContextMenuItem

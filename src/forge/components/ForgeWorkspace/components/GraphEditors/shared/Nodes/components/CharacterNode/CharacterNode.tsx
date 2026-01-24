@@ -12,7 +12,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { ForgeCharacter } from '@/forge/types/characters';
-import { MessageSquare, Play, Flag, Hash, Edit3, Plus, Trash2 } from 'lucide-react';
+import { MessageSquare, Play, Flag, Hash, Edit3, Plus, Trash2, Home } from 'lucide-react';
 import { FlagSchema } from '@/forge/types/flags';
 import { LayoutDirection } from '@/forge/lib/utils/layout/types';
 import {
@@ -41,6 +41,7 @@ interface CharacterNodeData extends ShellNodeData{
 
 import { getFlagColorClass } from '@/forge/lib/utils/flag-styles';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
+import { StandardNodeContextMenuItems } from '../shared/StandardNodeContextMenuItems';
 
 // ============================================================================
 // Component
@@ -58,11 +59,17 @@ export const CharacterNode = React.memo(function CharacterNode({ data, selected 
   const { isDimmed, isInPath, isStartNode, isEndNode } = ui;
   const setFlags = useMemo(() => node.setFlags ?? [], [node.setFlags]);
 
+
   // Use actions instead of callbacks
   const actions = useForgeEditorActions();
   const handleEdit = useCallback(() => {
     if (node.id) actions.openNodeEditor(node.id);
   }, [actions, node.id]);
+
+  const handleSetAsStart = useCallback(() => {
+    if (node.id) actions.setStartNode(node.id);
+  }, [actions, node.id]);
+
   const handleAddConditionals = useCallback(() => {
     if (!node.id) return;
     actions.patchNode(node.id, {
@@ -80,6 +87,7 @@ export const CharacterNode = React.memo(function CharacterNode({ data, selected 
     });
     actions.openNodeEditor(node.id);
   }, [actions, node.id]);
+  
   const handleDelete = useCallback(() => {
     if (node.id) actions.deleteNode(node.id);
   }, [actions, node.id]);
@@ -209,25 +217,20 @@ export const CharacterNode = React.memo(function CharacterNode({ data, selected 
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onSelect={handleEdit}>
-          <Edit3 size={14} className="mr-2 text-[var(--node-accent)]" /> Edit Node
-        </ContextMenuItem>
-        {node.id && (
-          <ContextMenuItem onSelect={handleAddConditionals}>
-            <Plus size={14} className="mr-2 text-[var(--node-conditional-accent)]" /> Add Conditionals
-          </ContextMenuItem>
-        )}
-        {!isStartNode && node.id && (
-          <>
-            <ContextMenuSeparator />
-            <ContextMenuItem 
-              onSelect={handleDelete}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 size={14} className="mr-2" /> Delete
-            </ContextMenuItem>
-          </>
-        )}
+        <StandardNodeContextMenuItems
+          nodeId={node.id}
+          isStartNode={isStartNode}
+          onEdit={handleEdit}
+          onSetAsStart={handleSetAsStart}
+          onDelete={handleDelete}
+          afterEditItems={
+            node.id ? (
+              <ContextMenuItem onSelect={handleAddConditionals}>
+                <Plus size={14} className="mr-2 text-[var(--node-conditional-accent)]" /> Add Conditionals
+              </ContextMenuItem>
+            ) : undefined
+          }
+        />
       </ContextMenuContent>
     </ContextMenu>
   );

@@ -15,6 +15,7 @@ export interface ForgeEditorActions {
   insertNodeOnEdge: (edgeId: string, nodeType: ForgeNodeType, x: number, y: number) => void;
   deleteEdge: (edgeId: string) => void;
   createEdge: (connection: Connection) => void;
+  setStartNode: (nodeId: string) => void;
 }
 
 export function makeForgeEditorActions(dispatch: (cmd: ForgeCommand) => void): ForgeEditorActions {
@@ -29,6 +30,7 @@ export function makeForgeEditorActions(dispatch: (cmd: ForgeCommand) => void): F
       dispatch({ type: FORGE_COMMAND.GRAPH.NODE_INSERT_ON_EDGE, edgeId, nodeType, x, y }),
     deleteEdge: (edgeId: string) => dispatch({ type: FORGE_COMMAND.GRAPH.EDGE_DELETE, edgeId }),
     createEdge: (connection: Connection) => dispatch({ type: FORGE_COMMAND.GRAPH.EDGE_CREATE, connection }),
+    setStartNode: (nodeId: string) => dispatch({ type: FORGE_COMMAND.GRAPH.SET_START_NODE, nodeId }),
   };
 }
 

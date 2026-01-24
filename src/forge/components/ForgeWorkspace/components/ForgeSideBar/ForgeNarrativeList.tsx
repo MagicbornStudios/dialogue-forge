@@ -10,7 +10,7 @@ import {
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { useForgeWorkspaceActions } from '@/forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
 import { FORGE_GRAPH_KIND } from '@/forge/types/forge-graph';
-import { createGraphWithStartEnd } from '@/forge/lib/utils/forge-flow-helpers';
+import { createEmptyForgeGraphDoc } from '@/forge/lib/utils/forge-flow-helpers';
 import { InlineRenameInput } from './InlineRenameInput';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Kbd } from '@/shared/ui/kbd';
@@ -83,7 +83,7 @@ export function ForgeNarrativeList({ className }: ForgeNarrativeListProps) {
     }
     
     try {
-      const { flow, startNodeId, endNodeIds } = createGraphWithStartEnd({
+      const emptyGraph = createEmptyForgeGraphDoc({
         projectId: selectedProjectId,
         kind: FORGE_GRAPH_KIND.NARRATIVE,
         title: 'New Narrative'
@@ -93,9 +93,9 @@ export function ForgeNarrativeList({ className }: ForgeNarrativeListProps) {
         projectId: selectedProjectId,
         kind: FORGE_GRAPH_KIND.NARRATIVE,
         title: 'New Narrative',
-        flow,
-        startNodeId,
-        endNodeIds,
+        flow: emptyGraph.flow,
+        startNodeId: emptyGraph.startNodeId,
+        endNodeIds: emptyGraph.endNodeIds,
       })
       
       // Add to cache

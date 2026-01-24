@@ -72,10 +72,13 @@ export function useGraphPageSync({
       return null;
     }
     
+    // Ensure pages is always an array
+    const safePages = Array.isArray(pages) ? pages : [];
+    
     try {
       // Calculate order based on siblings
-      const siblings = pages.filter(p => 
-        p.pageType === input.pageType && p.parent === input.parentPageId
+      const siblings = safePages.filter(p => 
+        p && p.pageType === input.pageType && p.parent === input.parentPageId
       );
       const order = siblings.length;
       
@@ -87,6 +90,10 @@ export function useGraphPageSync({
         order,
         parent: input.parentPageId || null,
       });
+      
+      if (!newPage) {
+        throw new Error('Failed to create page in database');
+      }
       
       // 2. Create node in graph
       const nodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -118,16 +125,20 @@ export function useGraphPageSync({
       } : null;
       
       // 5. Update graph - nodes is an array, not an object
-      const updatedNodes = [...graph.flow.nodes, newNode];
-      const updatedEdges = newEdge ? [...graph.flow.edges, newEdge] : graph.flow.edges;
+      // Ensure graph.flow.nodes is an array
+      const currentNodes = Array.isArray(graph.flow.nodes) ? graph.flow.nodes : [];
+      const currentEdges = Array.isArray(graph.flow.edges) ? graph.flow.edges : [];
+      
+      const updatedNodes = [...currentNodes, newNode];
+      const updatedEdges = newEdge ? [...currentEdges, newEdge] : currentEdges;
       
       // 6. Update startNodeId and endNodeIds if this is the first node
-      const isFirstNode = graph.flow.nodes.length === 0;
+      const isFirstNode = currentNodes.length === 0;
       const updateData: Parameters<typeof forgeDataAdapter.updateGraph>[1] = {
         flow: {
           nodes: updatedNodes,
           edges: updatedEdges,
-          viewport: graph.flow.viewport,
+          viewport: graph.flow.viewport || { x: 0, y: 0, zoom: 1 },
         },
       };
       
@@ -140,10 +151,13 @@ export function useGraphPageSync({
         updateData.startNodeId = newNode.id;
       }
       
+      // 7. Update graph first, then pages (atomic operation)
       const updatedGraph = await forgeDataAdapter.updateGraph(graph.id, updateData);
       
+      // 8. Update state in correct order: graph first, then pages
       onGraphUpdate(updatedGraph);
-      onPagesUpdate([...pages, newPage]);
+      // Ensure we're updating with a proper array
+      onPagesUpdate([...safePages, newPage]);
       
       toast.success(`Created ${input.pageType.toLowerCase()}: ${input.title}`);
       

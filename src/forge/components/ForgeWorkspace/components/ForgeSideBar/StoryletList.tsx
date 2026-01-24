@@ -10,7 +10,7 @@ import {
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { useForgeWorkspaceActions } from '@/forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
 import { FORGE_GRAPH_KIND } from '@/forge/types/forge-graph';
-import { createGraphWithStartEnd } from '@/forge/lib/utils/forge-flow-helpers';
+import { createEmptyForgeGraphDoc } from '@/forge/lib/utils/forge-flow-helpers';
 import { InlineRenameInput } from './InlineRenameInput';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Kbd } from '@/shared/ui/kbd';
@@ -83,7 +83,7 @@ export function StoryletList({ className }: StoryletsListProps) {
     }
     
     try {
-      const { flow, startNodeId, endNodeIds } = createGraphWithStartEnd({
+      const emptyGraph = createEmptyForgeGraphDoc({
         projectId: selectedProjectId,
         kind: FORGE_GRAPH_KIND.STORYLET,
         title: 'New Storylet'
@@ -93,9 +93,9 @@ export function StoryletList({ className }: StoryletsListProps) {
         projectId: selectedProjectId,
         kind: FORGE_GRAPH_KIND.STORYLET,
         title: 'New Storylet',
-        flow,
-        startNodeId,
-        endNodeIds,
+        flow: emptyGraph.flow,
+        startNodeId: emptyGraph.startNodeId,
+        endNodeIds: emptyGraph.endNodeIds,
       })
       
       // Add to cache

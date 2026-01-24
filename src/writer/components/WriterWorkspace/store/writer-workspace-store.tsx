@@ -230,10 +230,10 @@ export function createWriterWorkspaceStore(
                 throw new Error('ForgeDataAdapter not available');
               }
               
-              const { createGraphWithStartEnd } = await import('@/forge/lib/utils/forge-flow-helpers');
+              const { createEmptyForgeGraphDoc } = await import('@/forge/lib/utils/forge-flow-helpers');
               const { FORGE_GRAPH_KIND } = await import('@/forge/types/forge-graph');
               
-              const { flow, startNodeId, endNodeIds } = createGraphWithStartEnd({
+              const emptyGraph = createEmptyForgeGraphDoc({
                 projectId,
                 kind: FORGE_GRAPH_KIND.NARRATIVE,
                 title: 'Narrative Graph',
@@ -243,9 +243,9 @@ export function createWriterWorkspaceStore(
                 projectId,
                 kind: FORGE_GRAPH_KIND.NARRATIVE,
                 title: 'Narrative Graph',
-                flow,
-                startNodeId,
-                endNodeIds,
+                flow: emptyGraph.flow,
+                startNodeId: emptyGraph.startNodeId,
+                endNodeIds: emptyGraph.endNodeIds,
               });
               
               // Add to graphs list and select it

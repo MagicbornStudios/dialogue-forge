@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
-import { Hash, BookOpen, Flag, Play, Edit3, Trash2, ExternalLink } from 'lucide-react';
+import { Hash, BookOpen, Flag, Play, ExternalLink } from 'lucide-react';
 import type { FlagSchema } from '@/forge/types/flags';
 import type { LayoutDirection } from '@/forge/lib/utils/layout/types';
 import {
@@ -177,27 +177,21 @@ export const StoryletNode = React.memo(function StoryletNode({ data, selected }:
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-56">
-        <ContextMenuItem onSelect={handleEdit}>
-          <Edit3 size={14} className="mr-2 text-[var(--node-accent)]" /> Edit Node
-        </ContextMenuItem>
-
-        {graphId && (
-          <ContextMenuItem onSelect={handleOpenStorylet}>
-            <ExternalLink size={14} className="mr-2" /> Open Storylet Graph
-          </ContextMenuItem>
-        )}
-
-        {canDelete && (
-          <>
-            <ContextMenuSeparator />
-            <ContextMenuItem
-              onSelect={handleDelete}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 size={14} className="mr-2" /> Delete
-            </ContextMenuItem>
-          </>
-        )}
+        <StandardNodeContextMenuItems
+          nodeId={node.id}
+          isStartNode={isStartNode}
+          onEdit={handleEdit}
+          onSetAsStart={handleSetAsStart}
+          onDelete={handleDelete}
+          showDelete={canDelete}
+          afterEditItems={
+            graphId ? (
+              <ContextMenuItem onSelect={handleOpenStorylet}>
+                <ExternalLink size={14} className="mr-2" /> Open Storylet Graph
+              </ContextMenuItem>
+            ) : undefined
+          }
+        />
       </ContextMenuContent>
     </ContextMenu>
   );

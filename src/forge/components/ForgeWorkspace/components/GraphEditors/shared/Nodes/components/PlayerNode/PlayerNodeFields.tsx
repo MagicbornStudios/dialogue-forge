@@ -1,5 +1,5 @@
 import React from 'react';
-import { ForgeGraphDoc, ForgeChoice, ForgeNode } from '@/forge/types/forge-graph';
+import { ForgeGraphDoc, ForgeChoice, ForgeNode, ForgeNodePresentation } from '@/forge/types/forge-graph';
 import { FlagSchema } from '@/forge/types/flags';
 import { ForgeCharacter } from '@/forge/types/characters';
 import { CharacterSelector } from '../shared/CharacterSelector';
@@ -44,6 +44,11 @@ export function PlayerNodeFields({
   setChoiceInputs,
 }: PlayerNodeFieldsProps) {
   const actions = useForgeEditorActions();
+  const updatePresentation = (updates: Partial<ForgeNodePresentation>) => {
+    const nextPresentation = { ...node.presentation, ...updates };
+    const hasValue = Object.values(nextPresentation).some((value) => value);
+    onUpdate({ presentation: hasValue ? nextPresentation : undefined });
+  };
 
   const handleAddChoice = () => {
     if (!node.id) return;
@@ -103,6 +108,32 @@ export function PlayerNodeFields({
             onChange={(event) => onUpdate({ speaker: event.target.value })}
             className="flex-1 bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-player-accent)] outline-none"
             placeholder="Custom speaker name (optional)"
+          />
+        </div>
+      </div>
+      <div className="mt-4 space-y-2">
+        <label className="text-[10px] text-[var(--color-df-text-secondary)] uppercase">Media</label>
+        <div className="grid grid-cols-1 gap-2">
+          <input
+            type="text"
+            value={node.presentation?.imageId || ''}
+            onChange={(event) => updatePresentation({ imageId: event.target.value || undefined })}
+            className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-player-accent)] outline-none"
+            placeholder="Image ID (optional)"
+          />
+          <input
+            type="text"
+            value={node.presentation?.backgroundId || ''}
+            onChange={(event) => updatePresentation({ backgroundId: event.target.value || undefined })}
+            className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-player-accent)] outline-none"
+            placeholder="Background ID (optional)"
+          />
+          <input
+            type="text"
+            value={node.presentation?.portraitId || ''}
+            onChange={(event) => updatePresentation({ portraitId: event.target.value || undefined })}
+            className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-player-accent)] outline-none"
+            placeholder="Portrait ID (optional)"
           />
         </div>
       </div>

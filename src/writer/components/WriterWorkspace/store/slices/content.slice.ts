@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand';
-import type { ForgePage } from '@/forge/types/narrative';
+import type { ForgePage } from '@/shared/types/narrative';
 import type { WriterWorkspaceState } from '../writer-workspace-types';
 
 export interface ContentSlice {

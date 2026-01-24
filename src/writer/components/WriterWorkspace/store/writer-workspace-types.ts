@@ -1,5 +1,5 @@
-import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
-import type { ForgePage, NarrativeHierarchy } from '@/forge/types/narrative';
+import type { ForgeGraphDoc } from '@/shared/types/forge-graph';
+import type { ForgePage, NarrativeHierarchy } from '@/shared/types/narrative';
 
 export const WRITER_SAVE_STATUS = {
   DIRTY: 'dirty',

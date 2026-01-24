@@ -8,10 +8,10 @@ import type { StoreApi } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { ForgePage } from '@/forge/types/narrative';
-import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
+import type { ForgePage } from '@/shared/types/narrative';
+import type { ForgeGraphDoc } from '@/shared/types/forge-graph';
 import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
-import type { NarrativeHierarchy } from '@/forge/types/narrative';
+import type { NarrativeHierarchy } from '@/shared/types/narrative';
 import { createContentSlice } from './slices/content.slice';
 import { createEditorSlice } from './slices/editor.slice';
 import { createAiSlice } from './slices/ai.slice';
@@ -31,7 +31,9 @@ import {
   WRITER_SAVE_STATUS,
   WRITER_AI_PROPOSAL_STATUS,
 } from './writer-workspace-types';
-import { ForgeDataAdapter } from '@/forge/adapters/forge-data-adapter';
+import type { WriterForgeDataAdapter } from '@/writer/types/forge-data-adapter';
+import { createEmptyForgeGraphDoc } from '@/shared/utils/forge-graph-helpers';
+import { FORGE_GRAPH_KIND } from '@/shared/types/forge-graph';
 
 // Re-export types for convenience
 export type { WriterDocSnapshot, WriterPatchOp, WriterSelectionSnapshot } from '@/writer/types/writer-ai-types';
@@ -80,7 +82,7 @@ export interface WriterWorkspaceState {
 
   // Data adapters
   dataAdapter?: WriterDataAdapter;
-  forgeDataAdapter?: ForgeDataAdapter;
+  forgeDataAdapter?: WriterForgeDataAdapter;
 
   actions: {
     // Content actions
@@ -132,7 +134,7 @@ export interface CreateWriterWorkspaceStoreOptions {
   initialPages?: ForgePage[];
   initialActivePageId?: number | null;
   dataAdapter?: WriterDataAdapter;
-  forgeDataAdapter?: ForgeDataAdapter;
+  forgeDataAdapter?: WriterForgeDataAdapter;
 }
 
 export function createWriterWorkspaceStore(
@@ -230,9 +232,6 @@ export function createWriterWorkspaceStore(
               if (!adapter) {
                 throw new Error('ForgeDataAdapter not available');
               }
-              
-              const { createEmptyForgeGraphDoc } = await import('@/forge/lib/utils/forge-flow-helpers');
-              const { FORGE_GRAPH_KIND } = await import('@/forge/types/forge-graph');
               
               const emptyGraph = createEmptyForgeGraphDoc({
                 projectId,

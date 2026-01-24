@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand';
-import type { ForgePage } from '@/forge/types/narrative';
+import type { ForgePage } from '@/shared/types/narrative';
 import type { WriterWorkspaceState, WriterDraftState, WriterDraftContent } from '../writer-workspace-types';
 import { createWriterDraftContent, WRITER_SAVE_STATUS } from '../writer-workspace-types';
 

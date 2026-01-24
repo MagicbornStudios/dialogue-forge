@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ForgePage } from '@/forge/types/narrative';
+import type { ForgePage } from '@/shared/types/narrative';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 import { WriterYarnModal } from './components/WriterYarnModal';
 import { WriterPlayModal } from './components/WriterPlayModal';

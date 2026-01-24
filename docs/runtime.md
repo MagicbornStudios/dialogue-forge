@@ -22,6 +22,25 @@ A convenience export is exposed via `src/forge/runtime/execute-graph-to-frames.t
 ## How It Looks
 Runtime playback inside Forge uses the `GamePlayer` component, which provides a stage-like container for dialogue simulation during authoring.
 
+## Manual Runtime Verification Checklist
+Use the **Manual Playback Fixture** graph to confirm the dialogue UI and Remotion preview stay in sync. The fixture lives in `src/forge/runtime/__tests__/fixtures/manual-playback-graph.ts` so it can be reused in tests and as a manual QA reference.
+
+### Setup
+1. Start the app locally (`npm run dev`) and open `/forge`.
+2. In your Demo Project (or any project), create a new narrative graph named **Manual Playback Fixture**.
+3. Use `src/forge/runtime/__tests__/fixtures/manual-playback-graph.ts` as the reference for the node content, choices, and wiring.
+4. Switch to the **Play** tab.
+5. In the template dropdown, pick the **Dialogue Only** video template preset (starter template).
+
+### Checklist (manual)
+- ✅ **Initial frame renders**: The dialogue panel shows the Guide speaker and the intro line from the fixture.
+- ✅ **Choices render**: Two choices appear in the choice list.
+- ✅ **Dialogue updates on choice**: Clicking either choice updates the dialogue text to the outro line.
+- ✅ **Remotion Player updates**: The Remotion preview updates to reflect the newly selected line (speaker + dialogue).
+- ✅ **Completion state**: The choices panel transitions to “Dialogue complete.” after the outro line.
+
+If any step fails, re-check the fixture data and verify that the video template preset is selected so that the Remotion Player can compile frames.
+
 ## When to Edit Runtime Code
 - **New runtime behaviors** (scene/media directives, frame rendering, runtime tuning) → edit the engine in `src/forge/runtime/engine/`.
 - **Playback UI** (what users see during test runs) → edit `GamePlayer` or related UI in `src/forge/components/ForgeWorkspace/components/GamePlayer/`.

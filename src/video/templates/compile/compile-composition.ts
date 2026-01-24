@@ -13,7 +13,7 @@ export type CompileCompositionOptions = {
 };
 
 const resolveInputBindings = (
-  bindings: Record<string, string> | undefined,
+  bindings: Record<string, TemplateInputKey> | undefined,
   frameInputs: Record<TemplateInputKey, unknown>,
 ): Record<string, unknown> | undefined => {
   if (!bindings) {
@@ -21,7 +21,7 @@ const resolveInputBindings = (
   }
 
   const resolvedEntries = Object.entries(bindings)
-    .map(([key, binding]) => [key, frameInputs[binding as TemplateInputKey]] as const)
+    .map(([key, binding]) => [key, frameInputs[binding]] as const)
     .filter(([, value]) => value !== undefined);
 
   if (resolvedEntries.length === 0) {
@@ -32,9 +32,9 @@ const resolveInputBindings = (
 };
 
 const mergeResolvedInputs = (
-  templateInputs: Record<string, string> | undefined,
-  sceneInputs: Record<string, string> | undefined,
-  layerInputs: Record<string, string> | undefined,
+  templateInputs: Record<string, TemplateInputKey> | undefined,
+  sceneInputs: Record<string, TemplateInputKey> | undefined,
+  layerInputs: Record<string, TemplateInputKey> | undefined,
   frameInputs: Record<TemplateInputKey, unknown>,
 ): Record<string, unknown> | undefined => {
   const resolvedTemplateInputs = resolveInputBindings(templateInputs, frameInputs);
@@ -59,8 +59,8 @@ const buildCompositionLayer = (
   sceneStartMs: number,
   sceneDurationMs: number,
   frameInputs: Record<TemplateInputKey, unknown>,
-  templateInputs: Record<string, string> | undefined,
-  sceneInputs: Record<string, string> | undefined,
+  templateInputs: Record<string, TemplateInputKey> | undefined,
+  sceneInputs: Record<string, TemplateInputKey> | undefined,
   frameId: string,
   sceneId: string,
 ): VideoCompositionLayer => {

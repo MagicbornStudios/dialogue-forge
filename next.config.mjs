@@ -1,8 +1,23 @@
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { withPayload } from '@payloadcms/next/withPayload';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const payloadPackagePath = path.resolve(
+  __dirname,
+  'node_modules/@payloadcms/next',
+);
+
+let withPayload = (config) => config;
+
+if (fs.existsSync(payloadPackagePath)) {
+  const payloadModule = await import('@payloadcms/next/withPayload');
+  withPayload = payloadModule.withPayload;
+} else {
+  console.warn(
+    '[next.config] Optional dependency @payloadcms/next is not installed; skipping withPayload.',
+  );
+}
 
 /**
  * Next.js config notes:

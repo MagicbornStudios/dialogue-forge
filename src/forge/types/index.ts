@@ -16,6 +16,7 @@ export type {
   ForgeChoice,
   ForgeStoryletCall,
   ForgeNode,
+  ForgeNodePresentation,
   ForgeNodeType,
   ForgeGraphKind,
   ForgeEdgeKind,

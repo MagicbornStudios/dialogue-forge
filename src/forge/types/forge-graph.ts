@@ -126,6 +126,12 @@ export type ForgeStoryletCall = {
   returnGraphId?: number;
 };
 
+export type ForgeNodePresentation = {
+  imageId?: string;
+  backgroundId?: string;
+  portraitId?: string;
+};
+
 export type ForgeNode = {
   // shared
   id?: string;
@@ -154,6 +160,9 @@ export type ForgeNode = {
 
   // optional semantics for deterministic "book path"
   defaultNextNodeId?: string; // optional: explicitly mark default path
+
+  // optional media fields for presentation
+  presentation?: ForgeNodePresentation;
 };
 
 export type ForgeReactFlowEdge = Edge & {

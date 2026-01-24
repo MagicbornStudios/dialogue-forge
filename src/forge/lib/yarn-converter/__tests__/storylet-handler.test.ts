@@ -13,7 +13,7 @@ import {
   createMockAdapter,
   createMockForgeGraphDoc,
 } from './helpers';
-import { FORGE_NODE_TYPE, FORGE_STORYLET_CALL_MODE } from '@/src/types/forge/forge-graph';
+import { FORGE_NODE_TYPE, FORGE_STORYLET_CALL_MODE } from '@/forge/types/forge-graph';
 
 describe('StoryletHandler', () => {
   let handler: StoryletHandler;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CodeBlock } from './CodeBlock';
+import { FLAG_TYPE, FLAG_VALUE_TYPE } from '@/shared/types/constants';
 
 interface GuidePanelProps {
   isOpen: boolean;
@@ -198,21 +199,21 @@ const flagSchema: FlagSchema = {
     {
       id: 'quest_dragon_slayer',
       name: 'Dragon Slayer Quest',
-      type: 'quest',
-      valueType: 'string',
+      type: FLAG_TYPE.QUEST,
+      valueType: FLAG_VALUE_TYPE.STRING,
       defaultValue: 'not_started'
     },
     {
       id: 'player_hp',  // Matches flattened game state
       name: 'Player HP',
-      type: 'stat',
-      valueType: 'number',
+      type: FLAG_TYPE.STAT,
+      valueType: FLAG_VALUE_TYPE.NUMBER,
     },
     {
       id: 'player_affinity_A',  // Matches flattened game state
       name: 'Rune A Affinity',
-      type: 'stat',
-      valueType: 'number',
+      type: FLAG_TYPE.STAT,
+      valueType: FLAG_VALUE_TYPE.NUMBER,
     },
   ]
 };
@@ -295,13 +296,13 @@ const flagSchema: FlagSchema = {
           </div>
 
           <h3 className="text-lg font-semibold mt-6 mb-2 text-white">2. Define Flag Schema</h3>
-          <CodeBlock code={`import { FlagSchema } from '@magicborn/dialogue-forge';
+          <CodeBlock code={`import { FlagSchema, FLAG_TYPE, FLAG_VALUE_TYPE } from '@magicborn/dialogue-forge';
 
 const flagSchema: FlagSchema = {
   flags: [
-    { id: 'quest_dragon_slayer', type: 'quest', valueType: 'string' },
-    { id: 'item_ancient_key', type: 'item', valueType: 'boolean' },
-    { id: 'stat_gold', type: 'stat', valueType: 'number', defaultValue: 0 },
+    { id: 'quest_dragon_slayer', type: FLAG_TYPE.QUEST, valueType: FLAG_VALUE_TYPE.STRING },
+    { id: 'item_ancient_key', type: FLAG_TYPE.ITEM, valueType: FLAG_VALUE_TYPE.BOOLEAN },
+    { id: 'stat_gold', type: FLAG_TYPE.STAT, valueType: FLAG_VALUE_TYPE.NUMBER, defaultValue: 0 },
   ]
 };`} language="typescript" />
 
@@ -453,15 +454,17 @@ const gameState: GameState = {
   GamePlayer,
   importFromYarn,
   exportToYarn,
-  FlagSchema
+  FlagSchema,
+  FLAG_TYPE,
+  FLAG_VALUE_TYPE
 } from '@magicborn/dialogue-forge';
 
 // 1. Define flag schema
 const flagSchema: FlagSchema = {
   flags: [
-    { id: 'quest_complete', type: 'quest', valueType: 'boolean' },
-    { id: 'item_key', type: 'item', valueType: 'boolean' },
-    { id: 'stat_gold', type: 'stat', valueType: 'number', defaultValue: 0 },
+    { id: 'quest_complete', type: FLAG_TYPE.QUEST, valueType: FLAG_VALUE_TYPE.BOOLEAN },
+    { id: 'item_key', type: FLAG_TYPE.ITEM, valueType: FLAG_VALUE_TYPE.BOOLEAN },
+    { id: 'stat_gold', type: FLAG_TYPE.STAT, valueType: FLAG_VALUE_TYPE.NUMBER, defaultValue: 0 },
   ]
 };
 

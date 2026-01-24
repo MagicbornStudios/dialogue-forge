@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FlagSchema, FlagDefinition } from '@/shared/types/flags';
+import { FlagSchema, FlagDefinition } from '@/forge/types/flags';
 import { Info, X, BookOpen, Trophy, Package, TrendingUp, Crown, Globe, MessageSquare } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
 import { DOM_EVENT_TYPE } from '@/shared/types';
+import { FLAG_TYPE } from '@/shared/types/constants';
 
 interface FlagSelectorProps {
   value: string[];
@@ -87,7 +88,7 @@ export function FlagSelector({
   // Get flag definitions for selected flags
   const selectedFlags = value.map((flagId: string) => {
     const flag = flagSchema?.flags.find((f: FlagDefinition) => f.id === flagId);
-    return flag ? { ...flag, id: flagId } : { id: flagId, type: 'dialogue' as const, name: flagId };
+    return flag ? { ...flag, id: flagId } : { id: flagId, type: FLAG_TYPE.DIALOGUE, name: flagId };
   });
 
   // Filter available flags (not already selected)

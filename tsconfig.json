@@ -6,25 +6,22 @@
       "path": "./tsconfig.lib.json"
     },
     {
-      "path": "./tsconfig.next.json"
+      "path": "./src/ai/tsconfig.json"
     },
     {
-      "path": "./src/ai"
+      "path": "./src/forge/tsconfig.json"
     },
     {
-      "path": "./src/forge"
+      "path": "./src/shared/tsconfig.json"
     },
     {
-      "path": "./src/shared"
+      "path": "./src/styles/tsconfig.json"
     },
     {
-      "path": "./src/styles"
+      "path": "./src/video/tsconfig.json"
     },
     {
-      "path": "./src/video"
-    },
-    {
-      "path": "./src/writer"
+      "path": "./src/writer/tsconfig.json"
     }
   ],
   "include": [

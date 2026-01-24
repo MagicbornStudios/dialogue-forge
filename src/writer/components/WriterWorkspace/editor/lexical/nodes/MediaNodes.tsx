@@ -257,7 +257,7 @@ const ImageBlockComponent = ({
   );
 };
 
-export class ImageBlockNode extends DecoratorNode<JSX.Element> {
+export class ImageBlockNode extends DecoratorNode<React.JSX.Element> {
   __mediaId: string;
   __altText: string;
   __caption: string;
@@ -331,7 +331,7 @@ export class ImageBlockNode extends DecoratorNode<JSX.Element> {
     return false;
   }
 
-  decorate(editor: LexicalEditor, _config: EditorConfig): JSX.Element {
+  decorate(editor: LexicalEditor, _config: EditorConfig): React.JSX.Element {
     return (
       <ImageBlockComponent
         nodeKey={this.getKey()}
@@ -513,7 +513,7 @@ const FileAttachmentComponent = ({
   );
 };
 
-export class FileAttachmentNode extends DecoratorNode<JSX.Element> {
+export class FileAttachmentNode extends DecoratorNode<React.JSX.Element> {
   __mediaId: string;
   __label: string;
   __caption: string;
@@ -581,7 +581,7 @@ export class FileAttachmentNode extends DecoratorNode<JSX.Element> {
     return false;
   }
 
-  decorate(editor: LexicalEditor, _config: EditorConfig): JSX.Element {
+  decorate(editor: LexicalEditor, _config: EditorConfig): React.JSX.Element {
     return (
       <FileAttachmentComponent
         nodeKey={this.getKey()}
@@ -755,7 +755,7 @@ const EmbedBlockComponent = ({
   );
 };
 
-export class EmbedBlockNode extends DecoratorNode<JSX.Element> {
+export class EmbedBlockNode extends DecoratorNode<React.JSX.Element> {
   __mediaId: string;
   __title: string;
   __caption: string;
@@ -835,7 +835,7 @@ export class EmbedBlockNode extends DecoratorNode<JSX.Element> {
     return false;
   }
 
-  decorate(editor: LexicalEditor, _config: EditorConfig): JSX.Element {
+  decorate(editor: LexicalEditor, _config: EditorConfig): React.JSX.Element {
     return (
       <EmbedBlockComponent
         nodeKey={this.getKey()}

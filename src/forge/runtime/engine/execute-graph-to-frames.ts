@@ -1,4 +1,4 @@
-import { CONDITION_OPERATOR } from '@/src/forge/types/constants';
+import { CONDITION_OPERATOR } from '@/forge/types/constants';
 import {
   FORGE_CONDITIONAL_BLOCK_TYPE,
   FORGE_EDGE_KIND,
@@ -9,8 +9,8 @@ import {
   type ForgeChoice,
   type ForgeReactFlowEdge,
   type ForgeReactFlowNode,
-} from '@/src/forge/types/forge-graph';
-import type { ForgeGameState } from '@/src/forge/types/forge-game-state';
+} from '@/forge/types/forge-graph';
+import type { ForgeGameState } from '@/forge/types/forge-game-state';
 import {
   EXECUTION_MODE,
   EXECUTION_STATUS,
@@ -190,7 +190,7 @@ export const executeGraphToFrames = async (
 
   const graphStack: Array<{ graph: ForgeGraphDoc; returnNodeId?: string }> = [];
   let currentGraph = graph;
-  let currentNodeId = options.startingNodeId ?? graph.startNodeId;
+  let currentNodeId: string | undefined = options.startingNodeId ?? graph.startNodeId;
   let steps = 0;
 
   const buildGraphIndex = (graphDoc: ForgeGraphDoc) => {
@@ -359,7 +359,7 @@ export const executeGraphToFrames = async (
       });
 
       currentNodeId = selectedChoice.nextNodeId ?? getDefaultNextNodeId(
-        currentNodeId,
+        currentNodeId ?? '',
         nodeData,
         graphIndex.edgesBySource,
       );
@@ -405,7 +405,7 @@ export const executeGraphToFrames = async (
       }
 
       currentNodeId = matchedBlock?.nextNodeId ?? getDefaultNextNodeId(
-        currentNodeId,
+        currentNodeId ?? '',
         nodeData,
         graphIndex.edgesBySource,
       );
@@ -485,7 +485,7 @@ export const executeGraphToFrames = async (
       continue;
     }
 
-    currentNodeId = getDefaultNextNodeId(currentNodeId, nodeData, graphIndex.edgesBySource);
+    currentNodeId = getDefaultNextNodeId(currentNodeId ?? '', nodeData, graphIndex.edgesBySource);
     if (!currentNodeId && graphStack.length > 0) {
       const nextGraph = graphStack.pop();
       if (nextGraph) {

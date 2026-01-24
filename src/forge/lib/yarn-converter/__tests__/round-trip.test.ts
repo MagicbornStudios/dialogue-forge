@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { importFromYarn, exportToYarn } from '../index';
-import type { ForgeGraphDoc } from '@/src/types/forge/forge-graph';
+import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
 import {
   createMockForgeGraphDoc,
   createSimpleCharacterNode,
@@ -8,8 +8,8 @@ import {
   createSimpleConditionalNode,
   normalizeYarn,
 } from './helpers';
-import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
-import { CONDITION_OPERATOR, CONDITION_BLOCK_TYPE } from '@/forge/types/constants';
+import { FORGE_NODE_TYPE, FORGE_CONDITIONAL_BLOCK_TYPE } from '@/forge/types/forge-graph';
+import { CONDITION_OPERATOR } from '@/forge/types/constants';
 
 /**
  * Test round-trip conversion: Yarn → DialogueTree → Yarn
@@ -265,9 +265,9 @@ NPC: Hello {$player_name}! You have {$stat_gold} gold.
       const imported = await importFromYarn(yarn, 'Conditional Test');
       
       expect(imported.flow.nodes[0].data?.conditionalBlocks?.length).toBe(3);
-      expect(imported.flow.nodes[0].data?.conditionalBlocks?.[0].type).toBe(CONDITION_BLOCK_TYPE.IF);
-      expect(imported.flow.nodes[0].data?.conditionalBlocks?.[1].type).toBe(CONDITION_BLOCK_TYPE.ELSEIF);
-      expect(imported.flow.nodes[0].data?.conditionalBlocks?.[2].type).toBe(CONDITION_BLOCK_TYPE.ELSE);
+      expect(imported.flow.nodes[0].data?.conditionalBlocks?.[0].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.IF);
+      expect(imported.flow.nodes[0].data?.conditionalBlocks?.[1].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.ELSE_IF);
+      expect(imported.flow.nodes[0].data?.conditionalBlocks?.[2].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.ELSE);
     });
   });
 
@@ -281,7 +281,7 @@ NPC: Hello {$player_name}! You have {$stat_gold} gold.
         graph.flow.nodes[0].data.conditionalBlocks = [
           {
             id: 'block1',
-            type: CONDITION_BLOCK_TYPE.IF,
+            type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
             condition: [
               { flag: 'quest', operator: CONDITION_OPERATOR.IS_SET },
             ],
@@ -290,7 +290,7 @@ NPC: Hello {$player_name}! You have {$stat_gold} gold.
           },
           {
             id: 'block2',
-            type: CONDITION_BLOCK_TYPE.ELSE,
+            type: FORGE_CONDITIONAL_BLOCK_TYPE.ELSE,
             content: 'No quest!',
             speaker: 'Guard',
           },

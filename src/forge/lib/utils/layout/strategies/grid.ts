@@ -5,7 +5,7 @@
  * Useful for getting a quick overview of all nodes.
  */
 
-import type { ForgeGraphDoc, ForgeReactFlowNode } from '@/src/types/forge/forge-graph';
+import type { ForgeGraphDoc, ForgeReactFlowNode } from '@/forge/types/forge-graph';
 import { LayoutStrategy, LayoutOptions, LayoutResult } from '../types';
 
 // ============================================================================

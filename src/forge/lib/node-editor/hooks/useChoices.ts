@@ -1,5 +1,5 @@
 
-import { ForgeChoice, ForgeNode } from '@/src/types/forge/forge-graph';
+import { ForgeChoice, ForgeNode } from '@/forge/types/forge-graph';
 import { useState, useEffect, useRef } from 'react';
 
 interface UseChoicesResult {

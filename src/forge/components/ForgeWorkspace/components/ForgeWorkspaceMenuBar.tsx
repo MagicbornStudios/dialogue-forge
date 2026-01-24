@@ -23,6 +23,8 @@ import { CopilotButton, CopilotButtonContainer } from '@/forge/components/ForgeW
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { Button } from '@/shared/ui/button';
 import { ForgeProjectSwitcher } from './ForgeProjectSwitcher';
+// ThemeSwitcher is a demo app component, not part of the library
+// @ts-ignore - Demo app component, resolved at runtime
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import type { ForgeGameStateRecord } from '@/forge/types/forge-game-state';
 

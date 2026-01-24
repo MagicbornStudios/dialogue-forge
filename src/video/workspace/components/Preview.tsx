@@ -1,3 +1,4 @@
+import * as React from 'react';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
 import type { VideoTemplateMediaResolution } from '@/video/workspace/video-template-workspace-contracts';
 import { VIDEO_MEDIA_KIND } from '@/video/workspace/video-template-workspace-contracts';

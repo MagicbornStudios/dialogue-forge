@@ -114,7 +114,7 @@ export const ChoiceEdge = React.memo(function ChoiceEdge({
   // Get insert node types from edge data
   const insertNodeTypes = edgeData?.insertElementTypes;
   const hasContextMenu = !!insertNodeTypes && insertNodeTypes.length > 0;
-  const edgeStyle = useMemo(() => ({
+  const edgeStyle = useMemo<React.CSSProperties>(() => ({
     strokeWidth,
     opacity,
     cursor: 'pointer',
@@ -133,7 +133,7 @@ export const ChoiceEdge = React.memo(function ChoiceEdge({
         fill="none"
         stroke="transparent"
         strokeWidth={20}
-        style={{ cursor: 'pointer', pointerEvents: 'all' }}
+        style={{ cursor: 'pointer', pointerEvents: 'all' as React.CSSProperties['pointerEvents'] }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       />

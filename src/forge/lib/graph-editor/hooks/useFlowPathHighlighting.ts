@@ -1,6 +1,6 @@
 // src/components/ForgeStoryletGraphEditor/hooks/useFlowPathHighlighting.ts
 import { useMemo } from 'react';
-import type { ForgeGraphDoc, ForgeNode } from '@/src/types/forge/forge-graph';
+import type { ForgeGraphDoc, ForgeNode } from '@/forge/types/forge-graph';
 
 export function useFlowPathHighlighting(selectedNodeId: string | null, graph: ForgeGraphDoc) {
   return useMemo(() => {

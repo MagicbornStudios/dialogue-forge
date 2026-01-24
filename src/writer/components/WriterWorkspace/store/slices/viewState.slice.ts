@@ -66,78 +66,113 @@ export function createViewStateSlice(
     panelLayout: defaultPanelLayout,
     pageLayout: defaultPageLayout,
     openYarnModal: () =>
-      set((state) => ({
-        modalState: { ...state.modalState, isYarnModalOpen: true },
-      })),
+      set((state: WriterWorkspaceState) => {
+        const currentModalState = (state.modalState as WriterModalState) ?? defaultModalState;
+        return {
+          modalState: { ...currentModalState, isYarnModalOpen: true },
+        };
+      }),
     closeYarnModal: () =>
-      set((state) => ({
-        modalState: { ...state.modalState, isYarnModalOpen: false },
-      })),
+      set((state: WriterWorkspaceState) => {
+        const currentModalState = (state.modalState as WriterModalState) ?? defaultModalState;
+        return {
+          modalState: { ...currentModalState, isYarnModalOpen: false },
+        };
+      }),
     openPlayModal: () =>
-      set((state) => ({
-        modalState: { ...state.modalState, isPlayModalOpen: true },
-      })),
+      set((state: WriterWorkspaceState) => {
+        const currentModalState = (state.modalState as WriterModalState) ?? defaultModalState;
+        return {
+          modalState: { ...currentModalState, isPlayModalOpen: true },
+        };
+      }),
     closePlayModal: () =>
-      set((state) => ({
-        modalState: { ...state.modalState, isPlayModalOpen: false },
-      })),
+      set((state: WriterWorkspaceState) => {
+        const currentModalState = (state.modalState as WriterModalState) ?? defaultModalState;
+        return {
+          modalState: { ...currentModalState, isPlayModalOpen: false },
+        };
+      }),
     openSettingsModal: () =>
-      set((state) => ({
-        modalState: { ...state.modalState, isSettingsModalOpen: true },
-      })),
+      set((state: WriterWorkspaceState) => {
+        const currentModalState = (state.modalState as WriterModalState) ?? defaultModalState;
+        return {
+          modalState: { ...currentModalState, isSettingsModalOpen: true },
+        };
+      }),
     closeSettingsModal: () =>
-      set((state) => ({
-        modalState: { ...state.modalState, isSettingsModalOpen: false },
-      })),
+      set((state: WriterWorkspaceState) => {
+        const currentModalState = (state.modalState as WriterModalState) ?? defaultModalState;
+        return {
+          modalState: { ...currentModalState, isSettingsModalOpen: false },
+        };
+      }),
     togglePanel: (panel) =>
-      set((state) => ({
-        panelLayout: {
-          ...state.panelLayout,
-          [panel]: {
-            ...state.panelLayout[panel],
-            visible: !state.panelLayout[panel].visible,
+      set((state: WriterWorkspaceState) => {
+        const currentPanelLayout = (state.panelLayout as WriterPanelLayoutState) ?? defaultPanelLayout;
+        return {
+          panelLayout: {
+            ...currentPanelLayout,
+            [panel]: {
+              ...currentPanelLayout[panel],
+              visible: !currentPanelLayout[panel].visible,
+            },
           },
-        },
-      })),
+        };
+      }),
     dockPanel: (panel) =>
-      set((state) => ({
-        panelLayout: {
-          ...state.panelLayout,
-          [panel]: {
-            ...state.panelLayout[panel],
-            isDocked: true,
+      set((state: WriterWorkspaceState) => {
+        const currentPanelLayout = (state.panelLayout as WriterPanelLayoutState) ?? defaultPanelLayout;
+        return {
+          panelLayout: {
+            ...currentPanelLayout,
+            [panel]: {
+              ...currentPanelLayout[panel],
+              isDocked: true,
+            },
           },
-        },
-      })),
+        };
+      }),
     undockPanel: (panel) =>
-      set((state) => ({
-        panelLayout: {
-          ...state.panelLayout,
-          [panel]: {
-            ...state.panelLayout[panel],
-            isDocked: false,
+      set((state: WriterWorkspaceState) => {
+        const currentPanelLayout = (state.panelLayout as WriterPanelLayoutState) ?? defaultPanelLayout;
+        return {
+          panelLayout: {
+            ...currentPanelLayout,
+            [panel]: {
+              ...currentPanelLayout[panel],
+              isDocked: false,
+            },
           },
-        },
-      })),
+        };
+      }),
     setPageFullWidth: (pageId, value) =>
-      set((state) => ({
-        pageLayout: {
-          ...state.pageLayout,
-          fullWidthByPageId: {
-            ...state.pageLayout.fullWidthByPageId,
-            [pageId]: value,
+      set((state: WriterWorkspaceState) => {
+        const currentPageLayout = (state.pageLayout as WriterPageLayoutState) ?? defaultPageLayout;
+        const currentFullWidth = currentPageLayout.fullWidthByPageId ?? {};
+        return {
+          pageLayout: {
+            ...currentPageLayout,
+            fullWidthByPageId: {
+              ...currentFullWidth,
+              [pageId]: value,
+            },
           },
-        },
-      })),
+        };
+      }),
     togglePageFullWidth: (pageId) =>
-      set((state) => ({
-        pageLayout: {
-          ...state.pageLayout,
-          fullWidthByPageId: {
-            ...state.pageLayout.fullWidthByPageId,
-            [pageId]: !state.pageLayout.fullWidthByPageId[pageId],
+      set((state: WriterWorkspaceState) => {
+        const currentPageLayout = (state.pageLayout as WriterPageLayoutState) ?? defaultPageLayout;
+        const currentFullWidth = currentPageLayout.fullWidthByPageId ?? {};
+        return {
+          pageLayout: {
+            ...currentPageLayout,
+            fullWidthByPageId: {
+              ...currentFullWidth,
+              [pageId]: !currentFullWidth[pageId],
+            },
           },
-        },
-      })),
+        };
+      }),
   };
 }

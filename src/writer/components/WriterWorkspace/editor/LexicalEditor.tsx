@@ -22,11 +22,11 @@ import { BlockHandlePlugin } from '@/writer/components/WriterWorkspace/editor/le
 
 const parseSerializedEditorState = (editor: LexicalEditorType, value: string) => {
   try {
-    const parsed = JSON.parse(value) as { root?: unknown };
+    const parsed = JSON.parse(value);
     if (!parsed || typeof parsed !== 'object' || !('root' in parsed)) {
       return null;
     }
-    return editor.parseEditorState(parsed);
+    return editor.parseEditorState(value);
   } catch {
     return null;
   }
@@ -56,7 +56,7 @@ export function LexicalEditor({
     onError: (error: Error) => {
       throw error;
     },
-    editorState: (editor) => {
+    editorState: (editor: LexicalEditorType) => {
       if (!initialValueRef.current) {
         return;
       }

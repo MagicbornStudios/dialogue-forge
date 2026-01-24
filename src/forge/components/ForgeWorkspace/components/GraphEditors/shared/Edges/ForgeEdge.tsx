@@ -148,7 +148,7 @@ export const ForgeEdge = React.memo(function ForgeEdge({
         fill="none"
         stroke="transparent"
         strokeWidth={20}
-        style={{ cursor: 'pointer', pointerEvents: 'all' }}
+        style={{ cursor: 'pointer', pointerEvents: 'all' as React.CSSProperties['pointerEvents'] }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       />

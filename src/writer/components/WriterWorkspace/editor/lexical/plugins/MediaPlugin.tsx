@@ -110,9 +110,13 @@ export function MediaPlugin() {
         replaceNodeMedia(payload.nodeKey, result.mediaId, file.name);
         return;
       }
+      if (!dataAdapter?.uploadMedia) {
+        return;
+      }
+      const uploadMedia = dataAdapter.uploadMedia;
       await Promise.all(
         files.map(async (file) => {
-          const result = await dataAdapter.uploadMedia(file);
+          const result = await uploadMedia(file);
           if (!result?.mediaId) {
             return;
           }

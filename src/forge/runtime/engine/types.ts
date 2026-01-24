@@ -1,5 +1,5 @@
-import type { ForgeFlagValue, ForgeGameState } from '@/src/forge/types/forge-game-state';
-import type { ForgeChoice, ForgeCondition, ForgeGraphDoc, ForgeNode } from '@/src/forge/types/forge-graph';
+import type { ForgeFlagValue, ForgeGameState } from '@/forge/types/forge-game-state';
+import type { ForgeChoice, ForgeCondition, ForgeGraphDoc, ForgeNode } from '@/forge/types/forge-graph';
 import type {
   ExecutionMode,
   ExecutionStatus,
@@ -7,6 +7,8 @@ import type {
   RuntimeDirectiveApplyMode,
   RuntimeDirectiveType,
 } from './constants';
+
+export type { RuntimeDirectiveApplyMode };
 
 export type FlagMutation = {
   flagId: string;

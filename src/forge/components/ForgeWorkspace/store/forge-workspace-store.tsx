@@ -1,8 +1,10 @@
 "use client"
 
+import * as React from "react"
 import { createContext, useContext } from "react"
 import type { PropsWithChildren } from "react"
 import { createStore } from "zustand/vanilla"
+import type { StoreApi } from "zustand/vanilla"
 import { useStore } from "zustand"
 import { devtools } from "zustand/middleware"
 import { immer } from "zustand/middleware/immer"
@@ -126,7 +128,7 @@ export interface CreateForgeWorkspaceStoreOptions {
 export function createForgeWorkspaceStore(
   options: CreateForgeWorkspaceStoreOptions,
   eventSink: EventSink
-) {
+): StoreApi<ForgeWorkspaceState> {
   const { 
     initialFlagSchema: flagSchema, 
     initialGameState: gameState,

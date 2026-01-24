@@ -29,7 +29,7 @@ const sanitizeRuntimeLinks = (
   }
 
   if (data.choices) {
-    data.choices = data.choices.map(choice => {
+    data.choices = data.choices.map((choice: { nextNodeId?: string; [key: string]: unknown }) => {
       if (choice.nextNodeId && runtimeNodeIds.has(choice.nextNodeId)) {
         return { ...choice, nextNodeId: undefined };
       }
@@ -38,7 +38,7 @@ const sanitizeRuntimeLinks = (
   }
 
   if (data.conditionalBlocks) {
-    data.conditionalBlocks = data.conditionalBlocks.map(block => {
+    data.conditionalBlocks = data.conditionalBlocks.map((block: { nextNodeId?: string; [key: string]: unknown }) => {
       if (block.nextNodeId && runtimeNodeIds.has(block.nextNodeId)) {
         return { ...block, nextNodeId: undefined };
       }

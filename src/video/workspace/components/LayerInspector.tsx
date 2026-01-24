@@ -1,3 +1,4 @@
+import * as React from 'react';
 import type { VideoLayer } from '@/video/templates/types/video-layer';
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader } from '@/shared/ui/card';

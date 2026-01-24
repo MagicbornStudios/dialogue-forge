@@ -1,5 +1,5 @@
 // src/utils/forge-edge-style.ts
-import type { ForgeReactFlowEdge, ForgeReactFlowNode, ForgeNodeType } from '@/src/types/forge/forge-graph';
+import type { ForgeReactFlowEdge, ForgeReactFlowNode, ForgeNodeType } from '@/forge/types/forge-graph';
 
 export const TYPE_COLORS: Record<ForgeNodeType, string> = {
   ACT: '#8b5cf6',

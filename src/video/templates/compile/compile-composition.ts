@@ -1,9 +1,9 @@
-import type { Frame } from '@/src/forge/runtime/types';
-import type { TemplateInputKey } from '@/src/shared/types/bindings';
-import type { VideoComposition, VideoCompositionLayer, VideoCompositionScene } from '@/src/video/templates/types/video-composition';
-import type { VideoLayer } from '@/src/video/templates/types/video-layer';
-import type { VideoScene } from '@/src/video/templates/types/video-scene';
-import type { VideoTemplate } from '@/src/video/templates/types/video-template';
+import type { Frame } from '@/forge/runtime/types';
+import type { TemplateInputKey } from '@/shared/types/bindings';
+import type { VideoComposition, VideoCompositionLayer, VideoCompositionScene } from '@/video/templates/types/video-composition';
+import type { VideoLayer } from '@/video/templates/types/video-layer';
+import type { VideoScene } from '@/video/templates/types/video-scene';
+import type { VideoTemplate } from '@/video/templates/types/video-template';
 import { framesToTemplateInputs } from './frames-to-template-inputs';
 
 export type CompositionScenePicker = (frame: Frame, frameIndex: number, template: VideoTemplate) => VideoScene | null;
@@ -104,7 +104,7 @@ export const compileCompositionFromFrames = (
 
     const sceneId = `${frameInput.frameId}:${scene.id}`;
     const durationMs = scene.durationMs;
-    const layers = scene.layers.map((layer) =>
+    const layers = scene.layers.map((layer: VideoLayer) =>
       buildCompositionLayer(
         layer,
         currentStartMs,

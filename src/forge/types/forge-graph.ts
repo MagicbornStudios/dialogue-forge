@@ -1,6 +1,5 @@
-// src/types/forge/forge-graph.ts
 import type { Node, Edge, Viewport } from 'reactflow';
-import { CONDITION_OPERATOR, type ConditionOperator } from '@/src/forge/types/constants';
+import { CONDITION_OPERATOR, type ConditionOperator } from '@/forge/types/constants';
 
 /**
  * Forge graph kind constants

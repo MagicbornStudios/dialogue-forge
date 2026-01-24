@@ -1,4 +1,4 @@
-import type { ForgeNodeType } from '@/src/types/forge/forge-graph';
+import type { ForgeNodeType } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE_LABELS, NODE_TYPE_BORDER_COLORS, NODE_TYPE_BADGE_CLASSES } from '@/forge/types/ui-constants';
 
 /**

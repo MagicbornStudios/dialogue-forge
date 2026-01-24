@@ -1,3 +1,4 @@
+import * as React from 'react';
 import type { VideoScene } from '@/video/templates/types/video-scene';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';

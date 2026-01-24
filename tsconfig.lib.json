@@ -1,16 +1,28 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "composite": true,
     "module": "commonjs",
-    "lib": ["ES2020", "DOM"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "jsx": "react",
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "moduleResolution": "node",
     "types": ["node"],
-    "noEmit": false
+    "noEmit": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/shared/*": ["./src/shared/*"],
+      "@/ai/*": ["./src/ai/*"],
+      "@/forge/*": ["./src/forge/*"],
+      "@/writer/*": ["./src/writer/*"],
+      "@/video/*": ["./src/video/*"],
+      "@/*": ["./*"],
+      "@magicborn/dialogue-forge": ["./src"],
+      "@magicborn/dialogue-forge/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "app", "components", "styles", ".next"]
+  "exclude": ["node_modules", "dist", "app", "components", "styles", ".next", "**/__tests__/**", "**/*.test.ts", "**/*.test.tsx"]
 }

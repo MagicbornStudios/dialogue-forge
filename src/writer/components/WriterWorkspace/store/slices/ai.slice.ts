@@ -45,7 +45,8 @@ export interface AiActions {
 
 export function createAiSlice(
   set: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[0],
-  get: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[1]
+  get: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[1],
+  editorActions?: { setDraftContent: (pageId: number, content: WriterDraftContent) => void; setDraftTitle: (pageId: number, title: string) => void }
 ): AiSlice & AiActions {
   return {
     aiPreview: null,
@@ -174,8 +175,9 @@ export function createAiSlice(
         error: null,
         revision: 0,
       };
-      const snapshot = state.aiSnapshot ?? createSnapshotFromPage(page, draft);
-      const nextSnapshot = applyWriterPatchOps(snapshot, state.aiPreview);
+      const snapshot = (state.aiSnapshot as WriterDocSnapshot | null | undefined) ?? createSnapshotFromPage(page, draft);
+      const aiPreview = (state.aiPreview as WriterPatchOp[] | null | undefined) ?? [];
+      const nextSnapshot = applyWriterPatchOps(snapshot, aiPreview) as WriterDocSnapshot;
 
       set({
         aiPreview: null,
@@ -186,18 +188,21 @@ export function createAiSlice(
         aiUndoSnapshot: snapshot,
       });
 
-      get().actions.setDraftContent(
-        targetId,
-        createWriterDraftContent(nextSnapshot.content ?? '')
-      );
-      if (typeof nextSnapshot.title === 'string') {
-        get().actions.setDraftTitle(targetId, nextSnapshot.title);
+      const nextSnapshotTyped: WriterDocSnapshot = nextSnapshot as WriterDocSnapshot;
+      if (editorActions) {
+        editorActions.setDraftContent(
+          targetId,
+          createWriterDraftContent(nextSnapshotTyped.content ?? '')
+        );
+        if (typeof nextSnapshotTyped.title === 'string') {
+          editorActions.setDraftTitle(targetId, nextSnapshotTyped.title);
+        }
       }
     },
     revertAiDraft: () => {
       const state = get();
       const targetId = state.activePageId;
-      const undoSnapshot = state.aiUndoSnapshot;
+      const undoSnapshot = state.aiUndoSnapshot as WriterDocSnapshot | null | undefined;
       if (!targetId || !undoSnapshot) {
         return;
       }
@@ -211,12 +216,24 @@ export function createAiSlice(
         aiError: null,
       });
 
-      get().actions.setDraftContent(
-        targetId,
-        createWriterDraftContent(undoSnapshot.content ?? '')
-      );
-      if (typeof undoSnapshot.title === 'string') {
-        get().actions.setDraftTitle(targetId, undoSnapshot.title);
+      const undoSnapshotTyped: WriterDocSnapshot = undoSnapshot as WriterDocSnapshot;
+      if (editorActions) {
+        editorActions.setDraftContent(
+          targetId,
+          createWriterDraftContent(undoSnapshotTyped.content ?? '')
+        );
+        if (typeof undoSnapshotTyped.title === 'string') {
+          editorActions.setDraftTitle(targetId, undoSnapshotTyped.title);
+        }
+      } else {
+        const stateAfterSet = get() as WriterWorkspaceState;
+        (stateAfterSet.actions as { setDraftContent: (pageId: number, content: WriterDraftContent) => void; setDraftTitle: (pageId: number, title: string) => void }).setDraftContent(
+          targetId,
+          createWriterDraftContent(undoSnapshotTyped.content ?? '')
+        );
+        if (typeof undoSnapshotTyped.title === 'string') {
+          (stateAfterSet.actions as { setDraftContent: (pageId: number, content: WriterDraftContent) => void; setDraftTitle: (pageId: number, title: string) => void }).setDraftTitle(targetId, undoSnapshotTyped.title);
+        }
       }
     },
   };

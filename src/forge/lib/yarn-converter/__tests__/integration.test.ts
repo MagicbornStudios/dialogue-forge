@@ -12,8 +12,8 @@ import {
   createSimplePlayerNode,
   createSimpleConditionalNode,
 } from './helpers';
-import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
-import { CONDITION_OPERATOR, CONDITION_BLOCK_TYPE } from '@/forge/types/constants';
+import { FORGE_NODE_TYPE, FORGE_CONDITIONAL_BLOCK_TYPE } from '@/forge/types/forge-graph';
+import { CONDITION_OPERATOR } from '@/forge/types/constants';
 
 describe('Integration Tests', () => {
   describe('Full Graph Conversion', () => {

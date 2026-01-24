@@ -4,10 +4,10 @@
  * Tests YarnTextBuilder and NodeBlockBuilder
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { YarnTextBuilder } from '../builders/yarn-text-builder';
 import { NodeBlockBuilder } from '../builders/node-block-builder';
-import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
+import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { CONDITION_OPERATOR } from '@/forge/types/constants';
 
 describe('YarnTextBuilder', () => {

@@ -4,7 +4,7 @@
  * Comprehensive tests for export, import, and round-trip conversion
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { CharacterHandler } from '../handlers/character-handler';
 import { YarnTextBuilder } from '../builders/yarn-text-builder';
 import {
@@ -14,8 +14,8 @@ import {
   normalizeYarn,
   createSimpleCharacterNode,
 } from './helpers';
-import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
-import { CONDITION_OPERATOR, CONDITION_BLOCK_TYPE } from '@/forge/types/constants';
+import { FORGE_NODE_TYPE, FORGE_CONDITIONAL_BLOCK_TYPE } from '@/forge/types/forge-graph';
+import { CONDITION_OPERATOR } from '@/forge/types/constants';
 
 describe('CharacterHandler', () => {
   let handler: CharacterHandler;
@@ -90,7 +90,7 @@ describe('CharacterHandler', () => {
         conditionalBlocks: [
           {
             id: 'block1',
-            type: CONDITION_BLOCK_TYPE.IF,
+            type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
             condition: [
               { flag: 'has_key', operator: CONDITION_OPERATOR.IS_SET },
             ],
@@ -98,7 +98,7 @@ describe('CharacterHandler', () => {
           },
           {
             id: 'block2',
-            type: CONDITION_BLOCK_TYPE.ELSE,
+            type: FORGE_CONDITIONAL_BLOCK_TYPE.ELSE,
             content: 'Door locked!',
           },
         ],
@@ -117,7 +117,7 @@ describe('CharacterHandler', () => {
         conditionalBlocks: [
           {
             id: 'block1',
-            type: CONDITION_BLOCK_TYPE.IF,
+            type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
             condition: [
               { flag: 'quest', operator: CONDITION_OPERATOR.IS_SET },
             ],
@@ -207,9 +207,9 @@ NPC: Hello!
       
       expect(result.data?.conditionalBlocks).toBeDefined();
       expect(result.data?.conditionalBlocks?.length).toBe(2);
-      expect(result.data?.conditionalBlocks?.[0].type).toBe(CONDITION_BLOCK_TYPE.IF);
+      expect(result.data?.conditionalBlocks?.[0].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.IF);
       expect(result.data?.conditionalBlocks?.[0].content).toContain('Door unlocked!');
-      expect(result.data?.conditionalBlocks?.[1].type).toBe(CONDITION_BLOCK_TYPE.ELSE);
+      expect(result.data?.conditionalBlocks?.[1].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.ELSE);
       expect(result.data?.conditionalBlocks?.[1].content).toContain('Door locked!');
     });
 
@@ -228,9 +228,9 @@ NPC: Hello!
       const result = await handler.importNode(yarnBlock);
       
       expect(result.data?.conditionalBlocks?.length).toBe(3);
-      expect(result.data?.conditionalBlocks?.[0].type).toBe(CONDITION_BLOCK_TYPE.IF);
-      expect(result.data?.conditionalBlocks?.[1].type).toBe(CONDITION_BLOCK_TYPE.ELSEIF);
-      expect(result.data?.conditionalBlocks?.[2].type).toBe(CONDITION_BLOCK_TYPE.ELSE);
+      expect(result.data?.conditionalBlocks?.[0].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.IF);
+      expect(result.data?.conditionalBlocks?.[1].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.ELSE_IF);
+      expect(result.data?.conditionalBlocks?.[2].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.ELSE);
     });
 
     it('should import multiline content', async () => {
@@ -289,7 +289,7 @@ NPC: Line 3
         conditionalBlocks: [
           {
             id: 'block1',
-            type: CONDITION_BLOCK_TYPE.IF,
+            type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
             condition: [
               { flag: 'has_key', operator: CONDITION_OPERATOR.IS_SET },
             ],
@@ -298,7 +298,7 @@ NPC: Line 3
           },
           {
             id: 'block2',
-            type: CONDITION_BLOCK_TYPE.ELSE,
+            type: FORGE_CONDITIONAL_BLOCK_TYPE.ELSE,
             content: 'Door locked!',
             speaker: 'Guard',
           },
@@ -309,8 +309,8 @@ NPC: Line 3
       const imported = await handler.importNode(yarnBlock);
       
       expect(imported.data?.conditionalBlocks?.length).toBe(2);
-      expect(imported.data?.conditionalBlocks?.[0].type).toBe(CONDITION_BLOCK_TYPE.IF);
-      expect(imported.data?.conditionalBlocks?.[1].type).toBe(CONDITION_BLOCK_TYPE.ELSE);
+      expect(imported.data?.conditionalBlocks?.[0].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.IF);
+      expect(imported.data?.conditionalBlocks?.[1].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.ELSE);
     });
 
     it('should round-trip multiline content', async () => {

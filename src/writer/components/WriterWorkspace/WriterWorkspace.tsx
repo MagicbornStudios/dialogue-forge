@@ -92,6 +92,9 @@ export function WriterWorkspace({
     const store = storeRef.current;
 
     async function loadData() {
+      if (!dataAdapter || !projectId) {
+        return;
+      }
       try {
         const [actsData, chaptersData, pagesData] = await Promise.all([
           dataAdapter.listActs(projectId),

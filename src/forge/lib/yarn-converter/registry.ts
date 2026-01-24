@@ -5,7 +5,7 @@
  * Uses the Registry pattern to allow easy extension of new node types.
  */
 
-import type { ForgeNodeType } from '@/src/types/forge/forge-graph';
+import type { ForgeNodeType } from '@/forge/types/forge-graph';
 import type { NodeHandler } from './types';
 
 /**

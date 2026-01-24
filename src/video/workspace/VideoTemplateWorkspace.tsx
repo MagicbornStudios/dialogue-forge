@@ -49,9 +49,9 @@ export function VideoTemplateWorkspace({
 }: VideoTemplateWorkspaceProps) {
   const resolvedScenes = scenes ?? template?.scenes;
   const activeScene =
-    resolvedScenes?.find((scene) => scene.id === activeSceneId) ?? resolvedScenes?.[0] ?? null;
+    resolvedScenes?.find((scene: VideoScene) => scene.id === activeSceneId) ?? resolvedScenes?.[0] ?? null;
   const resolvedLayers = layers ?? activeScene?.layers;
-  const activeLayer = resolvedLayers?.find((layer) => layer.id === activeLayerId) ?? null;
+  const activeLayer = resolvedLayers?.find((layer: VideoLayer) => layer.id === activeLayerId) ?? null;
   const [resolvedMedia, setResolvedMedia] = React.useState<VideoTemplateMediaResolution | null>(null);
   const [isMediaLoading, setIsMediaLoading] = React.useState(false);
 

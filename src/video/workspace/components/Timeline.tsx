@@ -1,4 +1,6 @@
+import * as React from 'react';
 import type { VideoScene } from '@/video/templates/types/video-scene';
+import type { VideoLayer } from '@/video/templates/types/video-layer';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/ui/card';
@@ -47,7 +49,7 @@ export function Timeline({ scene, onSplitLayer, onZoomToFit }: TimelineProps) {
                   No layers on the timeline.
                 </div>
               ) : (
-                scene.layers.map((layer) => (
+                scene.layers.map((layer: VideoLayer) => (
                   <div
                     key={layer.id}
                     className="flex items-center justify-between rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-3 py-2 text-xs"

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { ForgeGraphDoc } from '@/src/types/forge/forge-graph';
+import type { ForgeGraphDoc } from '@/forge/types/forge-graph';
 
 /**
  * Hook to find all flags used in a graph

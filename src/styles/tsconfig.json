@@ -3,7 +3,9 @@
   "compilerOptions": {
     "composite": true,
     "rootDir": ".",
-    "noEmit": true
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "../../dist/styles"
   },
   "include": ["**/*"]
 }

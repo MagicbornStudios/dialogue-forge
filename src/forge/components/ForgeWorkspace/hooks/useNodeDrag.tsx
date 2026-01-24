@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import type { ForgeNodeType } from '@/src/types/forge/forge-graph';
+import type { ForgeNodeType } from '@/forge/types/forge-graph';
 
 interface NodeDragContextValue {
   draggedNodeType: ForgeNodeType | null;

@@ -4,7 +4,7 @@
  * Comprehensive tests for export, import, and round-trip conversion
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { PlayerHandler } from '../handlers/player-handler';
 import { YarnTextBuilder } from '../builders/yarn-text-builder';
 import {
@@ -12,7 +12,7 @@ import {
   parseYarnNode,
   createSimplePlayerNode,
 } from './helpers';
-import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
+import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { CONDITION_OPERATOR } from '@/forge/types/constants';
 
 describe('PlayerHandler', () => {
@@ -138,7 +138,7 @@ describe('PlayerHandler', () => {
       const result = await handler.importNode(yarnBlock);
       
       expect(result.data?.choices?.length).toBeGreaterThan(0);
-      const conditionalChoice = result.data?.choices?.find(c => c.text === 'Use key');
+      const conditionalChoice = result.data?.choices?.find((c: { text: string }) => c.text === 'Use key');
       expect(conditionalChoice?.conditions).toBeDefined();
       expect(conditionalChoice?.conditions?.[0].flag).toBe('has_key');
     });

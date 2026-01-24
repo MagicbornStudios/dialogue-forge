@@ -21,7 +21,7 @@ import {
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from '@/src/shared/ui/context-menu';
+} from '@/shared/ui/context-menu';
 import { ForgeNode, FORGE_CONDITIONAL_BLOCK_TYPE, FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
 

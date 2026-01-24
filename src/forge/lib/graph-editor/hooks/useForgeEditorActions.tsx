@@ -1,4 +1,5 @@
 // src/components/GraphEditors/hooks/useForgeEditorActions.ts
+import * as React from 'react';
 import { createContext, useContext } from 'react';
 import type { ForgeCommand } from './forge-commands';
 import { FORGE_COMMAND } from './forge-commands';

@@ -24,9 +24,9 @@ Create a new handler file:
 // src/lib/yarn-converter/handlers/cutscene-handler.ts
 import { BaseNodeHandler } from './base-handler';
 import { NodeBlockBuilder } from '../builders/node-block-builder';
-import type { ForgeReactFlowNode, ForgeNodeType, ForgeNode } from '@/src/types/forge/forge-graph';
+import type { ForgeReactFlowNode, ForgeNodeType, ForgeNode } from '@/forge/types/forge-graph';
 import type { YarnConverterContext, YarnNodeBlock } from '../types';
-import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
+import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 
 export class CutsceneHandler extends BaseNodeHandler {
   canHandle(nodeType: ForgeNodeType): boolean {
@@ -275,9 +275,9 @@ Use this template as a starting point:
 ```typescript
 import { BaseNodeHandler } from './base-handler';
 import { NodeBlockBuilder } from '../builders/node-block-builder';
-import type { ForgeReactFlowNode, ForgeNodeType, ForgeNode } from '@/src/types/forge/forge-graph';
+import type { ForgeReactFlowNode, ForgeNodeType, ForgeNode } from '@/forge/types/forge-graph';
 import type { YarnConverterContext, YarnNodeBlock } from '../types';
-import { FORGE_NODE_TYPE } from '@/src/types/forge/forge-graph';
+import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 
 export class YourNodeHandler extends BaseNodeHandler {
   canHandle(nodeType: ForgeNodeType): boolean {

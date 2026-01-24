@@ -14,7 +14,7 @@ import {
 } from './helpers';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { CONDITION_OPERATOR } from '@/forge/types/constants';
-import { CONDITION_BLOCK_TYPE } from '@/forge/lib/yarn-converter';
+import { FORGE_CONDITIONAL_BLOCK_TYPE } from '@/forge/types/forge-graph';
 
 describe('ConditionalHandler', () => {
   let handler: ConditionalHandler;
@@ -114,7 +114,7 @@ describe('ConditionalHandler', () => {
         conditionalBlocks: [
           {
             id: 'block1',
-            type: CONDITION_BLOCK_TYPE.IF,
+            type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
             condition: [
               { flag: 'quest', operator: CONDITION_OPERATOR.IS_SET },
             ],
@@ -133,7 +133,7 @@ describe('ConditionalHandler', () => {
         conditionalBlocks: [
           {
             id: 'block1',
-            type: CONDITION_BLOCK_TYPE.IF,
+            type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
             condition: [
               { flag: 'quest', operator: CONDITION_OPERATOR.IS_SET },
             ],
@@ -152,7 +152,7 @@ describe('ConditionalHandler', () => {
         conditionalBlocks: [
           {
             id: 'block1',
-            type: CONDITION_BLOCK_TYPE.IF,
+            type: FORGE_CONDITIONAL_BLOCK_TYPE.IF,
             condition: [
               { flag: 'quest', operator: CONDITION_OPERATOR.IS_SET },
             ],
@@ -182,7 +182,7 @@ describe('ConditionalHandler', () => {
       expect(result.id).toBe('cond1');
       expect(result.data?.type).toBe(FORGE_NODE_TYPE.CONDITIONAL);
       expect(result.data?.conditionalBlocks?.length).toBe(1);
-      expect(result.data?.conditionalBlocks?.[0].type).toBe(CONDITION_BLOCK_TYPE.IF);
+      expect(result.data?.conditionalBlocks?.[0].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.IF);
       expect(result.data?.conditionalBlocks?.[0].content).toContain('Quest active!');
     });
 
@@ -199,8 +199,8 @@ describe('ConditionalHandler', () => {
       const result = await handler.importNode(yarnBlock);
       
       expect(result.data?.conditionalBlocks?.length).toBe(2);
-      expect(result.data?.conditionalBlocks?.[0].type).toBe(CONDITION_BLOCK_TYPE.IF);
-      expect(result.data?.conditionalBlocks?.[1].type).toBe(CONDITION_BLOCK_TYPE.ELSE);
+      expect(result.data?.conditionalBlocks?.[0].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.IF);
+      expect(result.data?.conditionalBlocks?.[1].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.ELSE);
     });
 
     it('should import if/elseif/else blocks', async () => {
@@ -218,9 +218,9 @@ describe('ConditionalHandler', () => {
       const result = await handler.importNode(yarnBlock);
       
       expect(result.data?.conditionalBlocks?.length).toBe(3);
-      expect(result.data?.conditionalBlocks?.[0].type).toBe(CONDITION_BLOCK_TYPE.IF);
-      expect(result.data?.conditionalBlocks?.[1].type).toBe(CONDITION_BLOCK_TYPE.ELSEIF);
-      expect(result.data?.conditionalBlocks?.[2].type).toBe(CONDITION_BLOCK_TYPE.ELSE);
+      expect(result.data?.conditionalBlocks?.[0].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.IF);
+      expect(result.data?.conditionalBlocks?.[1].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.ELSE_IF);
+      expect(result.data?.conditionalBlocks?.[2].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.ELSE);
     });
 
     it('should import blocks with nextNodeId', async () => {
@@ -258,8 +258,8 @@ describe('ConditionalHandler', () => {
       const imported = await handler.importNode(yarnBlock);
       
       expect(imported.data?.conditionalBlocks?.length).toBe(2);
-      expect(imported.data?.conditionalBlocks?.[0].type).toBe(CONDITION_BLOCK_TYPE.IF);
-      expect(imported.data?.conditionalBlocks?.[1].type).toBe(CONDITION_BLOCK_TYPE.ELSE);
+      expect(imported.data?.conditionalBlocks?.[0].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.IF);
+      expect(imported.data?.conditionalBlocks?.[1].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.ELSE);
     });
 
     it('should round-trip if/elseif/else blocks', async () => {
@@ -288,9 +288,9 @@ describe('ConditionalHandler', () => {
       const imported = await handler.importNode(yarnBlock);
       
       expect(imported.data?.conditionalBlocks?.length).toBe(3);
-      expect(imported.data?.conditionalBlocks?.[0].type).toBe(CONDITION_BLOCK_TYPE.IF);
-      expect(imported.data?.conditionalBlocks?.[1].type).toBe(CONDITION_BLOCK_TYPE.ELSEIF);
-      expect(imported.data?.conditionalBlocks?.[2].type).toBe(CONDITION_BLOCK_TYPE.ELSE);
+      expect(imported.data?.conditionalBlocks?.[0].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.IF);
+      expect(imported.data?.conditionalBlocks?.[1].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.ELSE_IF);
+      expect(imported.data?.conditionalBlocks?.[2].type).toBe(FORGE_CONDITIONAL_BLOCK_TYPE.ELSE);
     });
   });
 

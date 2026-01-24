@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from 'react';
 import { createContext, useContext } from 'react';
 import type { PropsWithChildren } from 'react';
 import { createStore } from 'zustand/vanilla';
@@ -146,7 +147,7 @@ export function createWriterWorkspaceStore(
         
         const contentSlice = createContentSlice(setTyped, getTyped, initialActs, initialChapters, initialPages);
         const editorSlice = createEditorSlice(setTyped, getTyped, initialPages);
-        const aiSlice = createAiSlice(setTyped, getTyped);
+        const aiSlice = createAiSlice(setTyped, getTyped, { setDraftContent: editorSlice.setDraftContent, setDraftTitle: editorSlice.setDraftTitle });
         const navigationSlice = createNavigationSlice(setTyped, getTyped, initialActivePageId);
         const viewStateSlice = createViewStateSlice(setTyped, getTyped);
 

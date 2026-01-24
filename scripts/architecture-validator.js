@@ -57,8 +57,7 @@ class ArchitectureValidator {
   }
 
   validate() {
-    console.log('🔍 Validating Architecture Rules...
-');
+    console.log('🔍 Validating Architecture Rules...');
 
     try {
       const { data, path: sourcePath } = loadCruiseResult(this.inputPath);

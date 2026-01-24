@@ -9,7 +9,7 @@
  */
 
 import dagre from '@dagrejs/dagre';
-import type { ForgeGraphDoc, ForgeReactFlowNode, ForgeNode } from '@/src/types/forge/forge-graph';
+import type { ForgeGraphDoc, ForgeReactFlowNode, ForgeNode } from '@/forge/types/forge-graph';
 import { LayoutStrategy, LayoutOptions, LayoutResult, LayoutDirection } from '../types';
 
 // ============================================================================

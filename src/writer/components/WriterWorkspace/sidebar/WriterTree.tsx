@@ -125,6 +125,7 @@ export function WriterTree({ className }: WriterTreeProps) {
 
     setIsCreating(true);
     try {
+      console.log('Creating page', targetChapter);
       const newPage = await dataAdapter.createPage({
         title: 'New page',
         project: targetChapter.project,

@@ -1,5 +1,5 @@
-import { TEMPLATE_INPUT_KEY, type TemplateInputKey } from '@/src/shared/types/bindings';
-import type { Frame, PresentationLayer, PresentationState } from '@/src/forge/runtime/types';
+import { TEMPLATE_INPUT_KEY, type TemplateInputKey } from '@/shared/types/bindings';
+import type { Frame, PresentationLayer, PresentationState } from '@/forge/runtime/types';
 
 export type FrameTemplateInputs = {
   frameId: string;

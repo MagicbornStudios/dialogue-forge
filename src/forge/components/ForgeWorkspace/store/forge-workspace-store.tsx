@@ -19,6 +19,7 @@ import { createGraphSlice } from "@/forge/components/ForgeWorkspace/store/slices
 import { createGameStateSlice } from "@/forge/components/ForgeWorkspace/store/slices/gameState.slice"
 import { createViewStateSlice } from "@/forge/components/ForgeWorkspace/store/slices/viewState.slice"
 import { createProjectSlice } from "@/forge/components/ForgeWorkspace/store/slices/project.slice"
+import { createForgeDraftSlice } from "@/forge/components/ForgeWorkspace/store/slices/draft.slice"
 import type { ForgeDataAdapter } from "@/forge/adapters/forge-data-adapter"
 import type { VideoTemplateWorkspaceAdapter } from "@/video/workspace/video-template-workspace-contracts"
 import type { VideoTemplateOverrides } from "@/video/templates/types/video-template-overrides"
@@ -33,6 +34,14 @@ export interface ForgeWorkspaceState {
   activeNarrativeGraphId: ReturnType<typeof createGraphSlice>["activeNarrativeGraphId"]
   activeStoryletGraphId: ReturnType<typeof createGraphSlice>["activeStoryletGraphId"]
   breadcrumbHistoryByScope: ReturnType<typeof createGraphSlice>["breadcrumbHistoryByScope"]
+
+  // Draft slice
+  committedGraph: ReturnType<typeof createForgeDraftSlice>["committedGraph"]
+  draftGraph: ReturnType<typeof createForgeDraftSlice>["draftGraph"]
+  deltas: ReturnType<typeof createForgeDraftSlice>["deltas"]
+  validation: ReturnType<typeof createForgeDraftSlice>["validation"]
+  hasUncommittedChanges: ReturnType<typeof createForgeDraftSlice>["hasUncommittedChanges"]
+  lastCommittedAt: ReturnType<typeof createForgeDraftSlice>["lastCommittedAt"]
   
   // Game state slice
   activeFlagSchema: ReturnType<typeof createGameStateSlice>["activeFlagSchema"]
@@ -79,6 +88,14 @@ export interface ForgeWorkspaceState {
     popBreadcrumb: ReturnType<typeof createGraphSlice>["popBreadcrumb"]
     clearBreadcrumbs: ReturnType<typeof createGraphSlice>["clearBreadcrumbs"]
     navigateToBreadcrumb: ReturnType<typeof createGraphSlice>["navigateToBreadcrumb"]
+
+    // Draft actions
+    applyDelta: ReturnType<typeof createForgeDraftSlice>["applyDelta"]
+    commitDraft: ReturnType<typeof createForgeDraftSlice>["commitDraft"]
+    discardDraft: ReturnType<typeof createForgeDraftSlice>["discardDraft"]
+    resetDraft: ReturnType<typeof createForgeDraftSlice>["resetDraft"]
+    getDraftGraph: ReturnType<typeof createForgeDraftSlice>["getDraftGraph"]
+    getCommittedGraph: ReturnType<typeof createForgeDraftSlice>["getCommittedGraph"]
     
     // Game state actions
     setActiveFlagSchema: ReturnType<typeof createGameStateSlice>["setActiveFlagSchema"]
@@ -192,6 +209,8 @@ export function createForgeWorkspaceStore(
         const finalResolver = resolveGraph ?? graphResolver
         
         const graphSlice = createGraphSlice(set, get, narrativeGraphId, storyletGraphId, finalResolver)
+        const initialDraftGraph = initialNarrativeGraph ?? initialStoryletGraph ?? null
+        const draftSlice = createForgeDraftSlice(set, get, initialDraftGraph)
         
         // If initial graphs provided, add them to cache
         if (initialNarrativeGraph) {
@@ -255,6 +274,7 @@ export function createForgeWorkspaceStore(
 
         return {
           ...graphSlice,
+          ...draftSlice,
           ...gameStateSlice,
           ...viewStateSlice,
           ...projectSlice,
@@ -273,6 +293,14 @@ export function createForgeWorkspaceStore(
             popBreadcrumb: graphSlice.popBreadcrumb,
             clearBreadcrumbs: graphSlice.clearBreadcrumbs,
             navigateToBreadcrumb: graphSlice.navigateToBreadcrumb,
+
+            // Draft actions
+            applyDelta: draftSlice.applyDelta,
+            commitDraft: draftSlice.commitDraft,
+            discardDraft: draftSlice.discardDraft,
+            resetDraft: draftSlice.resetDraft,
+            getDraftGraph: draftSlice.getDraftGraph,
+            getCommittedGraph: draftSlice.getCommittedGraph,
             
             // Game state actions
             setActiveFlagSchema: gameStateSlice.setActiveFlagSchema,

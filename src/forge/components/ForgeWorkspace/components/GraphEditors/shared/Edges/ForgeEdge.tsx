@@ -93,6 +93,8 @@ export const ForgeEdge = React.memo(function ForgeEdge({
   const isSelected = selected || hovered;
   const isDimmed = data?.isDimmed ?? false;
   const isInPath = data?.isInPathToSelected ?? false;
+  const draftData = data as { isDraftAdded?: boolean; isDraftUpdated?: boolean } | undefined;
+  const isDraft = draftData?.isDraftAdded || draftData?.isDraftUpdated;
   
   // Determine stroke color - use vibrant green on hover/selected
   const strokeColor = isDimmed 
@@ -102,13 +104,15 @@ export const ForgeEdge = React.memo(function ForgeEdge({
       : isBackEdge 
         ? 'var(--color-df-edge-loop)' 
         : edgeColor;
+
+  const draftStrokeColor = isDraft ? 'var(--color-df-warning)' : strokeColor;
   
   const strokeWidth = isSelected || isInPath ? 4 : 3;
   const opacity = isDimmed ? 0.4 : (isSelected || isInPath ? 1 : 0.9);
   
   // Add glow effect when hovered or in path (only if not dimmed)
-  const glowColor = isBackEdge ? 'var(--color-df-edge-loop)' : edgeColor;
-  const filter = (hovered || isInPath) && !isDimmed 
+  const glowColor = isDraft ? 'var(--color-df-warning)' : (isBackEdge ? 'var(--color-df-edge-loop)' : edgeColor);
+  const filter = (hovered || isInPath || isDraft) && !isDimmed 
     ? `drop-shadow(0 0 8px ${glowColor})`
     : !isDimmed
     ? `drop-shadow(0 0 2px ${glowColor})`
@@ -130,7 +134,7 @@ export const ForgeEdge = React.memo(function ForgeEdge({
   const insertElementTypes = menuData?.insertElementTypes;
   const hasContextMenu = !!insertElementTypes && insertElementTypes.length > 0;
   const edgeStyle = useMemo(() => ({
-    stroke: strokeColor,
+    stroke: draftStrokeColor,
     strokeWidth,
     opacity,
     cursor: 'pointer',
@@ -138,7 +142,7 @@ export const ForgeEdge = React.memo(function ForgeEdge({
     filter,
     // Dashed line for back edges
     strokeDasharray: isBackEdge ? '8 4' : undefined,
-  }), [strokeColor, strokeWidth, opacity, filter, isBackEdge]);
+  }), [draftStrokeColor, strokeWidth, opacity, filter, isBackEdge]);
 
   const edgeContent = (
     <>
@@ -184,7 +188,9 @@ export const ForgeEdge = React.memo(function ForgeEdge({
     return (
       <g
         data-choice-index={dataChoiceIndex ?? undefined}
-        className={isChoiceHandle ? `forge-choice-edge${isDimmed ? ' is-dimmed' : ''}${isBackEdge ? ' is-loop' : ''}` : undefined}
+        className={isChoiceHandle
+          ? `forge-choice-edge${isDimmed ? ' is-dimmed' : ''}${isBackEdge ? ' is-loop' : ''}${isDraft ? ' is-draft' : ''}`
+          : `forge-edge${isDraft ? ' is-draft' : ''}`}
       >
         {edgeContent}
       </g>
@@ -204,7 +210,9 @@ export const ForgeEdge = React.memo(function ForgeEdge({
             e.stopPropagation();
           }}
           data-choice-index={dataChoiceIndex ?? undefined}
-          className={isChoiceHandle ? `forge-choice-edge${isDimmed ? ' is-dimmed' : ''}${isBackEdge ? ' is-loop' : ''}` : undefined}
+          className={isChoiceHandle
+            ? `forge-choice-edge${isDimmed ? ' is-dimmed' : ''}${isBackEdge ? ' is-loop' : ''}${isDraft ? ' is-draft' : ''}`
+            : `forge-edge${isDraft ? ' is-draft' : ''}`}
         >
           {edgeContent}
         </g>

@@ -15,7 +15,7 @@ import { StandardNodeContextMenuItems } from '@/forge/components/ForgeWorkspace/
 
 export const PageNode = React.memo(function PageNode({ data, selected, id }: NodeProps<ShellNodeData>) {
   const { node, ui = {} } = data;
-  const { isDimmed = false, isInPath = false, isStartNode = false } = ui;
+  const { isDimmed = false, isInPath = false, isStartNode = false, isDraftAdded, isDraftUpdated } = ui;
   
   const title = node.label || id;
   const summary = node.content;
@@ -53,6 +53,7 @@ export const PageNode = React.memo(function PageNode({ data, selected, id }: Nod
           data-selected={selected ? 'true' : 'false'}
           data-in-path={isInPath ? 'true' : 'false'}
           data-dimmed={isDimmed ? 'true' : 'false'}
+          data-draft={isDraftAdded ? 'added' : isDraftUpdated ? 'modified' : undefined}
           data-start="false"
           data-end="false"
           className="forge-node min-w-[220px] max-w-[320px] rounded-lg border-2 shadow-sm transition-all duration-200 border-node bg-node text-node"

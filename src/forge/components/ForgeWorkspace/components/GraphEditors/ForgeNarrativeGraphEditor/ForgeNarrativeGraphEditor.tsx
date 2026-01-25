@@ -19,7 +19,6 @@ import 'reactflow/dist/style.css';
 import { useFlowPathHighlighting } from '@/forge/lib/graph-editor/hooks/useFlowPathHighlighting';
 import { type LayoutDirection } from '@/forge/lib/utils/forge-flow-helpers';
 
-import { applyLayout } from '@/forge/lib/utils/layout/layout';
 import { GraphMiniMap } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphMiniMap';
 
 import { ActNode } from '../shared/Nodes/components/ActNode/ActNode';
@@ -33,8 +32,6 @@ import { cn } from '@/shared/lib/utils';
 
 import type { ForgeGraphDoc, ForgeNode, ForgeNodeType, ForgeReactFlowNode } from '@/forge/types/forge-graph';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
-import { PAGE_TYPE } from '@/forge/types/narrative';
-import type { ForgeReactFlowNode as ForgeReactFlowNodeType } from '@/forge/types/forge-graph';
 
 import { useForgeFlowEditorShell, type ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
 import { createForgeEditorSessionStore, ForgeEditorSessionProvider, useForgeEditorSession, useForgeEditorSessionStore } from '@/forge/lib/graph-editor/hooks/useForgeEditorSession';
@@ -48,6 +45,9 @@ import { ConditionalNode } from '@/forge/components/ForgeWorkspace/components/Gr
 import { GraphLeftToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLeftToolbar';
 import { GraphLayoutControls } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls';
 import { GraphEditorToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorToolbar';
+import { GraphEditorStatusBar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorStatusBar';
+import { CommitBar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/CommitBar';
+import { useDraftVisualIndicators } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/hooks/useDraftVisualIndicators';
 import { useShallow } from 'zustand/shallow';
 import type { FlagSchema } from '@/forge/types/flags';
 import type { ForgeCharacter } from '@/forge/types/characters';
@@ -111,6 +111,15 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     }))
   );
 
+  const { committedGraph, draftGraph, applyDelta, resetDraft } = useForgeWorkspaceStore(
+    useShallow((s) => ({
+      committedGraph: s.committedGraph,
+      draftGraph: s.draftGraph,
+      applyDelta: s.actions.applyDelta,
+      resetDraft: s.actions.resetDraft,
+    }))
+  );
+
   const reactFlow = useReactFlow();
 
   // Editor focus tracking - click-only, no hover preview
@@ -152,7 +161,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
 
   // Create a default empty graph if none exists, with correct kind for narrative
   const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
-  const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
   
   const effectiveGraph = React.useMemo(() => {
     if (graph) return graph;
@@ -165,118 +173,18 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     });
   }, [graph, selectedProjectId]);
 
-  // Handler to create database entries when ACT/CHAPTER/PAGE nodes are created
-  const handleNodeAdd = React.useCallback(async (node: ForgeReactFlowNode) => {
-    if (!dataAdapter || !selectedProjectId || !effectiveGraph) return;
-    
-    const nodeData = node.data as ForgeNode | undefined;
-    const nodeType = nodeData?.type ?? node.type;
-    
-    try {
-      if (nodeType === FORGE_NODE_TYPE.ACT) {
-        // Create ACT page in database
-        const actPage = await dataAdapter.createPage({
-          projectId: selectedProjectId,
-          pageType: PAGE_TYPE.ACT,
-          title: nodeData?.label || 'New Act',
-          order: 0, // TODO: Calculate from graph position or existing acts count
-          parent: null, // Acts have no parent
-        });
-        
-        // Update the graph node with the pageId
-        const updatedNodes = effectiveGraph.flow.nodes.map((n: ForgeReactFlowNode) => 
-          n.id === node.id 
-            ? { ...n, data: { ...(n.data ?? {}), pageId: actPage.id, title: actPage.title } as ForgeNode }
-            : n
-        );
-        
-        onChange({
-          ...effectiveGraph,
-          flow: { ...effectiveGraph.flow, nodes: updatedNodes },
-        });
-      } else if (nodeType === FORGE_NODE_TYPE.CHAPTER) {
-        // Find parent act from edges
-        const parentActNode = findParentNodeByType(effectiveGraph, node.id, FORGE_NODE_TYPE.ACT);
-        const parentActPageId = parentActNode?.data?.pageId as number | undefined;
-        
-        if (parentActPageId) {
-          const chapterPage = await dataAdapter.createPage({
-            projectId: selectedProjectId,
-            pageType: PAGE_TYPE.CHAPTER,
-            title: nodeData?.label || 'New Chapter',
-            order: 0, // TODO: Calculate from siblings
-            parent: parentActPageId,
-          });
-          
-          const updatedNodes = effectiveGraph.flow.nodes.map((n: ForgeReactFlowNode) => 
-            n.id === node.id 
-              ? { ...n, data: { ...(n.data ?? {}), pageId: chapterPage.id, title: chapterPage.title } as ForgeNode }
-              : n
-          );
-          
-          onChange({
-            ...effectiveGraph,
-            flow: { ...effectiveGraph.flow, nodes: updatedNodes },
-          });
-        } else {
-          console.warn('Cannot create chapter page: no parent act found');
-        }
-      } else if (nodeType === FORGE_NODE_TYPE.PAGE) {
-        // Find parent chapter from edges
-        const parentChapterNode = findParentNodeByType(effectiveGraph, node.id, FORGE_NODE_TYPE.CHAPTER);
-        const parentChapterPageId = parentChapterNode?.data?.pageId as number | undefined;
-        
-        if (parentChapterPageId) {
-          const contentPage = await dataAdapter.createPage({
-            projectId: selectedProjectId,
-            pageType: PAGE_TYPE.PAGE,
-            title: nodeData?.label || 'New Page',
-            order: 0, // TODO: Calculate from siblings
-            parent: parentChapterPageId,
-          });
-          
-          const updatedNodes = effectiveGraph.flow.nodes.map((n: ForgeReactFlowNode) => 
-            n.id === node.id 
-              ? { ...n, data: { ...(n.data ?? {}), pageId: contentPage.id, title: contentPage.title } as ForgeNode }
-              : n
-          );
-          
-          onChange({
-            ...effectiveGraph,
-            flow: { ...effectiveGraph.flow, nodes: updatedNodes },
-          });
-        } else {
-          console.warn('Cannot create content page: no parent chapter found');
-        }
-      }
-    } catch (error) {
-      console.error('Failed to create database entry for node:', error);
+  React.useEffect(() => {
+    if (!committedGraph || committedGraph.id !== effectiveGraph.id) {
+      resetDraft(effectiveGraph);
     }
-  }, [dataAdapter, selectedProjectId, effectiveGraph, onChange]);
-
-  // Helper to find parent node of a specific type
-  const findParentNodeByType = React.useCallback((graph: ForgeGraphDoc, nodeId: string, parentType: ForgeNodeType): ForgeReactFlowNode | null => {
-    const incomingEdges = graph.flow.edges.filter(edge => edge.target === nodeId);
-    for (const edge of incomingEdges) {
-      const sourceNode = graph.flow.nodes.find(n => n.id === edge.source);
-      if (sourceNode && sourceNode.type === parentType) {
-        return sourceNode;
-      }
-      // Recursively check parent's parents
-      const parentOfParent = findParentNodeByType(graph, edge.source, parentType);
-      if (parentOfParent) {
-        return parentOfParent;
-      }
-    }
-    return null;
-  }, []);
+  }, [committedGraph, effectiveGraph, resetDraft]);
 
   const shell = useForgeFlowEditorShell({
-    graph: effectiveGraph,
-    onChange,
+    committedGraph: committedGraph ?? effectiveGraph,
+    draftGraph: draftGraph ?? effectiveGraph,
+    applyDelta,
     reactFlow,
     sessionStore,
-    onNodeAdd: handleNodeAdd,
   });
 
   const selectedNodeType = shell.selectedNode?.type ?? null;
@@ -298,6 +206,8 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     shell.effectiveGraph
   );
 
+  const { addedNodeIds, modifiedNodeIds, addedEdgeIds, modifiedEdgeIds } = useDraftVisualIndicators();
+
   // Consume focus requests from workspace
   React.useEffect(() => {
     if (pendingFocus && graph && String(graph.id) === pendingFocus.graphId) {
@@ -314,18 +224,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
       clearFocus('narrative');
     }
   }, [pendingFocus, graph, reactFlow, clearFocus, shell.effectiveGraph]);
-
-  const handleAutoLayout = React.useCallback(
-    (direction?: LayoutDirection) => {
-      const dir = direction || layoutDirection;
-      if (direction) setLayoutDirection(direction);
-
-      const result = applyLayout(shell.effectiveGraph, 'dagre', { direction: dir });
-      onChange(result.graph);
-      setTimeout(() => reactFlow?.fitView({ padding: 0.2, duration: 500 }), 100);
-    },
-    [layoutDirection, onChange, reactFlow, shell.effectiveGraph, setLayoutDirection]
-  );
 
   const flowById = React.useMemo(
     () => new Map<string, ForgeReactFlowNode>(shell.effectiveGraph.flow.nodes.map((node) => [node.id, node])),
@@ -344,6 +242,8 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
       const nodeType = (flowNode?.type as ForgeNodeType | undefined) ?? (flowNode?.data as ForgeNode | undefined)?.type;
       const isStartNode = node.id === startId;
       const isEndNode = shell.effectiveGraph.endNodeIds.some((e) => e.nodeId === node.id);
+      const isDraftAdded = addedNodeIds.has(node.id);
+      const isDraftUpdated = modifiedNodeIds.has(node.id);
       const nodeData = (flowNode?.data ?? {}) as ForgeNode;
 
       return {
@@ -357,6 +257,8 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
             isInPath,
             isStartNode,
             isEndNode,
+            isDraftAdded,
+            isDraftUpdated,
           },
           flagSchema,
           characters,
@@ -373,6 +275,8 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     flagSchema,
     resolvedGameStateFlags,
     layoutDirection,
+    addedNodeIds,
+    modifiedNodeIds,
     nodeDepths,
     showPathHighlight,
     shell.effectiveGraph.endNodeIds,
@@ -405,6 +309,8 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
 
       const isInPath = edgesToSelectedNode.has(edge.id);
       const isDimmed = hasSelection && !isInPath;
+      const isDraftAdded = addedEdgeIds.has(edge.id);
+      const isDraftUpdated = modifiedEdgeIds.has(edge.id);
 
       return {
         ...edge,
@@ -413,11 +319,15 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
           isInPathToSelected: isInPath,
           isBackEdge,
           isDimmed,
+          isDraftAdded,
+          isDraftUpdated,
           sourceNode: sourceFlowNode,
         },
       };
     });
   }, [
+    addedEdgeIds,
+    modifiedEdgeIds,
     edgesToSelectedNode,
     flowById,
     layoutDirection,
@@ -445,7 +355,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
         isFocused={isFocused}
         openYarnModal={openYarnModal}
         handleClick={handleClick}
-        handleAutoLayout={handleAutoLayout}
+        handleAutoLayout={shell.handleAutoLayout}
         setLayoutDirection={setLayoutDirection}
         setAutoOrganize={setAutoOrganize}
         setShowPathHighlight={setShowPathHighlight}
@@ -507,6 +417,42 @@ function ForgeNarrativeGraphEditorContent({
   useForgeGraphEditorActions();
   
   const actions = useForgeEditorActions();
+  const { validation, deltas, commitDraft, discardDraft } = useForgeWorkspaceStore(
+    useShallow((state) => ({
+      validation: state.validation,
+      deltas: state.deltas,
+      commitDraft: state.actions.commitDraft,
+      discardDraft: state.actions.discardDraft,
+    }))
+  );
+
+  const uncommittedChangeCount = deltas.length;
+  const [isCommitting, setIsCommitting] = React.useState(false);
+  const [isDiscarding, setIsDiscarding] = React.useState(false);
+
+  const handleCommit = React.useCallback(async () => {
+    if (isCommitting) {
+      return;
+    }
+    setIsCommitting(true);
+    try {
+      await commitDraft();
+    } finally {
+      setIsCommitting(false);
+    }
+  }, [commitDraft, isCommitting]);
+
+  const handleDiscard = React.useCallback(async () => {
+    if (isDiscarding) {
+      return;
+    }
+    setIsDiscarding(true);
+    try {
+      await discardDraft();
+    } finally {
+      setIsDiscarding(false);
+    }
+  }, [discardDraft, isDiscarding]);
 
   return (
     <div 
@@ -518,7 +464,7 @@ function ForgeNarrativeGraphEditorContent({
     >
         {/* Toolbar with breadcrumbs and view toggles */}
         <div className={cn(
-          "flex items-center justify-between gap-2 px-3 py-2 border-t-1 bg-df-editor-bg flex-shrink-0 transition-colors",
+          "flex items-center gap-3 px-3 py-2 border-t-1 bg-df-editor-bg flex-shrink-0 transition-colors",
           isFocused ? "border-t-[var(--color-df-info)]" : "border-t-df-control-border"
         )}>
           <div className="flex items-center gap-2">
@@ -527,7 +473,20 @@ function ForgeNarrativeGraphEditorContent({
               <Focus size={14} style={{ color: 'var(--color-df-info)' }} />
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <GraphEditorStatusBar
+            validation={validation}
+            uncommittedChangeCount={uncommittedChangeCount}
+            className="flex-1"
+          />
+          <div className="ml-auto flex items-center gap-2">
+            <CommitBar
+              validation={validation}
+              uncommittedChangeCount={uncommittedChangeCount}
+              onCommit={handleCommit}
+              onDiscard={handleDiscard}
+              isCommitting={isCommitting}
+              isDiscarding={isDiscarding}
+            />
             <GraphEditorToolbar 
               scope="narrative" 
               onCreateNew={async () => {

@@ -37,5 +37,6 @@ export * from './bindings';
 export * from './export-registry';
 export * from './constants';
 export * from './forge-graph';
+export * from './draft';
 export * from './narrative';
 export * from './runtime';

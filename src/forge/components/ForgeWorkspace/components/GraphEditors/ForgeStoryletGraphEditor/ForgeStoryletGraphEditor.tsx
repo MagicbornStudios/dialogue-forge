@@ -47,6 +47,7 @@ import { GraphEditorToolbar } from '@/forge/components/ForgeWorkspace/components
 import { Network, Focus, FileText, Play } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 import { cn } from '@/shared/lib/utils';
+import { useDraftVisualIndicators } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/hooks/useDraftVisualIndicators';
 
 // EdgeDropMenu components
 import { CharacterEdgeDropMenu } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/CharacterNode/CharacterEdgeDropMenu';
@@ -170,6 +171,15 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     }))
   );
 
+  const { committedGraph, draftGraph, applyDelta, resetDraft } = useForgeWorkspaceStore(
+    useShallow((s) => ({
+      committedGraph: s.committedGraph,
+      draftGraph: s.draftGraph,
+      applyDelta: s.actions.applyDelta,
+      resetDraft: s.actions.resetDraft,
+    }))
+  );
+
   const reactFlow = useReactFlow();
 
   // Editor focus tracking - click-only, no hover preview
@@ -250,10 +260,17 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     });
   }, [graph, selectedProjectId]);
 
+  React.useEffect(() => {
+    if (!committedGraph || committedGraph.id !== effectiveGraph.id) {
+      resetDraft(effectiveGraph);
+    }
+  }, [committedGraph, effectiveGraph, resetDraft]);
+
   // Shell is still the only "graph mutation" boundary.
   const shell = useForgeFlowEditorShell({
-    graph: effectiveGraph,
-    onChange,
+    committedGraph: committedGraph ?? effectiveGraph,
+    draftGraph: draftGraph ?? effectiveGraph,
+    applyDelta,
     reactFlow,
     sessionStore,
   });
@@ -276,6 +293,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     showPathHighlight ? shell.selectedNodeId : null,
     shell.effectiveGraph
   );
+
+  const { addedNodeIds, modifiedNodeIds, addedEdgeIds, modifiedEdgeIds } = useDraftVisualIndicators();
 
   // Consume focus requests from workspace
   React.useEffect(() => {
@@ -315,6 +334,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
       const isStartNode = n.id === startId;
       const isEndNode = shell.endNodeIds.has(n.id);
+      const isDraftAdded = addedNodeIds.has(n.id);
+      const isDraftUpdated = modifiedNodeIds.has(n.id);
 
       const baseNodeData = (flowNode?.data ?? {}) as ForgeNode;
 
@@ -329,6 +350,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
             isInPath: inPath,
             isStartNode,
             isEndNode,
+            isDraftAdded,
+            isDraftUpdated,
           },
 
           // Read-only context
@@ -347,6 +370,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     flagSchema,
     resolvedGameStateFlags,
     layoutDirection,
+    addedNodeIds,
+    modifiedNodeIds,
     nodeDepths,
     showPathHighlight,
     shell.effectiveGraph.startNodeId,
@@ -383,6 +408,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
       const isInPath = edgesToSelectedNode.has(e.id);
       const isDimmed = hasSelection && !isInPath;
+      const isDraftAdded = addedEdgeIds.has(e.id);
+      const isDraftUpdated = modifiedEdgeIds.has(e.id);
 
       const stroke = edgeStrokeColor(e as any, sourceType);
 
@@ -415,12 +442,24 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
           isInPathToSelected: isInPath,
           isBackEdge,
           isDimmed,
+          isDraftAdded,
+          isDraftUpdated,
           insertElementTypes,
           sourceNode: sourceFlowNode,
         },
       } as any;
     });
-  }, [edgesToSelectedNode, layoutDirection, showBackEdges, showPathHighlight, shell, nodeById, flowById]);
+  }, [
+    addedEdgeIds,
+    modifiedEdgeIds,
+    edgesToSelectedNode,
+    layoutDirection,
+    showBackEdges,
+    showPathHighlight,
+    shell,
+    nodeById,
+    flowById,
+  ]);
 
   return (
     <ForgeEditorActionsProvider actions={actions}>

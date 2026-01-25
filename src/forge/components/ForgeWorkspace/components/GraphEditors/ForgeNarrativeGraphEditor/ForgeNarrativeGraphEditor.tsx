@@ -46,6 +46,7 @@ import { GraphLeftToolbar } from '@/forge/components/ForgeWorkspace/components/G
 import { GraphLayoutControls } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls';
 import { GraphEditorToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorToolbar';
 import { GraphEditorStatusBar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorStatusBar';
+import { CommitBar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/CommitBar';
 import { useDraftVisualIndicators } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/hooks/useDraftVisualIndicators';
 import { useShallow } from 'zustand/shallow';
 import type { FlagSchema } from '@/forge/types/flags';
@@ -416,14 +417,42 @@ function ForgeNarrativeGraphEditorContent({
   useForgeGraphEditorActions();
   
   const actions = useForgeEditorActions();
-  const { validation, deltas } = useForgeWorkspaceStore(
+  const { validation, deltas, commitDraft, discardDraft } = useForgeWorkspaceStore(
     useShallow((state) => ({
       validation: state.validation,
       deltas: state.deltas,
+      commitDraft: state.actions.commitDraft,
+      discardDraft: state.actions.discardDraft,
     }))
   );
 
   const uncommittedChangeCount = deltas.length;
+  const [isCommitting, setIsCommitting] = React.useState(false);
+  const [isDiscarding, setIsDiscarding] = React.useState(false);
+
+  const handleCommit = React.useCallback(async () => {
+    if (isCommitting) {
+      return;
+    }
+    setIsCommitting(true);
+    try {
+      await commitDraft();
+    } finally {
+      setIsCommitting(false);
+    }
+  }, [commitDraft, isCommitting]);
+
+  const handleDiscard = React.useCallback(async () => {
+    if (isDiscarding) {
+      return;
+    }
+    setIsDiscarding(true);
+    try {
+      await discardDraft();
+    } finally {
+      setIsDiscarding(false);
+    }
+  }, [discardDraft, isDiscarding]);
 
   return (
     <div 
@@ -450,6 +479,14 @@ function ForgeNarrativeGraphEditorContent({
             className="flex-1"
           />
           <div className="ml-auto flex items-center gap-2">
+            <CommitBar
+              validation={validation}
+              uncommittedChangeCount={uncommittedChangeCount}
+              onCommit={handleCommit}
+              onDiscard={handleDiscard}
+              isCommitting={isCommitting}
+              isDiscarding={isDiscarding}
+            />
             <GraphEditorToolbar 
               scope="narrative" 
               onCreateNew={async () => {

@@ -45,6 +45,7 @@ import { ConditionalNode } from '@/forge/components/ForgeWorkspace/components/Gr
 import { GraphLeftToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLeftToolbar';
 import { GraphLayoutControls } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls';
 import { GraphEditorToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorToolbar';
+import { GraphEditorStatusBar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorStatusBar';
 import { useDraftVisualIndicators } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/hooks/useDraftVisualIndicators';
 import { useShallow } from 'zustand/shallow';
 import type { FlagSchema } from '@/forge/types/flags';
@@ -415,6 +416,14 @@ function ForgeNarrativeGraphEditorContent({
   useForgeGraphEditorActions();
   
   const actions = useForgeEditorActions();
+  const { validation, deltas } = useForgeWorkspaceStore(
+    useShallow((state) => ({
+      validation: state.validation,
+      deltas: state.deltas,
+    }))
+  );
+
+  const uncommittedChangeCount = deltas.length;
 
   return (
     <div 
@@ -426,7 +435,7 @@ function ForgeNarrativeGraphEditorContent({
     >
         {/* Toolbar with breadcrumbs and view toggles */}
         <div className={cn(
-          "flex items-center justify-between gap-2 px-3 py-2 border-t-1 bg-df-editor-bg flex-shrink-0 transition-colors",
+          "flex items-center gap-3 px-3 py-2 border-t-1 bg-df-editor-bg flex-shrink-0 transition-colors",
           isFocused ? "border-t-[var(--color-df-info)]" : "border-t-df-control-border"
         )}>
           <div className="flex items-center gap-2">
@@ -435,7 +444,12 @@ function ForgeNarrativeGraphEditorContent({
               <Focus size={14} style={{ color: 'var(--color-df-info)' }} />
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <GraphEditorStatusBar
+            validation={validation}
+            uncommittedChangeCount={uncommittedChangeCount}
+            className="flex-1"
+          />
+          <div className="ml-auto flex items-center gap-2">
             <GraphEditorToolbar 
               scope="narrative" 
               onCreateNew={async () => {

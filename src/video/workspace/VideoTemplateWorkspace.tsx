@@ -28,7 +28,14 @@ interface VideoTemplateWorkspaceProps {
   onSelectScene?: (sceneId: string) => void;
   onSelectLayer?: (layerId: string) => void;
   onAddScene?: () => void;
+  onDuplicateScene?: (sceneId: string) => void;
+  onDeleteScene?: (sceneId: string) => void;
   onAddLayer?: () => void;
+  onDeleteLayer?: (layerId: string) => void;
+  onUpdateLayerStart?: (layerId: string, startMs: number) => void;
+  onUpdateLayerDuration?: (layerId: string, durationMs: number) => void;
+  onUpdateLayerOpacity?: (layerId: string, opacity: number) => void;
+  onUpdateTemplateMetadata?: (metadata: Partial<Pick<VideoTemplate, 'name' | 'width' | 'height' | 'frameRate'>>) => void;
   onTogglePlayback?: () => void;
 }
 

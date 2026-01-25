@@ -170,6 +170,15 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     }))
   );
 
+  const { committedGraph, draftGraph, applyDelta, resetDraft } = useForgeWorkspaceStore(
+    useShallow((s) => ({
+      committedGraph: s.committedGraph,
+      draftGraph: s.draftGraph,
+      applyDelta: s.actions.applyDelta,
+      resetDraft: s.actions.resetDraft,
+    }))
+  );
+
   const reactFlow = useReactFlow();
 
   // Editor focus tracking - click-only, no hover preview
@@ -250,10 +259,17 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     });
   }, [graph, selectedProjectId]);
 
+  React.useEffect(() => {
+    if (!committedGraph || committedGraph.id !== effectiveGraph.id) {
+      resetDraft(effectiveGraph);
+    }
+  }, [committedGraph, effectiveGraph, resetDraft]);
+
   // Shell is still the only "graph mutation" boundary.
   const shell = useForgeFlowEditorShell({
-    graph: effectiveGraph,
-    onChange,
+    committedGraph: committedGraph ?? effectiveGraph,
+    draftGraph: draftGraph ?? effectiveGraph,
+    applyDelta,
     reactFlow,
     sessionStore,
   });

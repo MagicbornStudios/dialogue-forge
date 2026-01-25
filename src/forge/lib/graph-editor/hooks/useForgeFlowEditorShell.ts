@@ -13,7 +13,7 @@ import {
 } from 'reactflow';
 import { useStore } from 'zustand';
 
-import type { ForgeReactFlowJson, ForgeGraphDoc, ForgeNode, ForgeNodeType } from '@/forge/types/forge-graph';
+import type { ForgeGraphDoc, ForgeNode, ForgeNodeType } from '@/forge/types/forge-graph';
 import { FORGE_GRAPH_KIND } from '@/forge/types/forge-graph';
 import {
   applyConnection,
@@ -23,6 +23,8 @@ import {
   removeEdgeAndSemanticLink,
   type LayoutDirection,
 } from '@/forge/lib/utils/forge-flow-helpers';
+import { calculateDelta } from '@/shared/lib/draft/draft-helpers';
+import { createEmptyForgeGraphDoc } from '@/shared/utils/forge-graph-helpers';
 import { applyLayout, resolveNodeCollisions } from '@/forge/lib/utils/layout/layout';
 import { LAYOUT_CONSTANTS } from '@/forge/lib/utils/constants';
 import type { ForgeEditorSessionStore, EdgeDropMenuState } from './useForgeEditorSession';
@@ -68,8 +70,9 @@ function toReactFlowEdges(flowEdges: ForgeGraphDoc['flow']['edges']): Edge[] {
 }
 
 export type UseForgeFlowEditorShellArgs = {
-  graph: ForgeGraphDoc | null;
-  onChange: (graph: ForgeGraphDoc) => void;
+  committedGraph: ForgeGraphDoc | null;
+  draftGraph: ForgeGraphDoc | null;
+  applyDelta: (delta: ReturnType<typeof calculateDelta>) => void;
   reactFlow: ReactFlowInstance;
   sessionStore: ForgeEditorSessionStore;
 
@@ -83,8 +86,9 @@ export type UseForgeFlowEditorShellArgs = {
 
 export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
   const {
-    graph,
-    onChange,
+    committedGraph,
+    draftGraph,
+    applyDelta,
     reactFlow,
     sessionStore,
     onNodeAdd,
@@ -120,26 +124,27 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
     sessionStore.getState().edgeDropMenu !== menu && sessionStore.setState({ edgeDropMenu: menu });
   }, [sessionStore]);
 
+  const fallbackGraph = React.useMemo(() => {
+    return createEmptyForgeGraphDoc({
+      projectId: committedGraph?.project ?? draftGraph?.project ?? 0,
+      kind: committedGraph?.kind ?? draftGraph?.kind ?? FORGE_GRAPH_KIND.STORYLET,
+      title: committedGraph?.title ?? draftGraph?.title ?? 'New Graph',
+      graphId: committedGraph?.id ?? draftGraph?.id ?? undefined,
+    });
+  }, [committedGraph, draftGraph]);
+
   const effectiveGraph: ForgeGraphDoc = React.useMemo(() => {
-    const now = new Date().toISOString();
-    // If graph is null, create a default empty graph
-    // The kind will be inferred from the graph prop if available, otherwise default to STORYLET
-    // The actual kind should be set by the editor component based on scope
-    return (
-      graph || {
-        id: 0,
-        project: 0,
-        kind: FORGE_GRAPH_KIND.STORYLET, // Default, but should be overridden by editor scope
-        title: 'New Graph',
-        startNodeId: '',
-        endNodeIds: [],
-        compiledYarn: null,
-        updatedAt: now,
-        createdAt: now,
-        flow: { nodes: [], edges: [], viewport: undefined } as ForgeReactFlowJson,
-      }
-    );
-  }, [graph]);
+    return draftGraph ?? committedGraph ?? fallbackGraph;
+  }, [committedGraph, draftGraph, fallbackGraph]);
+
+  const committedGraphForDelta = committedGraph ?? effectiveGraph;
+
+  const applyDraftUpdate = React.useCallback(
+    (nextDraft: ForgeGraphDoc) => {
+      applyDelta(calculateDelta(committedGraphForDelta, nextDraft));
+    },
+    [applyDelta, committedGraphForDelta]
+  );
 
   // local RF state (from flow)
   const [nodes, setNodes] = React.useState<Node<ShellNodeData>[]>(() =>
@@ -241,24 +246,24 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
         },
       };
 
-      onChange(nextGraph);
+      applyDraftUpdate(nextGraph);
       onNodeUpdate?.(nodeId, updates);
     },
-    [effectiveGraph, onChange, onNodeUpdate, reactFlow]
+    [effectiveGraph, applyDraftUpdate, onNodeUpdate, reactFlow]
   );
 
   const handleDeleteNode = React.useCallback(
     (nodeId: string) => {
       try {
         const next = deleteFlowNode(effectiveGraph, nodeId);
-        onChange(next);
+        applyDraftUpdate(next);
         onNodeDelete?.(nodeId);
         setSelectedNodeId(nodeId === selectedNodeId ? null : nodeId);
       } catch (e: any) {
         alert(e?.message ?? 'Failed to delete node.');
       }
     },
-    [effectiveGraph, onChange, onNodeDelete]
+    [effectiveGraph, applyDraftUpdate, onNodeDelete, selectedNodeId, setSelectedNodeId]
   );
 
   const onNodesChange = React.useCallback(
@@ -298,7 +303,7 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
                 },
               };
               pendingPositionUpdatesRef.current.clear();
-              onChange(nextGraph);
+              applyDraftUpdate(nextGraph);
             }
           }, 150); // 150ms debounce
         }
@@ -306,7 +311,7 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
         return nextNodes;
       });
     },
-    [effectiveGraph, onChange]
+    [effectiveGraph, applyDraftUpdate]
   );
 
   const onNodesDelete = React.useCallback(
@@ -320,9 +325,9 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
           setSelectedNodeId(null);
         }
       }
-      onChange(next);
+      applyDraftUpdate(next);
     },
-    [effectiveGraph, onChange, onNodeDelete]
+    [effectiveGraph, applyDraftUpdate, onNodeDelete, selectedNodeId, setSelectedNodeId]
   );
 
   const onEdgesChange = React.useCallback(
@@ -340,9 +345,9 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
         if (edge) onDisconnectHook?.(edge.id, edge.source, edge.target);
         next = removeEdgeAndSemanticLink(next, edgeId);
       }
-      onChange(next);
+      applyDraftUpdate(next);
     },
-    [effectiveGraph, onChange, onDisconnectHook]
+    [effectiveGraph, applyDraftUpdate, onDisconnectHook]
   );
 
   const onEdgesDelete = React.useCallback(
@@ -352,9 +357,9 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
         onDisconnectHook?.(e.id, e.source, e.target);
         next = removeEdgeAndSemanticLink(next, e.id);
       }
-      onChange(next);
+      applyDraftUpdate(next);
     },
-    [effectiveGraph, onChange, onDisconnectHook]
+    [effectiveGraph, applyDraftUpdate, onDisconnectHook]
   );
 
   // Track mouse position for edge drop menu fallback
@@ -434,13 +439,13 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
       if (!connection.source || !connection.target) return;
       setEdges((prev) => addEdge(connection, prev));
       const nextGraph = applyConnection(effectiveGraph, connection);
-      onChange(nextGraph);
+      applyDraftUpdate(nextGraph);
       setEdges(toReactFlowEdges(nextGraph.flow.edges));
       onConnectHook?.(connection.source, connection.target, connection.sourceHandle ?? undefined);
       setEdgeDropMenu(null);
       edgeDropConnectingRef.current = null;
     },
-    [effectiveGraph, onChange, onConnectHook]
+    [effectiveGraph, applyDraftUpdate, onConnectHook]
   );
   
   const { onConnectStart, onConnectEnd, connectingRef: edgeDropConnectingRef } = useEdgeDropBehavior({ reactFlow, nodes, onAutoConnect: onConnect });
@@ -470,8 +475,6 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
       const newId = `${type}_${Date.now()}`;
       const newFlowNode = createFlowNode(type, newId, x, y);
 
-      onNodeAdd?.(newFlowNode);
-
       const isFirstNode = effectiveGraph.flow.nodes.length === 0;
       
       let next: ForgeGraphDoc = {
@@ -493,22 +496,23 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
         next = applyConnection(next, connection);
       }
 
-      onChange(next);
+      applyDraftUpdate(next);
+      onNodeAdd?.(newFlowNode);
       setSelectedNodeId(newId);
       setPaneContextMenu(null);
       setEdgeDropMenu(null);
     },
-    [effectiveGraph, onChange, onNodeAdd]
+    [effectiveGraph, applyDraftUpdate, onNodeAdd, setPaneContextMenu, setEdgeDropMenu, setSelectedNodeId]
   );
 
   const handleInsertNode = React.useCallback(
     (type: ForgeNodeType, edgeId: string, x: number, y: number) => {
       const newId = `${type}_${Date.now()}`;
       const next = insertNodeBetweenEdge(effectiveGraph, edgeId, type, newId, x, y);
-      onChange(next);
+      applyDraftUpdate(next);
       setSelectedNodeId(newId);
     },
-    [effectiveGraph, onChange, setSelectedNodeId]
+    [effectiveGraph, applyDraftUpdate, setSelectedNodeId]
   );
 
   // Command dispatcher
@@ -547,7 +551,7 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
           break;
         case FORGE_COMMAND.GRAPH.EDGE_DELETE: {
           const next = removeEdgeAndSemanticLink(effectiveGraph, cmd.edgeId);
-          onChange(next);
+          applyDraftUpdate(next);
           break;
         }
         case FORGE_COMMAND.GRAPH.EDGE_CREATE:
@@ -558,14 +562,14 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
             ...effectiveGraph,
             startNodeId: cmd.nodeId,
           };
-          onChange(next);
+          applyDraftUpdate(next);
           break;
         }
       }
     },
     [
       effectiveGraph,
-      onChange,
+      applyDraftUpdate,
       setSelectedNodeId,
       setPaneContextMenu,
       setEdgeDropMenu,
@@ -584,11 +588,11 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
       if (direction) setLayoutDirection(direction);
 
       const result = applyLayout(effectiveGraph, 'dagre', { direction: dir });
-      onChange(result.graph);
+      applyDraftUpdate(result.graph);
 
       setTimeout(() => reactFlow?.fitView({ padding: 0.2, duration: 500 }), 100);
     },
-    [layoutDirection, onChange, reactFlow, effectiveGraph, setLayoutDirection]
+    [layoutDirection, applyDraftUpdate, reactFlow, effectiveGraph, setLayoutDirection]
   );
 
   // Node interaction handlers
@@ -624,9 +628,9 @@ export function useForgeFlowEditorShell(args: UseForgeFlowEditorShellArgs) {
         return orig && (orig.position?.x !== n.position?.x || orig.position?.y !== n.position?.y);
       });
 
-      if (changed) onChange(collisionResolved);
+      if (changed) applyDraftUpdate(collisionResolved);
     },
-    [autoOrganize, onChange, effectiveGraph]
+    [autoOrganize, applyDraftUpdate, effectiveGraph]
   );
 
   return {

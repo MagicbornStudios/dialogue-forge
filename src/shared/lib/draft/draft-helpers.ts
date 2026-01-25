@@ -1,5 +1,20 @@
-import { DRAFT_COLLECTION_ACTION, type DraftCollectionAction, type DraftCollectionDelta, type DraftDelta } from '@/shared/types/draft';
-import type { ForgeGraphDoc, ForgeReactFlowEdge, ForgeReactFlowNode } from '@/shared/types/forge-graph';
+import {
+  DRAFT_COLLECTION_ACTION,
+  type DraftCollectionAction,
+  type DraftCollectionDelta,
+  type DraftDelta,
+  type DraftDeltaIds,
+  type DraftPendingPageCreation,
+} from '@/shared/types/draft';
+import {
+  FORGE_NODE_TYPE,
+  type ForgeGraphDoc,
+  type ForgeNode,
+  type ForgeNodeType,
+  type ForgeReactFlowEdge,
+  type ForgeReactFlowNode,
+} from '@/shared/types/forge-graph';
+import { PAGE_TYPE } from '@/shared/types/narrative';
 
 type ForgeGraphDraftMeta = Pick<ForgeGraphDoc, 'title' | 'startNodeId' | 'endNodeIds' | 'compiledYarn'>;
 
@@ -15,6 +30,22 @@ type EntityWithId = {
 };
 
 const hasSameValue = <T,>(left: T, right: T): boolean => JSON.stringify(left) === JSON.stringify(right);
+
+const extractIdsFromItems = <TItem extends EntityWithId>(items: TItem[]): string[] => {
+  const ids = new Set<string>();
+  items.forEach((item) => {
+    if (item.id) {
+      ids.add(item.id);
+    }
+  });
+  return Array.from(ids);
+};
+
+const buildIdDelta = <TItem extends EntityWithId>(delta: DraftCollectionDelta<TItem>): DraftDeltaIds => ({
+  added: extractIdsFromItems(delta.added),
+  updated: extractIdsFromItems(delta.updated),
+  removed: extractIdsFromItems(delta.removed),
+});
 
 const buildCollectionDelta = <TItem extends EntityWithId>(
   committed: TItem[],
@@ -145,6 +176,109 @@ const extractIds = <TItem extends EntityWithId>(delta: DraftCollectionDelta<TIte
   return Array.from(ids);
 };
 
+const resolveNodeType = (node: ForgeReactFlowNode): ForgeNodeType | undefined => {
+  const nodeData = node.data as ForgeNode | undefined;
+  return (node.type as ForgeNodeType | undefined) ?? nodeData?.type;
+};
+
+const findParentNodeByType = (
+  graph: ForgeGraphDoc,
+  nodeId: string,
+  parentType: ForgeNodeType
+): ForgeReactFlowNode | null => {
+  const incomingEdges = graph.flow.edges.filter((edge) => edge.target === nodeId);
+  for (const edge of incomingEdges) {
+    const sourceNode = graph.flow.nodes.find((node) => node.id === edge.source);
+    if (sourceNode && resolveNodeType(sourceNode) === parentType) {
+      return sourceNode;
+    }
+    const parentOfParent = sourceNode ? findParentNodeByType(graph, sourceNode.id, parentType) : null;
+    if (parentOfParent) {
+      return parentOfParent;
+    }
+  }
+  return null;
+};
+
+const buildPendingPageCreations = (
+  draft: ForgeGraphDoc,
+  nodesDelta: DraftCollectionDelta<ForgeReactFlowNode>
+): DraftPendingPageCreation[] | undefined => {
+  const pending: DraftPendingPageCreation[] = [];
+  const candidates = nodesDelta.added;
+  if (!candidates.length) {
+    return undefined;
+  }
+
+  const resolveTitle = (nodeType: ForgeNodeType | undefined, nodeData?: ForgeNode): string => {
+    if (nodeData?.label) {
+      return nodeData.label;
+    }
+    switch (nodeType) {
+      case FORGE_NODE_TYPE.ACT:
+        return 'New Act';
+      case FORGE_NODE_TYPE.CHAPTER:
+        return 'New Chapter';
+      case FORGE_NODE_TYPE.PAGE:
+        return 'New Page';
+      default:
+        return 'New Page';
+    }
+  };
+
+  candidates.forEach((node) => {
+    const nodeData = node.data as ForgeNode | undefined;
+    const nodeType = resolveNodeType(node);
+    if (!nodeType) {
+      return;
+    }
+    const isNarrativeNode =
+      nodeType === FORGE_NODE_TYPE.ACT ||
+      nodeType === FORGE_NODE_TYPE.CHAPTER ||
+      nodeType === FORGE_NODE_TYPE.PAGE;
+    if (!isNarrativeNode) {
+      return;
+    }
+    if (nodeData?.pageId) {
+      return;
+    }
+
+    let pageType: DraftPendingPageCreation['pageType'] | null = null;
+    let parentNodeId: string | null = null;
+    let parentPageId: number | null = null;
+
+    if (nodeType === FORGE_NODE_TYPE.ACT) {
+      pageType = PAGE_TYPE.ACT;
+    } else if (nodeType === FORGE_NODE_TYPE.CHAPTER) {
+      pageType = PAGE_TYPE.CHAPTER;
+      const parentActNode = findParentNodeByType(draft, node.id, FORGE_NODE_TYPE.ACT);
+      parentNodeId = parentActNode?.id ?? null;
+      parentPageId = (parentActNode?.data as ForgeNode | undefined)?.pageId ?? null;
+    } else if (nodeType === FORGE_NODE_TYPE.PAGE) {
+      pageType = PAGE_TYPE.PAGE;
+      const parentChapterNode = findParentNodeByType(draft, node.id, FORGE_NODE_TYPE.CHAPTER);
+      parentNodeId = parentChapterNode?.id ?? null;
+      parentPageId = (parentChapterNode?.data as ForgeNode | undefined)?.pageId ?? null;
+    }
+
+    if (!pageType) {
+      return;
+    }
+
+    pending.push({
+      nodeId: node.id,
+      pageType,
+      title: resolveTitle(nodeType, nodeData),
+      order: 0,
+      projectId: draft.project,
+      parentNodeId,
+      parentPageId,
+    });
+  });
+
+  return pending.length ? pending : undefined;
+};
+
 const buildMetaDelta = (
   committed: ForgeGraphDoc,
   draft: ForgeGraphDoc
@@ -171,12 +305,16 @@ export const calculateDelta = (committed: ForgeGraphDoc, draft: ForgeGraphDoc): 
   const nodes = buildCollectionDelta(committed.flow.nodes, draft.flow.nodes);
   const edges = buildCollectionDelta(committed.flow.edges, draft.flow.edges);
   const viewportChanged = !hasSameValue(committed.flow.viewport, draft.flow.viewport);
+  const pendingPageCreations = buildPendingPageCreations(draft, nodes);
 
   return {
     nodes,
     edges,
+    nodeIds: buildIdDelta(nodes),
+    edgeIds: buildIdDelta(edges),
     viewport: viewportChanged ? draft.flow.viewport ?? null : undefined,
     meta: buildMetaDelta(committed, draft),
+    pendingPageCreations,
   };
 };
 
@@ -206,6 +344,9 @@ export const mergeDeltas = (delta1: ForgeGraphDraftDelta, delta2: ForgeGraphDraf
     edges: mergeCollectionDeltas(delta1.edges, delta2.edges),
   };
 
+  merged.nodeIds = buildIdDelta(merged.nodes);
+  merged.edgeIds = buildIdDelta(merged.edges);
+
   if (Object.keys(meta).length > 0) {
     merged.meta = meta;
   }
@@ -221,6 +362,14 @@ export const mergeDeltas = (delta1: ForgeGraphDraftDelta, delta2: ForgeGraphDraf
       ...(delta1.pendingPageOperations ?? []),
       ...(delta2.pendingPageOperations ?? []),
     ];
+  }
+
+  if (delta1.pendingPageCreations || delta2.pendingPageCreations) {
+    const creations = new Map<string, DraftPendingPageCreation>();
+    [...(delta1.pendingPageCreations ?? []), ...(delta2.pendingPageCreations ?? [])].forEach((creation) => {
+      creations.set(creation.nodeId, creation);
+    });
+    merged.pendingPageCreations = Array.from(creations.values());
   }
 
   return merged;

@@ -4,12 +4,13 @@ import type { VideoComposition, VideoCompositionLayer, VideoCompositionScene } f
 import type { VideoLayer } from '@/video/templates/types/video-layer';
 import type { VideoScene } from '@/video/templates/types/video-scene';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
-import { framesToTemplateInputs } from './frames-to-template-inputs';
+import { framesToTemplateInputs, type FrameTemplateInputs } from './frames-to-template-inputs';
 
 export type CompositionScenePicker = (frame: Frame, frameIndex: number, template: VideoTemplate) => VideoScene | null;
 
 export type CompileCompositionOptions = {
   selectScene?: CompositionScenePicker;
+  frameInputs?: FrameTemplateInputs[];
 };
 
 const resolveInputBindings = (
@@ -91,13 +92,18 @@ export const compileCompositionFromFrames = (
 
       return templateDoc.scenes[frameIndex % templateDoc.scenes.length] ?? null;
     });
-  const frameInputs = framesToTemplateInputs(frames);
+  const frameInputs = options.frameInputs ?? framesToTemplateInputs(frames);
 
   let currentStartMs = 0;
   const scenes: VideoCompositionScene[] = [];
 
   frameInputs.forEach((frameInput, frameIndex) => {
-    const scene = scenePicker(frames[frameIndex], frameIndex, template);
+    const frame = frames[frameIndex];
+    if (!frame) {
+      return;
+    }
+
+    const scene = scenePicker(frame, frameIndex, template);
     if (!scene) {
       return;
     }

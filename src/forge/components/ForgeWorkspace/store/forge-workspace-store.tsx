@@ -21,6 +21,7 @@ import { createViewStateSlice } from "@/forge/components/ForgeWorkspace/store/sl
 import { createProjectSlice } from "@/forge/components/ForgeWorkspace/store/slices/project.slice"
 import type { ForgeDataAdapter } from "@/forge/adapters/forge-data-adapter"
 import type { VideoTemplateWorkspaceAdapter } from "@/video/workspace/video-template-workspace-contracts"
+import type { VideoTemplateOverrides } from "@/video/templates/types/video-template-overrides"
 
 export interface EventSink {
   emit(event: ForgeEvent): void
@@ -59,6 +60,7 @@ export interface ForgeWorkspaceState {
   // Data adapter
   dataAdapter?: ForgeDataAdapter
   videoTemplateAdapter?: VideoTemplateWorkspaceAdapter
+  videoTemplateOverrides?: VideoTemplateOverrides
 
   actions: {
     // Graph actions
@@ -112,6 +114,7 @@ export interface ForgeWorkspaceState {
     
     // Project actions
     setSelectedProjectId: ReturnType<typeof createProjectSlice>["setSelectedProjectId"]
+    setVideoTemplateOverrides: (overrides?: VideoTemplateOverrides) => void
   }
 }
 
@@ -126,6 +129,7 @@ export interface CreateForgeWorkspaceStoreOptions {
   resolveGraph?: (id: string) => Promise<ForgeGraphDoc>
   dataAdapter?: ForgeDataAdapter
   videoTemplateAdapter?: VideoTemplateWorkspaceAdapter
+  videoTemplateOverrides?: VideoTemplateOverrides
 }
 
 export function createForgeWorkspaceStore(
@@ -143,6 +147,7 @@ export function createForgeWorkspaceStore(
     resolveGraph,
     dataAdapter,
     videoTemplateAdapter,
+    videoTemplateOverrides,
   } = options
 
   // Extract IDs from provided graphs if IDs not explicitly provided
@@ -255,6 +260,7 @@ export function createForgeWorkspaceStore(
           ...projectSlice,
           dataAdapter,
           videoTemplateAdapter,
+          videoTemplateOverrides,
           actions: {
             // Graph actions
             setGraph: setGraphWithEvents,
@@ -302,6 +308,11 @@ export function createForgeWorkspaceStore(
             
             // Project actions
             setSelectedProjectId: projectSlice.setSelectedProjectId,
+            setVideoTemplateOverrides: (overrides?: VideoTemplateOverrides) => {
+              set((state) => {
+                state.videoTemplateOverrides = overrides
+              })
+            },
           },
         }
         }),

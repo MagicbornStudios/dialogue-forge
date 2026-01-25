@@ -31,6 +31,7 @@ interface WriterWorkspaceProps {
   forgeDataAdapter?: WriterForgeDataAdapter;
   projectId?: number | null;
   onProjectChange?: (projectId: number | null) => void;
+  topBar?: React.ReactNode;
 }
 
 export function WriterWorkspace({
@@ -43,6 +44,7 @@ export function WriterWorkspace({
   forgeDataAdapter,
   projectId,
   onProjectChange,
+  topBar,
 }: WriterWorkspaceProps) {
   const eventSinkRef = useRef({
     emit: (event: WriterEvent) => {
@@ -192,6 +194,7 @@ export function WriterWorkspace({
               className={className}
               onActivePageChange={onActivePageChange}
               projectId={projectId}
+              topBar={topBar}
             />
           </WriterWorkspaceActionsWrapper>
         </WriterWorkspaceStoreProvider>
@@ -218,7 +221,8 @@ function WriterWorkspaceContent({
   className,
   onActivePageChange,
   projectId,
-}: Pick<WriterWorkspaceProps, 'className' | 'onActivePageChange' | 'projectId'>) {
+  topBar,
+}: Pick<WriterWorkspaceProps, 'className' | 'onActivePageChange' | 'projectId' | 'topBar'>) {
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const pages = useWriterWorkspaceStore((state) => state.pages);
   const activePage = activePageId ? pages.find(p => p.id === activePageId) ?? null : null;
@@ -232,6 +236,7 @@ function WriterWorkspaceContent({
   return (
     <>
       <div className={`flex h-full w-full flex-col ${className}`}>
+        {topBar}
         <WriterLayout
           sidebar={<WriterTree projectId={projectId} />}
           editor={<WriterEditorPane />}

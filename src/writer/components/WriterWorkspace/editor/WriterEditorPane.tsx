@@ -120,7 +120,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
       <div className="flex min-h-0 flex-1 flex-col bg-df-editor-bg">
         {activePage ? (
           <>
-            {/* <LexicalEditor
+            <LexicalEditor
               key={activePageId}
               value={draft?.content.serialized ?? activePage.bookBody ?? ''}
               placeholder="Start writing..."
@@ -130,7 +130,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
                 }
                 setDraftContent(activePageId, nextValue);
               }}
-            /> */}
+            />
             <AutosavePlugin />
           </>
         ) : (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, ChevronDown } from 'lucide-react';
+import { Plus, ChevronDown, Folder, Eye, FileText, File, Download, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import {
   Dialog,
@@ -16,15 +16,27 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from '@/shared/ui/dropdown-menu';
 import { useProjects, useCreateProject, type ProjectDocument } from '@/app/lib/forge/queries';
+
+interface WriterMenuHandlers {
+  onDownloadMarkdown?: () => void;
+  onDownloadPDF?: () => void;
+  onToggleFullWidth?: () => void;
+  isFullWidth?: boolean;
+  canDownload?: boolean;
+}
 
 interface ProjectSwitcherProps {
   selectedProjectId: number | null;
   onProjectChange: (projectId: number | null) => void;
+  writerMenus?: WriterMenuHandlers;
 }
 
-export function ProjectSwitcher({ selectedProjectId, onProjectChange }: ProjectSwitcherProps) {
+export function ProjectSwitcher({ selectedProjectId, onProjectChange, writerMenus }: ProjectSwitcherProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
@@ -98,6 +110,71 @@ export function ProjectSwitcher({ selectedProjectId, onProjectChange }: ProjectS
       >
         <Plus className="h-4 w-4" />
       </Button>
+
+      {/* Writer menus: File and View */}
+      {writerMenus && (
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="min-w-[120px] justify-between">
+                <div className="flex items-center gap-2">
+                  <Folder className="h-4 w-4" />
+                  <span>File</span>
+                </div>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem
+                    onClick={writerMenus.onDownloadMarkdown}
+                    disabled={!writerMenus.canDownload}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Markdown (.md)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={writerMenus.onDownloadPDF}
+                    disabled={!writerMenus.canDownload}
+                  >
+                    <File className="mr-2 h-4 w-4" />
+                    PDF (.pdf)
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="min-w-[120px] justify-between">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4" />
+                  <span>View</span>
+                </div>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem
+                onClick={writerMenus.onToggleFullWidth}
+              >
+                {writerMenus.isFullWidth ? (
+                  <Minimize2 className="mr-2 h-4 w-4" />
+                ) : (
+                  <Maximize2 className="mr-2 h-4 w-4" />
+                )}
+                Full width
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
+      )}
       
       <div className="ml-auto flex items-center gap-2">
         <Button

@@ -104,6 +104,15 @@ function mapGameStateRecord(gameState: GameState): ForgeGameStateRecord {
   };
 }
 
+function mapProject(project: Project): ForgeProjectSummary {
+  console.log('mapProject project', project);
+  return {
+    id: project.id,
+    name: project.name,
+    slug: project.slug ?? null,
+    narrativeGraph: extractNarrativeGraphId(project),
+  };
+}
 export function makePayloadForgeAdapter(opts?: {
   baseUrl?: string; // default: window.location.origin or 'http://localhost:3000'
 }): ForgeDataAdapter {
@@ -549,12 +558,8 @@ export function makePayloadForgeAdapter(opts?: {
             collection: PAYLOAD_COLLECTIONS.PROJECTS,
             data: input,
         }) as Project;
-        return {
-            id: result.id,
-            name: result.name,
-            slug: result.slug ?? null,
-            narrativeGraph: extractNarrativeGraphId(result),
-        };
+        console.log('createProject result', result);
+        return mapProject(result);
     },
   };
 

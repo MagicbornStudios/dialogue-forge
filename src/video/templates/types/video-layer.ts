@@ -1,4 +1,4 @@
-import type { TemplateInputKey } from '@/shared/types/bindings';
+import type { VideoTemplateInputBindings } from './video-template-input-bindings';
 
 export const VIDEO_LAYER_KIND = {
   BACKGROUND: 'background',
@@ -32,5 +32,5 @@ export interface VideoLayer {
   startMs: number;
   durationMs?: number;
   opacity?: number;
-  inputs?: Record<string, TemplateInputKey>;
+  inputs?: VideoTemplateInputBindings;
 }

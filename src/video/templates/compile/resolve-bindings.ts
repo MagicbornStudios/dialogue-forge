@@ -1,4 +1,5 @@
 import type { TemplateInputKey } from '../../../shared/types/bindings';
+import type { VideoTemplateInputBindings } from '../types/video-template-input-bindings';
 
 export type TemplateInputs = Partial<Record<TemplateInputKey, unknown>>;
 
@@ -7,12 +8,12 @@ export interface ResolvedBindings {
   missing: TemplateInputKey[];
 }
 
-const sortTemplateInputs = (bindings: Record<string, TemplateInputKey>): [string, TemplateInputKey][] => {
+const sortTemplateInputs = (bindings: VideoTemplateInputBindings): [string, TemplateInputKey][] => {
   return Object.entries(bindings).sort(([left], [right]) => left.localeCompare(right));
 };
 
 export const resolveBindings = (
-  bindings: Record<string, TemplateInputKey> | undefined,
+  bindings: VideoTemplateInputBindings | undefined,
   inputs: TemplateInputs,
 ): ResolvedBindings => {
   if (!bindings) {

@@ -49,7 +49,7 @@ describe('compileTemplate', () => {
       ],
     };
 
-    const composition = compileTemplate(template, {
+    const { composition } = compileTemplate(template, {
       [TEMPLATE_INPUT_KEY.NODE_BACKGROUND]: 'bg.png',
       [TEMPLATE_INPUT_KEY.NODE_DIALOGUE]: 'hello',
       [TEMPLATE_INPUT_KEY.NODE_IMAGE]: 'actor.png',

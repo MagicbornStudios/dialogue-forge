@@ -2,6 +2,8 @@ export * from './templates/types/video-composition';
 export * from './templates/types/video-layer';
 export * from './templates/types/video-scene';
 export * from './templates/types/video-template';
+export * from './templates/types/video-template-input-bindings';
+export * from './templates/types/video-template-input-overrides';
 export * from './templates/types/video-template-overrides';
 export * from './templates/compile/compile-template';
 export * from './templates/compile/normalize-timeline';

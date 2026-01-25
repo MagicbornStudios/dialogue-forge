@@ -1,6 +1,7 @@
 import type { Frame } from '@/forge/runtime/types';
 import type { TemplateInputKey } from '@/shared/types/bindings';
 import type { VideoComposition, VideoCompositionLayer, VideoCompositionScene } from '@/video/templates/types/video-composition';
+import type { VideoTemplateInputBindings } from '@/video/templates/types/video-template-input-bindings';
 import { VIDEO_LAYER_KIND_TO_COMPONENT, type VideoLayer } from '@/video/templates/types/video-layer';
 import type { VideoScene } from '@/video/templates/types/video-scene';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
@@ -14,7 +15,7 @@ export type CompileCompositionOptions = {
 };
 
 const resolveInputBindings = (
-  bindings: Record<string, TemplateInputKey> | undefined,
+  bindings: VideoTemplateInputBindings | undefined,
   frameInputs: Record<TemplateInputKey, unknown>,
 ): Record<string, unknown> | undefined => {
   if (!bindings) {
@@ -33,9 +34,9 @@ const resolveInputBindings = (
 };
 
 const mergeResolvedInputs = (
-  templateInputs: Record<string, TemplateInputKey> | undefined,
-  sceneInputs: Record<string, TemplateInputKey> | undefined,
-  layerInputs: Record<string, TemplateInputKey> | undefined,
+  templateInputs: VideoTemplateInputBindings | undefined,
+  sceneInputs: VideoTemplateInputBindings | undefined,
+  layerInputs: VideoTemplateInputBindings | undefined,
   frameInputs: Record<TemplateInputKey, unknown>,
 ): Record<string, unknown> | undefined => {
   const resolvedTemplateInputs = resolveInputBindings(templateInputs, frameInputs);
@@ -60,8 +61,8 @@ const buildCompositionLayer = (
   sceneStartMs: number,
   sceneDurationMs: number,
   frameInputs: Record<TemplateInputKey, unknown>,
-  templateInputs: Record<string, TemplateInputKey> | undefined,
-  sceneInputs: Record<string, TemplateInputKey> | undefined,
+  templateInputs: VideoTemplateInputBindings | undefined,
+  sceneInputs: VideoTemplateInputBindings | undefined,
   frameId: string,
   sceneId: string,
 ): VideoCompositionLayer => {

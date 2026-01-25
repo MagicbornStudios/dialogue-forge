@@ -1,6 +1,6 @@
-import type { TemplateInputKey } from '@/shared/types/bindings';
+import type { VideoTemplateInputOverrides } from './video-template-input-overrides';
 
 export interface VideoTemplateOverrides {
-  inputs?: Partial<Record<TemplateInputKey, unknown>>;
-  frameInputs?: Record<string, Partial<Record<TemplateInputKey, unknown>>>;
+  inputs?: VideoTemplateInputOverrides;
+  frameInputs?: Record<string, VideoTemplateInputOverrides>;
 }

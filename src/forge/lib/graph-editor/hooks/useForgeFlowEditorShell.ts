@@ -43,6 +43,8 @@ export type ShellNodeData = {
     isInPath?: boolean;
     isStartNode?: boolean;
     isEndNode?: boolean;
+    isDraftAdded?: boolean;
+    isDraftUpdated?: boolean;
   };
 
 };

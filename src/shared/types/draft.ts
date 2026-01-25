@@ -1,4 +1,4 @@
-import type { ForgePage } from '@/shared/types/narrative';
+import type { ForgePage, PageType } from '@/shared/types/narrative';
 
 export const DRAFT_PAGE_OPERATION_KIND = {
   CREATE: 'CREATE',
@@ -13,6 +13,22 @@ export type DraftPageOperation<TPage = ForgePage> = {
   kind: DraftPageOperationKind;
   page: TPage;
   previous?: TPage | null;
+};
+
+export type DraftDeltaIds = {
+  added: string[];
+  updated: string[];
+  removed: string[];
+};
+
+export type DraftPendingPageCreation = {
+  nodeId: string;
+  pageType: PageType;
+  title: string;
+  order: number;
+  projectId: number;
+  parentNodeId?: string | null;
+  parentPageId?: number | null;
 };
 
 export type DraftCollectionDelta<TItem> = {
@@ -35,6 +51,9 @@ export type DraftDelta<TNode = unknown, TEdge = unknown, TViewport = unknown, TM
   edges: DraftCollectionDelta<TEdge>;
   viewport?: TViewport | null;
   meta?: Partial<TMeta>;
+  nodeIds?: DraftDeltaIds;
+  edgeIds?: DraftDeltaIds;
+  pendingPageCreations?: DraftPendingPageCreation[];
   pendingPageOperations?: TPageOp[];
 };
 

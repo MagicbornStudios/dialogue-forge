@@ -38,6 +38,7 @@ interface VideoTemplateWorkspaceProps {
   onUpdateTemplateMetadata?: (metadata: Partial<Pick<VideoTemplate, 'name' | 'width' | 'height' | 'frameRate'>>) => void;
   onTogglePlayback?: () => void;
   onSaveTemplate?: () => void;
+  saveDisabled?: boolean;
 }
 
 export function VideoTemplateWorkspace({
@@ -55,6 +56,7 @@ export function VideoTemplateWorkspace({
   onAddLayer,
   onTogglePlayback,
   onSaveTemplate,
+  saveDisabled,
 }: VideoTemplateWorkspaceProps) {
   const resolvedScenes = scenes ?? template?.scenes;
   const activeScene =
@@ -147,7 +149,7 @@ export function VideoTemplateWorkspace({
           <Button
             size="sm"
             variant="secondary"
-            disabled={!adapterReady || !template}
+            disabled={!adapterReady || !template || saveDisabled}
             onClick={onSaveTemplate}
           >
             Save

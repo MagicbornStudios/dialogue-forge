@@ -37,6 +37,7 @@ interface VideoTemplateWorkspaceProps {
   onUpdateLayerOpacity?: (layerId: string, opacity: number) => void;
   onUpdateTemplateMetadata?: (metadata: Partial<Pick<VideoTemplate, 'name' | 'width' | 'height' | 'frameRate'>>) => void;
   onTogglePlayback?: () => void;
+  onSaveTemplate?: () => void;
 }
 
 export function VideoTemplateWorkspace({
@@ -53,6 +54,7 @@ export function VideoTemplateWorkspace({
   onAddScene,
   onAddLayer,
   onTogglePlayback,
+  onSaveTemplate,
 }: VideoTemplateWorkspaceProps) {
   const resolvedScenes = scenes ?? template?.scenes;
   const activeScene =
@@ -142,7 +144,12 @@ export function VideoTemplateWorkspace({
           <Button size="sm" variant="secondary" disabled={!adapterReady}>
             Load
           </Button>
-          <Button size="sm" variant="secondary" disabled={!adapterReady || !template}>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={!adapterReady || !template}
+            onClick={onSaveTemplate}
+          >
             Save
           </Button>
         </div>

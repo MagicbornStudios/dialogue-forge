@@ -9,6 +9,7 @@ import { initializeFlags } from '@/forge/lib/flag-manager/utils/flag-manager';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
+import type { VideoTemplateOverrides } from '@/video/templates/types/video-template-overrides';
 import type { VideoTemplateWorkspaceTemplateSummary } from '@/video/workspace/video-template-workspace-contracts';
 
 interface PlayViewProps {
@@ -17,6 +18,7 @@ interface PlayViewProps {
   flagSchema?: FlagSchema;
   gameState?: ForgeGameState;
   gameStateFlags?: ForgeGameFlagState;
+  videoTemplateOverrides?: VideoTemplateOverrides;
 }
 
 export function PlayView({
@@ -25,8 +27,11 @@ export function PlayView({
   flagSchema,
   gameState,
   gameStateFlags,
+  videoTemplateOverrides,
 }: PlayViewProps) {
   const videoTemplateAdapter = useForgeWorkspaceStore((s) => s.videoTemplateAdapter);
+  const workspaceOverrides = useForgeWorkspaceStore((s) => s.videoTemplateOverrides);
+  const resolvedOverrides = videoTemplateOverrides ?? workspaceOverrides;
   const [templateSummaries, setTemplateSummaries] = useState<VideoTemplateWorkspaceTemplateSummary[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<VideoTemplate | null>(null);
@@ -344,6 +349,7 @@ export function PlayView({
         gameState={resolvedGameState}
         gameStateFlags={resolvedGameStateFlags}
         videoTemplate={selectedTemplate}
+        videoTemplateOverrides={resolvedOverrides}
         onComplete={handleComplete}
         onFlagsChange={handleFlagUpdate}
       />

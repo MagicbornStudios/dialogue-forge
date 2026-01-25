@@ -6,13 +6,15 @@ import type { ForgeGameState } from '@/forge/types/forge-game-state';
 import { GRAPH_SCOPE } from '@/forge/types/constants';
 import type { VideoComposition } from '@/video/templates/types/video-composition';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
-import { compileCompositionFromFrames } from '@/video/templates/compile/compile-composition';
+import type { VideoTemplateOverrides } from '@/video/templates/types/video-template-overrides';
+import { compileTemplateWithOverrides } from '@/video/templates/compile/compile-template-overrides';
 import { useForgeWorkspaceStore } from '../store/forge-workspace-store';
 
 export type CompileCompositionJsonOptions = {
   graphId?: string;
   template: VideoTemplate;
   executionOptions?: ExecutionOptions;
+  overrides?: VideoTemplateOverrides;
 };
 
 const emptyGameState: ForgeGameState = { flags: {} };
@@ -24,6 +26,7 @@ export function useForgeWorkspaceCompositionCompiler() {
   const activeStoryletGraphId = useForgeWorkspaceStore((s) => s.activeStoryletGraphId);
   const activeGameState = useForgeWorkspaceStore((s) => s.activeGameState);
   const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
+  const videoTemplateOverrides = useForgeWorkspaceStore((s) => s.videoTemplateOverrides);
 
   const resolveGraph = useCallback(
     async (graphId: number): Promise<ForgeGraphDoc | null> => {
@@ -53,7 +56,7 @@ export function useForgeWorkspaceCompositionCompiler() {
   );
 
   return useCallback(
-    async ({ graphId, template, executionOptions }: CompileCompositionJsonOptions): Promise<{
+    async ({ graphId, template, executionOptions, overrides }: CompileCompositionJsonOptions): Promise<{
       composition: VideoComposition;
       execution: ExecutionResult;
     } | null> => {
@@ -73,10 +76,13 @@ export function useForgeWorkspaceCompositionCompiler() {
         resolveGraph,
       });
 
-      const composition = compileCompositionFromFrames(template, execution.frames);
+      const { composition } = compileTemplateWithOverrides(template, {
+        frames: execution.frames,
+        overrides: overrides ?? videoTemplateOverrides,
+      });
 
       return { composition, execution };
     },
-    [activeGameState, graphsById, resolveGraph, selectGraphId],
+    [activeGameState, graphsById, resolveGraph, selectGraphId, videoTemplateOverrides],
   );
 }

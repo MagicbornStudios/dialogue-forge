@@ -45,6 +45,7 @@ import { ConditionalNode } from '@/forge/components/ForgeWorkspace/components/Gr
 import { GraphLeftToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLeftToolbar';
 import { GraphLayoutControls } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls';
 import { GraphEditorToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorToolbar';
+import { useDraftVisualIndicators } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/hooks/useDraftVisualIndicators';
 import { useShallow } from 'zustand/shallow';
 import type { FlagSchema } from '@/forge/types/flags';
 import type { ForgeCharacter } from '@/forge/types/characters';
@@ -203,6 +204,8 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     shell.effectiveGraph
   );
 
+  const { addedNodeIds, modifiedNodeIds, addedEdgeIds, modifiedEdgeIds } = useDraftVisualIndicators();
+
   // Consume focus requests from workspace
   React.useEffect(() => {
     if (pendingFocus && graph && String(graph.id) === pendingFocus.graphId) {
@@ -237,6 +240,8 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
       const nodeType = (flowNode?.type as ForgeNodeType | undefined) ?? (flowNode?.data as ForgeNode | undefined)?.type;
       const isStartNode = node.id === startId;
       const isEndNode = shell.effectiveGraph.endNodeIds.some((e) => e.nodeId === node.id);
+      const isDraftAdded = addedNodeIds.has(node.id);
+      const isDraftUpdated = modifiedNodeIds.has(node.id);
       const nodeData = (flowNode?.data ?? {}) as ForgeNode;
 
       return {
@@ -250,6 +255,8 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
             isInPath,
             isStartNode,
             isEndNode,
+            isDraftAdded,
+            isDraftUpdated,
           },
           flagSchema,
           characters,
@@ -266,6 +273,8 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     flagSchema,
     resolvedGameStateFlags,
     layoutDirection,
+    addedNodeIds,
+    modifiedNodeIds,
     nodeDepths,
     showPathHighlight,
     shell.effectiveGraph.endNodeIds,
@@ -298,6 +307,8 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
 
       const isInPath = edgesToSelectedNode.has(edge.id);
       const isDimmed = hasSelection && !isInPath;
+      const isDraftAdded = addedEdgeIds.has(edge.id);
+      const isDraftUpdated = modifiedEdgeIds.has(edge.id);
 
       return {
         ...edge,
@@ -306,11 +317,15 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
           isInPathToSelected: isInPath,
           isBackEdge,
           isDimmed,
+          isDraftAdded,
+          isDraftUpdated,
           sourceNode: sourceFlowNode,
         },
       };
     });
   }, [
+    addedEdgeIds,
+    modifiedEdgeIds,
     edgesToSelectedNode,
     flowById,
     layoutDirection,

@@ -47,6 +47,7 @@ import { GraphEditorToolbar } from '@/forge/components/ForgeWorkspace/components
 import { Network, Focus, FileText, Play } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 import { cn } from '@/shared/lib/utils';
+import { useDraftVisualIndicators } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/hooks/useDraftVisualIndicators';
 
 // EdgeDropMenu components
 import { CharacterEdgeDropMenu } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/CharacterNode/CharacterEdgeDropMenu';
@@ -293,6 +294,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     shell.effectiveGraph
   );
 
+  const { addedNodeIds, modifiedNodeIds, addedEdgeIds, modifiedEdgeIds } = useDraftVisualIndicators();
+
   // Consume focus requests from workspace
   React.useEffect(() => {
     if (pendingFocus && graph && String(graph.id) === pendingFocus.graphId) {
@@ -331,6 +334,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
       const isStartNode = n.id === startId;
       const isEndNode = shell.endNodeIds.has(n.id);
+      const isDraftAdded = addedNodeIds.has(n.id);
+      const isDraftUpdated = modifiedNodeIds.has(n.id);
 
       const baseNodeData = (flowNode?.data ?? {}) as ForgeNode;
 
@@ -345,6 +350,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
             isInPath: inPath,
             isStartNode,
             isEndNode,
+            isDraftAdded,
+            isDraftUpdated,
           },
 
           // Read-only context
@@ -363,6 +370,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     flagSchema,
     resolvedGameStateFlags,
     layoutDirection,
+    addedNodeIds,
+    modifiedNodeIds,
     nodeDepths,
     showPathHighlight,
     shell.effectiveGraph.startNodeId,
@@ -399,6 +408,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
       const isInPath = edgesToSelectedNode.has(e.id);
       const isDimmed = hasSelection && !isInPath;
+      const isDraftAdded = addedEdgeIds.has(e.id);
+      const isDraftUpdated = modifiedEdgeIds.has(e.id);
 
       const stroke = edgeStrokeColor(e as any, sourceType);
 
@@ -431,12 +442,24 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
           isInPathToSelected: isInPath,
           isBackEdge,
           isDimmed,
+          isDraftAdded,
+          isDraftUpdated,
           insertElementTypes,
           sourceNode: sourceFlowNode,
         },
       } as any;
     });
-  }, [edgesToSelectedNode, layoutDirection, showBackEdges, showPathHighlight, shell, nodeById, flowById]);
+  }, [
+    addedEdgeIds,
+    modifiedEdgeIds,
+    edgesToSelectedNode,
+    layoutDirection,
+    showBackEdges,
+    showPathHighlight,
+    shell,
+    nodeById,
+    flowById,
+  ]);
 
   return (
     <ForgeEditorActionsProvider actions={actions}>

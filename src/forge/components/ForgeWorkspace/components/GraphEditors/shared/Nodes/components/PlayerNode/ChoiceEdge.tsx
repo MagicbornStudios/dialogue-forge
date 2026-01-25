@@ -18,6 +18,8 @@ interface ChoiceEdgeData {
   choiceIndex?: number;
   isDimmed?: boolean;
   isInPathToSelected?: boolean;
+  isDraftAdded?: boolean;
+  isDraftUpdated?: boolean;
   sourceNode?: ForgeReactFlowNode;
 }
 
@@ -89,6 +91,7 @@ export const ChoiceEdge = React.memo(function ChoiceEdge({
   const colorVar = isBackEdge ? 'var(--color-df-edge-loop)' : 'var(--edge-color)';
   const isSelected = selected || hovered;
   const isDimmed = edgeData?.isDimmed ?? false;
+  const isDraft = edgeData?.isDraftAdded || edgeData?.isDraftUpdated;
   
   // Make edge thicker and more opaque when hovered or selected
   // Dim edges not in path when highlighting is on
@@ -96,10 +99,10 @@ export const ChoiceEdge = React.memo(function ChoiceEdge({
   const opacity = isDimmed ? 0.15 : (isSelected ? 1 : 0.7);
   
   // Use dimmed color when dimmed
-  const strokeColor = isDimmed ? 'var(--color-df-edge-dimmed)' : colorVar;
+  const strokeColor = isDraft ? 'var(--color-df-warning)' : (isDimmed ? 'var(--color-df-edge-dimmed)' : colorVar);
   
   // Add glow effect when hovered (only if not dimmed)
-  const filter = hovered && !isDimmed ? `drop-shadow(0 0 4px ${colorVar})` : undefined;
+  const filter = (hovered || isDraft) && !isDimmed ? `drop-shadow(0 0 4px ${strokeColor})` : undefined;
 
   // For pulse animation
   const pulseColor = colorVar;
@@ -115,6 +118,7 @@ export const ChoiceEdge = React.memo(function ChoiceEdge({
   const insertNodeTypes = edgeData?.insertElementTypes;
   const hasContextMenu = !!insertNodeTypes && insertNodeTypes.length > 0;
   const edgeStyle = useMemo<React.CSSProperties>(() => ({
+    stroke: strokeColor,
     strokeWidth,
     opacity,
     cursor: 'pointer',
@@ -123,7 +127,7 @@ export const ChoiceEdge = React.memo(function ChoiceEdge({
     filter,
     // Dashed line for back edges
     strokeDasharray: isBackEdge ? '8 4' : undefined,
-  }), [strokeWidth, opacity, filter, isBackEdge]);
+  }), [strokeColor, strokeWidth, opacity, filter, isBackEdge]);
 
   const edgeContent = (
     <>
@@ -183,7 +187,7 @@ export const ChoiceEdge = React.memo(function ChoiceEdge({
     return (
       <g
         data-choice-index={dataChoiceIndex}
-        className={`forge-choice-edge${isDimmed ? ' is-dimmed' : ''}${isBackEdge ? ' is-loop' : ''}`}
+        className={`forge-choice-edge${isDimmed ? ' is-dimmed' : ''}${isBackEdge ? ' is-loop' : ''}${isDraft ? ' is-draft' : ''}`}
       >
         {edgeContent}
       </g>
@@ -203,7 +207,7 @@ export const ChoiceEdge = React.memo(function ChoiceEdge({
             e.stopPropagation();
           }}
           data-choice-index={dataChoiceIndex}
-          className={`forge-choice-edge${isDimmed ? ' is-dimmed' : ''}${isBackEdge ? ' is-loop' : ''}`}
+          className={`forge-choice-edge${isDimmed ? ' is-dimmed' : ''}${isBackEdge ? ' is-loop' : ''}${isDraft ? ' is-draft' : ''}`}
         >
           {edgeContent}
         </g>

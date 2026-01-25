@@ -89,3 +89,13 @@
   stroke: var(--color-df-edge-loop);
   fill: var(--color-df-edge-loop);
 }
+
+.dialogue-graph-editor .forge-edge.is-draft .react-flow__edge-path,
+.dialogue-graph-editor .forge-choice-edge.is-draft .react-flow__edge-path {
+  stroke: var(--color-df-warning);
+}
+
+.dialogue-graph-editor .forge-choice-edge.is-draft .forge-choice-arrow {
+  stroke: var(--color-df-warning);
+  fill: var(--color-df-warning);
+}

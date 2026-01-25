@@ -166,6 +166,12 @@
   box-shadow: var(--node-selected-shadow);
 }
 
+.dialogue-graph-editor .forge-node[data-draft="added"],
+.dialogue-graph-editor .forge-node[data-draft="modified"] {
+  outline: 2px solid var(--color-df-warning);
+  outline-offset: 2px;
+}
+
 .dialogue-graph-editor .forge-node[data-start="true"],
 .dialogue-graph-editor .forge-node[data-end="true"] {
   box-shadow: var(--node-start-shadow);

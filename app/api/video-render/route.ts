@@ -1,11 +1,12 @@
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 
-import { renderVideoToFile } from '@/app/lib/video/remotion-renderer';
+import { renderVideoToFile, startRenderJob } from '@/app/lib/video/remotion-renderer';
 import {
   VIDEO_RENDER_FORMAT,
   VIDEO_RENDER_RESPONSE_MODE,
   type VideoRenderFormat,
+  type VideoRenderJobResponseDTO,
   type VideoRenderRequestDTO,
   type VideoRenderResponseDTO,
   type VideoRenderResponseMode,
@@ -18,6 +19,7 @@ const isValidResponseMode = (value: unknown): value is VideoRenderResponseMode =
   Object.values(VIDEO_RENDER_RESPONSE_MODE).includes(value as VideoRenderResponseMode);
 
 const buildDownloadUrl = (filename: string) => `/api/video-render/${filename}`;
+const buildStatusUrl = (jobId: string) => `/api/video-render/status/${jobId}`;
 
 const streamFileResponse = (filePath: string, filename: string, contentType: string) =>
   new Response(Readable.toWeb(createReadStream(filePath)), {
@@ -45,6 +47,19 @@ export async function POST(request: Request) {
   const responseMode = isValidResponseMode(payload.responseMode)
     ? payload.responseMode
     : VIDEO_RENDER_RESPONSE_MODE.STREAM;
+
+  if (responseMode === VIDEO_RENDER_RESPONSE_MODE.ASYNC) {
+    const job = startRenderJob({
+      composition: payload.composition,
+      settings: payload.settings,
+    });
+    const body: VideoRenderJobResponseDTO = {
+      id: job.id,
+      status: job.status,
+      statusUrl: buildStatusUrl(job.id),
+    };
+    return Response.json(body);
+  }
 
   const asset = await renderVideoToFile({
     composition: payload.composition,

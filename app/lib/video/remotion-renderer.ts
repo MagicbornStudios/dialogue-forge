@@ -5,8 +5,10 @@ import { randomUUID } from 'node:crypto';
 
 import {
   VIDEO_RENDER_FORMAT,
+  VIDEO_RENDER_JOB_STATUS,
   type VideoRenderFormat,
   type VideoRenderInputProps,
+  type VideoRenderJobStatus,
   type VideoRenderSettingsDTO,
 } from '@/app/lib/video/types';
 import { REMOTION_COMPOSITION_ID } from '@/app/lib/video/remotion-root';
@@ -18,6 +20,14 @@ export interface RenderedVideoAsset {
   contentType: string;
 }
 
+export interface RenderJob {
+  id: string;
+  status: VideoRenderJobStatus;
+  progress: number | null;
+  asset?: RenderedVideoAsset;
+  error?: string;
+}
+
 const RENDER_STORAGE_DIR = path.join(os.tmpdir(), 'dialogue-forge-renders');
 const DEFAULT_RENDER_SETTINGS: VideoRenderSettingsDTO = {
   fps: 30,
@@ -27,6 +37,7 @@ const DEFAULT_RENDER_SETTINGS: VideoRenderSettingsDTO = {
 };
 
 let bundleLocation: string | null = null;
+const renderJobs = new Map<string, RenderJob>();
 
 const getCodecForFormat = (format: VideoRenderFormat) => {
   if (format === VIDEO_RENDER_FORMAT.WEBM) {
@@ -76,7 +87,26 @@ const getBundleLocation = async () => {
   return bundled;
 };
 
-export const renderVideoToFile = async (inputProps: VideoRenderInputProps): Promise<RenderedVideoAsset> => {
+const resolveProgressValue = (progress: unknown) => {
+  if (typeof progress === 'number') {
+    return progress;
+  }
+  if (progress && typeof progress === 'object') {
+    const progressRecord = progress as Record<string, number | undefined>;
+    if (typeof progressRecord.overallProgress === 'number') {
+      return progressRecord.overallProgress;
+    }
+    if (typeof progressRecord.progress === 'number') {
+      return progressRecord.progress;
+    }
+  }
+  return 0;
+};
+
+export const renderVideoToFile = async (
+  inputProps: VideoRenderInputProps,
+  onProgress?: (progress: number) => void
+): Promise<RenderedVideoAsset> => {
   const settings = resolveRenderSettings(inputProps.settings);
   const serveUrl = await getBundleLocation();
   const { renderMedia, selectComposition } = await import(
@@ -101,6 +131,9 @@ export const renderVideoToFile = async (inputProps: VideoRenderInputProps): Prom
     outputLocation,
     inputProps,
     overwrite: true,
+    onProgress: (progress) => {
+      onProgress?.(resolveProgressValue(progress));
+    },
   });
 
   return {
@@ -110,5 +143,38 @@ export const renderVideoToFile = async (inputProps: VideoRenderInputProps): Prom
     contentType: getContentTypeForFormat(settings.format),
   };
 };
+
+export const startRenderJob = (inputProps: VideoRenderInputProps): RenderJob => {
+  const id = randomUUID();
+  const job: RenderJob = {
+    id,
+    status: VIDEO_RENDER_JOB_STATUS.QUEUED,
+    progress: 0,
+  };
+  renderJobs.set(id, job);
+
+  const updateJob = (updates: Partial<RenderJob>) => {
+    const existing = renderJobs.get(id);
+    if (!existing) return;
+    renderJobs.set(id, { ...existing, ...updates });
+  };
+
+  void (async () => {
+    try {
+      updateJob({ status: VIDEO_RENDER_JOB_STATUS.RENDERING, progress: 0 });
+      const asset = await renderVideoToFile(inputProps, (progress) => {
+        updateJob({ progress });
+      });
+      updateJob({ status: VIDEO_RENDER_JOB_STATUS.COMPLETED, progress: 1, asset });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to render video.';
+      updateJob({ status: VIDEO_RENDER_JOB_STATUS.FAILED, error: message });
+    }
+  })();
+
+  return job;
+};
+
+export const getRenderJob = (id: string) => renderJobs.get(id) ?? null;
 
 export const getRenderStorageDir = () => RENDER_STORAGE_DIR;

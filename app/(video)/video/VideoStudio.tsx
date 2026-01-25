@@ -7,17 +7,13 @@ import type { VideoLayer } from '@/video/templates/types/video-layer';
 import type { VideoScene } from '@/video/templates/types/video-scene';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
 import { VideoTemplateWorkspace } from '@/video/workspace/VideoTemplateWorkspace';
-import { Preview } from '@/video/workspace/components/Preview';
-import type {
-  VideoTemplateMediaRequest,
-  VideoTemplateMediaResolution,
-  VideoTemplateWorkspaceTemplateSummary,
-} from '@/video/workspace/video-template-workspace-contracts';
-import { VIDEO_MEDIA_KIND } from '@/video/workspace/video-template-workspace-contracts';
-import { BINDING_KEY } from '@/shared/types/bindings';
+import type { VideoTemplateWorkspaceTemplateSummary } from '@/video/workspace/video-template-workspace-contracts';
+import { compileTemplate } from '@/video/templates/compile/compile-template';
+import type { VideoComposition } from '@/video/templates/types/video-composition';
 import { Card } from '@/shared/ui/card';
 import { Button } from '@/shared/ui/button';
 import { cn } from '@/shared/lib/utils';
+import { RemotionPreview } from './components/RemotionPreview';
 
 type VideoTemplateMetadataUpdate = Partial<Pick<VideoTemplate, 'name' | 'width' | 'height' | 'frameRate'>>;
 
@@ -51,8 +47,7 @@ export function VideoStudio() {
   const [activeSceneId, setActiveSceneId] = useState<string | undefined>(undefined);
   const [activeLayerId, setActiveLayerId] = useState<string | undefined>(undefined);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [resolvedMedia, setResolvedMedia] = useState<VideoTemplateMediaResolution | null>(null);
-  const [isMediaLoading, setIsMediaLoading] = useState(false);
+  const [currentFrame, setCurrentFrame] = useState(0);
 
   const workspaceTokens = useMemo(
     () =>
@@ -123,46 +118,24 @@ export function VideoStudio() {
   const activeLayer =
     activeScene?.layers?.find((layer) => layer.id === activeLayerId) ?? activeScene?.layers?.[0] ?? null;
 
-  const mediaRequest = useMemo<VideoTemplateMediaRequest | null>(() => {
-    const inputGroups = [activeLayer?.inputs, activeScene?.inputs, selectedTemplate?.inputs];
-    for (const inputs of inputGroups) {
-      const imageBinding = inputs?.[BINDING_KEY.MEDIA_IMAGE];
-      if (imageBinding) {
-        return { mediaId: imageBinding, kind: VIDEO_MEDIA_KIND.IMAGE } satisfies VideoTemplateMediaRequest;
-      }
-      const videoBinding = inputs?.[BINDING_KEY.MEDIA_VIDEO];
-      if (videoBinding) {
-        return { mediaId: videoBinding, kind: VIDEO_MEDIA_KIND.VIDEO } satisfies VideoTemplateMediaRequest;
-      }
+  const { composition, compositionError } = useMemo((): {
+    composition: VideoComposition | null;
+    compositionError: string | null;
+  } => {
+    if (!selectedTemplate) {
+      return { composition: null, compositionError: null };
     }
-    return null;
-  }, [activeLayer?.inputs, activeScene?.inputs, selectedTemplate?.inputs]);
+    try {
+      return { composition: compileTemplate(selectedTemplate, {}), compositionError: null };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to compile preview composition.';
+      return { composition: null, compositionError: message };
+    }
+  }, [selectedTemplate]);
 
   useEffect(() => {
-    let isMounted = true;
-    if (!videoTemplateAdapter.resolveMedia || !mediaRequest) {
-      setResolvedMedia(null);
-      return;
-    }
-    setIsMediaLoading(true);
-    videoTemplateAdapter
-      .resolveMedia(mediaRequest)
-      .then((resolved) => {
-        if (!isMounted) return;
-        setResolvedMedia(resolved ?? null);
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setResolvedMedia(null);
-      })
-      .finally(() => {
-        if (!isMounted) return;
-        setIsMediaLoading(false);
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, [mediaRequest, videoTemplateAdapter]);
+    setCurrentFrame(0);
+  }, [composition?.id, composition?.durationMs, composition?.frameRate]);
 
   const persistTemplate = useCallback(
     (updater: (template: VideoTemplate) => VideoTemplate) => {
@@ -337,6 +310,17 @@ export function VideoStudio() {
     [persistTemplate, selectedTemplate]
   );
 
+  const handleSetPlaying = useCallback((playing: boolean) => {
+    setIsPlaying(playing);
+  }, []);
+
+  const handleFrameChange = useCallback(
+    (frame: number) => {
+      setCurrentFrame(frame);
+    },
+    [setCurrentFrame]
+  );
+
   return (
     <div className="min-h-screen bg-[var(--video-workspace-bg)] text-[var(--video-workspace-text)]" style={workspaceTokens}>
       <div className="flex h-screen gap-4 p-6">
@@ -390,12 +374,13 @@ export function VideoStudio() {
             </div>
           </Card>
           <div className="flex-1">
-            <Preview
-              template={selectedTemplate}
+            <RemotionPreview
+              composition={composition}
+              errorMessage={compositionError}
               isPlaying={isPlaying}
-              onTogglePlayback={() => setIsPlaying((prev) => !prev)}
-              resolvedMedia={resolvedMedia}
-              isMediaLoading={isMediaLoading}
+              currentFrame={currentFrame}
+              onFrameChange={handleFrameChange}
+              onSetPlaying={handleSetPlaying}
             />
           </div>
         </main>

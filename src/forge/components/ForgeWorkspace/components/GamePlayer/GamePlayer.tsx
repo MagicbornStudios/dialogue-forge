@@ -15,8 +15,9 @@ import { FORGE_EDGE_KIND, type ForgeGraphDoc } from '@/forge/types/forge-graph';
 import { FlagSchema } from '@/forge/types/flags';
 import { DialogueResult, ForgeFlagState, type ForgeGameState } from '@/forge/types/forge-game-state';
 import { VideoCompositionRenderer } from '@/video/player/VideoCompositionRenderer';
-import { compileCompositionFromFrames } from '@/video/templates/compile/compile-composition';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
+import type { VideoTemplateOverrides } from '@/video/templates/types/video-template-overrides';
+import { compileTemplateWithOverrides } from '@/video/templates/compile/compile-template-overrides';
 import { VNStage } from './VNStage';
 
 export interface GamePlayerProps {
@@ -26,6 +27,7 @@ export interface GamePlayerProps {
   gameState?: ForgeGameState;
   gameStateFlags?: ForgeFlagState;
   videoTemplate?: VideoTemplate | null;
+  videoTemplateOverrides?: VideoTemplateOverrides;
   onComplete?: (result: DialogueResult) => void;
   onFlagsChange?: (flags: ForgeFlagState) => void;
 }
@@ -59,6 +61,7 @@ export function GamePlayer({
   gameState,
   gameStateFlags,
   videoTemplate,
+  videoTemplateOverrides,
   onComplete,
   onFlagsChange,
 }: GamePlayerProps) {
@@ -84,8 +87,13 @@ export function GamePlayer({
       return null;
     }
 
-    return compileCompositionFromFrames(videoTemplate, frames);
-  }, [frames, videoTemplate]);
+    const { composition: compiled } = compileTemplateWithOverrides(videoTemplate, {
+      frames,
+      overrides: videoTemplateOverrides,
+    });
+
+    return compiled;
+  }, [frames, videoTemplate, videoTemplateOverrides]);
   const compositionDurationFrames = composition
     ? msToFrames(composition.durationMs, composition.frameRate)
     : 1;

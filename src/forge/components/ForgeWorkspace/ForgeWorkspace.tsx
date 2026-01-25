@@ -5,6 +5,7 @@ import type { ForgeGameState } from '@/forge/types/forge-game-state';
 import type { ForgeCharacter } from '@/forge/types/characters';
 import type { FlagSchema } from '@/forge/types/flags';
 import type { VideoTemplateWorkspaceAdapter } from '@/video/workspace/video-template-workspace-contracts';
+import type { VideoTemplateOverrides } from '@/video/templates/types/video-template-overrides';
 
 import { ForgeWorkspaceMenuBar } from '@/forge/components/ForgeWorkspace/components/ForgeWorkspaceMenuBar';
 import { ProjectSync } from '@/forge/components/ForgeWorkspace/components/ProjectSync';
@@ -55,6 +56,7 @@ interface ForgeWorkspaceProps {
   // Persistence surface (already implemented)
   dataAdapter?: ForgeDataAdapter;
   videoTemplateAdapter?: VideoTemplateWorkspaceAdapter;
+  videoTemplateOverrides?: VideoTemplateOverrides;
 
   // Project selection sync
   selectedProjectId?: number | null;
@@ -75,6 +77,7 @@ export function ForgeWorkspace({
   resolveGraph,
   dataAdapter,
   videoTemplateAdapter,
+  videoTemplateOverrides,
   selectedProjectId,
   onProjectChange,
   headerLinks,
@@ -97,6 +100,7 @@ export function ForgeWorkspace({
         resolveGraph,
         dataAdapter,
         videoTemplateAdapter,
+        videoTemplateOverrides,
       },
       eventSinkRef.current
     )
@@ -109,6 +113,10 @@ export function ForgeWorkspace({
   React.useEffect(() => {
     storeRef.current.setState({ videoTemplateAdapter });
   }, [videoTemplateAdapter]);
+
+  React.useEffect(() => {
+    storeRef.current.setState({ videoTemplateOverrides });
+  }, [videoTemplateOverrides]);
 
   return (
     <CopilotKitProvider

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Code2, BookOpen, Settings, Terminal } from 'lucide-react';
+import { Code2, BookOpen, Film, Settings, Terminal } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -23,7 +23,16 @@ export default function HomePage() {
             <span className="text-lg font-semibold text-white">Forge</span>
             <span className="text-sm text-slate-400">Visual Dialogue Editor</span>
           </Link>
-          
+
+          <Link
+            href="/video"
+            className="group flex flex-col items-center gap-3 p-6 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 hover:border-slate-600 transition-all"
+          >
+            <Film className="w-12 h-12 text-rose-400 group-hover:text-rose-300" />
+            <span className="text-lg font-semibold text-white">Video Studio</span>
+            <span className="text-sm text-slate-400">Template Workspace</span>
+          </Link>
+
           <Link
             href="/writer"
             className="group flex flex-col items-center gap-3 p-6 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 hover:border-slate-600 transition-all"

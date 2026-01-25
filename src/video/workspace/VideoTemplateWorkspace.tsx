@@ -28,8 +28,16 @@ interface VideoTemplateWorkspaceProps {
   onSelectScene?: (sceneId: string) => void;
   onSelectLayer?: (layerId: string) => void;
   onAddScene?: () => void;
+  onDuplicateScene?: (sceneId: string) => void;
+  onDeleteScene?: (sceneId: string) => void;
   onAddLayer?: () => void;
+  onDeleteLayer?: (layerId: string) => void;
+  onUpdateLayerStart?: (layerId: string, startMs: number) => void;
+  onUpdateLayerDuration?: (layerId: string, durationMs: number) => void;
+  onUpdateLayerOpacity?: (layerId: string, opacity: number) => void;
+  onUpdateTemplateMetadata?: (metadata: Partial<Pick<VideoTemplate, 'name' | 'width' | 'height' | 'frameRate'>>) => void;
   onTogglePlayback?: () => void;
+  onSaveTemplate?: () => void;
 }
 
 export function VideoTemplateWorkspace({
@@ -46,6 +54,7 @@ export function VideoTemplateWorkspace({
   onAddScene,
   onAddLayer,
   onTogglePlayback,
+  onSaveTemplate,
 }: VideoTemplateWorkspaceProps) {
   const resolvedScenes = scenes ?? template?.scenes;
   const activeScene =
@@ -135,7 +144,12 @@ export function VideoTemplateWorkspace({
           <Button size="sm" variant="secondary" disabled={!adapterReady}>
             Load
           </Button>
-          <Button size="sm" variant="secondary" disabled={!adapterReady || !template}>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={!adapterReady || !template}
+            onClick={onSaveTemplate}
+          >
             Save
           </Button>
         </div>

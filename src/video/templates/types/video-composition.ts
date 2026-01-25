@@ -1,6 +1,10 @@
+import type { VideoLayerComponent, VideoLayerKind } from './video-layer';
+
 export interface VideoCompositionLayer {
   id: string;
   sceneId: string;
+  kind: VideoLayerKind;
+  component: VideoLayerComponent;
   startMs: number;
   endMs: number;
   opacity?: number;

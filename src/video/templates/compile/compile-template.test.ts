@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { TEMPLATE_INPUT_KEY } from '../../../shared/types/bindings';
+import { VIDEO_LAYER_COMPONENT, VIDEO_LAYER_KIND } from '../types/video-layer';
 import type { VideoTemplate } from '../types/video-template';
 import { compileTemplate } from './compile-template';
 
@@ -27,6 +28,7 @@ describe('compileTemplate', () => {
           layers: [
             {
               id: 'layer-b',
+              kind: VIDEO_LAYER_KIND.PORTRAIT,
               startMs: 500,
               durationMs: 1000,
               inputs: {
@@ -35,6 +37,7 @@ describe('compileTemplate', () => {
             },
             {
               id: 'layer-a',
+              kind: VIDEO_LAYER_KIND.PORTRAIT,
               startMs: 500,
               durationMs: 1000,
               inputs: {
@@ -46,7 +49,7 @@ describe('compileTemplate', () => {
       ],
     };
 
-    const composition = compileTemplate(template, {
+    const { composition } = compileTemplate(template, {
       [TEMPLATE_INPUT_KEY.NODE_BACKGROUND]: 'bg.png',
       [TEMPLATE_INPUT_KEY.NODE_DIALOGUE]: 'hello',
       [TEMPLATE_INPUT_KEY.NODE_IMAGE]: 'actor.png',
@@ -55,6 +58,7 @@ describe('compileTemplate', () => {
 
     const scene = composition.scenes[0];
     expect(scene.layers.map((layer) => layer.id)).toEqual(['layer-a', 'layer-b']);
+    expect(scene.layers[0].component).toBe(VIDEO_LAYER_COMPONENT.PORTRAIT);
 
     const resolvedInputs = scene.layers[0].resolvedInputs;
     expect(resolvedInputs).toEqual({

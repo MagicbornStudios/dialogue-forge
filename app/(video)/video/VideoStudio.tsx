@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { makePayloadVideoTemplateAdapter } from '@/app/lib/video/payload-video-template-adapter';
 import type { VideoLayer } from '@/video/templates/types/video-layer';
+import { VIDEO_LAYER_KIND } from '@/video/templates/types/video-layer';
 import type { VideoScene } from '@/video/templates/types/video-scene';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
 import { VideoTemplateWorkspace } from '@/video/workspace/VideoTemplateWorkspace';
@@ -49,6 +50,7 @@ const createScene = (sceneCount: number, durationMs: number): VideoScene => ({
 const createLayer = (layerCount: number, durationMs: number): VideoLayer => ({
   id: createTemplateId(),
   name: `Layer ${layerCount + 1}`,
+  kind: VIDEO_LAYER_KIND.BACKGROUND,
   startMs: 0,
   durationMs,
   opacity: 1,
@@ -224,7 +226,8 @@ export function VideoStudio() {
       return { composition: null, compositionError: null };
     }
     try {
-      return { composition: compileTemplate(selectedTemplate, {}), compositionError: null };
+      const result = compileTemplate(selectedTemplate, {});
+      return { composition: result.composition, compositionError: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to compile preview composition.';
       return { composition: null, compositionError: message };

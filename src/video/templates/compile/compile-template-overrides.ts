@@ -14,7 +14,7 @@ export interface VideoTemplateCompilePayload {
   options?: CompileCompositionOptions;
 }
 
-export interface VideoTemplateCompileResult {
+export interface VideoTemplateCompileResultWithOverrides {
   composition: VideoComposition;
   bindingMap: FrameTemplateInputs[];
 }
@@ -96,7 +96,7 @@ const applyOverrides = (
 export const compileTemplateWithOverrides = (
   template: VideoTemplate,
   payload: VideoTemplateCompilePayload,
-): VideoTemplateCompileResult => {
+): VideoTemplateCompileResultWithOverrides => {
   validateOverrides(payload.overrides);
   const baseFrameInputs = framesToTemplateInputs(payload.frames);
   const bindingMap = applyOverrides(baseFrameInputs, payload.overrides);

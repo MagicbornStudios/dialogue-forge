@@ -7,6 +7,7 @@ import {
   type VideoRenderInputProps,
   type VideoRenderSettingsDTO,
 } from '@/app/lib/video/types';
+import { mapDTOToVideoComposition } from '@/app/lib/video/map-composition';
 
 export const REMOTION_COMPOSITION_ID = 'VideoComposition';
 
@@ -38,8 +39,11 @@ const resolveSettings = (settings: VideoRenderSettingsDTO, composition: VideoRen
   height: settings?.height ?? composition.height,
 });
 
-export function RemotionVideoComposition({ composition }: VideoRenderInputProps) {
-  return <VideoCompositionRenderer composition={composition} />;
+export function RemotionVideoComposition(props: Record<string, unknown>) {
+  const { composition } = props as unknown as VideoRenderInputProps;
+  // Convert DTO to full VideoComposition (adds missing kind/component fields)
+  const fullComposition = mapDTOToVideoComposition(composition);
+  return <VideoCompositionRenderer composition={fullComposition} />;
 }
 
 export function RemotionRoot() {
@@ -49,12 +53,13 @@ export function RemotionRoot() {
       component={RemotionVideoComposition}
       defaultProps={DEFAULT_PROPS}
       calculateMetadata={({ props }) => {
-        const { fps, width, height } = resolveSettings(props.settings, props.composition);
+        const typedProps = props as unknown as VideoRenderInputProps;
+        const { fps, width, height } = resolveSettings(typedProps.settings, typedProps.composition);
         return {
           fps,
           width,
           height,
-          durationInFrames: msToFrames(props.composition.durationMs, fps),
+          durationInFrames: msToFrames(typedProps.composition.durationMs, fps),
         };
       }}
     />

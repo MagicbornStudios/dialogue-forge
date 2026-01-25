@@ -22,7 +22,7 @@ const buildDownloadUrl = (filename: string) => `/api/video-render/${filename}`;
 const buildStatusUrl = (jobId: string) => `/api/video-render/status/${jobId}`;
 
 const streamFileResponse = (filePath: string, filename: string, contentType: string) =>
-  new Response(Readable.toWeb(createReadStream(filePath)), {
+  new Response(Readable.toWeb(createReadStream(filePath)) as ReadableStream, {
     headers: {
       'Content-Type': contentType,
       'Content-Disposition': `attachment; filename=\"${filename}\"`,

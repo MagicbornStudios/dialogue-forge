@@ -11,7 +11,8 @@ import {
   type VideoRenderJobStatus,
   type VideoRenderSettingsDTO,
 } from '@/app/lib/video/types';
-import { REMOTION_COMPOSITION_ID } from '@/app/lib/video/remotion-root';
+// Remotion composition ID - extracted to avoid importing Remotion in server routes
+const REMOTION_COMPOSITION_ID = 'VideoComposition';
 
 export interface RenderedVideoAsset {
   id: string;
@@ -76,13 +77,14 @@ const getBundleLocation = async () => {
   );
   const entryPoint = path.join(process.cwd(), 'app/lib/video/remotion-entry.tsx');
   const outDir = path.join(os.tmpdir(), 'dialogue-forge-remotion-bundle');
-  const bundled = await bundle({
+  const bundled = await bundle(
     entryPoint,
-    outDir,
-    enableCaching: true,
-    overwrite: true,
-    tsconfig: path.join(process.cwd(), 'tsconfig.json'),
-  });
+    undefined, // onProgress callback (optional)
+    {
+      outDir,
+      enableCaching: true,
+    }
+  );
   bundleLocation = bundled;
   return bundled;
 };
@@ -116,7 +118,7 @@ export const renderVideoToFile = async (
   const composition = await selectComposition({
     serveUrl,
     id: REMOTION_COMPOSITION_ID,
-    inputProps,
+    inputProps: inputProps as unknown as Record<string, unknown>,
   });
 
   const renderDir = await ensureRenderStorage();
@@ -129,9 +131,9 @@ export const renderVideoToFile = async (
     serveUrl,
     codec: getCodecForFormat(settings.format),
     outputLocation,
-    inputProps,
+    inputProps: inputProps as unknown as Record<string, unknown>,
     overwrite: true,
-    onProgress: (progress) => {
+    onProgress: (progress: unknown) => {
       onProgress?.(resolveProgressValue(progress));
     },
   });

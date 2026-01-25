@@ -6,8 +6,9 @@ import {
 
 const buildDownloadUrl = (filename: string) => `/api/video-render/${filename}`;
 
-export async function GET(_request: Request, context: { params: { jobId: string } }) {
-  const job = getRenderJob(context.params.jobId);
+export async function GET(_request: Request, context: { params: Promise<{ jobId: string }> }) {
+  const { jobId } = await context.params;
+  const job = getRenderJob(jobId);
 
   if (!job) {
     return Response.json({ error: 'Render job not found.' }, { status: 404 });

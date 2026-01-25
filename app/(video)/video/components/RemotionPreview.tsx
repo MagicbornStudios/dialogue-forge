@@ -129,7 +129,7 @@ export function RemotionPreview({
               className="flex min-h-[280px] flex-1 items-center justify-center rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-preview)]"
               style={{ aspectRatio: composition ? `${composition.width} / ${composition.height}` : undefined }}
             >
-              {renderInputProps ? (
+              {renderInputProps && composition ? (
                 <Player
                   ref={playerRef}
                   component={RemotionVideoComposition}

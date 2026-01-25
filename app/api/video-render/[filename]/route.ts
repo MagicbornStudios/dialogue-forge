@@ -1,10 +1,12 @@
 import path from 'node:path';
+import os from 'node:os';
 import fs from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 
-import { getRenderStorageDir } from '@/app/lib/video/remotion-renderer';
 import { VIDEO_RENDER_FORMAT } from '@/app/lib/video/types';
+
+const RENDER_STORAGE_DIR = path.join(os.tmpdir(), 'dialogue-forge-renders');
 
 const getContentTypeForFilename = (filename: string) => {
   if (filename.endsWith(`.${VIDEO_RENDER_FORMAT.WEBM}`)) {
@@ -13,10 +15,9 @@ const getContentTypeForFilename = (filename: string) => {
   return 'video/mp4';
 };
 
-export async function GET(_: Request, { params }: { params: { filename: string } }) {
-  const renderDir = getRenderStorageDir();
-  const filename = params.filename;
-  const filePath = path.join(renderDir, filename);
+export async function GET(_: Request, { params }: { params: Promise<{ filename: string }> }) {
+  const { filename } = await params;
+  const filePath = path.join(RENDER_STORAGE_DIR, filename);
 
   try {
     await fs.access(filePath);
@@ -24,7 +25,7 @@ export async function GET(_: Request, { params }: { params: { filename: string }
     return Response.json({ error: 'Render not found.' }, { status: 404 });
   }
 
-  return new Response(Readable.toWeb(createReadStream(filePath)), {
+  return new Response(Readable.toWeb(createReadStream(filePath)) as ReadableStream, {
     headers: {
       'Content-Type': getContentTypeForFilename(filename),
       'Content-Disposition': `attachment; filename=\"${filename}\"`,

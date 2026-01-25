@@ -68,9 +68,9 @@ module.exports = {
   overrides: [
     {
       files: ["app/**/*.{js,jsx,ts,tsx}"],
-      plugins: ["@typescript-eslint", "@next/next"],
+      extends: ["next/core-web-vitals"],
       rules: {
-        // Next.js recommended rules
+        // Next.js recommended rules are included via extends
         "@next/next/no-html-link-for-pages": "error",
         "@next/next/no-img-element": "warn",
       },

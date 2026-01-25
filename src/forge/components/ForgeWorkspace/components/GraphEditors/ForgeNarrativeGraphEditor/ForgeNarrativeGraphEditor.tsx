@@ -184,7 +184,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
         });
         
         // Update the graph node with the pageId
-        const updatedNodes = effectiveGraph.flow.nodes.map(n => 
+        const updatedNodes = effectiveGraph.flow.nodes.map((n: ForgeReactFlowNode) => 
           n.id === node.id 
             ? { ...n, data: { ...(n.data ?? {}), pageId: actPage.id, title: actPage.title } as ForgeNode }
             : n
@@ -208,7 +208,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
             parent: parentActPageId,
           });
           
-          const updatedNodes = effectiveGraph.flow.nodes.map(n => 
+          const updatedNodes = effectiveGraph.flow.nodes.map((n: ForgeReactFlowNode) => 
             n.id === node.id 
               ? { ...n, data: { ...(n.data ?? {}), pageId: chapterPage.id, title: chapterPage.title } as ForgeNode }
               : n
@@ -235,7 +235,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
             parent: parentChapterPageId,
           });
           
-          const updatedNodes = effectiveGraph.flow.nodes.map(n => 
+          const updatedNodes = effectiveGraph.flow.nodes.map((n: ForgeReactFlowNode) => 
             n.id === node.id 
               ? { ...n, data: { ...(n.data ?? {}), pageId: contentPage.id, title: contentPage.title } as ForgeNode }
               : n

@@ -16,6 +16,7 @@ import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { getFlagColorClass } from '@/forge/lib/utils/flag-styles';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { useForgeWorkspaceActions } from '@/forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
+import { StandardNodeContextMenuItems } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/StandardNodeContextMenuItems';
 
 interface StoryletNodeData {
   node: ForgeNode;
@@ -38,6 +39,9 @@ export const StoryletNode = React.memo(function StoryletNode({ data, selected }:
   const workspaceActions = useForgeWorkspaceActions();
   const handleEdit = useCallback(() => {
     if (node.id) actions.openNodeEditor(node.id);
+  }, [actions, node.id]);
+  const handleSetAsStart = useCallback(() => {
+    if (node.id) actions.setStartNode(node.id);
   }, [actions, node.id]);
   const handleDoubleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();

@@ -44,6 +44,9 @@ export const ConditionalNode = React.memo(function ConditionalNode({ data, selec
   const handleEdit = useCallback(() => {
     if (node.id) actions.openNodeEditor(node.id);
   }, [actions, node.id]);
+  const handleSetAsStart = useCallback(() => {
+    if (node.id) actions.setStartNode(node.id);
+  }, [actions, node.id]);
   const handleDelete = useCallback(() => {
     if (node.id) actions.deleteNode(node.id);
   }, [actions, node.id]);

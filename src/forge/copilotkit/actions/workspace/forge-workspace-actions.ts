@@ -387,7 +387,8 @@ export function createExpandEditorAction(
         enum: ['narrativeEditor', 'storyletEditor', 'nodeEditor'],
       },
     ],
-    handler: async ({ editorType }: { editorType: 'narrativeEditor' | 'storyletEditor' | 'nodeEditor' }) => {
+    handler: async (args: { [x: string]: unknown }) => {
+      const editorType = args.editorType as 'narrativeEditor' | 'storyletEditor' | 'nodeEditor';
       const state = workspaceStore.getState();
       state.actions.dockPanel(editorType);
       return { success: true, message: `Expanded ${editorType} to fullscreen` };
@@ -413,7 +414,8 @@ export function createMinimizeEditorAction(
         enum: ['narrativeEditor', 'storyletEditor', 'nodeEditor'],
       },
     ],
-    handler: async ({ editorType }: { editorType: 'narrativeEditor' | 'storyletEditor' | 'nodeEditor' }) => {
+    handler: async (args: { [x: string]: unknown }) => {
+      const editorType = args.editorType as 'narrativeEditor' | 'storyletEditor' | 'nodeEditor';
       const state = workspaceStore.getState();
       state.actions.undockPanel(editorType);
       return { success: true, message: `Minimized ${editorType} from fullscreen` };

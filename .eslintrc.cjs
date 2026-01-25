@@ -67,6 +67,15 @@ module.exports = {
   plugins: ["@typescript-eslint"],
   overrides: [
     {
+      files: ["app/**/*.{js,jsx,ts,tsx}"],
+      plugins: ["@typescript-eslint", "@next/next"],
+      rules: {
+        // Next.js recommended rules
+        "@next/next/no-html-link-for-pages": "error",
+        "@next/next/no-img-element": "warn",
+      },
+    },
+    {
       files: ["src/**/*.{js,jsx,ts,tsx}", "src/**/*.d.ts"],
       rules: {
         "no-restricted-imports": [

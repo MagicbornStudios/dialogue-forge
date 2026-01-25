@@ -55,12 +55,13 @@ export function WriterTreeRow({
         <span className="truncate flex-1">{node.data?.name || ''}</span>
         {/* Detour indicator - orange/brown bullet */}
         {hasDetour && (
-          <Circle 
-            size={8} 
-            fill="currentColor" 
-            className="text-orange-600 dark:text-orange-500 flex-shrink-0" 
-            title="Has detour connection"
-          />
+          <span title="Has detour connection">
+            <Circle 
+              size={8} 
+              fill="currentColor" 
+              className="text-orange-600 dark:text-orange-500 flex-shrink-0" 
+            />
+          </span>
         )}
         {/* End node label */}
         {isEndNode && (

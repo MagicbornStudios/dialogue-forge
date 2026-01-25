@@ -213,7 +213,7 @@ export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
           </React.Fragment>
         );
       })}
-      <EditorExpandControls editorType={editorType} className="ml-auto" />
+      <EditorExpandControls editorType={scope === 'narrative' ? 'narrativeEditor' : 'storyletEditor'} className="ml-auto" />
     </div>
   );
 }

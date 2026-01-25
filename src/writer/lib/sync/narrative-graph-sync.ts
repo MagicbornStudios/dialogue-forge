@@ -1,28 +1,10 @@
 // src/writer/lib/sync/narrative-graph-sync.ts
 import type { ForgeGraphDoc, ForgeNode, ForgeReactFlowNode } from '@/shared/types/forge-graph';
 import { FORGE_NODE_TYPE } from '@/shared/types/forge-graph';
-import type { ForgeAct, ForgeChapter, ForgePage } from '@/shared/types/narrative';
+import type { ForgePage, NarrativeHierarchy } from '@/shared/types/narrative';
+import { PAGE_TYPE } from '@/shared/types/narrative';
 import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
 import type { WriterForgeDataAdapter } from '@/writer/types/forge-data-adapter';
-
-export type NarrativeHierarchy = {
-  // Connected hierarchy
-  acts: Map<number, {
-    act: ForgeAct;
-    chapters: Map<number, {
-      chapter: ForgeChapter;
-      pages: Map<number, ForgePage>;
-    }>;
-  }>;
-  
-  // Disconnected items (no parent edges)
-  disconnectedActs: ForgeAct[];
-  disconnectedChapters: ForgeChapter[];
-  disconnectedPages: ForgePage[];
-  
-  // Conditional access tracking
-  conditionalPageConnections: Map<number, Set<string>>; // pageId -> conditional nodeIds
-};
 
 /**
  * Synchronous version that works with pre-loaded data
@@ -31,24 +13,21 @@ export type NarrativeHierarchy = {
  */
 export function extractNarrativeHierarchySync(
   graph: ForgeGraphDoc | null,
-  acts: ForgeAct[] | undefined,
-  chapters: ForgeChapter[] | undefined,
-  pages: ForgePage[] | undefined
+  allPages: ForgePage[] | undefined
 ): NarrativeHierarchy {
   // Handle null/undefined inputs safely
   if (!graph || !graph.flow || !Array.isArray(graph.flow.nodes)) {
     return {
-      acts: new Map(),
-      disconnectedActs: [],
-      disconnectedChapters: [],
-      disconnectedPages: Array.isArray(pages) ? pages : [],
-      conditionalPageConnections: new Map(),
+      acts: [],
     };
   }
 
-  const safeActs = Array.isArray(acts) ? acts : [];
-  const safeChapters = Array.isArray(chapters) ? chapters : [];
-  const safePages = Array.isArray(pages) ? pages : [];
+  const safePages = Array.isArray(allPages) ? allPages : [];
+  
+  // Filter pages by type
+  const safeActs = safePages.filter(p => p.pageType === PAGE_TYPE.ACT);
+  const safeChapters = safePages.filter(p => p.pageType === PAGE_TYPE.CHAPTER);
+  const safeContentPages = safePages.filter(p => p.pageType === PAGE_TYPE.PAGE);
 
   const nodeMap = new Map<string, ForgeReactFlowNode>(
     graph.flow.nodes.map(n => [n.id, n])
@@ -135,48 +114,36 @@ export function extractNarrativeHierarchySync(
     }
   }
   
-  // Build connected hierarchy
-  const actsMap = new Map<number, {
-    act: ForgeAct;
-    chapters: Map<number, { chapter: ForgeChapter; pages: Map<number, ForgePage> }>;
-  }>();
+  // Build connected hierarchy as array structure
+  const actsArray: NarrativeHierarchy['acts'] = [];
   
   for (const actId of connectedActIds) {
     const act = actMap.get(actId);
     if (!act) continue;
     
-    const chaptersMap = new Map<number, { chapter: ForgeChapter; pages: Map<number, ForgePage> }>();
+    const chaptersArray: Array<{ page: ForgePage; pages: ForgePage[] }> = [];
     
-    // Find chapters for this act
+    // Find chapters for this act (chapters have parent pointing to act page ID)
     for (const chapter of safeChapters) {
-      if (chapter.act === actId && connectedChapterIds.has(chapter.id)) {
-        const pagesMap = new Map<number, ForgePage>();
+      if (chapter.parent === actId && connectedChapterIds.has(chapter.id)) {
+        const pagesArray: ForgePage[] = [];
         
-        // Find pages for this chapter
-        for (const page of safePages) {
-          if (page.chapter === chapter.id && connectedPageIds.has(page.id)) {
-            pagesMap.set(page.id, page);
+        // Find pages for this chapter (pages have parent pointing to chapter page ID)
+        for (const page of safeContentPages) {
+          if (page.parent === chapter.id && connectedPageIds.has(page.id)) {
+            pagesArray.push(page);
           }
         }
         
-        chaptersMap.set(chapter.id, { chapter, pages: pagesMap });
+        chaptersArray.push({ page: chapter, pages: pagesArray });
       }
     }
     
-    actsMap.set(actId, { act, chapters: chaptersMap });
+    actsArray.push({ page: act, chapters: chaptersArray });
   }
   
-  // Find disconnected items
-  const disconnectedActsList = safeActs.filter(a => !connectedActIds.has(a.id));
-  const disconnectedChaptersList = safeChapters.filter(c => !connectedChapterIds.has(c.id));
-  const disconnectedPagesList = safePages.filter(p => !connectedPageIds.has(p.id));
-  
   return {
-    acts: actsMap,
-    disconnectedActs: disconnectedActsList,
-    disconnectedChapters: disconnectedChaptersList,
-    disconnectedPages: disconnectedPagesList,
-    conditionalPageConnections: findConditionalPageConnections(graph),
+    acts: actsArray,
   };
 }
 
@@ -192,17 +159,18 @@ export async function extractNarrativeHierarchy(
     graph.flow.nodes.map(n => [n.id, n])
   );
   
-  // Load all database entries
-  const [allActs, allChapters, allPages] = await Promise.all([
-    dataAdapter.listActs(graph.project),
-    dataAdapter.listChapters(graph.project),
-    dataAdapter.listPages(graph.project),
-  ]);
+  // Load all pages (unified model - acts, chapters, and content pages are all pages)
+  const allPages = await dataAdapter.listPages(graph.project);
+  
+  // Filter pages by type
+  const allActs = allPages.filter(p => p.pageType === PAGE_TYPE.ACT);
+  const allChapters = allPages.filter(p => p.pageType === PAGE_TYPE.CHAPTER);
+  const allContentPages = allPages.filter(p => p.pageType === PAGE_TYPE.PAGE);
   
   // Build maps for quick lookup
   const actMap = new Map(allActs.map(a => [a.id, a]));
   const chapterMap = new Map(allChapters.map(c => [c.id, c]));
-  const pageMap = new Map(allPages.map(p => [p.id, p]));
+  const pageMap = new Map(allContentPages.map(p => [p.id, p]));
   
   // Build edge maps
   const incomingEdges = new Map<string, string[]>(); // nodeId -> source nodeIds
@@ -292,48 +260,36 @@ export async function extractNarrativeHierarchy(
     }
   }
   
-  // Build connected hierarchy
-  const acts = new Map<number, {
-    act: ForgeAct;
-    chapters: Map<number, { chapter: ForgeChapter; pages: Map<number, ForgePage> }>;
-  }>();
+  // Build connected hierarchy as array structure
+  const actsArray: NarrativeHierarchy['acts'] = [];
   
   for (const actId of connectedActIds) {
     const act = actMap.get(actId);
     if (!act) continue;
     
-    const chapters = new Map<number, { chapter: ForgeChapter; pages: Map<number, ForgePage> }>();
+    const chaptersArray: Array<{ page: ForgePage; pages: ForgePage[] }> = [];
     
-    // Find chapters for this act
+    // Find chapters for this act (chapters have parent pointing to act page ID)
     for (const chapter of allChapters) {
-      if (chapter.act === actId && connectedChapterIds.has(chapter.id)) {
-        const pages = new Map<number, ForgePage>();
+      if (chapter.parent === actId && connectedChapterIds.has(chapter.id)) {
+        const pagesArray: ForgePage[] = [];
         
-        // Find pages for this chapter
-        for (const page of allPages) {
-          if (page.chapter === chapter.id && connectedPageIds.has(page.id)) {
-            pages.set(page.id, page);
+        // Find pages for this chapter (pages have parent pointing to chapter page ID)
+        for (const page of allContentPages) {
+          if (page.parent === chapter.id && connectedPageIds.has(page.id)) {
+            pagesArray.push(page);
           }
         }
         
-        chapters.set(chapter.id, { chapter, pages });
+        chaptersArray.push({ page: chapter, pages: pagesArray });
       }
     }
     
-    acts.set(actId, { act, chapters });
+    actsArray.push({ page: act, chapters: chaptersArray });
   }
   
-  // Find disconnected items
-  const disconnectedActs = allActs.filter(a => !connectedActIds.has(a.id));
-  const disconnectedChapters = allChapters.filter(c => !connectedChapterIds.has(c.id));
-  const disconnectedPages = allPages.filter(p => !connectedPageIds.has(p.id));
-  
   return {
-    acts,
-    disconnectedActs,
-    disconnectedChapters,
-    disconnectedPages,
-    conditionalPageConnections: findConditionalPageConnections(graph),
+    acts: actsArray,
   };
 }
 
@@ -402,16 +358,17 @@ export async function syncGraphToDatabase(
 ): Promise<void> {
   const projectId = graph.project;
   
-  // Get existing acts, chapters, pages from database
-  const [existingActs, existingChapters, existingPages] = await Promise.all([
-    dataAdapter.listActs(projectId),
-    dataAdapter.listChapters(projectId),
-    dataAdapter.listPages(projectId),
-  ]);
+  // Get existing pages from database (unified model)
+  const allPages = await dataAdapter.listPages(projectId);
+  
+  // Filter by type
+  const existingActs = allPages.filter(p => p.pageType === PAGE_TYPE.ACT);
+  const existingChapters = allPages.filter(p => p.pageType === PAGE_TYPE.CHAPTER);
+  const existingContentPages = allPages.filter(p => p.pageType === PAGE_TYPE.PAGE);
   
   const existingActIds = new Set(existingActs.map(a => a.id));
   const existingChapterIds = new Set(existingChapters.map(c => c.id));
-  const existingPageIds = new Set(existingPages.map(p => p.id));
+  const existingPageIds = new Set(existingContentPages.map(p => p.id));
   
   // Process nodes and create missing database entries
   for (const node of graph.flow.nodes) {
@@ -425,30 +382,35 @@ export async function syncGraphToDatabase(
           // Database entry doesn't exist - this is an error state
           console.warn(`Act node references non-existent act ID: ${nodeData.actId}`);
         }
-      } else if (forgeDataAdapter.createAct) {
-        // Create new act in database
-        await forgeDataAdapter.createAct({
+      } else if (dataAdapter.createPage) {
+        // Create new act page in database (unified model)
+        await dataAdapter.createPage({
           projectId,
-          name: nodeData?.label || 'New Act',
-          summary: nodeData?.content || null,
+          pageType: PAGE_TYPE.ACT,
+          title: nodeData?.label || 'New Act',
           order: 0, // TODO: Calculate from graph position
+          parent: null, // Acts have no parent
         });
         // Note: We can't update the node here - that would require updating the graph
         // This will be handled by the Forge editor when nodes are created
-      } else {
-        console.warn('ForgeDataAdapter does not implement createAct.');
       }
     } else if (nodeType === FORGE_NODE_TYPE.CHAPTER) {
       if (nodeData?.chapterId) {
         if (!existingChapterIds.has(nodeData.chapterId)) {
           console.warn(`Chapter node references non-existent chapter ID: ${nodeData.chapterId}`);
         }
-      } else {
+      } else if (dataAdapter.createPage) {
         // Find parent act from edges
         const parentActId = findParentActId(graph, node.id);
         if (parentActId) {
-          // TODO: Create chapter - need to add createChapter to adapter
-          console.warn('createChapter not yet implemented in adapters');
+          // Create chapter page in database (unified model)
+          await dataAdapter.createPage({
+            projectId,
+            pageType: PAGE_TYPE.CHAPTER,
+            title: nodeData?.label || 'New Chapter',
+            order: 0, // TODO: Calculate from graph position
+            parent: parentActId, // Chapter's parent is the act page
+          });
         }
       }
     } else if (nodeType === FORGE_NODE_TYPE.PAGE) {
@@ -456,15 +418,16 @@ export async function syncGraphToDatabase(
         if (!existingPageIds.has(nodeData.pageId)) {
           console.warn(`Page node references non-existent page ID: ${nodeData.pageId}`);
         }
-      } else {
+      } else if (dataAdapter.createPage) {
         // Find parent chapter from edges
         const parentChapterId = findParentChapterId(graph, node.id);
-        if (parentChapterId && dataAdapter.createPage) {
+        if (parentChapterId) {
           const page = await dataAdapter.createPage({
+            projectId,
+            pageType: PAGE_TYPE.PAGE,
             title: nodeData?.label || 'New Page',
-            project: projectId,
-            chapter: parentChapterId,
             order: 0, // TODO: Calculate from graph position
+            parent: parentChapterId, // Page's parent is the chapter page
             bookBody: nodeData?.content || null,
           });
           // Note: Can't update node here - handled by Forge editor

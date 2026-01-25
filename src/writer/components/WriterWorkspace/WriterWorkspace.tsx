@@ -15,8 +15,8 @@ import { WriterTree } from '@/writer/components/WriterWorkspace/sidebar/WriterTr
 import { WriterLayout } from '@/writer/components/WriterWorkspace/layout/WriterLayout';
 import { WriterEditorPane } from '@/writer/components/WriterWorkspace/editor/WriterEditorPane';
 import { WriterWorkspaceModalsRenderer } from '@/writer/components/WriterWorkspace/modals/WriterWorkspaceModals';
-import { CopilotKitWorkspaceProvider } from '@/ai/copilotkit/providers/CopilotKitWorkspaceProvider';
-import { useWriterWorkspaceActions } from '@/writer/copilotkit';
+import { CopilotKitProvider } from '@/ai/copilotkit/providers/CopilotKitProvider';
+import { useWriterWorkspaceActions, useWriterCopilotContext } from '@/writer/copilotkit';
 import { Toaster } from '@/shared/ui/toast';
 import { validateNarrativeGraph } from '@/shared/lib/graph-validation';
 import { toast } from 'sonner';
@@ -182,8 +182,11 @@ export function WriterWorkspace({
 
   return (
     <>
-      <WriterWorkspaceStoreProvider store={storeRef.current}>
-        <CopilotKitWorkspaceProvider workspaceStore={storeRef.current}>
+      <CopilotKitProvider
+        instructions="You are an AI assistant for the Writer workspace. Help users edit and improve their writing."
+        defaultOpen={false}
+      >
+        <WriterWorkspaceStoreProvider store={storeRef.current}>
           <WriterWorkspaceActionsWrapper store={storeRef.current}>
             <WriterWorkspaceContent
               className={className}
@@ -191,8 +194,8 @@ export function WriterWorkspace({
               projectId={projectId}
             />
           </WriterWorkspaceActionsWrapper>
-        </CopilotKitWorkspaceProvider>
-      </WriterWorkspaceStoreProvider>
+        </WriterWorkspaceStoreProvider>
+      </CopilotKitProvider>
       <Toaster />
     </>
   );
@@ -205,8 +208,9 @@ function WriterWorkspaceActionsWrapper({
   children: React.ReactNode;
   store: ReturnType<typeof createWriterWorkspaceStore>;
 }) {
-  // Register workspace actions
+  // Register workspace actions and provide context
   useWriterWorkspaceActions(store);
+  useWriterCopilotContext(store);
   return <>{children}</>;
 }
 
@@ -216,8 +220,8 @@ function WriterWorkspaceContent({
   projectId,
 }: Pick<WriterWorkspaceProps, 'className' | 'onActivePageChange' | 'projectId'>) {
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
-  const pageMap = useWriterWorkspaceStore((state) => state.pageMap);
-  const activePage = activePageId ? pageMap.get(activePageId) ?? null : null;
+  const pages = useWriterWorkspaceStore((state) => state.pages);
+  const activePage = activePageId ? pages.find(p => p.id === activePageId) ?? null : null;
 
   useEffect(() => {
     if (onActivePageChange) {

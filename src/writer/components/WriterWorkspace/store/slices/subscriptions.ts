@@ -4,7 +4,6 @@ import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter
 import type { WriterForgeDataAdapter } from '@/writer/types/forge-data-adapter';
 import type { EventSink } from '@/writer/events/writer-events';
 import { extractNarrativeHierarchySync } from '@/writer/lib/sync/narrative-graph-sync';
-import { PAGE_TYPE } from '@/shared/types/narrative';
 
 /**
  * Setup subscriptions for side-effect events.
@@ -53,18 +52,11 @@ export function setupWriterWorkspaceSubscriptions(
       if (narrativeGraph === prevNarrativeGraph) return;
       
       if (narrativeGraph && dataAdapter) {
-        // Extract hierarchy from graph using current database state
-        // Note: acts and chapters are now part of unified pages collection
-        // Filter pages by type for backward compatibility
-        const acts = state.pages?.filter(p => p.pageType === PAGE_TYPE.ACT) ?? [];
-        const chapters = state.pages?.filter(p => p.pageType === PAGE_TYPE.CHAPTER) ?? [];
-        const pages = state.pages?.filter(p => p.pageType === PAGE_TYPE.PAGE) ?? [];
-        
+        // Extract hierarchy from graph using unified pages collection
+        // All pages (acts, chapters, content pages) are in the same array
         const hierarchy = extractNarrativeHierarchySync(
           narrativeGraph,
-          acts,
-          chapters,
-          pages
+          state.pages
         );
         
         // Update store with hierarchy
@@ -80,22 +72,18 @@ export function setupWriterWorkspaceSubscriptions(
     }
   );
 
-  // Subscribe to acts/chapters/pages changes to rebuild hierarchy if graph exists
+  // Subscribe to pages changes to rebuild hierarchy if graph exists
   domainStore.subscribe(
     async (state, prevState) => {
       const narrativeGraph = state.narrativeGraph;
       if (!narrativeGraph || !dataAdapter) return;
       
-      // Rebuild hierarchy when content changes
-      const actsChanged = state.acts !== prevState.acts;
-      const chaptersChanged = state.chapters !== prevState.chapters;
+      // Rebuild hierarchy when pages change
       const pagesChanged = state.pages !== prevState.pages;
       
-      if (actsChanged || chaptersChanged || pagesChanged) {
+      if (pagesChanged) {
         const hierarchy = extractNarrativeHierarchySync(
           narrativeGraph,
-          state.acts,
-          state.chapters,
           state.pages
         );
         

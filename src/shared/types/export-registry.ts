@@ -1,4 +1,4 @@
-import { FORGE_NODE_TYPE, type ForgeNodeType } from '@/forge/types/forge-graph';
+import { FORGE_NODE_TYPE, type ForgeNodeType } from '@/shared/types/forge-graph';
 
 export const EXPORT_KIND = {
   YARN: 'YARN',

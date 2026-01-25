@@ -225,10 +225,18 @@ export function GamePlayer({
   const frameContent = activeFrame?.content;
   const frameDirectives = activeFrame?.directives ?? [];
   const hasChoices = Boolean(pendingChoice?.choices?.length);
-  const backgroundLabel =
-    activeFrame?.presentation?.background?.directive?.refId ??
-    activeFrame?.presentation?.background?.directive?.payload?.label ??
-    '';
+  const backgroundLabel: string = (() => {
+    const refId = activeFrame?.presentation?.background?.directive?.refId;
+    if (refId && typeof refId === 'string') return refId;
+    
+    const payload = activeFrame?.presentation?.background?.directive?.payload;
+    if (payload && typeof payload === 'object' && 'label' in payload) {
+      const label = (payload as { label?: unknown }).label;
+      if (typeof label === 'string') return label;
+    }
+    
+    return '';
+  })();
   const hasVideoTemplate = Boolean(videoTemplate);
   const hasVideoComposition = Boolean(composition && composition.durationMs > 0);
 

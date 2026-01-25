@@ -28,6 +28,11 @@ if (fs.existsSync(payloadPackagePath)) {
 const nextConfig = {
   pageExtensions: ['ts', 'tsx', 'js', 'jsx'],
 
+  // Silence Sass deprecation warnings from PayloadCMS node_modules and sass-loader
+  sassOptions: {
+    silenceDeprecations: ['import', 'legacy-js-api'],
+  },
+
   // Remove this. Only use transpilePackages for *external* workspace packages.
   // transpilePackages: ['@magicborn/dialogue-forge'],
 
@@ -41,6 +46,16 @@ const nextConfig = {
       // Payload config alias (server-side usage)
       '@payload-config': path.resolve(__dirname, './app/payload.config.ts'),
     };
+
+    // Silence webpack warnings from PayloadCMS node_modules
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      {
+        module: /node_modules\/payload/,
+        message: /Critical dependency: the request of a dependency is an expression/,
+      },
+    ];
+
     return config;
   },
 

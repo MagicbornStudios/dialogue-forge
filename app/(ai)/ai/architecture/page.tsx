@@ -118,11 +118,11 @@ const extractFileRanges = (violation: unknown): OpenCodeFileRange[] => {
       }
 
       const location = isRecord(segment.location) ? segment.location : {};
-      const start =
+      const startLocation =
         isRecord(location.start) && (location.start as Record<string, unknown>)
           ? (location.start as Record<string, unknown>)
           : {};
-      const end =
+      const endLocation =
         isRecord(location.end) && (location.end as Record<string, unknown>)
           ? (location.end as Record<string, unknown>)
           : {};
@@ -131,33 +131,43 @@ const extractFileRanges = (violation: unknown): OpenCodeFileRange[] => {
         getNumber(segment.startLine) ??
         getNumber(segment.line) ??
         getNumber(location.startLine) ??
-        getNumber(start.line) ??
+        getNumber(startLocation.line) ??
         getNumber(location.line);
       const startColumn =
         getNumber(segment.startColumn) ??
         getNumber(segment.column) ??
         getNumber(location.startColumn) ??
-        getNumber(start.column) ??
+        getNumber(startLocation.column) ??
         getNumber(location.column);
       const endLine =
         getNumber(segment.endLine) ??
         getNumber(location.endLine) ??
-        getNumber(end.line);
+        getNumber(endLocation.line);
       const endColumn =
         getNumber(segment.endColumn) ??
         getNumber(location.endColumn) ??
-        getNumber(end.column);
+        getNumber(endLocation.column);
+
+      const start: OpenCodeRangePosition | undefined =
+        startLine !== undefined || startColumn !== undefined
+          ? {
+              ...(startLine !== undefined && { line: startLine }),
+              ...(startColumn !== undefined && { column: startColumn }),
+            }
+          : undefined;
+      
+      const end: OpenCodeRangePosition | undefined =
+        endLine !== undefined || endColumn !== undefined
+          ? {
+              ...(endLine !== undefined && { line: endLine }),
+              ...(endColumn !== undefined && { column: endColumn }),
+            }
+          : undefined;
 
       return {
         path,
-        start:
-          startLine !== undefined || startColumn !== undefined
-            ? { line: startLine, column: startColumn }
-            : undefined,
-        end:
-          endLine !== undefined || endColumn !== undefined
-            ? { line: endLine, column: endColumn }
-            : undefined,
+        start,
+        end,
       };
     })
     .filter((range): range is OpenCodeFileRange => Boolean(range));

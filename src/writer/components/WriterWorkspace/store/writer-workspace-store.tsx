@@ -49,6 +49,7 @@ export { WRITER_SAVE_STATUS, WRITER_AI_PROPOSAL_STATUS } from './writer-workspac
 export interface WriterWorkspaceState {
   // Unified content slice
   pages: ForgePage[];
+  pageMap: Map<number, ForgePage>;
   contentError: string | null;
 
   // Editor slice

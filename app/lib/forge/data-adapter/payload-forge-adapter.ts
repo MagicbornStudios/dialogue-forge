@@ -2,11 +2,11 @@
 import { PayloadSDK } from '@payloadcms/sdk';
 import type { ForgeDataAdapter, ForgeProjectSummary, ForgeFlagSchema } from '@/forge/adapters/forge-data-adapter';
 import type { ForgeGraphDoc, ForgeReactFlowJson, ForgeGraphKind } from '@/forge/types/forge-graph';
-import type { Project, Character, FlagSchema, ForgeGraph, Act, GameState } from '@/app/payload-types';
+import type { Project, Character, FlagSchema, ForgeGraph, GameState, Page } from '@/app/payload-types';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
-import { ForgeAct } from '@/forge/types/narrative';
 import { ForgeFlagState, ForgeGameState, ForgeGameStateRecord } from '@/forge/types/forge-game-state';
 import type { ForgeCharacter } from '@/forge/types/characters';
+import { ForgePage } from '@/forge/types/narrative';
 
 /**
  * Helper to extract narrativeGraph ID from Project
@@ -328,22 +328,7 @@ export function makePayloadForgeAdapter(opts?: {
             id: flagSchemaId,
         });
     },
-    async getAct(actId: number): Promise<ForgeAct> {
-        const result = await payload.findByID({
-            collection: PAYLOAD_COLLECTIONS.ACTS,
-            id: actId,
-        }) as Act;
-        return {
-            id: result.id,
-            title: result.title,
-            summary: result.summary ?? null,
-            order: result.order,
-            project: typeof result.project === 'number' ? result.project : result.project.id,
-            bookHeading: result.bookHeading ?? null,
-            bookBody: result.bookBody ?? null,
-            _status: result._status as 'draft' | 'published' | null,
-        };
-    },
+
     // Unified page operations (for ACT, CHAPTER, PAGE nodes)
     async getPage(pageId: number): Promise<ForgePage> {
         const result = await payload.findByID({

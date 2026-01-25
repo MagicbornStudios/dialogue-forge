@@ -1,4 +1,5 @@
 import type { VideoCompositionScene } from '../types/video-composition';
+import { VIDEO_LAYER_KIND_TO_COMPONENT } from '../types/video-layer';
 import type { NormalizedVideoTemplate } from './normalize-timeline';
 
 export interface StitchedScenes {
@@ -21,6 +22,8 @@ export const stitchScenes = (template: NormalizedVideoTemplate): StitchedScenes 
       layers: scene.layers.map((layer) => ({
         id: layer.id,
         sceneId: scene.id,
+        kind: layer.kind,
+        component: VIDEO_LAYER_KIND_TO_COMPONENT[layer.kind],
         startMs: sceneStartMs + layer.startMs,
         endMs: sceneStartMs + layer.startMs + layer.durationMs,
         opacity: layer.opacity,

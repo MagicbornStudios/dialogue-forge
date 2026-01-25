@@ -1,7 +1,7 @@
 import type { Frame } from '@/forge/runtime/types';
 import type { TemplateInputKey } from '@/shared/types/bindings';
 import type { VideoComposition, VideoCompositionLayer, VideoCompositionScene } from '@/video/templates/types/video-composition';
-import type { VideoLayer } from '@/video/templates/types/video-layer';
+import { VIDEO_LAYER_KIND_TO_COMPONENT, type VideoLayer } from '@/video/templates/types/video-layer';
 import type { VideoScene } from '@/video/templates/types/video-scene';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
 import { framesToTemplateInputs, type FrameTemplateInputs } from './frames-to-template-inputs';
@@ -71,6 +71,8 @@ const buildCompositionLayer = (
   return {
     id: `${frameId}:${sceneId}:${layer.id}`,
     sceneId,
+    kind: layer.kind,
+    component: VIDEO_LAYER_KIND_TO_COMPONENT[layer.kind],
     startMs: sceneStartMs + layer.startMs,
     endMs: sceneStartMs + Math.max(0, durationMs),
     opacity: layer.opacity,

@@ -10,6 +10,17 @@ import { VideoTemplateWorkspace } from '@/video/workspace/VideoTemplateWorkspace
 import type { VideoTemplateWorkspaceTemplateSummary } from '@/video/workspace/video-template-workspace-contracts';
 import { compileTemplate } from '@/video/templates/compile/compile-template';
 import type { VideoComposition } from '@/video/templates/types/video-composition';
+import { mapVideoCompositionToDTO } from '@/app/lib/video/map-composition';
+import {
+  VIDEO_RENDER_FORMAT,
+  VIDEO_RENDER_JOB_STATUS,
+  VIDEO_RENDER_RESPONSE_MODE,
+  type VideoRenderFormat,
+  type VideoRenderJobResponseDTO,
+  type VideoRenderJobStatus,
+  type VideoRenderJobStatusDTO,
+  type VideoRenderRequestDTO,
+} from '@/app/lib/video/types';
 import { Card } from '@/shared/ui/card';
 import { Button } from '@/shared/ui/button';
 import { cn } from '@/shared/lib/utils';
@@ -48,6 +59,15 @@ export function VideoStudio() {
   const [activeLayerId, setActiveLayerId] = useState<string | undefined>(undefined);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentFrame, setCurrentFrame] = useState(0);
+  const [renderFormat, setRenderFormat] = useState<VideoRenderFormat>(VIDEO_RENDER_FORMAT.MP4);
+  const [renderWidth, setRenderWidth] = useState<number>(1920);
+  const [renderHeight, setRenderHeight] = useState<number>(1080);
+  const [renderFps, setRenderFps] = useState<number>(30);
+  const [renderJobId, setRenderJobId] = useState<string | null>(null);
+  const [renderStatus, setRenderStatus] = useState<VideoRenderJobStatus | null>(null);
+  const [renderProgress, setRenderProgress] = useState<number | null>(null);
+  const [renderDownloadUrl, setRenderDownloadUrl] = useState<string | null>(null);
+  const [renderError, setRenderError] = useState<string | null>(null);
 
   const workspaceTokens = useMemo(
     () =>
@@ -136,6 +156,63 @@ export function VideoStudio() {
   useEffect(() => {
     setCurrentFrame(0);
   }, [composition?.id, composition?.durationMs, composition?.frameRate]);
+
+  useEffect(() => {
+    if (!composition) {
+      return;
+    }
+    setRenderWidth(composition.width);
+    setRenderHeight(composition.height);
+    setRenderFps(composition.frameRate);
+  }, [composition?.width, composition?.height, composition?.frameRate]);
+
+  useEffect(() => {
+    if (!renderJobId) {
+      return;
+    }
+    if (
+      renderStatus === VIDEO_RENDER_JOB_STATUS.COMPLETED ||
+      renderStatus === VIDEO_RENDER_JOB_STATUS.FAILED
+    ) {
+      return;
+    }
+    let isMounted = true;
+    const controller = new AbortController();
+    const pollStatus = async () => {
+      try {
+        const response = await fetch(`/api/video-render/status/${renderJobId}`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch render status.');
+        }
+        const data = (await response.json()) as VideoRenderJobStatusDTO;
+        if (!isMounted) return;
+        setRenderStatus(data.status);
+        setRenderProgress(typeof data.progress === 'number' ? data.progress : null);
+        if (data.status === VIDEO_RENDER_JOB_STATUS.COMPLETED && data.url) {
+          setRenderDownloadUrl(data.url);
+        }
+        if (data.status === VIDEO_RENDER_JOB_STATUS.FAILED) {
+          setRenderError(data.error ?? 'Render failed.');
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        setRenderError(error instanceof Error ? error.message : 'Unable to fetch render status.');
+      }
+    };
+
+    const interval = setInterval(() => {
+      void pollStatus();
+    }, 1500);
+    void pollStatus();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+      clearInterval(interval);
+    };
+  }, [renderJobId, renderStatus]);
 
   const persistTemplate = useCallback(
     (updater: (template: VideoTemplate) => VideoTemplate) => {
@@ -321,6 +398,54 @@ export function VideoStudio() {
     [setCurrentFrame]
   );
 
+  const handleRenderExport = useCallback(async () => {
+    if (!composition) {
+      setRenderError('No composition available to render.');
+      return;
+    }
+    if (renderFps <= 0 || renderWidth <= 0 || renderHeight <= 0) {
+      setRenderError('Export settings must be greater than zero.');
+      return;
+    }
+    setRenderError(null);
+    setRenderDownloadUrl(null);
+    setRenderProgress(0);
+    setRenderStatus(VIDEO_RENDER_JOB_STATUS.QUEUED);
+    const payload: VideoRenderRequestDTO = {
+      composition: mapVideoCompositionToDTO(composition),
+      settings: {
+        fps: renderFps,
+        width: renderWidth,
+        height: renderHeight,
+        format: renderFormat,
+      },
+      responseMode: VIDEO_RENDER_RESPONSE_MODE.ASYNC,
+    };
+
+    try {
+      const response = await fetch('/api/video-render', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to start render.');
+      }
+      const data = (await response.json()) as VideoRenderJobResponseDTO;
+      setRenderJobId(data.id);
+      setRenderStatus(data.status);
+    } catch (error) {
+      setRenderError(error instanceof Error ? error.message : 'Unable to start render.');
+      setRenderStatus(null);
+      setRenderJobId(null);
+    }
+  }, [composition, renderFps, renderFormat, renderHeight, renderWidth]);
+
+  const isRendering =
+    renderStatus === VIDEO_RENDER_JOB_STATUS.QUEUED || renderStatus === VIDEO_RENDER_JOB_STATUS.RENDERING;
+
   return (
     <div className="min-h-screen bg-[var(--video-workspace-bg)] text-[var(--video-workspace-text)]" style={workspaceTokens}>
       <div className="flex h-screen gap-4 p-6">
@@ -371,6 +496,98 @@ export function VideoStudio() {
             <div className="text-sm font-semibold">Video Studio</div>
             <div className="text-xs text-[var(--video-workspace-text-muted)]">
               Pick a template on the left to preview and edit.
+            </div>
+          </Card>
+          <Card className="border-[var(--video-workspace-border)] bg-[var(--video-workspace-panel)] px-4 py-3">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-sm font-semibold">Export</div>
+                <div className="text-xs text-[var(--video-workspace-text-muted)]">
+                  Render the current composition with custom settings.
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => void handleRenderExport()}
+                disabled={!composition || Boolean(compositionError)}
+              >
+                Render
+              </Button>
+            </div>
+            <div className="mt-4 grid gap-3 text-xs text-[var(--video-workspace-text-muted)] sm:grid-cols-2">
+              <label className="flex flex-col gap-1">
+                <span className="text-[10px] uppercase tracking-wide">Format</span>
+                <select
+                  className="rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-2 py-1 text-sm text-[var(--video-workspace-text)]"
+                  value={renderFormat}
+                  onChange={(event) => setRenderFormat(event.target.value as VideoRenderFormat)}
+                >
+                  <option value={VIDEO_RENDER_FORMAT.MP4}>MP4</option>
+                  <option value={VIDEO_RENDER_FORMAT.WEBM}>WebM</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[10px] uppercase tracking-wide">Frame Rate</span>
+                <input
+                  type="number"
+                  min={1}
+                  className="rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-2 py-1 text-sm text-[var(--video-workspace-text)]"
+                  value={renderFps}
+                  onChange={(event) => setRenderFps(Number(event.target.value))}
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[10px] uppercase tracking-wide">Width</span>
+                <input
+                  type="number"
+                  min={1}
+                  className="rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-2 py-1 text-sm text-[var(--video-workspace-text)]"
+                  value={renderWidth}
+                  onChange={(event) => setRenderWidth(Number(event.target.value))}
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[10px] uppercase tracking-wide">Height</span>
+                <input
+                  type="number"
+                  min={1}
+                  className="rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-2 py-1 text-sm text-[var(--video-workspace-text)]"
+                  value={renderHeight}
+                  onChange={(event) => setRenderHeight(Number(event.target.value))}
+                />
+              </label>
+            </div>
+            <div className="mt-4 space-y-2 text-xs text-[var(--video-workspace-text-muted)]">
+              {isRendering && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-medium text-[var(--video-workspace-text)]">Rendering…</span>
+                    {renderProgress !== null && <span>{Math.round(renderProgress * 100)}%</span>}
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-[var(--video-workspace-muted)]">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all"
+                      style={{ width: `${Math.round((renderProgress ?? 0) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              {renderDownloadUrl && (
+                <div className="flex items-center justify-between rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-3 py-2">
+                  <span className="text-[var(--video-workspace-text)]">Render complete.</span>
+                  <Button size="sm" asChild>
+                    <a href={renderDownloadUrl} download>
+                      Download
+                    </a>
+                  </Button>
+                </div>
+              )}
+              {renderError && (
+                <div className="rounded-md border border-red-500/60 bg-red-500/10 px-3 py-2 text-[11px] text-red-200">
+                  {renderError}
+                </div>
+              )}
             </div>
           </Card>
           <div className="flex-1">

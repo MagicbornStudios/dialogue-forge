@@ -77,6 +77,53 @@ export function VideoStudio() {
   const [renderDownloadUrl, setRenderDownloadUrl] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
 
+  const syncTemplateSummary = useCallback((template: VideoTemplate) => {
+    setTemplateSummaries((summaries) => {
+      const existing = summaries.find((summary) => summary.id === template.id);
+      if (!existing) {
+        return [...summaries, { id: template.id, name: template.name }];
+      }
+      return summaries.map((summary) =>
+        summary.id === template.id ? { ...summary, name: template.name } : summary
+      );
+    });
+  }, []);
+
+  const cloneTemplate = useCallback((template: VideoTemplate, nameOverride?: string): VideoTemplate => {
+    const clonedScenes = template.scenes.map((scene) => ({
+      ...scene,
+      id: createTemplateId(),
+      layers: scene.layers.map((layer) => ({
+        ...layer,
+        id: createTemplateId(),
+      })),
+    }));
+    return {
+      ...template,
+      id: createTemplateId(),
+      name: nameOverride ?? `${template.name} Copy`,
+      scenes: clonedScenes,
+    };
+  }, []);
+
+  const saveTemplate = useCallback(
+    async (template: VideoTemplate) => {
+      try {
+        const saved = await videoTemplateAdapter.saveTemplate(template);
+        setSelectedTemplate(saved);
+        setSelectedTemplateId(saved.id);
+        syncTemplateSummary(saved);
+        return saved;
+      } catch {
+        setSelectedTemplate(template);
+        setSelectedTemplateId(template.id);
+        syncTemplateSummary(template);
+        return template;
+      }
+    },
+    [syncTemplateSummary, videoTemplateAdapter]
+  );
+
   const workspaceTokens = useMemo(
     () =>
       ({
@@ -232,23 +279,16 @@ export function VideoStudio() {
           .then((saved) => {
             setSelectedTemplate(saved);
             setSelectedTemplateId(saved.id);
-            setTemplateSummaries((summaries) => {
-              const existing = summaries.find((summary) => summary.id === saved.id);
-              if (!existing) {
-                return [...summaries, { id: saved.id, name: saved.name }];
-              }
-              return summaries.map((summary) =>
-                summary.id === saved.id ? { ...summary, name: saved.name } : summary
-              );
-            });
+            syncTemplateSummary(saved);
           })
           .catch(() => {
             setSelectedTemplate(next);
+            syncTemplateSummary(next);
           });
         return next;
       });
     },
-    [videoTemplateAdapter]
+    [syncTemplateSummary, videoTemplateAdapter]
   );
 
   const handleSelectScene = (sceneId: string) => {
@@ -338,6 +378,32 @@ export function VideoStudio() {
     },
     [setSelectedTemplateId]
   );
+
+  const handleCreateFromPreset = useCallback(
+    async (presetId: string) => {
+      if (!presetId) return;
+      try {
+        const preset = await videoTemplateAdapter.loadTemplate(presetId);
+        if (!preset) return;
+        const cloned = cloneTemplate(preset, `${preset.name} Copy`);
+        await saveTemplate(cloned);
+      } catch {
+        return;
+      }
+    },
+    [cloneTemplate, saveTemplate, videoTemplateAdapter]
+  );
+
+  const handleDuplicateTemplate = useCallback(async () => {
+    if (!selectedTemplate) return;
+    const cloned = cloneTemplate(selectedTemplate, `${selectedTemplate.name} Copy`);
+    await saveTemplate(cloned);
+  }, [cloneTemplate, saveTemplate, selectedTemplate]);
+
+  const handleSaveTemplate = useCallback(async () => {
+    if (!selectedTemplate) return;
+    await saveTemplate(selectedTemplate);
+  }, [saveTemplate, selectedTemplate]);
 
   const handleDuplicateScene = useCallback(
     (sceneId: string) => {
@@ -532,8 +598,8 @@ export function VideoStudio() {
                   <div className="text-sm font-semibold">Templates</div>
                   <div className="text-xs text-[var(--video-workspace-text-muted)]">Select a video template</div>
                 </div>
-                <Button size="sm" variant="secondary" disabled>
-                  New
+                <Button size="sm" variant="secondary" disabled={!selectedTemplate} onClick={handleDuplicateTemplate}>
+                  Duplicate template
                 </Button>
               </div>
               <div className="flex flex-col gap-2 p-4">
@@ -543,24 +609,33 @@ export function VideoStudio() {
                   </div>
                 ) : (
                   templateSummaries.map((template) => (
-                    <button
-                      key={template.id}
-                      type="button"
-                      className={cn(
-                        'flex w-full flex-col gap-1 rounded-md border px-3 py-2 text-left text-sm transition',
-                        selectedTemplateId === template.id
-                          ? 'border-transparent bg-primary text-primary-foreground'
-                          : 'border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] text-[var(--video-workspace-text)]'
-                      )}
-                      onClick={() => setSelectedTemplateId(template.id)}
-                    >
-                      <span className="font-medium">{template.name}</span>
-                      <span className="text-xs text-[var(--video-workspace-text-muted)]">
-                        {template.updatedAt
-                          ? `Updated ${new Date(template.updatedAt).toLocaleDateString()}`
-                          : 'Preset template'}
-                      </span>
-                    </button>
+                    <div key={template.id} className="flex items-start gap-2">
+                      <button
+                        type="button"
+                        className={cn(
+                          'flex w-full flex-1 flex-col gap-1 rounded-md border px-3 py-2 text-left text-sm transition',
+                          selectedTemplateId === template.id
+                            ? 'border-transparent bg-primary text-primary-foreground'
+                            : 'border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] text-[var(--video-workspace-text)]'
+                        )}
+                        onClick={() => setSelectedTemplateId(template.id)}
+                      >
+                        <span className="font-medium">{template.name}</span>
+                        <span className="text-xs text-[var(--video-workspace-text-muted)]">
+                          {template.updatedAt
+                            ? `Updated ${new Date(template.updatedAt).toLocaleDateString()}`
+                            : 'Preset template'}
+                        </span>
+                      </button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="shrink-0"
+                        onClick={() => void handleCreateFromPreset(template.id)}
+                      >
+                        New from preset
+                      </Button>
+                    </div>
                   ))
                 )}
               </div>
@@ -698,6 +773,7 @@ export function VideoStudio() {
               onUpdateLayerDuration={(layerId, durationMs) => handleUpdateLayer(layerId, { durationMs })}
               onUpdateLayerOpacity={(layerId, opacity) => handleUpdateLayer(layerId, { opacity })}
               onUpdateTemplateMetadata={handleUpdateTemplateMetadata}
+              onSaveTemplate={() => void handleSaveTemplate()}
             />
           </section>
         </div>

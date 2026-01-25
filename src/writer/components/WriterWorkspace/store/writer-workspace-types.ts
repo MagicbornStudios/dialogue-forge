@@ -116,5 +116,11 @@ export interface WriterWorkspaceState {
   selectedNarrativeGraphId: number | null;
   narrativeGraph: ForgeGraphDoc | null;
   narrativeHierarchy: NarrativeHierarchy | null;
+  committedGraph: ForgeGraphDoc | null;
+  draftGraph: ForgeGraphDoc | null;
+  deltas: unknown[];
+  validation: unknown | null;
+  hasUncommittedChanges: boolean;
+  lastCommittedAt: Date | null;
   actions: Record<string, unknown>;
 }

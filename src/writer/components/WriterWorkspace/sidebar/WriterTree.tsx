@@ -87,18 +87,28 @@ function getAllNodeIds(nodes: TreeNode[]): string[] {
   return ids;
 }
 
-function buildTreeData(pages: ForgePage[], graph: ForgeGraphDoc | null): TreeNode[] {
+function buildTreeData(
+  pages: ForgePage[], 
+  graph: ForgeGraphDoc | null,
+  drafts: Record<number, { title: string }>
+): TreeNode[] {
   if (!pages || !Array.isArray(pages) || pages.length === 0) {
     return [];
   }
   
   const hierarchy = buildNarrativeHierarchy(pages);
   
+  // Helper to get display title (draft title if available, otherwise page title)
+  const getDisplayTitle = (page: ForgePage): string => {
+    const draftTitle = drafts[page.id]?.title?.trim();
+    return draftTitle || page.title;
+  };
+  
   return hierarchy.acts.map(({ page: actPage, chapters }) => {
     const actNodeId = findNodeIdByPageId(graph, actPage.id);
     return {
       id: `page-${actPage.id}`,
-      name: actPage.title,
+      name: getDisplayTitle(actPage),
       page: actPage,
       hasDetour: hasDetourConnection(graph, actNodeId),
       isEndNode: isEndNode(graph, actNodeId),
@@ -106,7 +116,7 @@ function buildTreeData(pages: ForgePage[], graph: ForgeGraphDoc | null): TreeNod
         const chapterNodeId = findNodeIdByPageId(graph, chapterPage.id);
         return {
           id: `page-${chapterPage.id}`,
-          name: chapterPage.title,
+          name: getDisplayTitle(chapterPage),
           page: chapterPage,
           hasDetour: hasDetourConnection(graph, chapterNodeId),
           isEndNode: isEndNode(graph, chapterNodeId),
@@ -114,7 +124,7 @@ function buildTreeData(pages: ForgePage[], graph: ForgeGraphDoc | null): TreeNod
             const pageNodeId = findNodeIdByPageId(graph, page.id);
             return {
               id: `page-${page.id}`,
-              name: page.title,
+              name: getDisplayTitle(page),
               page,
               hasDetour: hasDetourConnection(graph, pageNodeId),
               isEndNode: isEndNode(graph, pageNodeId),
@@ -133,6 +143,7 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
   const { toast } = useToast();
   
   const pages = useWriterWorkspaceStore((state) => state.pages);
+  const drafts = useWriterWorkspaceStore((state) => state.drafts);
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const dataAdapter = useWriterWorkspaceStore((state) => state.dataAdapter);
   const forgeDataAdapter = useWriterWorkspaceStore((state) => state.forgeDataAdapter);
@@ -169,8 +180,8 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
     onPagesUpdate: setPages,
   });
 
-  // Build tree data from pages with graph metadata
-  const treeNodes = useMemo(() => buildTreeData(pages || [], effectiveGraph), [pages, effectiveGraph]);
+  // Build tree data from pages with graph metadata, using draft titles when available
+  const treeNodes = useMemo(() => buildTreeData(pages || [], narrativeGraph, drafts), [pages, narrativeGraph, drafts]);
   
   // Convert to react-arborist format
   const treeData = useMemo(() => {

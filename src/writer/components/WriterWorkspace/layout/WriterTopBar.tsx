@@ -1,125 +1,138 @@
-import React, { useMemo } from 'react';
-import { ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
+import React from 'react';
+import { FileText, File, Maximize2, Minimize2, Download, Folder, Eye } from 'lucide-react';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
-import { PAGE_TYPE } from '@/shared/types/narrative';
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
+  MenubarTrigger,
+  MenubarCheckboxItem,
+} from '@/shared/ui/menubar';
+import { getPlainTextFromSerializedContent } from '@/writer/components/WriterWorkspace/store/writer-workspace-types';
 
 export function WriterTopBar() {
+  const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const pageMap = useWriterWorkspaceStore((state) => state.pageMap);
   const drafts = useWriterWorkspaceStore((state) => state.drafts);
-  const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const pageLayout = useWriterWorkspaceStore((state) => state.pageLayout);
   const togglePageFullWidth = useWriterWorkspaceStore((state) => state.actions.togglePageFullWidth);
-  const setActivePageId = useWriterWorkspaceStore((state) => state.actions.setActivePageId);
 
-  const activePage = useMemo(
-    () => activePageId ? pageMap.get(activePageId) ?? null : null,
-    [pageMap, activePageId]
-  );
-
-  // Build breadcrumb path by walking up the parent chain
-  const breadcrumbPath = useMemo(() => {
-    if (!activePage) return [];
-    
-    const path = [activePage];
-    let current = activePage;
-    
-    // Walk up parent chain using O(1) lookup
-    while (current.parent) {
-      const parent = pageMap.get(current.parent);
-      if (parent) {
-        path.unshift(parent);
-        current = parent;
-      } else {
-        break;
-      }
-    }
-    
-    return path;
-  }, [activePage, pageMap]);
-  
+  const activePage = activePageId ? pageMap.get(activePageId) ?? null : null;
+  const draft = activePageId ? drafts[activePageId] ?? null : null;
   const draftTitle = activePageId ? drafts[activePageId]?.title ?? '' : '';
-  const pageTitle =
-    draftTitle.trim() ||
-    activePage?.title ||
-    (activePageId ? 'Untitled' : 'Select a page');
+  const pageContent = draft?.content.plainText ?? getPlainTextFromSerializedContent(activePage?.bookBody) ?? '';
   const isFullWidth = activePageId
     ? pageLayout.fullWidthByPageId[activePageId] ?? false
     : false;
 
-  const metadata = useMemo(() => {
-    if (!activePage) {
-      return [];
-    }
-    return [
-      activePage._status
-        ? { label: 'Status', value: activePage._status }
-        : null,
-      activePage.summary
-        ? { label: 'Summary', value: activePage.summary }
-        : null,
-      activePage.pageType
-        ? { label: 'Type', value: activePage.pageType }
-        : null,
-    ].filter(Boolean) as Array<{ label: string; value: string }>;
-  }, [activePage]);
+  const downloadAsMarkdown = () => {
+    const title = draftTitle.trim() || activePage?.title || 'Untitled';
+    const blob = new Blob([pageContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.replace(/\s+/g, '_')}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadAsPDF = () => {
+    const title = draftTitle.trim() || activePage?.title || 'Untitled';
+    
+    // Create a temporary window for printing
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; }
+            h1, h2, h3 { margin-top: 20px; }
+            p { margin: 10px 0; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <pre style="white-space: pre-wrap; font-family: inherit;">${pageContent}</pre>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
+  };
 
   return (
-    <div className="flex flex-col gap-2 px-4 py-3 mb-2">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <nav className="flex flex-wrap items-center gap-2 text-xs text-df-text-tertiary">
-            {breadcrumbPath.length > 0 ? (
-              breadcrumbPath.map((page, index) => (
-                <React.Fragment key={page.id}>
-                  {index > 0 && <ChevronRight size={12} className="text-df-text-tertiary" />}
-                  <button
-                    type="button"
-                    onClick={() => setActivePageId(page.id)}
-                    className={`truncate transition-colors ${
-                      page.id === activePageId
-                        ? 'text-df-text-primary font-medium'
-                        : 'hover:text-df-text-primary'
-                    }`}
-                  >
-                    {page.title}
-                  </button>
-                </React.Fragment>
-              ))
-            ) : (
-              <span className="text-df-text-tertiary">Workspace</span>
-            )}
-          </nav>
-          <div className="mt-1 text-base font-semibold text-df-text-primary">
-            {pageTitle}
-          </div>
-        </div>
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-md border border-df-control-border bg-df-control-bg px-3 py-1 text-xs text-df-text-secondary transition hover:text-df-text-primary disabled:opacity-50"
-          onClick={() => {
-            if (activePageId) {
-              togglePageFullWidth(activePageId);
-            }
-          }}
-          disabled={!activePageId}
-          aria-pressed={isFullWidth}
-        >
-          {isFullWidth ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-          Full width
-        </button>
-      </div>
-      {metadata.length > 0 ? (
-        <div className="flex flex-wrap gap-3 text-xs text-df-text-tertiary">
-          {metadata.map((item) => (
-            <div key={item.label} className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-df-text-tertiary">
-                {item.label}
-              </span>
-              <span className="text-df-text-secondary">{item.value}</span>
-            </div>
-          ))}
-        </div>
-      ) : null}
+    <div className="w-full flex items-center justify-between px-6 py-2.5 border-b border-df-node-border/30">
+      {/* Left: File menu */}
+      <Menubar className="border-0 bg-transparent p-0">
+        <MenubarMenu>
+          <MenubarTrigger className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-df-text-secondary hover:text-df-text-primary rounded-md transition-colors data-[state=open]:text-df-text-primary hover:bg-df-control-hover/30 data-[state=open]:bg-df-control-hover/30 h-8">
+            <Folder size={15} className="opacity-60" />
+            File
+          </MenubarTrigger>
+          <MenubarContent>
+            <MenubarSub>
+              <MenubarSubTrigger className="text-df-text-primary">
+                <Download size={14} className="mr-2" />
+                Download
+              </MenubarSubTrigger>
+              <MenubarSubContent>
+                <MenubarItem 
+                  onClick={downloadAsMarkdown}
+                  disabled={!activePageId || !pageContent}
+                  className="text-df-text-primary"
+                >
+                  <FileText size={14} className="mr-2" />
+                  Markdown (.md)
+                </MenubarItem>
+                <MenubarItem 
+                  onClick={downloadAsPDF}
+                  disabled={!activePageId || !pageContent}
+                  className="text-df-text-primary"
+                >
+                  <File size={14} className="mr-2" />
+                  PDF (.pdf)
+                </MenubarItem>
+              </MenubarSubContent>
+            </MenubarSub>
+          </MenubarContent>
+        </MenubarMenu>
+      </Menubar>
+
+      {/* Right: View menu */}
+      <Menubar className="border-0 bg-transparent p-0">
+        <MenubarMenu>
+          <MenubarTrigger className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-df-text-secondary hover:text-df-text-primary rounded-md transition-colors data-[state=open]:text-df-text-primary hover:bg-df-control-hover/30 data-[state=open]:bg-df-control-hover/30 h-8">
+            <Eye size={15} className="opacity-60" />
+            View
+          </MenubarTrigger>
+          <MenubarContent>
+            <MenubarCheckboxItem
+              checked={isFullWidth}
+              onCheckedChange={() => {
+                if (activePageId) {
+                  togglePageFullWidth(activePageId);
+                }
+              }}
+              disabled={!activePageId}
+              className="text-df-text-primary"
+            >
+              {isFullWidth ? <Minimize2 size={14} className="mr-2" /> : <Maximize2 size={14} className="mr-2" />}
+              Full width
+            </MenubarCheckboxItem>
+          </MenubarContent>
+        </MenubarMenu>
+      </Menubar>
     </div>
   );
 }

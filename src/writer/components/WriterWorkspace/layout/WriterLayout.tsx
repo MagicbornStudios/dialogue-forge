@@ -2,7 +2,6 @@ import * as React from 'react';
 import type { ReactNode } from 'react';
 import { FORGE_NODE_TYPE } from '@/shared/types/forge-graph';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
-import { WriterTopBar } from '@/writer/components/WriterWorkspace/layout/WriterTopBar';
 
 interface WriterLayoutProps {
   sidebar: ReactNode;
@@ -24,23 +23,24 @@ export function WriterLayout({ sidebar, editor, className }: WriterLayoutProps) 
 
   return (
     <div
-      className={`flex min-h-0 flex-1 ${className ?? ''}`}
+      className={`flex min-h-0 flex-1 flex-col ${className ?? ''}`}
       data-domain="writer"
       data-editor-scope="writer"
       data-context-node-type={contextNodeType ?? undefined}
       data-focused={hasActivePage ? 'true' : 'false'}
     >
-      <aside className="flex min-h-0 w-[320px] min-w-[260px] flex-col border-r border-df-node-border pr-2">
-        {sidebar}
-      </aside>
-      <section className="flex min-h-0 flex-1 flex-col pl-2">
-        <div className={`flex min-h-0 flex-1 flex-col ${contentClassName}`}>
-          <WriterTopBar />
-          <div className="flex min-h-0 flex-1 flex-col">
-            {editor}
+      <div className="flex min-h-0 flex-1">
+        <aside className="flex min-h-0 w-[320px] min-w-[260px] flex-col border-r border-df-node-border pr-2">
+          {sidebar}
+        </aside>
+        <section className="flex min-h-0 flex-1 flex-col pl-2">
+          <div className={`flex min-h-0 flex-1 flex-col ${contentClassName}`}>
+            <div className="flex min-h-0 flex-1 flex-col">
+              {editor}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

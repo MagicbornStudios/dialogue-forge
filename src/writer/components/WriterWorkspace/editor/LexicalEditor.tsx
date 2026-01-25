@@ -78,17 +78,21 @@ export function LexicalEditor({
       <WriterEditorSessionProvider store={sessionStoreRef.current}>
         <LexicalComposer initialConfig={initialConfig}>
           <div className="flex min-h-0 flex-1 flex-col">
+            {/* ============================================
+                PLUGIN DEBUGGING: Start with minimal plugins
+                Uncomment plugins one at a time to isolate the issue
+                ============================================ */}
+            
+            {/* Plugin Group 2: Custom UI Plugins - Toolbar at top */}
             <ToolbarPlugin />
-            <AiSelectionPlugin />
-            <CopilotKitPlugin />
-            <KeyboardShortcutsPlugin />
-            <WriterPlugins />
-            <div className="relative flex min-h-0 flex-1 flex-col">
+            
+            {/* Essential plugins - keep these enabled */}
+            <div className="relative flex min-h-0 flex-1 flex-col bg-df-editor-bg rounded-b border border-t-0 border-df-editor-border">
               <RichTextPlugin
                 contentEditable={
                   <ContentEditable
                     ref={setContentElem}
-                    className="min-h-[240px] flex-1 px-4 py-4 text-sm text-df-text-primary outline-none"
+                    className="min-h-[240px] flex-1 px-4 py-4 text-sm text-df-text-primary outline-none bg-df-editor-bg"
                   />
                 }
                 placeholder={
@@ -98,11 +102,6 @@ export function LexicalEditor({
                 }
                 ErrorBoundary={LexicalErrorBoundary}
               />
-              {contentElem ? <BlockHandlePlugin anchorElem={contentElem} /> : null}
-              <HistoryPlugin />
-              <ListPlugin />
-              <CheckListPlugin />
-              <TabIndentationPlugin />
               <OnChangePlugin
                 onChange={(editorState) => {
                   if (!onChange) {
@@ -118,6 +117,41 @@ export function LexicalEditor({
                 }}
               />
             </div>
+
+            {/* ============================================
+                ADD PLUGINS BACK ONE AT A TIME:
+                Uncomment each plugin individually and test
+                ============================================ */}
+
+            {/* Plugin Group 1: Core Lexical Plugins */}
+            <HistoryPlugin />
+            {/* <ListPlugin /> */}
+            {/* <CheckListPlugin /> */}
+            {/* <TabIndentationPlugin /> */}
+
+            {/* Plugin Group 2: Custom UI Plugins */}
+            {/* {contentElem ? <BlockHandlePlugin anchorElem={contentElem} /> : null} */}
+
+            {/* Plugin Group 3: AI/Selection Plugins */}
+            {/* <AiSelectionPlugin /> */}
+            {/* <CopilotKitPlugin /> */}
+
+            {/* Plugin Group 4: Keyboard/Shortcuts */}
+            {/* <KeyboardShortcutsPlugin /> */}
+
+            {/* Plugin Group 5: WriterPlugins (contains multiple) */}
+            <WriterPlugins />
+            {/* 
+              WriterPlugins includes:
+              - AutoFocusPlugin
+              - MediaPlugin
+              - ListPlugin (duplicate - already listed above)
+              - LinkPlugin
+              - MarkdownShortcutPlugin
+              - MarkdownPastePlugin
+              - SlashCommandPlugin
+              - TablePlugin
+            */}
           </div>
         </LexicalComposer>
       </WriterEditorSessionProvider>

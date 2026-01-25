@@ -8,14 +8,19 @@ import type { WriterForgeDataAdapter } from '@/writer/types/forge-data-adapter';
 import { createFlowNode } from '@/shared/utils/forge-graph-helpers';
 import { findLastNodeInHierarchy, findNodeByPageId } from '@/shared/lib/graph-validation';
 import { useToast } from '@/shared/ui/toast';
+import { calculateDelta } from '@/shared/lib/draft/draft-helpers';
 
 export interface UseGraphPageSyncOptions {
   graph: ForgeGraphDoc | null;
+  committedGraph?: ForgeGraphDoc | null;
+  draftGraph?: ForgeGraphDoc | null;
+  applyDelta?: (delta: ReturnType<typeof calculateDelta>) => void;
+  commitDraft?: () => Promise<void>;
   pages: ForgePage[];
   projectId: number | null;
   dataAdapter?: WriterDataAdapter;
   forgeDataAdapter?: WriterForgeDataAdapter;
-  onGraphUpdate: (graph: ForgeGraphDoc) => void;
+  onGraphUpdate?: (graph: ForgeGraphDoc) => void;
   onPagesUpdate: (pages: ForgePage[]) => void;
 }
 
@@ -52,6 +57,10 @@ function calculatePosition(graph: ForgeGraphDoc | null, pageType: PageType): { x
 
 export function useGraphPageSync({
   graph,
+  committedGraph,
+  draftGraph,
+  applyDelta,
+  commitDraft,
   pages,
   projectId,
   dataAdapter,
@@ -60,6 +69,7 @@ export function useGraphPageSync({
   onPagesUpdate,
 }: UseGraphPageSyncOptions) {
   const { toast } = useToast();
+  const effectiveGraph = draftGraph ?? graph;
   
   // Create page + node + edge atomically
   const createPageWithNode = useCallback(async (input: {
@@ -67,7 +77,7 @@ export function useGraphPageSync({
     title: string;
     parentPageId?: number | null;
   }) => {
-    if (!dataAdapter || !forgeDataAdapter || !graph || !projectId) {
+    if (!dataAdapter || !effectiveGraph || !projectId) {
       toast.error('Required adapters or graph not available');
       return null;
     }
@@ -97,7 +107,7 @@ export function useGraphPageSync({
       
       // 2. Create node in graph
       const nodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const position = calculatePosition(graph, input.pageType);
+      const position = calculatePosition(effectiveGraph, input.pageType);
       const newNode = createFlowNode(
         pageTypeToNodeType(input.pageType) as any,
         nodeId,
@@ -114,8 +124,8 @@ export function useGraphPageSync({
       
       // 3. Find parent node to connect to
       const parentNodeId = input.parentPageId
-        ? findNodeByPageId(graph, input.parentPageId)
-        : findLastNodeInHierarchy(graph, input.pageType);
+        ? findNodeByPageId(effectiveGraph, input.parentPageId)
+        : findLastNodeInHierarchy(effectiveGraph, input.pageType);
       
       // 4. Create edge if parent exists
       const newEdge = parentNodeId ? {
@@ -126,37 +136,53 @@ export function useGraphPageSync({
       
       // 5. Update graph - nodes is an array, not an object
       // Ensure graph.flow.nodes is an array
-      const currentNodes = Array.isArray(graph.flow.nodes) ? graph.flow.nodes : [];
-      const currentEdges = Array.isArray(graph.flow.edges) ? graph.flow.edges : [];
+      const currentNodes = Array.isArray(effectiveGraph.flow.nodes) ? effectiveGraph.flow.nodes : [];
+      const currentEdges = Array.isArray(effectiveGraph.flow.edges) ? effectiveGraph.flow.edges : [];
       
       const updatedNodes = [...currentNodes, newNode];
       const updatedEdges = newEdge ? [...currentEdges, newEdge] : currentEdges;
       
       // 6. Update startNodeId and endNodeIds if this is the first node
       const isFirstNode = currentNodes.length === 0;
-      const updateData: Parameters<typeof forgeDataAdapter.updateGraph>[1] = {
+      let updatedGraph: ForgeGraphDoc = {
+        ...effectiveGraph,
         flow: {
           nodes: updatedNodes,
           edges: updatedEdges,
-          viewport: graph.flow.viewport || { x: 0, y: 0, zoom: 1 },
+          viewport: effectiveGraph.flow.viewport || { x: 0, y: 0, zoom: 1 },
         },
       };
       
       if (isFirstNode) {
         // First node becomes both start and end
-        updateData.startNodeId = newNode.id;
-        updateData.endNodeIds = [{ nodeId: newNode.id }];
-      } else if (input.pageType === PAGE_TYPE.ACT && !graph.startNodeId) {
+        updatedGraph.startNodeId = newNode.id;
+        updatedGraph.endNodeIds = [{ nodeId: newNode.id }];
+      } else if (input.pageType === PAGE_TYPE.ACT && !effectiveGraph.startNodeId) {
         // If adding first Act to a graph that has no start, set it as start
-        updateData.startNodeId = newNode.id;
+        updatedGraph.startNodeId = newNode.id;
       }
-      
-      // 7. Update graph first, then pages (atomic operation)
-      const updatedGraph = await forgeDataAdapter.updateGraph(graph.id, updateData);
-      
-      // 8. Update state in correct order: graph first, then pages
-      onGraphUpdate(updatedGraph);
-      // Ensure we're updating with a proper array
+
+      const hasDraftPipeline = Boolean(applyDelta && commitDraft && (committedGraph ?? effectiveGraph));
+      if (!hasDraftPipeline && !forgeDataAdapter) {
+        throw new Error('ForgeDataAdapter not available');
+      }
+
+      if (hasDraftPipeline) {
+        const committedGraphForDelta = committedGraph ?? effectiveGraph;
+        if (!committedGraphForDelta) {
+          throw new Error('Committed graph not available');
+        }
+        applyDelta?.(calculateDelta(committedGraphForDelta, updatedGraph));
+        await commitDraft?.();
+      } else if (forgeDataAdapter) {
+        const persistedGraph = await forgeDataAdapter.updateGraph(updatedGraph.id, {
+          flow: updatedGraph.flow,
+          startNodeId: updatedGraph.startNodeId,
+          endNodeIds: updatedGraph.endNodeIds,
+        });
+        onGraphUpdate?.(persistedGraph);
+      }
+
       onPagesUpdate([...safePages, newPage]);
       
       toast.success(`Created ${input.pageType.toLowerCase()}: ${input.title}`);
@@ -167,7 +193,7 @@ export function useGraphPageSync({
       toast.error(`Failed to create ${input.pageType.toLowerCase()}`);
       return null;
     }
-  }, [graph, pages, projectId, dataAdapter, forgeDataAdapter, onGraphUpdate, onPagesUpdate, toast]);
+  }, [applyDelta, commitDraft, committedGraph, effectiveGraph, pages, projectId, dataAdapter, forgeDataAdapter, onGraphUpdate, onPagesUpdate, toast]);
   
   return { createPageWithNode };
 }

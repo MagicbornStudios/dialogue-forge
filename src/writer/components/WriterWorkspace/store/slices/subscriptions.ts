@@ -45,8 +45,8 @@ export function setupWriterWorkspaceSubscriptions(
   // Subscribe to narrative graph changes and sync hierarchy
   domainStore.subscribe(
     async (state, prevState) => {
-      const narrativeGraph = state.narrativeGraph;
-      const prevNarrativeGraph = prevState.narrativeGraph;
+      const narrativeGraph = state.draftGraph ?? state.narrativeGraph;
+      const prevNarrativeGraph = prevState.draftGraph ?? prevState.narrativeGraph;
       
       // Only process if graph actually changed
       if (narrativeGraph === prevNarrativeGraph) return;
@@ -75,7 +75,7 @@ export function setupWriterWorkspaceSubscriptions(
   // Subscribe to pages changes to rebuild hierarchy if graph exists
   domainStore.subscribe(
     async (state, prevState) => {
-      const narrativeGraph = state.narrativeGraph;
+      const narrativeGraph = state.draftGraph ?? state.narrativeGraph;
       if (!narrativeGraph || !dataAdapter) return;
       
       // Rebuild hierarchy when pages change

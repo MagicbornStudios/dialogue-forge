@@ -42,6 +42,7 @@ interface VideoTemplateWorkspaceProps {
   onTogglePlayback?: () => void;
   onSaveTemplate?: () => void;
   saveDisabled?: boolean;
+  headerNotice?: string;
 }
 
 export function VideoTemplateWorkspace({
@@ -63,6 +64,7 @@ export function VideoTemplateWorkspace({
   onTogglePlayback,
   onSaveTemplate,
   saveDisabled,
+  headerNotice,
 }: VideoTemplateWorkspaceProps) {
   const draftStoreRef = React.useRef<ReturnType<typeof createVideoDraftStore> | null>(null);
   if (!draftStoreRef.current) {
@@ -219,6 +221,11 @@ export function VideoTemplateWorkspace({
             {hasUncommittedChanges ? (
               <Badge variant="secondary" className="text-[11px]">
                 Draft changes
+              </Badge>
+            ) : null}
+            {headerNotice ? (
+              <Badge variant="secondary" className="text-[11px]">
+                {headerNotice}
               </Badge>
             ) : null}
           </div>

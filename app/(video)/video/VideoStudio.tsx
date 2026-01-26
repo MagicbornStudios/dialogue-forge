@@ -159,12 +159,6 @@ export function VideoStudio() {
 
   useEffect(() => {
     let isMounted = true;
-    if (!hasSelectedProject) {
-      setTemplateSummaries([]);
-      return () => {
-        isMounted = false;
-      };
-    }
     videoTemplateAdapter
       .listTemplates()
       .then((templates) => {
@@ -178,7 +172,7 @@ export function VideoStudio() {
     return () => {
       isMounted = false;
     };
-  }, [hasSelectedProject, videoTemplateAdapter]);
+  }, [videoTemplateAdapter]);
 
   useEffect(() => {
     if (selectedTemplateId || templateSummaries.length === 0) {
@@ -408,6 +402,7 @@ export function VideoStudio() {
   const handleCreateFromPreset = useCallback(
     async (presetId: string) => {
       if (!presetId) return;
+      if (!hasSelectedProject) return;
       try {
         const preset = await videoTemplateAdapter.loadTemplate(presetId);
         if (!preset) return;
@@ -417,19 +412,21 @@ export function VideoStudio() {
         return;
       }
     },
-    [cloneTemplate, saveTemplate, videoTemplateAdapter]
+    [cloneTemplate, hasSelectedProject, saveTemplate, videoTemplateAdapter]
   );
 
   const handleDuplicateTemplate = useCallback(async () => {
     if (!selectedTemplate) return;
+    if (!hasSelectedProject) return;
     const cloned = cloneTemplate(selectedTemplate, `${selectedTemplate.name} Copy`);
     await saveTemplate(cloned);
-  }, [cloneTemplate, saveTemplate, selectedTemplate]);
+  }, [cloneTemplate, hasSelectedProject, saveTemplate, selectedTemplate]);
 
   const handleSaveTemplate = useCallback(async () => {
     if (!selectedTemplate) return;
+    if (!hasSelectedProject) return;
     await saveTemplate(selectedTemplate);
-  }, [saveTemplate, selectedTemplate]);
+  }, [hasSelectedProject, saveTemplate, selectedTemplate]);
 
   const handleDuplicateScene = useCallback(
     (sceneId: string) => {
@@ -617,205 +614,201 @@ export function VideoStudio() {
         style={workspaceTokens}
       >
         <ProjectSwitcher selectedProjectId={selectedProjectId} onProjectChange={setSelectedProjectId} />
-        {!hasSelectedProject ? (
-          <div className="flex flex-1 items-center justify-center p-6">
-            <Card className="w-full max-w-lg border-[var(--video-workspace-border)] bg-[var(--video-workspace-panel)] px-6 py-5">
-              <div className="text-base font-semibold">No project selected</div>
-              <div className="mt-2 text-sm text-[var(--video-workspace-text-muted)]">
-                Choose a project above to load video templates, enable saving, and export your renders.
+        <div className="flex flex-1 min-h-0 gap-4 p-6">
+          <aside className="flex w-72 flex-col gap-4">
+            <Card className="border-[var(--video-workspace-border)] bg-[var(--video-workspace-panel)]">
+              <div className="flex items-center justify-between border-b border-[var(--video-workspace-border)] px-4 py-3">
+                <div>
+                  <div className="text-sm font-semibold">Templates</div>
+                  <div className="text-xs text-[var(--video-workspace-text-muted)]">Select a video template</div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={!selectedTemplate || !hasSelectedProject}
+                  onClick={handleDuplicateTemplate}
+                >
+                  Duplicate template
+                </Button>
               </div>
-            </Card>
-          </div>
-        ) : (
-          <div className="flex flex-1 min-h-0 gap-4 p-6">
-            <aside className="flex w-72 flex-col gap-4">
-              <Card className="border-[var(--video-workspace-border)] bg-[var(--video-workspace-panel)]">
-                <div className="flex items-center justify-between border-b border-[var(--video-workspace-border)] px-4 py-3">
-                  <div>
-                    <div className="text-sm font-semibold">Templates</div>
-                    <div className="text-xs text-[var(--video-workspace-text-muted)]">Select a video template</div>
+              <div className="flex flex-col gap-2 p-4">
+                {templateSummaries.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] p-3 text-xs text-[var(--video-workspace-text-muted)]">
+                    No templates available.
                   </div>
-                  <Button size="sm" variant="secondary" disabled={!selectedTemplate} onClick={handleDuplicateTemplate}>
-                    Duplicate template
-                  </Button>
-                </div>
-                <div className="flex flex-col gap-2 p-4">
-                  {templateSummaries.length === 0 ? (
-                    <div className="rounded-md border border-dashed border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] p-3 text-xs text-[var(--video-workspace-text-muted)]">
-                      No templates available.
-                    </div>
-                  ) : (
-                    templateSummaries.map((template) => (
-                      <div key={template.id} className="flex items-start gap-2">
-                        <button
-                          type="button"
-                          className={cn(
-                            'flex w-full flex-1 flex-col gap-1 rounded-md border px-3 py-2 text-left text-sm transition',
-                            selectedTemplateId === template.id
-                              ? 'border-transparent bg-primary text-primary-foreground'
-                              : 'border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] text-[var(--video-workspace-text)]'
-                          )}
-                          onClick={() => setSelectedTemplateId(template.id)}
-                        >
-                          <span className="font-medium">{template.name}</span>
-                          <span className="text-xs text-[var(--video-workspace-text-muted)]">
-                            {template.updatedAt
-                              ? `Updated ${new Date(template.updatedAt).toLocaleDateString()}`
-                              : 'Preset template'}
-                          </span>
-                        </button>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="shrink-0"
-                          onClick={() => void handleCreateFromPreset(template.id)}
-                        >
-                          New from preset
-                        </Button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </Card>
-            </aside>
-
-            <main className="flex min-w-0 flex-1 flex-col gap-4">
-              <Card className="border-[var(--video-workspace-border)] bg-[var(--video-workspace-panel)] px-4 py-3">
-                <div className="text-sm font-semibold">Video Studio</div>
-                <div className="text-xs text-[var(--video-workspace-text-muted)]">
-                  Pick a template on the left to preview and edit.
-                </div>
-              </Card>
-              <Card className="border-[var(--video-workspace-border)] bg-[var(--video-workspace-panel)] px-4 py-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="text-sm font-semibold">Export</div>
-                    <div className="text-xs text-[var(--video-workspace-text-muted)]">
-                      Render the current composition with custom settings.
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => void handleRenderExport()}
-                    disabled={!hasSelectedProject || !composition || Boolean(compositionError)}
-                  >
-                    Render
-                  </Button>
-                </div>
-                <div className="mt-4 grid gap-3 text-xs text-[var(--video-workspace-text-muted)] sm:grid-cols-2">
-                  <label className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-wide">Format</span>
-                    <select
-                      className="rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-2 py-1 text-sm text-[var(--video-workspace-text)]"
-                      value={renderFormat}
-                      onChange={(event) => setRenderFormat(event.target.value as VideoRenderFormat)}
-                    >
-                      <option value={VIDEO_RENDER_FORMAT.MP4}>MP4</option>
-                      <option value={VIDEO_RENDER_FORMAT.WEBM}>WebM</option>
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-wide">Frame Rate</span>
-                    <input
-                      type="number"
-                      min={1}
-                      className="rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-2 py-1 text-sm text-[var(--video-workspace-text)]"
-                      value={renderFps}
-                      onChange={(event) => setRenderFps(Number(event.target.value))}
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-wide">Width</span>
-                    <input
-                      type="number"
-                      min={1}
-                      className="rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-2 py-1 text-sm text-[var(--video-workspace-text)]"
-                      value={renderWidth}
-                      onChange={(event) => setRenderWidth(Number(event.target.value))}
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-wide">Height</span>
-                    <input
-                      type="number"
-                      min={1}
-                      className="rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-2 py-1 text-sm text-[var(--video-workspace-text)]"
-                      value={renderHeight}
-                      onChange={(event) => setRenderHeight(Number(event.target.value))}
-                    />
-                  </label>
-                </div>
-                <div className="mt-4 space-y-2 text-xs text-[var(--video-workspace-text-muted)]">
-                  {isRendering && (
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-medium text-[var(--video-workspace-text)]">Rendering…</span>
-                        {renderProgress !== null && <span>{Math.round(renderProgress * 100)}%</span>}
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-[var(--video-workspace-muted)]">
-                        <div
-                          className="h-full rounded-full bg-primary transition-all"
-                          style={{ width: `${Math.round((renderProgress ?? 0) * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {renderDownloadUrl && (
-                    <div className="flex items-center justify-between rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-3 py-2">
-                      <span className="text-[var(--video-workspace-text)]">Render complete.</span>
-                      <Button size="sm" asChild>
-                        <a href={renderDownloadUrl} download>
-                          Download
-                        </a>
+                ) : (
+                  templateSummaries.map((template) => (
+                    <div key={template.id} className="flex items-start gap-2">
+                      <button
+                        type="button"
+                        className={cn(
+                          'flex w-full flex-1 flex-col gap-1 rounded-md border px-3 py-2 text-left text-sm transition',
+                          selectedTemplateId === template.id
+                            ? 'border-transparent bg-primary text-primary-foreground'
+                            : 'border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] text-[var(--video-workspace-text)]'
+                        )}
+                        onClick={() => setSelectedTemplateId(template.id)}
+                      >
+                        <span className="font-medium">{template.name}</span>
+                        <span className="text-xs text-[var(--video-workspace-text-muted)]">
+                          {template.updatedAt
+                            ? `Updated ${new Date(template.updatedAt).toLocaleDateString()}`
+                            : 'Preset template'}
+                        </span>
+                      </button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="shrink-0"
+                        onClick={() => void handleCreateFromPreset(template.id)}
+                        disabled={!hasSelectedProject}
+                      >
+                        New from preset
                       </Button>
                     </div>
-                  )}
-                  {renderError && (
-                    <div className="rounded-md border border-red-500/60 bg-red-500/10 px-3 py-2 text-[11px] text-red-200">
-                      {renderError}
-                    </div>
-                  )}
-                </div>
-              </Card>
-              <div className="flex-1">
-                <RemotionPreview
-                  composition={composition}
-                  errorMessage={compositionError}
-                  isPlaying={isPlaying}
-                  currentFrame={currentFrame}
-                  onFrameChange={handleFrameChange}
-                  onSetPlaying={handleSetPlaying}
-                />
+                  ))
+                )}
               </div>
-            </main>
+            </Card>
+          </aside>
 
-            <section className="flex w-[520px] min-w-0 flex-col">
-              <VideoTemplateWorkspace
-                className="h-full"
-                template={selectedTemplate}
-                adapter={videoTemplateAdapter}
-                activeSceneId={activeScene?.id}
-                activeLayerId={activeLayer?.id}
+          <main className="flex min-w-0 flex-1 flex-col gap-4">
+            <Card className="border-[var(--video-workspace-border)] bg-[var(--video-workspace-panel)] px-4 py-3">
+              <div className="text-sm font-semibold">Video Studio</div>
+              <div className="text-xs text-[var(--video-workspace-text-muted)]">
+                Pick a template on the left to preview and edit.
+              </div>
+            </Card>
+            <Card className="border-[var(--video-workspace-border)] bg-[var(--video-workspace-panel)] px-4 py-3">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-sm font-semibold">Export</div>
+                  <div className="text-xs text-[var(--video-workspace-text-muted)]">
+                    Render the current composition with custom settings.
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => void handleRenderExport()}
+                  disabled={!composition || Boolean(compositionError)}
+                >
+                  Render
+                </Button>
+              </div>
+              <div className="mt-4 grid gap-3 text-xs text-[var(--video-workspace-text-muted)] sm:grid-cols-2">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-wide">Format</span>
+                  <select
+                    className="rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-2 py-1 text-sm text-[var(--video-workspace-text)]"
+                    value={renderFormat}
+                    onChange={(event) => setRenderFormat(event.target.value as VideoRenderFormat)}
+                  >
+                    <option value={VIDEO_RENDER_FORMAT.MP4}>MP4</option>
+                    <option value={VIDEO_RENDER_FORMAT.WEBM}>WebM</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-wide">Frame Rate</span>
+                  <input
+                    type="number"
+                    min={1}
+                    className="rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-2 py-1 text-sm text-[var(--video-workspace-text)]"
+                    value={renderFps}
+                    onChange={(event) => setRenderFps(Number(event.target.value))}
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-wide">Width</span>
+                  <input
+                    type="number"
+                    min={1}
+                    className="rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-2 py-1 text-sm text-[var(--video-workspace-text)]"
+                    value={renderWidth}
+                    onChange={(event) => setRenderWidth(Number(event.target.value))}
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-wide">Height</span>
+                  <input
+                    type="number"
+                    min={1}
+                    className="rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-2 py-1 text-sm text-[var(--video-workspace-text)]"
+                    value={renderHeight}
+                    onChange={(event) => setRenderHeight(Number(event.target.value))}
+                  />
+                </label>
+              </div>
+              <div className="mt-4 space-y-2 text-xs text-[var(--video-workspace-text-muted)]">
+                {isRendering && (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-medium text-[var(--video-workspace-text)]">Rendering…</span>
+                      {renderProgress !== null && <span>{Math.round(renderProgress * 100)}%</span>}
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-[var(--video-workspace-muted)]">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${Math.round((renderProgress ?? 0) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {renderDownloadUrl && (
+                  <div className="flex items-center justify-between rounded-md border border-[var(--video-workspace-border)] bg-[var(--video-workspace-muted)] px-3 py-2">
+                    <span className="text-[var(--video-workspace-text)]">Render complete.</span>
+                    <Button size="sm" asChild>
+                      <a href={renderDownloadUrl} download>
+                        Download
+                      </a>
+                    </Button>
+                  </div>
+                )}
+                {renderError && (
+                  <div className="rounded-md border border-red-500/60 bg-red-500/10 px-3 py-2 text-[11px] text-red-200">
+                    {renderError}
+                  </div>
+                )}
+              </div>
+            </Card>
+            <div className="flex-1">
+              <RemotionPreview
+                composition={composition}
+                errorMessage={compositionError}
                 isPlaying={isPlaying}
-                onTogglePlayback={() => setIsPlaying((prev) => !prev)}
-                onSelectScene={handleSelectScene}
-                onSelectLayer={handleSelectLayer}
-                onAddScene={() => handleAddScene()}
-                onDuplicateScene={handleDuplicateScene}
-                onDeleteScene={handleDeleteScene}
-                onAddLayer={handleAddLayer}
-                onDeleteLayer={handleDeleteLayer}
-                onUpdateLayerStart={(layerId, startMs) => handleUpdateLayer(layerId, { startMs })}
-                onUpdateLayerDuration={(layerId, durationMs) => handleUpdateLayer(layerId, { durationMs })}
-                onUpdateLayerOpacity={(layerId, opacity) => handleUpdateLayer(layerId, { opacity })}
-                onUpdateTemplateMetadata={handleUpdateTemplateMetadata}
-                onSaveTemplate={() => void handleSaveTemplate()}
-                saveDisabled={!hasSelectedProject}
+                currentFrame={currentFrame}
+                onFrameChange={handleFrameChange}
+                onSetPlaying={handleSetPlaying}
               />
-            </section>
-          </div>
-        )}
+            </div>
+          </main>
+
+          <section className="flex w-[520px] min-w-0 flex-col">
+            <VideoTemplateWorkspace
+              className="h-full"
+              template={selectedTemplate}
+              adapter={videoTemplateAdapter}
+              activeSceneId={activeScene?.id}
+              activeLayerId={activeLayer?.id}
+              isPlaying={isPlaying}
+              onTogglePlayback={() => setIsPlaying((prev) => !prev)}
+              onSelectScene={handleSelectScene}
+              onSelectLayer={handleSelectLayer}
+              onAddScene={() => handleAddScene()}
+              onDuplicateScene={handleDuplicateScene}
+              onDeleteScene={handleDeleteScene}
+              onAddLayer={handleAddLayer}
+              onDeleteLayer={handleDeleteLayer}
+              onUpdateLayerStart={(layerId, startMs) => handleUpdateLayer(layerId, { startMs })}
+              onUpdateLayerDuration={(layerId, durationMs) => handleUpdateLayer(layerId, { durationMs })}
+              onUpdateLayerOpacity={(layerId, opacity) => handleUpdateLayer(layerId, { opacity })}
+              onUpdateTemplateMetadata={handleUpdateTemplateMetadata}
+              onSaveTemplate={() => void handleSaveTemplate()}
+              saveDisabled={!hasSelectedProject}
+              headerNotice={!hasSelectedProject ? 'Editing local presets; select a project to save.' : undefined}
+            />
+          </section>
+        </div>
       </div>
     </CopilotKitProvider>
   );

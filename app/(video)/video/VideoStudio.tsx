@@ -7,6 +7,7 @@ import type { VideoLayer } from '@/video/templates/types/video-layer';
 import { VIDEO_LAYER_KIND } from '@/video/templates/types/video-layer';
 import type { VideoScene } from '@/video/templates/types/video-scene';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
+import type { TemplateInputKey } from '@/shared/types/bindings';
 import { VideoTemplateWorkspace } from '@/video/workspace/VideoTemplateWorkspace';
 import type { VideoTemplateWorkspaceTemplateSummary } from '@/video/workspace/video-template-workspace-contracts';
 import { compileTemplate } from '@/video/templates/compile/compile-template';
@@ -476,23 +477,26 @@ export function VideoStudio() {
     [activeSceneId, persistTemplate, selectedTemplate]
   );
 
-  const handleAddLayer = useCallback(() => {
-    if (!selectedTemplate) return;
-    const targetSceneId = activeSceneId ?? selectedTemplate.scenes[0]?.id;
-    if (!targetSceneId) return;
-    const targetScene = selectedTemplate.scenes.find((scene) => scene.id === targetSceneId);
-    if (!targetScene) return;
-    const newLayer = createLayer(targetScene.layers.length, targetScene.durationMs);
-    const nextScenes = selectedTemplate.scenes.map((scene) =>
-      scene.id === targetSceneId ? { ...scene, layers: [...scene.layers, newLayer] } : scene
-    );
-    persistTemplate((template) => ({
-      ...template,
-      scenes: nextScenes,
-    }));
-    setActiveSceneId(targetSceneId);
-    setActiveLayerId(newLayer.id);
-  }, [activeSceneId, persistTemplate, selectedTemplate]);
+  const handleAddLayer = useCallback(
+    (options?: { sceneId?: string }) => {
+      if (!selectedTemplate) return;
+      const targetSceneId = options?.sceneId ?? activeSceneId ?? selectedTemplate.scenes[0]?.id;
+      if (!targetSceneId) return;
+      const targetScene = selectedTemplate.scenes.find((scene) => scene.id === targetSceneId);
+      if (!targetScene) return;
+      const newLayer = createLayer(targetScene.layers.length, targetScene.durationMs);
+      const nextScenes = selectedTemplate.scenes.map((scene) =>
+        scene.id === targetSceneId ? { ...scene, layers: [...scene.layers, newLayer] } : scene
+      );
+      persistTemplate((template) => ({
+        ...template,
+        scenes: nextScenes,
+      }));
+      setActiveSceneId(targetSceneId);
+      setActiveLayerId(newLayer.id);
+    },
+    [activeSceneId, persistTemplate, selectedTemplate]
+  );
 
   const handleDeleteLayer = useCallback(
     (layerId: string) => {
@@ -518,6 +522,69 @@ export function VideoStudio() {
       setActiveSceneId(nextActiveSceneId);
     },
     [activeLayerId, activeSceneId, persistTemplate, selectedTemplate]
+  );
+
+  const handleUpdateLayerTiming = useCallback(
+    (payload: { layerId?: string; startMs?: number; durationMs?: number }) => {
+      if (!selectedTemplate) return;
+      const layerId = payload.layerId ?? activeLayerId;
+      if (!layerId) return;
+      const updates: Partial<Pick<VideoLayer, 'startMs' | 'durationMs'>> = {};
+      if (typeof payload.startMs === 'number' && !Number.isNaN(payload.startMs)) {
+        updates.startMs = Math.max(0, Math.round(payload.startMs));
+      }
+      if (typeof payload.durationMs === 'number' && !Number.isNaN(payload.durationMs)) {
+        updates.durationMs = Math.max(0, Math.round(payload.durationMs));
+      }
+      if (Object.keys(updates).length === 0) return;
+      handleUpdateLayer(layerId, updates);
+    },
+    [activeLayerId, handleUpdateLayer, selectedTemplate]
+  );
+
+  const handleUpdateLayerOpacity = useCallback(
+    (payload: { layerId?: string; opacity: number }) => {
+      if (!selectedTemplate) return;
+      const layerId = payload.layerId ?? activeLayerId;
+      if (!layerId) return;
+      if (payload.opacity === undefined || Number.isNaN(payload.opacity)) return;
+      const normalizedOpacity = Math.min(1, Math.max(0, payload.opacity));
+      handleUpdateLayer(layerId, { opacity: normalizedOpacity });
+    },
+    [activeLayerId, handleUpdateLayer, selectedTemplate]
+  );
+
+  const handleBindLayerInput = useCallback(
+    (payload: { layerId?: string; inputName: string; bindingKey: TemplateInputKey }) => {
+      if (!selectedTemplate) return;
+      const layerId = payload.layerId ?? activeLayerId;
+      if (!layerId) return;
+      const inputName = payload.inputName.trim();
+      if (!inputName) return;
+      persistTemplate((template) => ({
+        ...template,
+        scenes: template.scenes.map((scene) => {
+          if (!scene.layers.some((layer) => layer.id === layerId)) {
+            return scene;
+          }
+          return {
+            ...scene,
+            layers: scene.layers.map((layer) =>
+              layer.id === layerId
+                ? {
+                    ...layer,
+                    inputs: {
+                      ...(layer.inputs ?? {}),
+                      [inputName]: payload.bindingKey,
+                    },
+                  }
+                : layer
+            ),
+          };
+        }),
+      }));
+    },
+    [activeLayerId, persistTemplate, selectedTemplate]
   );
 
   const handleUpdateTemplateMetadata = useCallback(
@@ -594,13 +661,34 @@ export function VideoStudio() {
   const copilotHandlers = useMemo<VideoWorkspaceActionHandlers>(
     () => ({
       addScene: handleAddScene,
+      addLayer: handleAddLayer,
+      deleteScene: handleDeleteScene,
       deleteLayer: handleDeleteLayer,
+      duplicateScene: handleDuplicateScene,
+      updateLayerTiming: handleUpdateLayerTiming,
+      updateLayerOpacity: handleUpdateLayerOpacity,
+      bindLayerInput: handleBindLayerInput,
       setDuration: handleSetDuration,
+      setTemplateMetadata: handleUpdateTemplateMetadata,
       renameTemplate: handleRenameTemplate,
       loadPreset: handleLoadPreset,
       exportVideo: handleExport,
     }),
-    [handleAddScene, handleDeleteLayer, handleExport, handleLoadPreset, handleRenameTemplate, handleSetDuration]
+    [
+      handleAddLayer,
+      handleAddScene,
+      handleBindLayerInput,
+      handleDeleteLayer,
+      handleDeleteScene,
+      handleDuplicateScene,
+      handleExport,
+      handleLoadPreset,
+      handleRenameTemplate,
+      handleSetDuration,
+      handleUpdateLayerOpacity,
+      handleUpdateLayerTiming,
+      handleUpdateTemplateMetadata,
+    ]
   );
 
   const isRendering =

@@ -7,14 +7,17 @@ import { VIDEO_MEDIA_KIND } from './video-template-workspace-contracts';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
+import type { DraftDeltaIds } from '@/shared/types/draft';
 import { SceneList } from './components/SceneList';
 import { LayerList } from './components/LayerList';
 import { LayerInspector } from './components/LayerInspector';
 import { Preview } from './components/Preview';
 import { Timeline } from './components/Timeline';
+import { calculateVideoTemplateDelta, createVideoDraftStore } from './store/video-draft-slice';
 import { cn } from '@/shared/lib/utils';
 import { BINDING_KEY } from '@/shared/types/bindings';
 import * as React from 'react';
+import { useStore } from 'zustand';
 
 interface VideoTemplateWorkspaceProps {
   className?: string;
@@ -54,11 +57,43 @@ export function VideoTemplateWorkspace({
   onSelectLayer,
   onAddScene,
   onAddLayer,
+  onUpdateLayerStart,
+  onUpdateLayerDuration,
+  onUpdateLayerOpacity,
   onTogglePlayback,
   onSaveTemplate,
   saveDisabled,
 }: VideoTemplateWorkspaceProps) {
-  const resolvedScenes = scenes ?? template?.scenes;
+  const draftStoreRef = React.useRef<ReturnType<typeof createVideoDraftStore> | null>(null);
+  if (!draftStoreRef.current) {
+    draftStoreRef.current = createVideoDraftStore(template ?? null);
+  }
+  const draftStore = draftStoreRef.current;
+
+  const draftTemplate = useStore(draftStore, (state) => state.draftGraph);
+  const committedTemplate = useStore(draftStore, (state) => state.committedGraph);
+  const hasUncommittedChanges = useStore(draftStore, (state) => state.hasUncommittedChanges);
+
+  React.useEffect(() => {
+    const currentState = draftStore.getState();
+    if (!template) {
+      if (currentState.committedGraph) {
+        currentState.resetDraft(null);
+      }
+      return;
+    }
+    const committed = currentState.committedGraph;
+    if (committed?.id !== template.id) {
+      currentState.resetDraft(template);
+      return;
+    }
+    if (!currentState.hasUncommittedChanges) {
+      currentState.resetDraft(template);
+    }
+  }, [draftStore, template]);
+
+  const resolvedTemplate = draftTemplate ?? template ?? null;
+  const resolvedScenes = scenes ?? resolvedTemplate?.scenes;
   const activeScene =
     resolvedScenes?.find((scene: VideoScene) => scene.id === activeSceneId) ?? resolvedScenes?.[0] ?? null;
   const resolvedLayers = layers ?? activeScene?.layers;
@@ -81,8 +116,52 @@ export function VideoTemplateWorkspace({
   );
 
   const adapterReady = adapter !== undefined;
+  const currentDelta = React.useMemo(() => {
+    if (!draftTemplate || !committedTemplate) {
+      return null;
+    }
+    return calculateVideoTemplateDelta(committedTemplate, draftTemplate);
+  }, [committedTemplate, draftTemplate]);
+
+  const sceneDraftIds = currentDelta?.sceneIds;
+  const layerDraftIds = activeScene ? currentDelta?.layerIdsByScene[activeScene.id] : undefined;
+
+  const hasDraftForId = (deltaIds: DraftDeltaIds | undefined, id: string | undefined): boolean => {
+    if (!deltaIds || !id) {
+      return false;
+    }
+    return deltaIds.added.includes(id) || deltaIds.updated.includes(id) || deltaIds.removed.includes(id);
+  };
+
+  const handleUpdateLayer = React.useCallback(
+    (layerId: string, updates: Partial<Pick<VideoLayer, 'startMs' | 'durationMs' | 'opacity'>>) => {
+      draftStore.getState().updateLayer(layerId, updates);
+    },
+    [draftStore]
+  );
+
+  const handleCommitDraft = React.useCallback(() => {
+    if (!currentDelta || !draftTemplate) {
+      return;
+    }
+    const updatedLayers = Object.values(currentDelta.layersByScene).flatMap((delta) => delta.updated);
+    updatedLayers.forEach((layer) => {
+      onUpdateLayerStart?.(layer.id, layer.startMs);
+      if (layer.durationMs !== undefined) {
+        onUpdateLayerDuration?.(layer.id, layer.durationMs);
+      }
+      if (layer.opacity !== undefined) {
+        onUpdateLayerOpacity?.(layer.id, layer.opacity);
+      }
+    });
+    draftStore.getState().commitDraft();
+  }, [currentDelta, draftStore, draftTemplate, onUpdateLayerDuration, onUpdateLayerOpacity, onUpdateLayerStart]);
+
+  const handleDiscardDraft = React.useCallback(() => {
+    draftStore.getState().discardDraft();
+  }, [draftStore]);
   const mediaRequest = React.useMemo(() => {
-    const inputGroups = [activeLayer?.inputs, activeScene?.inputs, template?.inputs];
+    const inputGroups = [activeLayer?.inputs, activeScene?.inputs, resolvedTemplate?.inputs];
     for (const inputs of inputGroups) {
       const imageBinding = inputs?.[BINDING_KEY.MEDIA_IMAGE];
       if (imageBinding) {
@@ -94,7 +173,7 @@ export function VideoTemplateWorkspace({
       }
     }
     return null;
-  }, [activeLayer?.inputs, activeScene?.inputs, template?.inputs]);
+  }, [activeLayer?.inputs, activeScene?.inputs, resolvedTemplate?.inputs]);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -137,6 +216,11 @@ export function VideoTemplateWorkspace({
             <Badge variant="secondary" className="text-[11px]">
               {adapterReady ? 'Adapter ready' : 'Adapter unbound'}
             </Badge>
+            {hasUncommittedChanges ? (
+              <Badge variant="secondary" className="text-[11px]">
+                Draft changes
+              </Badge>
+            ) : null}
           </div>
           <div className="text-xs text-[var(--video-workspace-text-muted)]">
             {template ? `Editing ${template.name}` : 'Select a template to begin.'}
@@ -146,14 +230,22 @@ export function VideoTemplateWorkspace({
           <Button size="sm" variant="secondary" disabled={!adapterReady}>
             Load
           </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={!adapterReady || !template || saveDisabled}
-            onClick={onSaveTemplate}
-          >
-            Save
+          <Button size="sm" variant="secondary" onClick={handleDiscardDraft} disabled={!hasUncommittedChanges}>
+            Discard
           </Button>
+          <Button size="sm" onClick={handleCommitDraft} disabled={!hasUncommittedChanges}>
+            Commit
+          </Button>
+          {onSaveTemplate ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={!adapterReady || !template || saveDisabled}
+              onClick={onSaveTemplate}
+            >
+              Save
+            </Button>
+          ) : null}
         </div>
       </Card>
 
@@ -162,26 +254,34 @@ export function VideoTemplateWorkspace({
           <SceneList
             scenes={resolvedScenes}
             activeSceneId={activeScene?.id}
+            draftSceneIds={sceneDraftIds}
             onSelectScene={onSelectScene}
             onAddScene={onAddScene}
           />
           <LayerList
             layers={resolvedLayers}
             activeLayerId={activeLayer?.id}
+            draftLayerIds={layerDraftIds}
             onSelectLayer={onSelectLayer}
             onAddLayer={onAddLayer}
           />
         </div>
 
         <Preview
-          template={template}
+          template={resolvedTemplate ?? undefined}
           isPlaying={isPlaying}
           onTogglePlayback={onTogglePlayback}
           resolvedMedia={resolvedMedia}
           isMediaLoading={isMediaLoading}
         />
 
-        <LayerInspector layer={activeLayer ?? undefined} />
+        <LayerInspector
+          layer={activeLayer ?? undefined}
+          hasDraftChanges={hasDraftForId(layerDraftIds, activeLayer?.id)}
+          onUpdateLayerStart={(layerId, startMs) => handleUpdateLayer(layerId, { startMs })}
+          onUpdateLayerDuration={(layerId, durationMs) => handleUpdateLayer(layerId, { durationMs })}
+          onUpdateLayerOpacity={(layerId, opacity) => handleUpdateLayer(layerId, { opacity })}
+        />
       </div>
 
       <div className="min-h-[220px]">

@@ -15,7 +15,7 @@ interface PreviewProps {
 }
 
 export function Preview({ template, isPlaying, onTogglePlayback, resolvedMedia, isMediaLoading }: PreviewProps) {
-  const hasBinding = template !== undefined;
+  const hasBinding = Boolean(template);
   const ratio = template ? `${template.width} / ${template.height}` : undefined;
   const hasTemplate = Boolean(template);
   const hasMedia = Boolean(resolvedMedia?.url);

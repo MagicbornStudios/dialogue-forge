@@ -1,4 +1,5 @@
 import * as React from 'react';
+import type { DraftDeltaIds } from '@/shared/types/draft';
 import type { VideoScene } from '@/video/templates/types/video-scene';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
@@ -8,13 +9,19 @@ import { cn } from '@/shared/lib/utils';
 interface SceneListProps {
   scenes?: VideoScene[];
   activeSceneId?: string;
+  draftSceneIds?: DraftDeltaIds;
   onSelectScene?: (sceneId: string) => void;
   onAddScene?: () => void;
 }
 
-export function SceneList({ scenes, activeSceneId, onSelectScene, onAddScene }: SceneListProps) {
+export function SceneList({ scenes, activeSceneId, draftSceneIds, onSelectScene, onAddScene }: SceneListProps) {
   const hasBinding = scenes !== undefined;
   const totalScenes = scenes?.length ?? 0;
+  const draftIds = new Set<string>([
+    ...(draftSceneIds?.added ?? []),
+    ...(draftSceneIds?.updated ?? []),
+    ...(draftSceneIds?.removed ?? []),
+  ]);
 
   return (
     <Card className="h-full border-[var(--video-workspace-border)] bg-[var(--video-workspace-panel)]">
@@ -47,6 +54,7 @@ export function SceneList({ scenes, activeSceneId, onSelectScene, onAddScene }: 
           <div className="flex flex-col gap-2">
             {scenes?.map((scene, index) => {
               const isActive = scene.id === activeSceneId;
+              const isDraft = draftIds.has(scene.id);
               return (
                 <Button
                   key={scene.id}
@@ -61,7 +69,12 @@ export function SceneList({ scenes, activeSceneId, onSelectScene, onAddScene }: 
                   <span className="truncate text-[var(--video-workspace-text)]">
                     {scene.name || `Scene ${index + 1}`}
                   </span>
-                  <span className="text-[10px] text-[var(--video-workspace-text-muted)]">
+                  <span className="flex items-center gap-2 text-[10px] text-[var(--video-workspace-text-muted)]">
+                    {isDraft ? (
+                      <Badge variant="secondary" className="px-1 text-[9px]">
+                        Draft
+                      </Badge>
+                    ) : null}
                     {(scene.durationMs / 1000).toFixed(1)}s
                   </span>
                 </Button>

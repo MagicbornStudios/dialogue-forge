@@ -8,16 +8,30 @@ export function useVideoWorkspaceActions(handlers: VideoWorkspaceActionHandlers)
 
   const [
     addSceneAction,
+    addLayerAction,
+    deleteSceneAction,
     deleteLayerAction,
+    duplicateSceneAction,
+    updateLayerTimingAction,
+    updateLayerOpacityAction,
+    bindLayerInputAction,
     setDurationAction,
+    setTemplateMetadataAction,
     renameTemplateAction,
     loadPresetAction,
     exportAction,
   ] = actions;
 
   useCopilotAction(addSceneAction);
+  useCopilotAction(addLayerAction);
+  useCopilotAction(deleteSceneAction);
   useCopilotAction(deleteLayerAction);
+  useCopilotAction(duplicateSceneAction);
+  useCopilotAction(updateLayerTimingAction);
+  useCopilotAction(updateLayerOpacityAction);
+  useCopilotAction(bindLayerInputAction);
   useCopilotAction(setDurationAction);
+  useCopilotAction(setTemplateMetadataAction);
   useCopilotAction(renameTemplateAction);
   useCopilotAction(loadPresetAction);
   useCopilotAction(exportAction);

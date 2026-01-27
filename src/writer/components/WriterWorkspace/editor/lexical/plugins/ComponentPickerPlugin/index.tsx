@@ -92,23 +92,27 @@ export function ComponentPickerMenuItem({
   onMouseEnter: () => void;
   option: ComponentPickerOption;
 }) {
-  let className = 'item';
-  if (isSelected) {
-    className += ' selected';
-  }
   return (
     <li
       key={option.key}
       tabIndex={-1}
-      className={className}
+      className={`flex items-center gap-2 px-3 py-2 cursor-pointer rounded-md text-sm text-df-text-primary transition-colors ${
+        isSelected
+          ? 'bg-df-node-selected text-df-text-primary'
+          : 'hover:bg-df-control-hover'
+      }`}
       ref={option.setRefElement}
       role="option"
       aria-selected={isSelected}
       id={'typeahead-item-' + index}
       onMouseEnter={onMouseEnter}
       onClick={onClick}>
-      {option.icon}
-      <span className="text">{option.title}</span>
+      {option.icon && (
+        <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center [&_i.icon]:w-4 [&_i.icon]:h-4 [&_i.icon]:block [&_i.icon]:bg-contain [&_i.icon]:bg-no-repeat [&_i.icon]:bg-center [&_i.icon]:opacity-60">
+          {option.icon}
+        </span>
+      )}
+      <span className="flex-1">{option.title}</span>
     </li>
   );
 }

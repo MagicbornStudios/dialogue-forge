@@ -232,22 +232,22 @@ export default function DraggableBlockPlugin({
       {isPickerOpen && pickerPosition
         ? ReactDOM.createPortal(
             <div
-              className="typeahead-popover component-picker-menu max-w-[260px]"
+              className="bg-df-surface border border-df-control-border rounded-lg shadow-df-lg max-w-[260px] overflow-hidden z-50"
               ref={pickerRef}
               style={{
                 left: pickerPosition.left,
                 position: 'absolute',
                 top: pickerPosition.top,
-                zIndex: 10,
+                zIndex: 50,
               }}>
               <Input
-                className="w-full box-border py-2 px-2.5 border-0 outline-none text-sm rounded-t-lg"
+                className="w-full border-0 border-b border-df-control-border rounded-none rounded-t-lg bg-df-surface text-df-text-primary placeholder:text-df-text-tertiary focus-visible:ring-0 focus-visible:ring-offset-0"
                 placeholder="Filter blocks..."
                 value={queryString}
                 ref={searchInputRef}
                 onChange={(event) => setQueryString(event.target.value)}
               />
-              <ul>
+              <ul className="max-h-[300px] overflow-y-auto p-1">
                 {options.map((option, i: number) => (
                   <ComponentPickerMenuItem
                     index={i}

@@ -205,139 +205,86 @@ function TextFormatFloatingToolbar({
   return (
     <div 
       ref={popupCharStylesEditorRef} 
-      className="flex items-center gap-0.5 absolute top-0 left-0 z-10 opacity-0 transition-opacity duration-200 h-10 bg-df-elevated border border-df-control-border rounded-md shadow-df-md p-1 will-change-transform">
+      className="flex items-center gap-0.5 absolute top-0 left-0 z-10 opacity-0 transition-opacity duration-200 h-9 bg-df-elevated border border-df-control-border rounded-lg shadow-df-lg p-1 will-change-transform">
       {editor.isEditable() && (
         <>
           <Button
-            variant={isBold ? 'secondary' : 'ghost'}
+            variant="ghost"
             size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
             }}
-            className={`h-8 w-8 p-0 ${isBold ? 'bg-df-node-selected' : ''}`}
+            className={`h-7 w-7 p-0 hover:bg-df-control-hover ${isBold ? 'bg-df-node-selected' : ''}`}
             title="Bold"
             aria-label="Format text as bold">
-            <Bold size={16} className="text-df-text-primary" />
+            <Bold size={14} className={isBold ? 'text-df-text-primary' : 'text-df-text-secondary'} />
           </Button>
           <Button
-            variant={isItalic ? 'secondary' : 'ghost'}
+            variant="ghost"
             size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
             }}
-            className={`h-8 w-8 p-0 ${isItalic ? 'bg-df-node-selected' : ''}`}
+            className={`h-7 w-7 p-0 hover:bg-df-control-hover ${isItalic ? 'bg-df-node-selected' : ''}`}
             title="Italic"
             aria-label="Format text as italics">
-            <Italic size={16} className="text-df-text-primary" />
+            <Italic size={14} className={isItalic ? 'text-df-text-primary' : 'text-df-text-secondary'} />
           </Button>
           <Button
-            variant={isUnderline ? 'secondary' : 'ghost'}
+            variant="ghost"
             size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
             }}
-            className={`h-8 w-8 p-0 ${isUnderline ? 'bg-df-node-selected' : ''}`}
+            className={`h-7 w-7 p-0 hover:bg-df-control-hover ${isUnderline ? 'bg-df-node-selected' : ''}`}
             title="Underline"
             aria-label="Format text to underlined">
-            <Underline size={16} className="text-df-text-primary" />
+            <Underline size={14} className={isUnderline ? 'text-df-text-primary' : 'text-df-text-secondary'} />
           </Button>
           <Button
-            variant={isStrikethrough ? 'secondary' : 'ghost'}
+            variant="ghost"
             size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
             }}
-            className={`h-8 w-8 p-0 ${isStrikethrough ? 'bg-df-node-selected' : ''}`}
+            className={`h-7 w-7 p-0 hover:bg-df-control-hover ${isStrikethrough ? 'bg-df-node-selected' : ''}`}
             title="Strikethrough"
             aria-label="Format text with a strikethrough">
-            <Strikethrough size={16} className="text-df-text-primary" />
+            <Strikethrough size={14} className={isStrikethrough ? 'text-df-text-primary' : 'text-df-text-secondary'} />
           </Button>
+          <div className="w-px h-5 bg-df-control-border mx-0.5" />
           <Button
-            variant={isSubscript ? 'secondary' : 'ghost'}
-            size="icon"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'subscript');
-            }}
-            className={`h-8 w-8 p-0 ${isSubscript ? 'bg-df-node-selected' : ''}`}
-            title="Subscript"
-            aria-label="Format Subscript">
-            <Subscript size={16} className="text-df-text-primary" />
-          </Button>
-          <Button
-            variant={isSuperscript ? 'secondary' : 'ghost'}
-            size="icon"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript');
-            }}
-            className={`h-8 w-8 p-0 ${isSuperscript ? 'bg-df-node-selected' : ''}`}
-            title="Superscript"
-            aria-label="Format Superscript">
-            <Superscript size={16} className="text-df-text-primary" />
-          </Button>
-          <Button
-            variant={isUppercase ? 'secondary' : 'ghost'}
-            size="icon"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'uppercase');
-            }}
-            className={`h-8 w-8 p-0 ${isUppercase ? 'bg-df-node-selected' : ''}`}
-            title="Uppercase"
-            aria-label="Format text to uppercase">
-            <Type size={16} className="text-df-text-primary" />
-          </Button>
-          <Button
-            variant={isLowercase ? 'secondary' : 'ghost'}
-            size="icon"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'lowercase');
-            }}
-            className={`h-8 w-8 p-0 ${isLowercase ? 'bg-df-node-selected' : ''}`}
-            title="Lowercase"
-            aria-label="Format text to lowercase">
-            <Type size={16} className="text-df-text-primary" />
-          </Button>
-          <Button
-            variant={isCapitalize ? 'secondary' : 'ghost'}
-            size="icon"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'capitalize');
-            }}
-            className={`h-8 w-8 p-0 ${isCapitalize ? 'bg-df-node-selected' : ''}`}
-            title="Capitalize"
-            aria-label="Format text to capitalize">
-            <Type size={16} className="text-df-text-primary" />
-          </Button>
-          <Button
-            variant={isCode ? 'secondary' : 'ghost'}
+            variant="ghost"
             size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
             }}
-            className={`h-8 w-8 p-0 ${isCode ? 'bg-df-node-selected' : ''}`}
+            className={`h-7 w-7 p-0 hover:bg-df-control-hover ${isCode ? 'bg-df-node-selected' : ''}`}
             title="Insert code block"
             aria-label="Insert code block">
-            <Code size={16} className="text-df-text-primary" />
+            <Code size={14} className={isCode ? 'text-df-text-primary' : 'text-df-text-secondary'} />
           </Button>
+          <div className="w-px h-5 bg-df-control-border mx-0.5" />
           <Button
-            variant={isLink ? 'secondary' : 'ghost'}
+            variant="ghost"
             size="icon"
             onClick={insertLink}
-            className={`h-8 w-8 p-0 ${isLink ? 'bg-df-node-selected' : ''}`}
+            className={`h-7 w-7 p-0 hover:bg-df-control-hover ${isLink ? 'bg-df-node-selected' : ''}`}
             title="Insert link"
             aria-label="Insert link">
-            <Link size={16} className="text-df-text-primary" />
+            <Link size={14} className={isLink ? 'text-df-text-primary' : 'text-df-text-secondary'} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={insertComment}
+            className="h-7 w-7 p-0 hover:bg-df-control-hover"
+            title="Add comment"
+            aria-label="Add comment">
+            <MessageSquare size={14} className="text-df-text-secondary" />
           </Button>
         </>
       )}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={insertComment}
-        className="h-8 w-8 p-0 hidden lg:flex"
-        title="Insert comment"
-        aria-label="Insert comment">
-        <MessageSquare size={16} className="text-df-text-primary" />
-      </Button>
     </div>
   );
 }

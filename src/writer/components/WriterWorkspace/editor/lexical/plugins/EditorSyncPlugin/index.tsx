@@ -10,6 +10,7 @@ import { $rootTextContent } from '@lexical/text';
 import { COLLABORATION_TAG, HISTORIC_TAG } from 'lexical';
 import { useEffect, useRef } from 'react';
 import { useEditorSyncContext } from '../../context/EditorSyncContext';
+import { COMMENT_DELETION_TAG } from '../CommentPlugin';
 
 export default function EditorSyncPlugin({
   debounceMs = 300,
@@ -30,8 +31,8 @@ export default function EditorSyncPlugin({
     lastSerializedRef.current = '';
 
     const handleUpdate = ({ editorState, tags }: { editorState: any; tags: Set<string> }) => {
-      // Skip updates from collaboration or history (undo/redo)
-      if (tags.has(COLLABORATION_TAG) || tags.has(HISTORIC_TAG)) {
+      // Skip updates from collaboration, history (undo/redo), or comment deletion
+      if (tags.has(COLLABORATION_TAG) || tags.has(HISTORIC_TAG) || tags.has(COMMENT_DELETION_TAG)) {
         return;
       }
 

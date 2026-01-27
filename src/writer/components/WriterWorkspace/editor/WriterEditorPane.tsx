@@ -209,10 +209,10 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-row bg-df-editor-bg overflow-hidden relative" style={{ isolation: 'isolate' }}>
+      <div className="flex min-h-0 flex-1 flex-row bg-df-editor-bg overflow-hidden relative">
         {activePage ? (
           <>
-            <div className="flex min-h-0 flex-[3] flex-col relative overflow-hidden" style={{ isolation: 'isolate' }}>
+            <div className="flex min-h-0 flex-[3] flex-col relative overflow-hidden">
               <FlashMessageContext>
                 <LexicalCollaboration>
                   <LexicalComposer initialConfig={initialConfig}>
@@ -234,7 +234,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
                               pageId={activePageId}
                               dataAdapter={dataAdapter}
                             >
-                              <div className="editor-shell flex min-h-0 flex-1 flex-col overflow-hidden relative" style={{ isolation: 'isolate', contain: 'layout style paint' }}>
+                              <div className="editor-shell flex min-h-0 flex-1 flex-col overflow-hidden relative">
                                 <Editor />
                               </div>
                             </CommentContextProvider>

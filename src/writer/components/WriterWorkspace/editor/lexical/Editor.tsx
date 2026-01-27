@@ -247,7 +247,6 @@ export default function Editor(): JSX.Element {
             )}
             {floatingAnchorElem && !isSmallWidthViewport && (
               <>
-                <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
                 <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
                 <TableHoverActionsV2Plugin anchorElem={floatingAnchorElem} />
                 <FloatingTextFormatToolbarPlugin

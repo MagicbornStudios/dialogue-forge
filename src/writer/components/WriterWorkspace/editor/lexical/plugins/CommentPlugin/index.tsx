@@ -24,6 +24,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { createDOMRange } from '@lexical/selection';
 import { mergeRegister, registerNestedElementResolver } from '@lexical/utils';
 import {
+  $addUpdateTag,
   $getNodeByKey,
   $getSelection,
   $isRangeSelection,
@@ -54,6 +55,8 @@ import { useCommentMode } from './useCommentMode';
 export const INSERT_INLINE_COMMAND: LexicalCommand<void> = createCommand(
   'INSERT_INLINE_COMMAND',
 );
+
+export const COMMENT_DELETION_TAG = 'comment-deletion';
 
 export default function CommentPlugin({
   providerFactory,
@@ -158,33 +161,29 @@ export default function CommentPlugin({
       } else {
         commentStore.deleteCommentOrThread(comment);
 
-        // Remove ids from associated marks
+        // Remove ids from associated marks - do this synchronously to preserve text formatting
         const id = thread !== undefined ? thread.id : comment.id;
         const markNodeKeys = markNodeMap.get(id);
         if (markNodeKeys !== undefined) {
-          // Do async to avoid causing a React infinite loop
-          setTimeout(() => {
-            editor.update(() => {
-              for (const key of markNodeKeys) {
-                const node: null | MarkNode = $getNodeByKey(key);
-                if ($isMarkNode(node)) {
-                  node.deleteID(id);
-                  if (node.getIDs().length === 0) {
-                    $unwrapMarkNode(node);
-                  }
+          editor.update(() => {
+            $addUpdateTag(COMMENT_DELETION_TAG);
+            for (const key of markNodeKeys) {
+              const node: null | MarkNode = $getNodeByKey(key);
+              if ($isMarkNode(node)) {
+                node.deleteID(id);
+                if (node.getIDs().length === 0) {
+                  $unwrapMarkNode(node);
                 }
               }
-            });
-          });
+            }
+          }, { tag: COMMENT_DELETION_TAG });
         }
 
-        // Persist to Payload
+        // Persist to Payload (fire and forget to avoid blocking)
         if (pageId && dataAdapter?.deleteComment) {
-          try {
-            await dataAdapter.deleteComment(pageId, comment.id);
-          } catch (error) {
+          dataAdapter.deleteComment(pageId, comment.id).catch((error) => {
             console.error('Failed to delete thread in Payload:', error);
-          }
+          });
         }
       }
     },

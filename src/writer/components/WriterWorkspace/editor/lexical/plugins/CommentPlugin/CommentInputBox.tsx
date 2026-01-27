@@ -82,7 +82,7 @@ export function CommentInputBox({
               elements[i] = elem;
               container.appendChild(elem);
             }
-            const color = '255, 212, 0';
+            const color = '251, 188, 5'; // Google Docs yellow
             const style = `position:absolute;top:${
               selectionRect.top +
               (window.pageYOffset || document.documentElement.scrollTop)
@@ -90,7 +90,7 @@ export function CommentInputBox({
               selectionRect.height
             }px;width:${
               selectionRect.width
-            }px;background-color:rgba(${color}, 0.3);pointer-events:none;z-index:5;`;
+            }px;background-color:rgba(${color}, 0.4);pointer-events:none;z-index:5;`;
             elem.style.cssText = style;
           }
           for (let i = elementsLength - 1; i >= selectionRectsLength; i--) {
@@ -152,26 +152,29 @@ export function CommentInputBox({
 
   return (
     <div 
-      className="absolute w-[250px] min-h-20 bg-df-elevated border border-df-control-border shadow-df-md rounded-md z-[24] animate-in fade-in slide-in-from-bottom-2 duration-200"
+      className="absolute w-[320px] bg-df-elevated border border-df-control-border shadow-df-lg rounded-lg z-[24] animate-in fade-in slide-in-from-bottom-2 duration-200"
       ref={boxRef}>
-      <PlainTextEditor
-        className="relative border border-df-control-border bg-df-editor-bg rounded-md text-[15px] caret-df-text-primary text-df-text-primary block py-2.5 px-2.5 min-h-20 focus:outline-none focus:ring-2 focus:ring-df-node-selected focus:ring-offset-0"
-        onEscape={onEscape}
-        onChange={onChange}
-      />
-      <div className="flex flex-row px-2.5 pb-2.5 gap-2.5">
+      <div className="p-3 border-b border-df-control-border">
+        <PlainTextEditor
+          className="w-full text-sm text-df-text-primary placeholder:text-df-text-tertiary bg-transparent border-0 outline-none resize-none min-h-[60px] max-h-[200px] overflow-y-auto"
+          placeholder="Add a comment..."
+          onEscape={onEscape}
+          onChange={onChange}
+        />
+      </div>
+      <div className="flex flex-row justify-end px-3 py-2 gap-2 bg-df-control-bg rounded-b-lg">
         <Button
-          variant="outline"
+          variant="ghost"
+          size="sm"
           onClick={cancelAddComment}
-          className="flex-1">
-          <X size={14} className="mr-2" />
+          className="text-df-text-secondary hover:bg-df-control-hover">
           Cancel
         </Button>
         <Button
+          size="sm"
           onClick={submitComment}
           disabled={!canSubmit}
-          className="flex-1 bg-df-node-selected font-medium text-df-text-primary hover:bg-df-control-hover hover:opacity-90 disabled:bg-df-control-bg disabled:opacity-50 disabled:cursor-not-allowed disabled:text-df-text-muted disabled:font-normal">
-          <MessageSquare size={14} className="mr-2" />
+          className="bg-df-node-selected text-df-text-primary hover:bg-df-control-hover disabled:bg-df-control-bg disabled:text-df-text-muted disabled:cursor-not-allowed px-4">
           Comment
         </Button>
       </div>

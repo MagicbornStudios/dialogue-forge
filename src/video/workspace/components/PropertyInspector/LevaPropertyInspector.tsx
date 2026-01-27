@@ -1,9 +1,12 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { useControls, button, folder } from 'leva';
+import { useControls, button, folder, Leva } from 'leva';
 import type { VideoLayer } from '@/video/templates/types/video-layer';
 import { VIDEO_LAYER_KIND } from '@/video/templates/types/video-layer';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { X } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
 
 interface LevaPropertyInspectorProps {
   layer: VideoLayer | null;
@@ -251,5 +254,51 @@ export function LevaPropertyInspector({
   // Property updates from canvas will be reflected when the component remounts via key prop
   // This is handled by the parent component (DefaultTab) which uses a key based on layer ID
 
-  return null; // Leva renders its own panel
+  return (
+    <Card className="h-full flex flex-col border-border">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 py-3">
+        <CardTitle className="text-sm font-semibold">Properties</CardTitle>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={onClose}
+          title="Close inspector"
+        >
+          <X size={14} />
+        </Button>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-auto px-4 pb-4">
+        <div 
+          className="leva-container" 
+          data-leva-store={storeName}
+          style={{
+            position: 'relative',
+          }}
+        >
+          <style>{`
+            [data-leva-store="${storeName}"] > div {
+              position: relative !important;
+              transform: none !important;
+              top: auto !important;
+              left: auto !important;
+              right: auto !important;
+              bottom: auto !important;
+              width: 100% !important;
+              max-width: 100% !important;
+            }
+          `}</style>
+          <Leva
+            store={storeName}
+            titleBar={false}
+            collapsed={false}
+            oneLineLabels={false}
+            hideTitleBar={true}
+            flat={false}
+            root={false}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

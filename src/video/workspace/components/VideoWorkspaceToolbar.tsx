@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/shared/ui/button';
-import { Play, Pause, Download, Eye, Save, Undo2, Redo2, Copy } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
+import { Play, Pause, Download, Save, Undo2, Redo2, Copy, Edit2, Eye } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +29,9 @@ export function VideoWorkspaceToolbar() {
   const draftTemplate = useVideoWorkspaceStore((s) => s.draftGraph);
   const hasUncommittedChanges = useVideoWorkspaceStore((s) => s.hasUncommittedChanges);
   const adapter = useVideoWorkspaceStore((s) => s.adapter);
+  const overrideTab = useVideoWorkspaceStore((s) => s.overrideTab ?? 'default');
   const setIsPlaying = useVideoWorkspaceStore((s) => s.actions.setIsPlaying);
+  const setOverrideTab = useVideoWorkspaceStore((s) => s.actions.setOverrideTab);
   const openModal = useVideoWorkspaceStore((s) => s.actions.openModal);
   const commitDraft = useVideoWorkspaceStore((s) => s.actions.commitDraft);
   const resetDraft = useVideoWorkspaceStore((s) => s.actions.resetDraft);
@@ -160,29 +163,54 @@ export function VideoWorkspaceToolbar() {
 
         <div className="w-px h-4 bg-border mx-1" />
 
-        {/* Preview/Export */}
-        <Button
-          type="button"
+        {/* Edit/Preview Mode Toggle */}
+        <ToggleGroup
+          type="single"
+          value={overrideTab}
+          onValueChange={(value) => {
+            if (value) {
+              setOverrideTab(value as 'default' | 'override');
+            }
+          }}
           variant="outline"
           size="sm"
-          className="h-7 px-2"
-          onClick={() => openModal('preview')}
-          title="Preview template"
+          className="gap-0 border border-border rounded-md overflow-hidden"
         >
-          <Eye size={14} />
-          <span className="ml-1.5 text-xs">Preview</span>
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 px-2"
-          onClick={() => openModal('export')}
-          title="Export video"
-        >
-          <Download size={14} />
-          <span className="ml-1.5 text-xs">Export</span>
-        </Button>
+          <ToggleGroupItem
+            value="default"
+            aria-label="Edit mode"
+            className="h-7 px-3 rounded-none border-0 data-[state=on]:bg-[var(--color-df-video)] data-[state=on]:text-white data-[state=on]:hover:bg-[var(--color-df-video)]"
+          >
+            <Edit2 size={14} />
+            <span className="ml-1.5 text-xs">Edit</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="override"
+            aria-label="Preview mode"
+            className="h-7 px-3 rounded-none border-0 border-l border-border data-[state=on]:bg-[var(--color-df-video)] data-[state=on]:text-white data-[state=on]:hover:bg-[var(--color-df-video)]"
+          >
+            <Eye size={14} />
+            <span className="ml-1.5 text-xs">Preview</span>
+          </ToggleGroupItem>
+        </ToggleGroup>
+
+        {/* Export - Only shown in Preview mode */}
+        {overrideTab === 'override' && (
+          <>
+            <div className="w-px h-4 bg-border mx-1" />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2"
+              onClick={() => openModal('export')}
+              title="Export video"
+            >
+              <Download size={14} />
+              <span className="ml-1.5 text-xs">Export</span>
+            </Button>
+          </>
+        )}
       </div>
       
       <div className="text-[11px] text-muted-foreground font-mono">

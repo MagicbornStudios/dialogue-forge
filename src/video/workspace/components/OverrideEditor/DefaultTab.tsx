@@ -89,14 +89,20 @@ export function DefaultTab() {
         </div>
       </div>
 
-      {/* Leva Property Inspector - Renders its own floating panel */}
-      {selectedLayerId && selectedLayer && (
-        <LevaPropertyInspector
-          key={`${selectedLayerId}-${Math.round(selectedLayer.visual?.x ?? 0)}-${Math.round(selectedLayer.visual?.y ?? 0)}-${Math.round(selectedLayer.visual?.width ?? 200)}-${Math.round(selectedLayer.visual?.height ?? 200)}`}
-          layer={selectedLayer}
-          onUpdate={updateLayer}
-          onClose={() => handleLayerSelect(null)}
-        />
+      {/* Leva Property Inspector - Embedded in sidebar */}
+      {selectedLayerId && selectedLayer ? (
+        <div className="w-[300px] border-l border-border flex-shrink-0">
+          <LevaPropertyInspector
+            key={`${selectedLayerId}-${Math.round(selectedLayer.visual?.x ?? 0)}-${Math.round(selectedLayer.visual?.y ?? 0)}-${Math.round(selectedLayer.visual?.width ?? 200)}-${Math.round(selectedLayer.visual?.height ?? 200)}`}
+            layer={selectedLayer}
+            onUpdate={updateLayer}
+            onClose={() => handleLayerSelect(null)}
+          />
+        </div>
+      ) : (
+        <div className="w-[300px] border-l border-border flex-shrink-0 flex items-center justify-center">
+          <div className="text-sm text-muted-foreground">Select a layer to edit properties</div>
+        </div>
       )}
     </div>
   );

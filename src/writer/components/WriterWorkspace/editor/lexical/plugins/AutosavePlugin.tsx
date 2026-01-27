@@ -4,7 +4,7 @@ import {
   WRITER_SAVE_STATUS,
 } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 
-const DEFAULT_AUTOSAVE_DELAY_MS = 1000;
+const DEFAULT_AUTOSAVE_DELAY_MS = 5000;
 
 export function AutosavePlugin({ delayMs = DEFAULT_AUTOSAVE_DELAY_MS }: { delayMs?: number }) {
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);

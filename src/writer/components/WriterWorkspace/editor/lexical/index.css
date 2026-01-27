@@ -1694,3 +1694,8 @@ button.item.dropdown-item-active i {
   border-width: 6px 4px 0 4px !important;
   border-top-color: var(--color-df-text-primary) !important;
 }
+
+/* Draggable block menu positioning - Lexical applies transform */
+.draggable-block-menu {
+  /* All styling handled by Tailwind classes in component */
+}

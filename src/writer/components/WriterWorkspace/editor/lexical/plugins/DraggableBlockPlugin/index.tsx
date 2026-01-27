@@ -273,7 +273,7 @@ export default function DraggableBlockPlugin({
         menuComponent={
           <div 
             ref={menuRef} 
-            className="rounded px-0.5 py-0.5 cursor-grab opacity-0 absolute left-0 top-0 will-change-[transform,opacity] flex gap-0.5 transition-[transform_140ms_ease-in-out,opacity_160ms_ease-in-out] active:cursor-grabbing">
+            className="draggable-block-menu rounded px-0.5 py-0.5 cursor-grab opacity-0 absolute left-0 top-0 will-change-[transform,opacity] flex gap-0.5 items-center transition-[transform_140ms_ease-in-out,opacity_160ms_ease-in-out] active:cursor-grabbing">
             <button
               title="Click to add below"
               className="inline-block border-0 cursor-pointer bg-transparent hover:bg-df-control-hover rounded p-1"

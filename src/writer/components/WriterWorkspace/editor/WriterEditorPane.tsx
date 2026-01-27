@@ -15,6 +15,10 @@ import DocsPlugin from './lexical/plugins/DocsPlugin';
 import { ToolbarContext } from './lexical/context/ToolbarContext';
 import { isDevPlayground } from './lexical/appSettings';
 import Editor from './lexical/Editor';
+import ToolbarPlugin from './lexical/plugins/ToolbarPlugin';
+import ShortcutsPlugin from './lexical/plugins/ShortcutsPlugin';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import type { LexicalEditor } from 'lexical';
 import { CollaborationContext, CollaborationContextType } from '@lexical/react/LexicalCollaborationContext';
 import { Doc } from 'yjs';
 import { JSX } from 'react';
@@ -51,6 +55,32 @@ function LexicalCollaboration({
     <CollaborationContext.Provider value={contextValue}>
       {children}
     </CollaborationContext.Provider>
+  );
+}
+
+function EditorToolbarWrapper() {
+  const [editor] = useLexicalComposerContext();
+  const [activeEditor, setActiveEditor] = useState<LexicalEditor>(editor);
+  const [isLinkEditMode, setIsLinkEditMode] = useState<boolean>(false);
+  const { settings: { isRichText } } = useSettings();
+
+  if (!isRichText) {
+    return null;
+  }
+
+  return (
+    <>
+      <ToolbarPlugin
+        editor={editor}
+        activeEditor={activeEditor}
+        setActiveEditor={setActiveEditor}
+        setIsLinkEditMode={setIsLinkEditMode}
+      />
+      <ShortcutsPlugin
+        editor={activeEditor}
+        setIsLinkEditMode={setIsLinkEditMode}
+      />
+    </>
   );
 }
 
@@ -189,12 +219,16 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
                     <SharedHistoryContext>
                       <TableContext>
                         <ToolbarContext>
+                          <EditorToolbarWrapper />
                           <EditorSyncContextProvider
                             pageId={activePageId}
                             onContentChange={(pageId, content) => {
                               setDraftContent(pageId, content);
                             }}
-                            pageContent={draft?.content.serialized ?? activePage?.bookBody ?? null}
+                            pageContent={
+                              draft?.content.serialized ?? 
+                              (activePage?.bookBody !== undefined && activePage?.bookBody !== null ? activePage.bookBody : null)
+                            }
                           >
                             <CommentContextProvider
                               pageId={activePageId}

@@ -21,6 +21,8 @@ export function WriterTopBar() {
   const drafts = useWriterWorkspaceStore((state) => state.drafts);
   const pageLayout = useWriterWorkspaceStore((state) => state.pageLayout);
   const togglePageFullWidth = useWriterWorkspaceStore((state) => state.actions.togglePageFullWidth);
+  const autosaveEnabled = useWriterWorkspaceStore((state) => state.autosaveEnabled);
+  const setAutosaveEnabled = useWriterWorkspaceStore((state) => state.actions.setAutosaveEnabled);
 
   const activePage = activePageId ? pageMap.get(activePageId) ?? null : null;
   const draft = activePageId ? drafts[activePageId] ?? null : null;
@@ -130,6 +132,28 @@ export function WriterTopBar() {
                 </MenubarItem>
               </MenubarSubContent>
             </MenubarSub>
+          </MenubarContent>
+        </MenubarMenu>
+      </Menubar>
+
+      {/* Center: Project menu */}
+      <Menubar className="border-0 bg-transparent p-0">
+        <MenubarMenu>
+          <MenubarTrigger className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-df-text-secondary hover:text-df-text-primary rounded-md transition-colors data-[state=open]:text-df-text-primary hover:bg-df-control-hover/30 data-[state=open]:bg-df-control-hover/30 h-8">
+            <Settings size={15} className="opacity-60" />
+            Project
+          </MenubarTrigger>
+          <MenubarContent>
+            <MenubarCheckboxItem
+              checked={autosaveEnabled}
+              onCheckedChange={(checked) => {
+                setAutosaveEnabled(checked === true);
+              }}
+              className="text-df-text-primary"
+            >
+              <Save size={14} className="mr-2" />
+              Autosave
+            </MenubarCheckboxItem>
           </MenubarContent>
         </MenubarMenu>
       </Menubar>

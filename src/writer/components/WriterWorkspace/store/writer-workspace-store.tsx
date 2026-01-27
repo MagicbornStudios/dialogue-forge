@@ -75,6 +75,7 @@ export interface WriterWorkspaceState {
   modalState: ReturnType<typeof createViewStateSlice>['modalState'];
   panelLayout: ReturnType<typeof createViewStateSlice>['panelLayout'];
   pageLayout: ReturnType<typeof createViewStateSlice>['pageLayout'];
+  autosaveEnabled: ReturnType<typeof createViewStateSlice>['autosaveEnabled'];
 
   // Narrative graph sync
   narrativeGraphs: ForgeGraphDoc[];
@@ -337,6 +338,7 @@ export function createWriterWorkspaceStore(
             undockPanel: viewStateSlice.undockPanel,
             setPageFullWidth: viewStateSlice.setPageFullWidth,
             togglePageFullWidth: viewStateSlice.togglePageFullWidth,
+            setAutosaveEnabled: viewStateSlice.setAutosaveEnabled,
           },
         };
       }),

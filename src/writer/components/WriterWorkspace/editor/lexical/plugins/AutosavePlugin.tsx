@@ -11,10 +11,12 @@ export function AutosavePlugin({ delayMs = DEFAULT_AUTOSAVE_DELAY_MS }: { delayM
   const draft = useWriterWorkspaceStore((state) =>
     activePageId ? state.drafts[activePageId] ?? null : null
   );
+  const autosaveEnabled = useWriterWorkspaceStore((state) => state.autosaveEnabled);
   const saveNow = useWriterWorkspaceStore((state) => state.actions.saveNow);
 
   useEffect(() => {
-    if (!draft || draft.status !== WRITER_SAVE_STATUS.DIRTY || !activePageId) {
+    // Only autosave if enabled
+    if (!autosaveEnabled || !draft || draft.status !== WRITER_SAVE_STATUS.DIRTY || !activePageId) {
       return undefined;
     }
 
@@ -25,7 +27,7 @@ export function AutosavePlugin({ delayMs = DEFAULT_AUTOSAVE_DELAY_MS }: { delayM
     return () => {
       clearTimeout(handle);
     };
-  }, [activePageId, delayMs, draft?.revision, draft?.status, saveNow]);
+  }, [activePageId, delayMs, draft?.revision, draft?.status, saveNow, autosaveEnabled]);
 
   return null;
 }

@@ -9,8 +9,6 @@ import type {TableCellNode, TableDOMCell, TableMapType} from '@lexical/table';
 import type {LexicalEditor, NodeKey} from 'lexical';
 import type {JSX} from 'react';
 
-import './index.css';
-
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {useLexicalEditable} from '@lexical/react/useLexicalEditable';
 import {
@@ -474,14 +472,14 @@ function TableCellResizer({editor}: {editor: LexicalEditor}): JSX.Element {
       {activeCell != null && (
         <>
           <div
-            className="TableCellResizer__resizer TableCellResizer__ui"
+            className="absolute touch-none [@media(pointer:coarse)]:bg-[#adf] [@media(pointer:coarse)]:mix-blend-color"
             style={resizerStyles.right || undefined}
             onPointerEnter={handlePointerEnter('right')}
             onPointerLeave={handlePointerLeave}
             onPointerDown={toggleResize('right')}
           />
           <div
-            className="TableCellResizer__resizer TableCellResizer__ui"
+            className="absolute touch-none [@media(pointer:coarse)]:bg-[#adf] [@media(pointer:coarse)]:mix-blend-color"
             style={resizerStyles.bottom || undefined}
             onPointerDown={toggleResize('bottom')}
           />

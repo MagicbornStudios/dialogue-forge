@@ -9,7 +9,6 @@
 import type {JSX} from 'react';
 
 import 'react-day-picker/style.css';
-import './DateTimeNode.css';
 
 import {
   autoUpdate,
@@ -193,7 +192,7 @@ export default function DateTimeComponent({
           <FloatingOverlay lockScroll={true}>
             <FloatingFocusManager context={context} initialFocus={-1}>
               <div
-                className={'dateTimePicker'}
+                className={'bg-df-surface border border-df-control-border shadow-df-md rounded-lg px-2.5 py-0 pl-2.5'}
                 ref={refs.setFloating}
                 style={floatingStyles}
                 {...getFloatingProps()}>

@@ -8,8 +8,6 @@
 
 import type {JSX} from 'react';
 
-import './index.css';
-
 import {$isCodeHighlightNode} from '@lexical/code';
 import {$isLinkNode, TOGGLE_LINK_COMMAND} from '@lexical/link';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
@@ -33,6 +31,19 @@ import {getDOMRangeRect} from '../../utils/getDOMRangeRect';
 import {getSelectedNode} from '../../utils/getSelectedNode';
 import {setFloatingElemPosition} from '../../utils/setFloatingElemPosition';
 import {INSERT_INLINE_COMMAND} from '../CommentPlugin';
+import {Button} from '@/shared/ui/button';
+import {
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Code,
+  Link,
+  MessageSquare,
+  Subscript,
+  Superscript,
+  Type,
+} from 'lucide-react';
 
 function TextFormatFloatingToolbar({
   editor,
@@ -192,127 +203,141 @@ function TextFormatFloatingToolbar({
   }, [editor, $updateTextFormatFloatingToolbar]);
 
   return (
-    <div ref={popupCharStylesEditorRef} className="floating-text-format-popup">
+    <div 
+      ref={popupCharStylesEditorRef} 
+      className="flex items-center gap-0.5 absolute top-0 left-0 z-10 opacity-0 transition-opacity duration-200 h-10 bg-df-elevated border border-df-control-border rounded-md shadow-df-md p-1 will-change-transform">
       {editor.isEditable() && (
         <>
-          <button
-            type="button"
+          <Button
+            variant={isBold ? 'secondary' : 'ghost'}
+            size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
             }}
-            className={'popup-item spaced ' + (isBold ? 'active' : '')}
+            className={`h-8 w-8 p-0 ${isBold ? 'bg-df-node-selected' : ''}`}
             title="Bold"
             aria-label="Format text as bold">
-            <i className="format bold" />
-          </button>
-          <button
-            type="button"
+            <Bold size={16} className="text-df-text-primary" />
+          </Button>
+          <Button
+            variant={isItalic ? 'secondary' : 'ghost'}
+            size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
             }}
-            className={'popup-item spaced ' + (isItalic ? 'active' : '')}
+            className={`h-8 w-8 p-0 ${isItalic ? 'bg-df-node-selected' : ''}`}
             title="Italic"
             aria-label="Format text as italics">
-            <i className="format italic" />
-          </button>
-          <button
-            type="button"
+            <Italic size={16} className="text-df-text-primary" />
+          </Button>
+          <Button
+            variant={isUnderline ? 'secondary' : 'ghost'}
+            size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
             }}
-            className={'popup-item spaced ' + (isUnderline ? 'active' : '')}
+            className={`h-8 w-8 p-0 ${isUnderline ? 'bg-df-node-selected' : ''}`}
             title="Underline"
             aria-label="Format text to underlined">
-            <i className="format underline" />
-          </button>
-          <button
-            type="button"
+            <Underline size={16} className="text-df-text-primary" />
+          </Button>
+          <Button
+            variant={isStrikethrough ? 'secondary' : 'ghost'}
+            size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
             }}
-            className={'popup-item spaced ' + (isStrikethrough ? 'active' : '')}
+            className={`h-8 w-8 p-0 ${isStrikethrough ? 'bg-df-node-selected' : ''}`}
             title="Strikethrough"
             aria-label="Format text with a strikethrough">
-            <i className="format strikethrough" />
-          </button>
-          <button
-            type="button"
+            <Strikethrough size={16} className="text-df-text-primary" />
+          </Button>
+          <Button
+            variant={isSubscript ? 'secondary' : 'ghost'}
+            size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'subscript');
             }}
-            className={'popup-item spaced ' + (isSubscript ? 'active' : '')}
+            className={`h-8 w-8 p-0 ${isSubscript ? 'bg-df-node-selected' : ''}`}
             title="Subscript"
             aria-label="Format Subscript">
-            <i className="format subscript" />
-          </button>
-          <button
-            type="button"
+            <Subscript size={16} className="text-df-text-primary" />
+          </Button>
+          <Button
+            variant={isSuperscript ? 'secondary' : 'ghost'}
+            size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript');
             }}
-            className={'popup-item spaced ' + (isSuperscript ? 'active' : '')}
+            className={`h-8 w-8 p-0 ${isSuperscript ? 'bg-df-node-selected' : ''}`}
             title="Superscript"
             aria-label="Format Superscript">
-            <i className="format superscript" />
-          </button>
-          <button
-            type="button"
+            <Superscript size={16} className="text-df-text-primary" />
+          </Button>
+          <Button
+            variant={isUppercase ? 'secondary' : 'ghost'}
+            size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'uppercase');
             }}
-            className={'popup-item spaced ' + (isUppercase ? 'active' : '')}
+            className={`h-8 w-8 p-0 ${isUppercase ? 'bg-df-node-selected' : ''}`}
             title="Uppercase"
             aria-label="Format text to uppercase">
-            <i className="format uppercase" />
-          </button>
-          <button
-            type="button"
+            <Type size={16} className="text-df-text-primary" />
+          </Button>
+          <Button
+            variant={isLowercase ? 'secondary' : 'ghost'}
+            size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'lowercase');
             }}
-            className={'popup-item spaced ' + (isLowercase ? 'active' : '')}
+            className={`h-8 w-8 p-0 ${isLowercase ? 'bg-df-node-selected' : ''}`}
             title="Lowercase"
             aria-label="Format text to lowercase">
-            <i className="format lowercase" />
-          </button>
-          <button
-            type="button"
+            <Type size={16} className="text-df-text-primary" />
+          </Button>
+          <Button
+            variant={isCapitalize ? 'secondary' : 'ghost'}
+            size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'capitalize');
             }}
-            className={'popup-item spaced ' + (isCapitalize ? 'active' : '')}
+            className={`h-8 w-8 p-0 ${isCapitalize ? 'bg-df-node-selected' : ''}`}
             title="Capitalize"
             aria-label="Format text to capitalize">
-            <i className="format capitalize" />
-          </button>
-          <button
-            type="button"
+            <Type size={16} className="text-df-text-primary" />
+          </Button>
+          <Button
+            variant={isCode ? 'secondary' : 'ghost'}
+            size="icon"
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
             }}
-            className={'popup-item spaced ' + (isCode ? 'active' : '')}
+            className={`h-8 w-8 p-0 ${isCode ? 'bg-df-node-selected' : ''}`}
             title="Insert code block"
             aria-label="Insert code block">
-            <i className="format code" />
-          </button>
-          <button
-            type="button"
+            <Code size={16} className="text-df-text-primary" />
+          </Button>
+          <Button
+            variant={isLink ? 'secondary' : 'ghost'}
+            size="icon"
             onClick={insertLink}
-            className={'popup-item spaced ' + (isLink ? 'active' : '')}
+            className={`h-8 w-8 p-0 ${isLink ? 'bg-df-node-selected' : ''}`}
             title="Insert link"
             aria-label="Insert link">
-            <i className="format link" />
-          </button>
+            <Link size={16} className="text-df-text-primary" />
+          </Button>
         </>
       )}
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={insertComment}
-        className={'popup-item spaced insert-comment'}
+        className="h-8 w-8 p-0 hidden lg:flex"
         title="Insert comment"
         aria-label="Insert comment">
-        <i className="format add-comment" />
-      </button>
+        <MessageSquare size={16} className="text-df-text-primary" />
+      </Button>
     </div>
   );
 }

@@ -318,6 +318,18 @@ export interface Page {
    */
   bookBody?: string | null;
   /**
+   * Comments and threads associated with this page
+   */
+  comments?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
    * Dialogue graph for PAGE type
    */
   dialogueGraph?: (number | null) | ForgeGraph;
@@ -611,6 +623,7 @@ export interface PagesSelect<T extends boolean = true> {
   order?: T;
   bookHeading?: T;
   bookBody?: T;
+  comments?: T;
   dialogueGraph?: T;
   archivedAt?: T;
   updatedAt?: T;

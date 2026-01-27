@@ -8,7 +8,6 @@
 
 import type {JSX} from 'react';
 
-import './index.css';
 
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {useLexicalNodeSelection} from '@lexical/react/useLexicalNodeSelection';
@@ -59,7 +58,13 @@ function PageBreakComponent({nodeKey}: {nodeKey: NodeKey}) {
   useEffect(() => {
     const pbElem = editor.getElementByKey(nodeKey);
     if (pbElem !== null) {
-      pbElem.className = isSelected ? 'selected' : '';
+      if (isSelected) {
+        pbElem.classList.add('border-df-node-selected');
+        pbElem.style.setProperty('--before-opacity', '1');
+      } else {
+        pbElem.classList.remove('border-df-node-selected');
+        pbElem.style.setProperty('--before-opacity', '0.5');
+      }
     }
   }, [editor, isSelected, nodeKey]);
 
@@ -99,6 +104,14 @@ export class PageBreakNode extends DecoratorNode<JSX.Element> {
     const el = document.createElement('figure');
     el.style.pageBreakAfter = 'always';
     el.setAttribute('type', this.getType());
+    el.className = 'relative block w-full overflow-visible -ml-7 mt-7 mb-7 border-0 border-t border-b border-dashed border-df-control-border bg-df-control-bg before:content-[""] before:absolute before:top-1/2 before:-translate-y-1/2 before:left-[40px] before:opacity-50 before:w-4 before:h-4 before:bg-contain before:bg-no-repeat before:bg-center after:content-["PAGE_BREAK"] after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:block after:py-0.5 after:px-1.5 after:border after:border-df-control-border after:bg-df-surface after:text-xs after:text-df-text-primary after:font-semibold';
+    el.style.setProperty('--editor-input-padding', '28px');
+    el.style.width = 'calc(100% + var(--editor-input-padding) * 2)';
+    el.style.marginLeft = 'calc(var(--editor-input-padding) * -1)';
+    el.style.marginTop = 'var(--editor-input-padding)';
+    el.style.marginBottom = 'var(--editor-input-padding)';
+    el.style.setProperty('--before-bg-image', 'url(/src/images/icons/scissors.svg)');
+    el.style.setProperty('--before-left', 'calc(var(--editor-input-padding) + 12px)');
     return el;
   }
 

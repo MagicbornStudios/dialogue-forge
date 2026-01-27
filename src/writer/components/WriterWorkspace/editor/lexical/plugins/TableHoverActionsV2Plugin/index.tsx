@@ -7,8 +7,6 @@
  */
 import type {JSX} from 'react';
 
-import './index.css';
-
 import {
   autoUpdate,
   offset,
@@ -36,6 +34,7 @@ import {
 } from 'lexical';
 import {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
+import {Filter, Plus} from 'lucide-react';
 
 import DropDown, {DropDownItem} from '../../ui/DropDown';
 import {getThemeSelector} from '../../utils/getThemeSelector';
@@ -417,28 +416,33 @@ function TableHoverActionsV2({
           ...floatingStyles,
           opacity: isVisible ? 1 : 0,
         }}
-        className="floating-top-actions">
-        <DropDown
-          buttonAriaLabel="Sort column"
-          buttonClassName="floating-filter-indicator"
-          hideChevron={true}>
-          <DropDownItem
-            className="item"
-            onClick={() => handleSortColumn('desc')}>
-            Sort Ascending
-          </DropDownItem>
-          <DropDownItem
-            className="item"
-            onClick={() => handleSortColumn('asc')}>
-            Sort Descending
-          </DropDownItem>
-        </DropDown>
+        className="flex items-center gap-1 relative">
+        <div className="relative">
+          <DropDown
+            buttonAriaLabel="Sort column"
+            buttonClassName="bg-df-surface border border-df-control-border rounded-sm shadow-df-sm box-border h-[18px] pointer-events-auto transition-opacity duration-80 w-[18px] z-10 cursor-pointer hover:bg-df-control-hover flex items-center justify-center p-0 [&>span]:hidden"
+            buttonIconClassName="!hidden"
+            hideChevron={true}>
+            <DropDownItem
+              className="item"
+              onClick={() => handleSortColumn('desc')}>
+              Sort Ascending
+            </DropDownItem>
+            <DropDownItem
+              className="item"
+              onClick={() => handleSortColumn('asc')}>
+              Sort Descending
+            </DropDownItem>
+          </DropDown>
+          <Filter className="h-3 w-3 text-df-text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
         <button
-          className="floating-add-indicator"
+          className="bg-df-surface border border-df-control-border rounded-sm shadow-df-sm box-border h-[18px] pointer-events-auto transition-opacity duration-80 w-[18px] z-10 cursor-pointer hover:bg-df-control-hover flex items-center justify-center p-0"
           aria-label="Add column"
           type="button"
-          onClick={handleAddColumn}
-        />
+          onClick={handleAddColumn}>
+          <Plus className="h-3 w-3 text-df-text-primary" />
+        </button>
       </div>
       <button
         ref={(node) => {
@@ -449,11 +453,12 @@ function TableHoverActionsV2({
           ...leftFloatingStyles,
           opacity: isLeftVisible ? 1 : 0,
         }}
-        className="floating-add-indicator"
+        className="bg-df-surface border border-df-control-border rounded-sm shadow-df-sm box-border h-[18px] pointer-events-auto transition-opacity duration-80 w-[18px] z-10 cursor-pointer hover:bg-df-control-hover flex items-center justify-center p-0"
         aria-label="Add row"
         type="button"
-        onClick={handleAddRow}
-      />
+        onClick={handleAddRow}>
+        <Plus className="h-3 w-3 text-df-text-primary" />
+      </button>
     </>
   );
 }

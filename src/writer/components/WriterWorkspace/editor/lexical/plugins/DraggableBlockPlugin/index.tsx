@@ -8,8 +8,6 @@
 import type {NodeKey} from 'lexical';
 import type {JSX} from 'react';
 
-import './index.css';
-
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {DraggableBlockPlugin_EXPERIMENTAL} from '@lexical/react/LexicalDraggableBlockPlugin';
 import {
@@ -30,6 +28,8 @@ import {
   getBaseOptions,
   getDynamicOptions,
 } from '../ComponentPickerPlugin';
+import { Input } from '@/shared/ui/input';
+import { GripVertical, Plus } from 'lucide-react';
 
 const DRAGGABLE_BLOCK_MENU_CLASSNAME = 'draggable-block-menu';
 
@@ -232,7 +232,7 @@ export default function DraggableBlockPlugin({
       {isPickerOpen && pickerPosition
         ? ReactDOM.createPortal(
             <div
-              className="typeahead-popover component-picker-menu draggable-block-component-picker"
+              className="typeahead-popover component-picker-menu max-w-[260px]"
               ref={pickerRef}
               style={{
                 left: pickerPosition.left,
@@ -240,8 +240,8 @@ export default function DraggableBlockPlugin({
                 top: pickerPosition.top,
                 zIndex: 10,
               }}>
-              <input
-                className="component-picker-search"
+              <Input
+                className="w-full box-border py-2 px-2.5 border-0 outline-none text-sm rounded-t-lg"
                 placeholder="Filter blocks..."
                 value={queryString}
                 ref={searchInputRef}
@@ -271,17 +271,24 @@ export default function DraggableBlockPlugin({
         menuRef={menuRef}
         targetLineRef={targetLineRef}
         menuComponent={
-          <div ref={menuRef} className="icon draggable-block-menu">
+          <div 
+            ref={menuRef} 
+            className="rounded px-0.5 py-0.5 cursor-grab opacity-0 absolute left-0 top-0 will-change-[transform,opacity] flex gap-0.5 transition-[transform_140ms_ease-in-out,opacity_160ms_ease-in-out] active:cursor-grabbing">
             <button
               title="Click to add below"
-              className="icon icon-plus"
-              onClick={openComponentPicker}
-            />
-            <div className="icon" />
+              className="inline-block border-0 cursor-pointer bg-transparent hover:bg-df-control-hover rounded p-1"
+              onClick={openComponentPicker}>
+              <Plus size={16} className="opacity-30" />
+            </button>
+            <div className="w-4 h-4 opacity-30">
+              <GripVertical size={16} />
+            </div>
           </div>
         }
         targetLineComponent={
-          <div ref={targetLineRef} className="draggable-block-target-line" />
+          <div 
+            ref={targetLineRef} 
+            className="pointer-events-none bg-df-node-selected h-1 absolute left-0 top-0 opacity-0 will-change-transform" />
         }
         isOnMenu={isOnMenu}
         onElementChanged={setDraggableElement}

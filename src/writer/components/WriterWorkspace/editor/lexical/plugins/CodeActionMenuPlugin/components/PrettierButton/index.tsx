@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
-import './index.css';
 
 import {$isCodeNode} from '@lexical/code';
 import {$getNearestNodeFromDOMNode, LexicalEditor} from 'lexical';
@@ -138,21 +137,21 @@ export function PrettierButton({lang, editor, getCodeDOMNode}: Props) {
   }
 
   return (
-    <div className="prettier-wrapper">
+    <div className="relative">
       <button
-        className="menu-item"
+        className="border border-transparent rounded px-1 bg-transparent cursor-pointer flex-shrink-0 flex items-center text-df-text-tertiary uppercase hover:border-df-control-border hover:opacity-90 active:bg-df-control-hover active:border-df-control-border"
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         aria-label="prettier">
         {syntaxError ? (
-          <i className="format prettier-error" />
+          <i className="format prettier-error h-4 w-4 opacity-60 flex text-df-text-tertiary bg-contain" />
         ) : (
-          <i className="format prettier" />
+          <i className="format prettier h-4 w-4 opacity-60 flex text-df-text-tertiary bg-contain" />
         )}
       </button>
       {tipsVisible ? (
-        <pre className="code-error-tips">{syntaxError}</pre>
+        <pre className="p-1.5 rounded px-1 text-white bg-df-base mt-1 absolute top-7 right-0">{syntaxError}</pre>
       ) : null}
     </div>
   );

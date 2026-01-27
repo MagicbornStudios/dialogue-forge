@@ -9,7 +9,6 @@
 import type {LexicalEditor, NodeKey} from 'lexical';
 import type {JSX} from 'react';
 
-import './StickyNode.css';
 
 import {useCollaborationContext} from '@lexical/react/LexicalCollaborationContext';
 import {CollaborationPlugin} from '@lexical/react/LexicalCollaborationPlugin';
@@ -25,9 +24,9 @@ import {useEffect, useLayoutEffect, useRef} from 'react';
 
 import {createWebsocketProvider} from '../collaboration';
 import {useSharedHistoryContext} from '../context/SharedHistoryContext';
-import StickyEditorTheme from '../themes/StickyEditorTheme';
 import ContentEditable from '../ui/ContentEditable';
 import {$isStickyNode} from './StickyNode';
+import StickyEditorTheme from '../themes/StickyEditorTheme';
 
 type Positioning = {
   isDragging: boolean;
@@ -198,9 +197,9 @@ export default function StickyComponent({
   const {historyState} = useSharedHistoryContext();
 
   return (
-    <div ref={stickyContainerRef} className="sticky-note-container">
+    <div ref={stickyContainerRef} className="absolute z-[9] w-[120px] inline-block">
       <div
-        className={`sticky-note ${color}`}
+        className={`leading-none text-left w-[120px] my-6 mx-6 p-5 relative border border-df-control-border font-['Reenie_Beanie'] text-2xl rounded-br-[60px_5px] block cursor-move ${color === 'yellow' ? 'border-t border-t-[#fdfd86] bg-gradient-to-br from-[#ffff88] from-[81%] via-[#ffff88] via-[82%] to-[#ffffc6]' : 'border-t border-t-[#e7d1e4] bg-gradient-to-br from-[#f7cbe8] from-[81%] via-[#f7cbe8] via-[82%] to-[#e7bfe1]'}`}
         onPointerDown={(event) => {
           const stickyContainer = stickyContainerRef.current;
           if (
@@ -219,7 +218,7 @@ export default function StickyComponent({
             positioning.offsetX = event.clientX / zoom - left;
             positioning.offsetY = event.clientY / zoom - top;
             positioning.isDragging = true;
-            stickContainer.classList.add('dragging');
+            stickContainer.classList.add('[&]:transition-none');
             document.addEventListener('pointermove', handlePointerMove);
             document.addEventListener('pointerup', handlePointerUp);
             event.preventDefault();
@@ -255,8 +254,8 @@ export default function StickyComponent({
             contentEditable={
               <ContentEditable
                 placeholder="What's up?"
-                placeholderClassName="StickyNode__placeholder"
-                className="StickyNode__contentEditable"
+                placeholderClassName="text-2xl text-df-text-tertiary overflow-hidden absolute text-ellipsis top-7 left-5 w-[120px] select-none whitespace-nowrap inline-block pointer-events-none"
+                className="min-h-5 border-0 resize-none cursor-text text-2xl caret-df-text-primary block relative outline-0 p-2.5 select-text whitespace-pre-wrap break-words"
               />
             }
             ErrorBoundary={LexicalErrorBoundary}

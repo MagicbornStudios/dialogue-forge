@@ -9,7 +9,6 @@
 import type {LexicalCommand, LexicalEditor, NodeKey} from 'lexical';
 import type {JSX} from 'react';
 
-import './ImageNode.css';
 
 import {useCollaborationContext} from '@lexical/react/LexicalCollaborationContext';
 import {CollaborationPlugin} from '@lexical/react/LexicalCollaborationPlugin';
@@ -503,8 +502,8 @@ export default function ImageComponent({
                 contentEditable={
                   <ContentEditable
                     placeholder="Enter a caption..."
-                    placeholderClassName="ImageNode__placeholder"
-                    className="ImageNode__contentEditable"
+                    placeholderClassName="text-xs text-df-text-tertiary overflow-hidden absolute text-ellipsis top-2.5 left-2.5 select-none whitespace-nowrap inline-block pointer-events-none"
+                    className="min-h-5 border-0 resize-none cursor-text caret-df-text-primary block relative outline-0 p-2.5 select-text text-xs w-full whitespace-pre-wrap break-words box-border"
                   />
                 }
                 ErrorBoundary={LexicalErrorBoundary}

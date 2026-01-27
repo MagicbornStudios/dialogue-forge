@@ -9,7 +9,6 @@
 import type {Option, Options, PollNode} from './PollNode';
 import type {JSX} from 'react';
 
-import './PollNode.css';
 
 import {useCollaborationContext} from '@lexical/react/LexicalCollaborationContext';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
@@ -61,15 +60,15 @@ function PollOptionComponent({
   const text = option.text;
 
   return (
-    <div className="PollNode__optionContainer">
+    <div className="flex flex-row mb-2.5 items-center">
       <div
         className={joinClasses(
-          'PollNode__optionCheckboxWrapper',
-          checked && 'PollNode__optionCheckboxChecked',
+          'relative flex w-[22px] h-[22px] border border-df-text-tertiary mr-2.5 rounded',
+          checked && 'border-df-node-selected bg-df-node-selected after:content-[""] after:cursor-pointer after:border-white after:border-solid after:absolute after:block after:top-1 after:w-1.5 after:left-2 after:h-2.5 after:m-0 after:rotate-45 after:border-r-0.5 after:border-b-0.5 after:pointer-events-none',
         )}>
         <input
           ref={checkboxRef}
-          className="PollNode__optionCheckbox"
+          className="border-0 absolute block w-full h-full opacity-0 cursor-pointer"
           type="checkbox"
           onChange={(e) => {
             withPollNode((node) => {
@@ -79,16 +78,16 @@ function PollOptionComponent({
           checked={checked}
         />
       </div>
-      <div className="PollNode__optionInputWrapper">
+      <div className="flex flex-[10px] border border-df-node-selected rounded relative overflow-hidden cursor-pointer">
         <div
-          className="PollNode__optionInputVotes"
+          className="bg-df-control-hover h-full absolute top-0 left-0 transition-all duration-1000 ease z-0"
           style={{width: `${votes === 0 ? 0 : (votes / totalVotes) * 100}%`}}
         />
-        <span className="PollNode__optionInputVotesCount">
+        <span className="text-df-node-selected absolute right-4 text-xs top-1.5">
           {votes > 0 && (votes === 1 ? '1 vote' : `${votes} votes`)}
         </span>
         <input
-          className="PollNode__optionInput"
+          className="flex flex-[1px] border-0 p-1.5 text-df-node-selected bg-transparent font-bold outline-0 z-0 placeholder:font-normal placeholder:text-df-text-tertiary"
           type="text"
           value={text}
           onChange={(e) => {
@@ -112,8 +111,8 @@ function PollOptionComponent({
       <button
         disabled={options.length < 3}
         className={joinClasses(
-          'PollNode__optionDelete',
-          options.length < 3 && 'PollNode__optionDeleteDisabled',
+          'relative flex w-7 h-7 ml-1.5 border-0 bg-transparent z-0 cursor-pointer rounded opacity-30 hover:opacity-100 hover:bg-df-control-hover before:content-[""] before:absolute before:block before:bg-df-text-tertiary before:w-0.5 before:h-4 before:top-1.5 before:left-[13px] before:-rotate-45 after:content-[""] after:absolute after:block after:bg-df-text-tertiary after:w-0.5 after:h-4 after:top-1.5 after:left-[13px] after:rotate-45',
+          options.length < 3 && 'cursor-not-allowed hover:opacity-30 hover:bg-transparent',
         )}
         aria-label="Remove"
         onClick={() => {
@@ -209,7 +208,7 @@ export default function PollComponent({
             />
           );
         })}
-        <div className="PollNode__footer">
+        <div className="flex justify-center">
           <Button onClick={addOption} small={true}>
             Add Option
           </Button>

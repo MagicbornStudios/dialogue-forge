@@ -59,11 +59,14 @@ export function CopyButton({editor, getCodeDOMNode}: Props) {
   }
 
   return (
-    <button className="menu-item" onClick={handleClick} aria-label="copy">
+    <button 
+      className="border border-transparent rounded px-1 bg-transparent cursor-pointer flex-shrink-0 flex items-center text-df-text-tertiary uppercase hover:border-df-control-border hover:opacity-90 active:bg-df-control-hover active:border-df-control-border" 
+      onClick={handleClick} 
+      aria-label="copy">
       {isCopyCompleted ? (
-        <i className="format success" />
+        <i className="format success h-4 w-4 opacity-60 flex text-df-text-tertiary bg-contain" />
       ) : (
-        <i className="format copy" />
+        <i className="format copy h-4 w-4 opacity-60 flex text-df-text-tertiary bg-contain" />
       )}
     </button>
   );

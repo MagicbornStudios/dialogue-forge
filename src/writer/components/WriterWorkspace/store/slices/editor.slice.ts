@@ -150,6 +150,36 @@ export function createEditorSlice(
         for (const page of nextPages) {
           nextPageMap.set(page.id, page);
         }
+        
+        // Persist to Payload if dataAdapter is available
+        const dataAdapter = get().dataAdapter;
+        if (dataAdapter) {
+          // Fire and forget - don't await to avoid blocking UI
+          dataAdapter.updatePage(targetId, {
+            title: draft.title,
+            bookBody: draft.content.serialized,
+          }).catch((error) => {
+            console.error('Failed to persist page to Payload:', error);
+            // Mark as error if persistence fails
+            set((state) => {
+              const currentDraft = state.drafts[targetId];
+              if (currentDraft) {
+                return {
+                  drafts: {
+                    ...state.drafts,
+                    [targetId]: {
+                      ...currentDraft,
+                      status: WRITER_SAVE_STATUS.ERROR,
+                      error: 'Failed to save to server',
+                    },
+                  },
+                };
+              }
+              return state;
+            });
+          });
+        }
+        
         return {
           pages: nextPages,
           pageMap: nextPageMap,

@@ -6,7 +6,6 @@
  *
  */
 
-import './Collapsible.css';
 
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {

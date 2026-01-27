@@ -79,6 +79,8 @@ import {VersionsPlugin} from './plugins/VersionsPlugin';
 import YouTubePlugin from './plugins/YouTubePlugin';
 import ContentEditable from './ui/ContentEditable';
 import EditorSyncPlugin from './plugins/EditorSyncPlugin';
+import PageContentPlugin from './plugins/PageContentPlugin';
+import { AutosavePlugin } from './plugins/AutosavePlugin';
 
 const COLLAB_DOC_ID = 'main';
 
@@ -184,6 +186,8 @@ export default function Editor(): JSX.Element {
         <AutoLinkPlugin />
         <DateTimePlugin />
         <EditorSyncPlugin />
+        <PageContentPlugin />
+        <AutosavePlugin />
         <CommentPlugin
           providerFactory={isCollab ? createWebsocketProvider : undefined}
           commentsContainer={typeof document !== 'undefined' ? document.getElementById('comments-container') : null}

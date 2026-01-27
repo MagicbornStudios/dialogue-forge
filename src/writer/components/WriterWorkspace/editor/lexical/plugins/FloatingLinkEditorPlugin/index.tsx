@@ -7,8 +7,6 @@
  */
 import type {JSX} from 'react';
 
-import './index.css';
-
 import {
   $createLinkNode,
   $isAutoLinkNode,
@@ -39,6 +37,9 @@ import {createPortal} from 'react-dom';
 import {getSelectedNode} from '../../utils/getSelectedNode';
 import {setFloatingElemPositionForLinkEditor} from '../../utils/setFloatingElemPositionForLinkEditor';
 import {sanitizeUrl} from '../../utils/url';
+import {Input} from '@/shared/ui/input';
+import {Button} from '@/shared/ui/button';
+import {X, Check, Pencil, Trash2} from 'lucide-react';
 
 function preventDefault(
   event: React.KeyboardEvent<HTMLInputElement> | React.MouseEvent<HTMLElement>,
@@ -137,7 +138,7 @@ function FloatingLinkEditor({
         setFloatingElemPositionForLinkEditor(domRect, editorElem, anchorElem);
       }
       setLastSelection(selection);
-    } else if (!activeElement || activeElement.className !== 'link-input') {
+    } else if (!activeElement || !activeElement.classList.contains('link-input')) {
       if (rootElement !== null) {
         setFloatingElemPositionForLinkEditor(null, editorElem, anchorElem);
       }
@@ -276,12 +277,14 @@ function FloatingLinkEditor({
   };
 
   return (
-    <div ref={editorRef} className="link-editor">
+    <div 
+      ref={editorRef} 
+      className="flex absolute top-0 left-0 z-10 max-w-[400px] w-full opacity-0 bg-df-elevated shadow-df-md rounded-b-lg transition-opacity duration-200 will-change-transform">
       {!isLink ? null : isLinkEditMode ? (
         <>
-          <input
+          <Input
             ref={inputRef}
-            className="link-input"
+            className="link-input block w-[calc(100%-75px)] box-border my-3 mx-3 py-2 px-3 rounded-[15px] bg-df-control-bg text-[15px] text-df-text-primary border-0 outline-0 relative font-inherit"
             value={editedLinkUrl}
             onChange={(event) => {
               setEditedLinkUrl(event.target.value);
@@ -290,54 +293,56 @@ function FloatingLinkEditor({
               monitorInputInteraction(event);
             }}
           />
-          <div>
-            <div
-              className="link-cancel"
-              role="button"
-              tabIndex={0}
-              onMouseDown={preventDefault}
+          <div className="flex items-center gap-1 my-3 mx-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-[35px] h-[35px]"
               onClick={() => {
                 setIsLinkEditMode(false);
-              }}
-            />
-
-            <div
-              className="link-confirm"
-              role="button"
-              tabIndex={0}
-              onMouseDown={preventDefault}
-              onClick={handleLinkSubmission}
-            />
+              }}>
+              <X size={16} className="text-df-text-primary" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-[35px] h-[35px]"
+              onClick={handleLinkSubmission}>
+              <Check size={16} className="text-df-text-primary" />
+            </Button>
           </div>
         </>
       ) : (
-        <div className="link-view">
+        <div className="block w-[calc(100%-24px)] my-2 mx-3 py-2 px-3 rounded-[15px] text-[15px] text-df-text-primary border-0 outline-0 relative font-inherit">
           <a
             href={sanitizeUrl(linkUrl)}
             target="_blank"
-            rel="noopener noreferrer">
+            rel="noopener noreferrer"
+            className="block break-words w-[calc(100%-33px)] text-df-node-selected underline">
             {linkUrl}
           </a>
-          <div
-            className="link-edit"
-            role="button"
-            tabIndex={0}
-            onMouseDown={preventDefault}
-            onClick={(event) => {
-              event.preventDefault();
-              setEditedLinkUrl(linkUrl);
-              setIsLinkEditMode(true);
-            }}
-          />
-          <div
-            className="link-trash"
-            role="button"
-            tabIndex={0}
-            onMouseDown={preventDefault}
-            onClick={() => {
-              editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
-            }}
-          />
+          <div className="flex items-center gap-1 absolute right-0 top-0 bottom-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-[35px] h-[35px]"
+              onClick={(event) => {
+                event.preventDefault();
+                setEditedLinkUrl(linkUrl);
+                setIsLinkEditMode(true);
+              }}>
+              <Pencil size={16} className="text-df-text-primary" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-[35px] h-[35px]"
+              onClick={() => {
+                editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
+              }}>
+              <Trash2 size={16} className="text-df-text-primary" />
+            </Button>
+          </div>
         </div>
       )}
     </div>

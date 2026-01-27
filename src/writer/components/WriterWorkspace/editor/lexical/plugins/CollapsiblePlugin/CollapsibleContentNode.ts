@@ -43,7 +43,7 @@ export class CollapsibleContentNode extends ElementNode {
 
   createDOM(config: EditorConfig, editor: LexicalEditor): HTMLElement {
     const dom = document.createElement('div');
-    dom.classList.add('Collapsible__content');
+    dom.classList.add('py-0', 'px-1.5', 'pb-1.5', 'pl-5');
     if (IS_CHROME) {
       editor.getEditorState().read(() => {
         const containerNode = this.getParentOrThrow();
@@ -93,7 +93,7 @@ export class CollapsibleContentNode extends ElementNode {
 
   exportDOM(): DOMExportOutput {
     const element = document.createElement('div');
-    element.classList.add('Collapsible__content');
+    element.classList.add('py-0', 'px-1.5', 'pb-1.5', 'pl-5');
     element.setAttribute('data-lexical-collapsible-content', 'true');
     return {element};
   }

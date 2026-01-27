@@ -41,6 +41,7 @@ export interface ViewStateSlice {
   modalState: WriterModalState;
   panelLayout: WriterPanelLayoutState;
   pageLayout: WriterPageLayoutState;
+  autosaveEnabled: boolean;
 }
 
 export interface ViewStateActions {
@@ -55,6 +56,13 @@ export interface ViewStateActions {
   undockPanel: (panel: 'sidebar' | 'editor') => void;
   setPageFullWidth: (pageId: number, value: boolean) => void;
   togglePageFullWidth: (pageId: number) => void;
+  setAutosaveEnabled: (enabled: boolean) => void;
+}
+
+function getInitialAutosaveEnabled(): boolean {
+  if (typeof window === 'undefined') return true;
+  const saved = localStorage.getItem('writer-autosave-enabled');
+  return saved !== null ? saved === 'true' : true;
 }
 
 export function createViewStateSlice(
@@ -65,6 +73,7 @@ export function createViewStateSlice(
     modalState: defaultModalState,
     panelLayout: defaultPanelLayout,
     pageLayout: defaultPageLayout,
+    autosaveEnabled: getInitialAutosaveEnabled(),
     openYarnModal: () =>
       set((state: WriterWorkspaceState) => {
         const currentModalState = (state.modalState as WriterModalState) ?? defaultModalState;
@@ -174,5 +183,11 @@ export function createViewStateSlice(
           },
         };
       }),
+    setAutosaveEnabled: (enabled) => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('writer-autosave-enabled', String(enabled));
+      }
+      set({ autosaveEnabled: enabled });
+    },
   };
 }

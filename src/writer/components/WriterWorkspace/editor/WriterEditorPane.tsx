@@ -194,6 +194,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
                             onContentChange={(pageId, content) => {
                               setDraftContent(pageId, content);
                             }}
+                            pageContent={draft?.content.serialized ?? activePage?.bookBody ?? null}
                           >
                             <CommentContextProvider
                               pageId={activePageId}

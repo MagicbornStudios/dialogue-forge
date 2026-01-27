@@ -8,7 +8,6 @@
 
 import type {JSX} from 'react';
 
-import './index.css';
 
 import {
   $isCodeNode,
@@ -143,8 +142,8 @@ function CodeActionMenuContainer({
   return (
     <>
       {isShown ? (
-        <div className="code-action-menu-container" style={{...position}}>
-          <div className="code-highlight-language">{codeFriendlyName}</div>
+        <div className="h-9 text-[10px] text-df-text-tertiary absolute flex items-center flex-row select-none" style={{...position}}>
+          <div className="mr-1">{codeFriendlyName}</div>
           <CopyButton editor={editor} getCodeDOMNode={getCodeDOMNode} />
           {canBePrettier(normalizedLang) ? (
             <PrettierButton

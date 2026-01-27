@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
 import type { VideoLayer } from '@/video/templates/types/video-layer';
 import { cn } from '@/shared/lib/utils';
 import { Play, Pause } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
+import { assignLayersToTracks } from '../../utils/track-assignment';
 
 interface VideoTimelineProps {
   template: VideoTemplate | null;
@@ -50,6 +51,30 @@ export function VideoTimeline({
   const durationMs = scene?.durationMs ?? 5000;
   const frameRate = template?.frameRate ?? 30;
   const totalFrames = Math.ceil(durationMs / (1000 / frameRate));
+
+  // Assign layers to tracks
+  const trackAssignments = useMemo(() => {
+    return assignLayersToTracks(layers, durationMs);
+  }, [layers, durationMs]);
+
+  // Group layers by track
+  const layersByTrack = useMemo(() => {
+    const grouped = new Map<number, VideoLayer[]>();
+    layers.forEach(layer => {
+      const trackIndex = trackAssignments.get(layer.id) ?? 0;
+      if (!grouped.has(trackIndex)) {
+        grouped.set(trackIndex, []);
+      }
+      grouped.get(trackIndex)!.push(layer);
+    });
+    return grouped;
+  }, [layers, trackAssignments]);
+
+  // Get max track index
+  const maxTrackIndex = useMemo(() => {
+    if (layers.length === 0) return -1;
+    return Math.max(...Array.from(trackAssignments.values()));
+  }, [trackAssignments, layers.length]);
 
   // Playback loop
   useEffect(() => {
@@ -253,119 +278,132 @@ export function VideoTimeline({
           </div>
         ) : (
           <div className="py-2">
-            {layers.map((layer, index) => {
-              const startPercent = ((layer.startMs ?? 0) / durationMs) * 100;
-              const widthPercent = ((layer.durationMs ?? durationMs) / durationMs) * 100;
-              const isSelected = selectedLayerId === layer.id;
-
+            {/* Render each track */}
+            {Array.from({ length: maxTrackIndex + 1 }, (_, trackIndex) => {
+              const trackLayers = layersByTrack.get(trackIndex) ?? [];
+              
               return (
-                <div
-                  key={layer.id}
-                  className={cn(
-                    'relative h-8 mx-2 mb-1 group',
-                    isSelected && 'ring-1 ring-[var(--color-df-video)]'
-                  )}
-                >
-                  {/* Layer track background */}
-                  <div className="absolute inset-0 bg-[var(--video-timeline-bg)] rounded border border-border" />
-                  
-                  {/* Layer duration bar */}
-                  <div
-                    className={cn(
-                      'absolute h-full video-timeline-track transition-all cursor-move',
-                      isSelected && 'video-timeline-track-selected'
-                    )}
-                    style={{
-                      left: `${startPercent}%`,
-                      width: `${widthPercent}%`,
-                    }}
-                    onMouseDown={(e) => {
-                      e.stopPropagation();
-                      if (!timelineRef.current || onLayerStartChange === undefined) return;
-                      const rect = timelineRef.current.getBoundingClientRect();
-                      const barRect = e.currentTarget.getBoundingClientRect();
-                      const localX = e.clientX - barRect.left;
-                      const barWidth = barRect.width;
-                      
-                      // Check if clicking on edges (within 4px)
-                      if (localX < 4) {
-                        // Left edge - resize start
-                        setDragState({
-                          type: 'start',
-                          layerId: layer.id,
-                          sceneIndex: null,
-                          startX: e.clientX - rect.left,
-                          initialStartMs: layer.startMs ?? 0,
-                          initialDurationMs: layer.durationMs ?? 1000,
-                        });
-                      } else if (localX > barWidth - 4) {
-                        // Right edge - resize duration
-                        setDragState({
-                          type: 'duration',
-                          layerId: layer.id,
-                          sceneIndex: null,
-                          startX: e.clientX - rect.left,
-                          initialStartMs: layer.startMs ?? 0,
-                          initialDurationMs: layer.durationMs ?? 1000,
-                        });
-                      } else {
-                        // Middle - move layer
-                        onLayerSelect(layer.id);
-                        setDragState({
-                          type: 'move',
-                          layerId: layer.id,
-                          sceneIndex: null,
-                          startX: e.clientX - rect.left,
-                          initialStartMs: layer.startMs ?? 0,
-                          initialDurationMs: layer.durationMs ?? 1000,
-                        });
-                      }
-                    }}
-                  >
-                    <div className="h-full flex items-center px-2 text-xs font-medium text-white truncate">
-                      {layer.name ?? layer.id}
+                <div key={trackIndex} className="relative mb-1">
+                  {/* Track label */}
+                  <div className="absolute left-0 -translate-x-full pr-2 h-8 flex items-center">
+                    <div className="text-xs text-muted-foreground font-mono">
+                      Track {trackIndex}
                     </div>
-                    {/* Left edge handle */}
-                    <div
-                      className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize bg-white/20 hover:bg-white/40"
-                      onMouseDown={(e) => {
-                        e.stopPropagation();
-                        if (!timelineRef.current || onLayerStartChange === undefined) return;
-                        const rect = timelineRef.current.getBoundingClientRect();
-                        setDragState({
-                          type: 'start',
-                          layerId: layer.id,
-                          sceneIndex: null,
-                          startX: e.clientX - rect.left,
-                          initialStartMs: layer.startMs ?? 0,
-                          initialDurationMs: layer.durationMs ?? 1000,
-                        });
-                      }}
-                    />
-                    {/* Right edge handle */}
-                    <div
-                      className="absolute right-0 top-0 bottom-0 w-1 cursor-ew-resize bg-white/20 hover:bg-white/40"
-                      onMouseDown={(e) => {
-                        e.stopPropagation();
-                        if (!timelineRef.current || onLayerDurationChange === undefined) return;
-                        const rect = timelineRef.current.getBoundingClientRect();
-                        setDragState({
-                          type: 'duration',
-                          layerId: layer.id,
-                          sceneIndex: null,
-                          startX: e.clientX - rect.left,
-                          initialStartMs: layer.startMs ?? 0,
-                          initialDurationMs: layer.durationMs ?? 1000,
-                        });
-                      }}
-                    />
                   </div>
+                  
+                  {/* Track row */}
+                  <div className="relative h-8 mx-2">
+                    {/* Track background */}
+                    <div className="absolute inset-0 bg-[var(--video-timeline-bg)] rounded border border-border" />
+                    
+                    {/* Render layers in this track */}
+                    {trackLayers.map((layer) => {
+                      const startPercent = ((layer.startMs ?? 0) / durationMs) * 100;
+                      const widthPercent = ((layer.durationMs ?? 1000) / durationMs) * 100;
+                      const isSelected = selectedLayerId === layer.id;
 
-                  {/* Layer name on left */}
-                  <div className="absolute left-0 -translate-x-full pr-2 h-full flex items-center">
-                    <div className="text-xs text-muted-foreground truncate max-w-[100px]">
-                      {layer.name ?? layer.id}
-                    </div>
+                      return (
+                        <div
+                          key={layer.id}
+                          className={cn(
+                            'absolute top-0 h-full group',
+                            isSelected && 'ring-1 ring-[var(--color-df-video)]'
+                          )}
+                          style={{
+                            left: `${startPercent}%`,
+                            width: `${widthPercent}%`,
+                          }}
+                        >
+                          {/* Layer duration bar */}
+                          <div
+                            className={cn(
+                              'h-full video-timeline-track transition-all cursor-move rounded',
+                              isSelected && 'video-timeline-track-selected'
+                            )}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              if (!timelineRef.current || onLayerStartChange === undefined) return;
+                              const rect = timelineRef.current.getBoundingClientRect();
+                              const barRect = e.currentTarget.getBoundingClientRect();
+                              const localX = e.clientX - barRect.left;
+                              const barWidth = barRect.width;
+                              
+                              // Check if clicking on edges (within 4px)
+                              if (localX < 4) {
+                                // Left edge - resize start
+                                setDragState({
+                                  type: 'start',
+                                  layerId: layer.id,
+                                  sceneIndex: null,
+                                  startX: e.clientX - rect.left,
+                                  initialStartMs: layer.startMs ?? 0,
+                                  initialDurationMs: layer.durationMs ?? 1000,
+                                });
+                              } else if (localX > barWidth - 4) {
+                                // Right edge - resize duration
+                                setDragState({
+                                  type: 'duration',
+                                  layerId: layer.id,
+                                  sceneIndex: null,
+                                  startX: e.clientX - rect.left,
+                                  initialStartMs: layer.startMs ?? 0,
+                                  initialDurationMs: layer.durationMs ?? 1000,
+                                });
+                              } else {
+                                // Middle - move layer
+                                onLayerSelect(layer.id);
+                                setDragState({
+                                  type: 'move',
+                                  layerId: layer.id,
+                                  sceneIndex: null,
+                                  startX: e.clientX - rect.left,
+                                  initialStartMs: layer.startMs ?? 0,
+                                  initialDurationMs: layer.durationMs ?? 1000,
+                                });
+                              }
+                            }}
+                          >
+                            <div className="h-full flex items-center px-2 text-xs font-medium text-white truncate">
+                              {layer.name ?? layer.id}
+                            </div>
+                            {/* Left edge handle */}
+                            <div
+                              className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize bg-white/20 hover:bg-white/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                if (!timelineRef.current || onLayerStartChange === undefined) return;
+                                const rect = timelineRef.current.getBoundingClientRect();
+                                setDragState({
+                                  type: 'start',
+                                  layerId: layer.id,
+                                  sceneIndex: null,
+                                  startX: e.clientX - rect.left,
+                                  initialStartMs: layer.startMs ?? 0,
+                                  initialDurationMs: layer.durationMs ?? 1000,
+                                });
+                              }}
+                            />
+                            {/* Right edge handle */}
+                            <div
+                              className="absolute right-0 top-0 bottom-0 w-1 cursor-ew-resize bg-white/20 hover:bg-white/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                if (!timelineRef.current || onLayerDurationChange === undefined) return;
+                                const rect = timelineRef.current.getBoundingClientRect();
+                                setDragState({
+                                  type: 'duration',
+                                  layerId: layer.id,
+                                  sceneIndex: null,
+                                  startX: e.clientX - rect.left,
+                                  initialStartMs: layer.startMs ?? 0,
+                                  initialDurationMs: layer.durationMs ?? 1000,
+                                });
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );

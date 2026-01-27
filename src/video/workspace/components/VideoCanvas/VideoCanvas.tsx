@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
 import type { VideoLayer } from '@/video/templates/types/video-layer';
 import type { VideoLayerKind } from '@/video/templates/types/video-layer';
 import { VideoLayerRenderer } from './VideoLayerRenderer';
 import { useElementDrag } from '../../hooks/useElementDrag';
 import { cn } from '@/shared/lib/utils';
+import { findAvailableTrack } from '../../utils/track-assignment';
 
 export interface VideoCanvasProps {
   template: VideoTemplate | null;
@@ -14,6 +15,8 @@ export interface VideoCanvasProps {
   showGrid?: boolean;
   zoom?: number;
   readonly?: boolean;
+  currentFrame?: number;
+  frameRate?: number;
   onLayerSelect: (layerId: string | null) => void;
   onLayerMove: (layerId: string, x: number, y: number) => void;
   onLayerResize: (layerId: string, width: number, height: number) => void;
@@ -27,6 +30,8 @@ export function VideoCanvas({
   showGrid = true,
   zoom = 1,
   readonly = false,
+  currentFrame = 0,
+  frameRate = 30,
   onLayerSelect,
   onLayerMove,
   onLayerResize,
@@ -39,9 +44,24 @@ export function VideoCanvas({
   const { draggedElementType, setDraggedElementType } = useElementDrag();
 
   // Get first scene's layers (for now, we'll support single-scene templates)
-  const layers = template?.scenes[0]?.layers ?? [];
+  const allLayers = template?.scenes[0]?.layers ?? [];
   const templateWidth = template?.width ?? 1920;
   const templateHeight = template?.height ?? 1080;
+  
+  // Calculate current time in milliseconds
+  const currentTimeMs = useMemo(() => {
+    return (currentFrame / frameRate) * 1000;
+  }, [currentFrame, frameRate]);
+  
+  // Filter layers to only show those visible at the current frame
+  const layers = useMemo(() => {
+    return allLayers.filter(layer => {
+      const layerStart = layer.startMs ?? 0;
+      const layerDuration = layer.durationMs ?? 1000;
+      const layerEnd = layerStart + layerDuration;
+      return currentTimeMs >= layerStart && currentTimeMs < layerEnd;
+    });
+  }, [allLayers, currentTimeMs]);
 
   // Calculate canvas display size based on available space and zoom
   const [canvasScale, setCanvasScale] = useState(1);
@@ -93,8 +113,8 @@ export function VideoCanvas({
     
     console.log('🎨 Canvas drop event:', { draggedElementType, hasCanvas: !!canvasRef.current });
     
-    if (!draggedElementType || !canvasRef.current) {
-      console.warn('❌ Drop cancelled - no element type or canvas ref');
+    if (!draggedElementType || !canvasRef.current || !template) {
+      console.warn('❌ Drop cancelled - no element type or canvas ref or template');
       return;
     }
     
@@ -110,13 +130,26 @@ export function VideoCanvas({
     const dropX = Math.round(x);
     const dropY = Math.round(y);
     
+    // Calculate start time based on current frame
+    const defaultDurationMs = 1000; // 1 second default
+    const dropStartMs = currentTimeMs;
+    
+    // Find available track for the new layer
+    const scene = template.scenes[0];
+    const existingLayers = scene?.layers ?? [];
+    const availableTrack = findAvailableTrack(
+      existingLayers,
+      dropStartMs,
+      defaultDurationMs
+    );
+    
     // Create new layer
     const newLayer: Partial<VideoLayer> = {
       id: `layer_${Date.now()}`,
       name: `${draggedElementType} Layer`,
       kind: draggedElementType,
-      startMs: 0,
-      durationMs: 1000, // 1 second default
+      startMs: dropStartMs,
+      durationMs: defaultDurationMs,
       opacity: 1,
       visual: {
         x: dropX,
@@ -141,12 +174,12 @@ export function VideoCanvas({
       } : undefined,
     };
     
-    console.log('🎨 Calling onLayerAdd with:', newLayer);
+    console.log('🎨 Calling onLayerAdd with:', newLayer, 'availableTrack:', availableTrack);
     onLayerAdd(newLayer);
     
     console.log('🎨 Clearing drag state');
     setDraggedElementType(null);
-  }, [draggedElementType, canvasScale, onLayerAdd, setDraggedElementType]);
+  }, [draggedElementType, canvasScale, template, currentTimeMs, onLayerAdd, setDraggedElementType]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

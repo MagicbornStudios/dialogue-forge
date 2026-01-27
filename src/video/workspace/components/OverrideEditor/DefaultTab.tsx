@@ -64,6 +64,8 @@ export function DefaultTab() {
             template={draftTemplate}
             selectedLayerId={selectedLayerId}
             showGrid={showGrid}
+            currentFrame={currentFrame}
+            frameRate={draftTemplate?.frameRate ?? 30}
             onLayerSelect={handleLayerSelect}
             onLayerMove={handleLayerMove}
             onLayerResize={handleLayerResize}

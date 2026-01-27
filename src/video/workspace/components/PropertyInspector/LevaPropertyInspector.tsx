@@ -289,7 +289,6 @@ export function LevaPropertyInspector({
             }
           `}</style>
           <Leva
-            store={storeName}
             titleBar={false}
             collapsed={false}
             oneLineLabels={false}

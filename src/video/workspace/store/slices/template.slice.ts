@@ -2,6 +2,7 @@ import type { StateCreator } from 'zustand';
 import type { VideoWorkspaceState } from '../video-workspace-store';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
 import type { VideoLayer } from '@/video/templates/types/video-layer';
+import { findAvailableTrack } from '../../utils/track-assignment';
 
 export interface TemplateSlice {
   // Template cache: by template ID
@@ -41,6 +42,7 @@ export interface TemplateActions {
   updateLayerStart: (layerId: string, startMs: number) => void;
   updateLayerDuration: (layerId: string, durationMs: number) => void;
   updateSceneDuration: (sceneIndex: number, durationMs: number) => void;
+  duplicateLayer: (layerId: string, sceneIndex?: number) => void;
 }
 
 export function createTemplateSlice(
@@ -426,6 +428,60 @@ export function createTemplateSlice(
       }
       
       set({ draftGraph: updatedTemplate });
+    },
+    
+    duplicateLayer: (layerId: string, sceneIndex = 0) => {
+      const state = get();
+      const draftTemplate = state.draftGraph;
+      if (!draftTemplate) return;
+      
+      // Find the layer to duplicate
+      const scene = draftTemplate.scenes[sceneIndex];
+      if (!scene) return;
+      
+      const originalLayer = scene.layers.find(l => l.id === layerId);
+      if (!originalLayer) return;
+      
+      // Create duplicate with new ID
+      const duplicatedLayer: VideoLayer = {
+        ...originalLayer,
+        id: `layer_${Date.now()}`,
+        name: `${originalLayer.name ?? originalLayer.id} Copy`,
+        // Keep same start time and duration - track assignment will handle placement
+        startMs: originalLayer.startMs ?? 0,
+        durationMs: originalLayer.durationMs ?? 1000,
+      };
+      
+      // Find available track for the duplicated layer
+      const allLayers = scene.layers;
+      const availableTrack = findAvailableTrack(
+        allLayers,
+        duplicatedLayer.startMs ?? 0,
+        duplicatedLayer.durationMs ?? 1000,
+        originalLayer.id
+      );
+      
+      // If no available track found, the layer will be placed on a new track
+      // (track assignment happens automatically when rendering)
+      
+      // Add duplicated layer to scene
+      const updatedTemplate = { ...draftTemplate };
+      updatedTemplate.scenes = [...draftTemplate.scenes];
+      updatedTemplate.scenes[sceneIndex] = {
+        ...updatedTemplate.scenes[sceneIndex],
+        layers: [...updatedTemplate.scenes[sceneIndex].layers, duplicatedLayer],
+      };
+      
+      set({ draftGraph: updatedTemplate });
+      
+      // Auto-select the duplicated layer
+      state.actions.setSelectedLayerId(duplicatedLayer.id);
+      
+      // Emit event
+      state.eventSink?.emit({
+        type: 'layer.added',
+        payload: { layerId: duplicatedLayer.id },
+      });
     },
   };
 }

@@ -78,7 +78,6 @@ import TwitterPlugin from './plugins/TwitterPlugin';
 import {VersionsPlugin} from './plugins/VersionsPlugin';
 import YouTubePlugin from './plugins/YouTubePlugin';
 import ContentEditable from './ui/ContentEditable';
-import EditorSyncPlugin from './plugins/EditorSyncPlugin';
 import PageContentPlugin from './plugins/PageContentPlugin';
 import { AutosavePlugin } from './plugins/AutosavePlugin';
 
@@ -171,7 +170,6 @@ export default function Editor(): JSX.Element {
         <SpeechToTextPlugin />
         <AutoLinkPlugin />
         <DateTimePlugin />
-        <EditorSyncPlugin />
         <PageContentPlugin />
         <AutosavePlugin />
         <CommentPlugin

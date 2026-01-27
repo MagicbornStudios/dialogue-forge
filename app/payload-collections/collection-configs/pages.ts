@@ -84,6 +84,13 @@ export const Pages: CollectionConfig = {
       },
     },
     {
+      name: 'comments',
+      type: 'json',
+      admin: {
+        description: 'Comments and threads associated with this page',
+      },
+    },
+    {
       name: 'dialogueGraph',
       type: 'relationship',
       relationTo: PAYLOAD_COLLECTIONS.FORGE_GRAPHS as any,

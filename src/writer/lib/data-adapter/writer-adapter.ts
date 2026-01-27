@@ -1,8 +1,20 @@
 import type { ForgePage } from '@/shared/types/narrative';
 import type { WriterMediaRecord, WriterMediaUploadResult } from './media';
+import type { Comment, Thread } from '@/writer/components/WriterWorkspace/editor/lexical/commenting';
 
 export type WriterPageDoc = ForgePage;
 export type WriterDoc = WriterPageDoc;
+
+export type WriterComment = Comment & {
+  pageId: number;
+  nodeKey?: string;
+  threadId?: string | null;
+};
+
+export type WriterThread = Thread & {
+  pageId: number;
+  nodeKey?: string;
+};
 
 /**
  * Writer Data Adapter Interface
@@ -29,4 +41,16 @@ export interface WriterDataAdapter {
   uploadMedia?(file: File): Promise<WriterMediaUploadResult>;
   resolveMedia?(mediaId: string): Promise<WriterMediaRecord | null>;
   createEmbed?(url: string): Promise<WriterMediaUploadResult>;
+
+  // Comment operations
+  listComments(pageId: number): Promise<Array<WriterComment | WriterThread>>;
+  createComment(pageId: number, comment: {
+    author: string;
+    content: string;
+    nodeKey?: string;
+    threadId?: string | null;
+    quote?: string;
+  }): Promise<WriterComment | WriterThread>;
+  updateComment(pageId: number, commentId: string, patch: Partial<WriterComment>): Promise<WriterComment>;
+  deleteComment(pageId: number, commentId: string): Promise<void>;
 }

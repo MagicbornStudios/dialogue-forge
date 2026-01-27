@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FileText, Settings } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import {
   useWriterWorkspaceStore,
   WRITER_AI_PROPOSAL_STATUS,
@@ -22,8 +22,9 @@ import PlaygroundEditorTheme from './lexical/themes/PlaygroundEditorTheme';
 import PlaygroundNodes from './lexical/nodes/PlaygroundNodes';
 import { buildHTMLConfig } from './lexical/buildHTMLConfig';
 import { useSettings } from './lexical/context/SettingsContext';
-import logo from '@/writer/components/WriterWorkspace/editor/lexical/images/logo.svg';
 import { FlashMessageContext } from './lexical/context/FlashMessageContext';
+import { EditorSyncContextProvider } from './lexical/context/EditorSyncContext';
+import { CommentContextProvider } from './lexical/context/CommentContext';
 
 interface WriterEditorPaneProps {
   className?: string;
@@ -71,6 +72,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
   const saveNow = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.saveNow);
   const applyAiEdits = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.applyAiEdits);
   const revertAiDraft = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.revertAiDraft);
+  const dataAdapter = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.dataAdapter);
 
   const activePage = activePageId ? pageMap.get(activePageId) ?? null : null;
 
@@ -132,7 +134,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
         throw error;
       },
     }),
-    [emptyEditor, isCollab],
+    [emptyEditor, isCollab, draft?.content.serialized, activePage?.bookBody, activePageId],
   );
 
 
@@ -187,11 +189,21 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
                     <SharedHistoryContext>
                       <TableContext>
                         <ToolbarContext>
-                          <div className="editor-shell flex min-h-0 flex-1 flex-col overflow-hidden relative" style={{ isolation: 'isolate', contain: 'layout style paint' }}>
-                            <Editor />
-                          </div>
-                          {isDevPlayground && <Settings />}
-                          {isDevPlayground && <DocsPlugin />}
+                          <EditorSyncContextProvider
+                            pageId={activePageId}
+                            onContentChange={(pageId, content) => {
+                              setDraftContent(pageId, content);
+                            }}
+                          >
+                            <CommentContextProvider
+                              pageId={activePageId}
+                              dataAdapter={dataAdapter}
+                            >
+                              <div className="editor-shell flex min-h-0 flex-1 flex-col overflow-hidden relative" style={{ isolation: 'isolate', contain: 'layout style paint' }}>
+                                <Editor />
+                              </div>
+                            </CommentContextProvider>
+                          </EditorSyncContextProvider>
                         </ToolbarContext>
                       </TableContext>
                     </SharedHistoryContext>

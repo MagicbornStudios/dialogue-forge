@@ -78,6 +78,7 @@ import TwitterPlugin from './plugins/TwitterPlugin';
 import {VersionsPlugin} from './plugins/VersionsPlugin';
 import YouTubePlugin from './plugins/YouTubePlugin';
 import ContentEditable from './ui/ContentEditable';
+import EditorSyncPlugin from './plugins/EditorSyncPlugin';
 
 const COLLAB_DOC_ID = 'main';
 
@@ -182,6 +183,7 @@ export default function Editor(): JSX.Element {
         <SpeechToTextPlugin />
         <AutoLinkPlugin />
         <DateTimePlugin />
+        <EditorSyncPlugin />
         <CommentPlugin
           providerFactory={isCollab ? createWebsocketProvider : undefined}
           commentsContainer={typeof document !== 'undefined' ? document.getElementById('comments-container') : null}

@@ -3,6 +3,7 @@
 import { ProjectSwitcher } from '@/components/ProjectSwitcher';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 import { getPlainTextFromSerializedContent } from '@/writer/components/WriterWorkspace/store/writer-workspace-types';
+import { convertSerializedContentToMarkdown } from '@/writer/lib/editor/export-utils';
 import { useMemo } from 'react';
 
 interface WriterProjectSwitcherProps {
@@ -25,14 +26,17 @@ export function WriterProjectSwitcher({ selectedProjectId, onProjectChange }: Wr
   const draft = activePageId ? drafts[activePageId] ?? null : null;
   const draftTitle = activePageId ? drafts[activePageId]?.title ?? '' : '';
   const pageContent = draft?.content.plainText ?? getPlainTextFromSerializedContent(activePage?.bookBody) ?? '';
+  const serializedContent = draft?.content.serialized ?? activePage?.bookBody ?? '';
+  const hasContent = !!(serializedContent && serializedContent.trim() && serializedContent !== '{"root":{"children":[],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
   const isFullWidth = activePageId
     ? pageLayout.fullWidthByPageId[activePageId] ?? false
     : false;
 
   const writerMenus = useMemo(() => {
-    const downloadAsMarkdown = () => {
+    const downloadAsMarkdown = async () => {
       const title = draftTitle.trim() || activePage?.title || 'Untitled';
-      const blob = new Blob([pageContent], { type: 'text/markdown' });
+      const markdown = await convertSerializedContentToMarkdown(serializedContent);
+      const blob = new Blob([markdown], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -41,11 +45,23 @@ export function WriterProjectSwitcher({ selectedProjectId, onProjectChange }: Wr
       URL.revokeObjectURL(url);
     };
 
-    const downloadAsPDF = () => {
+    const downloadAsPDF = async () => {
       const title = draftTitle.trim() || activePage?.title || 'Untitled';
+      const serializedContent = draft?.content.serialized ?? activePage?.bookBody ?? '';
+      const markdown = await convertSerializedContentToMarkdown(serializedContent);
       
       const printWindow = window.open('', '_blank');
       if (!printWindow) return;
+
+      // Convert markdown to HTML for better PDF rendering
+      const htmlContent = markdown
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+        .replace(/^\*(.*)\*/gim, '<em>$1</em>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
 
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -53,14 +69,22 @@ export function WriterProjectSwitcher({ selectedProjectId, onProjectChange }: Wr
           <head>
             <title>${title}</title>
             <style>
-              body { font-family: Arial, sans-serif; padding: 40px; }
-              h1, h2, h3 { margin-top: 20px; }
+              body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; }
+              h1, h2, h3 { margin-top: 20px; margin-bottom: 10px; }
+              h1 { font-size: 2em; }
+              h2 { font-size: 1.5em; }
+              h3 { font-size: 1.2em; }
               p { margin: 10px 0; }
+              strong { font-weight: bold; }
+              em { font-style: italic; }
+              @media print {
+                body { padding: 20px; }
+              }
             </style>
           </head>
           <body>
             <h1>${title}</h1>
-            <pre style="white-space: pre-wrap; font-family: inherit;">${pageContent}</pre>
+            <div>${htmlContent}</div>
           </body>
         </html>
       `);
@@ -80,7 +104,7 @@ export function WriterProjectSwitcher({ selectedProjectId, onProjectChange }: Wr
         }
       },
       isFullWidth,
-      canDownload: !!(activePageId && pageContent),
+      canDownload: !!(activePageId && hasContent),
     };
   }, [activePageId, activePage, draftTitle, pageContent, isFullWidth, togglePageFullWidth]);
 

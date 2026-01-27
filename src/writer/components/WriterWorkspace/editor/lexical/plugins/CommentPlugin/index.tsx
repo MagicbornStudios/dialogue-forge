@@ -74,9 +74,9 @@ import {
   useCommentStore,
 } from '../../commenting';
 import useModal from '../../hooks/useModal';
-import CommentEditorTheme from '../../themes/CommentEditorTheme';
 import Button from '../../ui/Button';
 import ContentEditable from '../../ui/ContentEditable';
+import CommentEditorTheme from '../../themes/CommentEditorTheme';
 
 export const INSERT_INLINE_COMMAND: LexicalCommand<void> = createCommand(
   'INSERT_INLINE_COMMAND',
@@ -714,8 +714,12 @@ function useCollabAuthorName(): string {
 
 export default function CommentPlugin({
   providerFactory,
+  commentsContainer,
+  showCommentsButtonContainer,
 }: {
   providerFactory?: (id: string, yjsDocMap: Map<string, Doc>) => Provider;
+  commentsContainer?: HTMLElement | null;
+  showCommentsButtonContainer?: HTMLElement | null;
 }): JSX.Element {
   const collabContext = useCollaborationContext();
   const [editor] = useLexicalComposerContext();
@@ -727,7 +731,7 @@ export default function CommentPlugin({
   const [activeAnchorKey, setActiveAnchorKey] = useState<NodeKey | null>();
   const [activeIDs, setActiveIDs] = useState<Array<string>>([]);
   const [showCommentInput, setShowCommentInput] = useState(false);
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(commentsContainer !== null && commentsContainer !== undefined);
   const {yjsDocMap} = collabContext;
 
   useEffect(() => {
@@ -980,9 +984,9 @@ export default function CommentPlugin({
           title={showComments ? 'Hide Comments' : 'Show Comments'}>
           <i className="comments" />
         </Button>,
-        document.body,
+        showCommentsButtonContainer || document.body,
       )}
-      {showComments &&
+      {(showComments || commentsContainer) &&
         createPortal(
           <CommentsPanel
             comments={comments}
@@ -991,7 +995,7 @@ export default function CommentPlugin({
             activeIDs={activeIDs}
             markNodeMap={markNodeMap}
           />,
-          document.body,
+          commentsContainer || document.body,
         )}
     </>
   );

@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
-import { FileText } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FileText, Settings } from 'lucide-react';
 import {
   useWriterWorkspaceStore,
   WRITER_AI_PROPOSAL_STATUS,
@@ -8,12 +8,49 @@ import {
 } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 import { getPlainTextFromSerializedContent } from '@/writer/components/WriterWorkspace/store/writer-workspace-types';
 import { applyWriterPatchOps } from '@/writer/lib/editor/patches';
-import { LexicalEditor } from '@/writer/components/WriterWorkspace/editor/LexicalEditor';
-import { AutosavePlugin } from '@/writer/components/WriterWorkspace/editor/lexical/plugins/AutosavePlugin';
-import { DOM_EVENT_TYPE } from '@/shared/types';
+import { LexicalComposer } from '@lexical/react/LexicalComposer';
+import { SharedHistoryContext } from './lexical/context/SharedHistoryContext';
+import { TableContext } from './lexical/plugins/TablePlugin';
+import DocsPlugin from './lexical/plugins/DocsPlugin';
+import { ToolbarContext } from './lexical/context/ToolbarContext';
+import { isDevPlayground } from './lexical/appSettings';
+import Editor from './lexical/Editor';
+import { CollaborationContext, CollaborationContextType } from '@lexical/react/LexicalCollaborationContext';
+import { Doc } from 'yjs';
+import { JSX } from 'react';
+import PlaygroundEditorTheme from './lexical/themes/PlaygroundEditorTheme';
+import PlaygroundNodes from './lexical/nodes/PlaygroundNodes';
+import { buildHTMLConfig } from './lexical/buildHTMLConfig';
+import { useSettings } from './lexical/context/SettingsContext';
+import logo from '@/writer/components/WriterWorkspace/editor/lexical/images/logo.svg';
+import { FlashMessageContext } from './lexical/context/FlashMessageContext';
 
 interface WriterEditorPaneProps {
   className?: string;
+}
+
+function LexicalCollaboration({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactNode {
+  const [yjsDocMap] = useState(() => new Map<string, Doc>());
+  const contextValue: CollaborationContextType = useMemo(
+    () => ({
+      isCollabActive: false,
+      name: '',
+      color: '',
+      clientID: 0,
+      yjsDocMap,
+    }),
+    [yjsDocMap],
+  );
+
+  return (
+    <CollaborationContext.Provider value={contextValue}>
+      {children}
+    </CollaborationContext.Provider>
+  );
 }
 
 export function WriterEditorPane({ className }: WriterEditorPaneProps) {
@@ -48,8 +85,8 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
       }
     };
 
-    window.addEventListener(DOM_EVENT_TYPE.KEY_DOWN, handler);
-    return () => window.removeEventListener(DOM_EVENT_TYPE.KEY_DOWN, handler);
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, [activePageId, saveNow]);
 
   const saveStatus = useMemo(() => {
@@ -75,6 +112,29 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
     }
     return applyWriterPatchOps(aiSnapshot, aiPreview);
   }, [aiPreview, aiSnapshot]);
+
+  const {
+    settings: {isCollab, emptyEditor, measureTypingPerf},
+  } = useSettings();
+
+  const initialConfig = useMemo(
+    () => ({
+      editorState: isCollab
+        ? null
+        : emptyEditor
+          ? undefined
+          : draft?.content.serialized ?? activePage?.bookBody ?? '',
+      html: buildHTMLConfig(),
+      namespace: 'Playground',
+      nodes: PlaygroundNodes,
+      theme: PlaygroundEditorTheme,
+      onError: (error: Error) => {
+        throw error;
+      },
+    }),
+    [emptyEditor, isCollab],
+  );
+
 
   const beforeContent = aiSnapshot?.content
     ?? draft?.content.plainText
@@ -117,21 +177,32 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col bg-df-editor-bg">
+      <div className="flex min-h-0 flex-1 flex-row bg-df-editor-bg overflow-hidden relative" style={{ isolation: 'isolate' }}>
         {activePage ? (
           <>
-            <LexicalEditor
-              key={activePageId}
-              value={draft?.content.serialized ?? activePage.bookBody ?? ''}
-              placeholder="Start writing..."
-              onChange={(nextValue) => {
-                if (!activePageId) {
-                  return;
-                }
-                setDraftContent(activePageId, nextValue);
-              }}
+            <div className="flex min-h-0 flex-[3] flex-col relative overflow-hidden" style={{ isolation: 'isolate' }}>
+              <FlashMessageContext>
+                <LexicalCollaboration>
+                  <LexicalComposer initialConfig={initialConfig}>
+                    <SharedHistoryContext>
+                      <TableContext>
+                        <ToolbarContext>
+                          <div className="editor-shell flex min-h-0 flex-1 flex-col overflow-hidden relative" style={{ isolation: 'isolate', contain: 'layout style paint' }}>
+                            <Editor />
+                          </div>
+                          {isDevPlayground && <Settings />}
+                          {isDevPlayground && <DocsPlugin />}
+                        </ToolbarContext>
+                      </TableContext>
+                    </SharedHistoryContext>
+                  </LexicalComposer>
+                </LexicalCollaboration>
+              </FlashMessageContext>
+            </div>
+            <div 
+              id="comments-container"
+              className="flex-shrink-0 flex-[1] min-w-[300px] max-w-[400px] border-l border-df-control-border bg-df-surface overflow-hidden relative"
             />
-            <AutosavePlugin />
           </>
         ) : (
           <div className="flex h-full items-center justify-center p-6 text-sm text-df-text-tertiary">

@@ -43,19 +43,22 @@ const VOICE_COMMANDS: Readonly<
 };
 
 export const SUPPORT_SPEECH_RECOGNITION: boolean =
-  'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+  typeof window !== 'undefined' &&
+  ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
 function SpeechToTextPlugin(): null {
   const [editor] = useLexicalComposerContext();
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const SpeechRecognition =
-    // @ts-expect-error missing type
-    window.SpeechRecognition || window.webkitSpeechRecognition;
+    typeof window !== 'undefined'
+      ? // @ts-expect-error missing type
+        window.SpeechRecognition || window.webkitSpeechRecognition
+      : null;
   const recognition = useRef<typeof SpeechRecognition | null>(null);
   const report = useReport();
 
   useEffect(() => {
-    if (isEnabled && recognition.current === null) {
+    if (isEnabled && recognition.current === null && SpeechRecognition) {
       recognition.current = new SpeechRecognition();
       recognition.current.continuous = true;
       recognition.current.interimResults = true;

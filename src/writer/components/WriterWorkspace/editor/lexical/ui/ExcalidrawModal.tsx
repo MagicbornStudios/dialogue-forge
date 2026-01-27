@@ -16,7 +16,6 @@ import type {JSX} from 'react';
 
 import './ExcalidrawModal.css';
 
-import {Excalidraw} from '@excalidraw/excalidraw';
 import {isDOMNode} from 'lexical';
 import * as React from 'react';
 import {ReactPortal, useEffect, useLayoutEffect, useRef, useState} from 'react';
@@ -85,6 +84,29 @@ export default function ExcalidrawModal({
   const [elements, setElements] =
     useState<ExcalidrawInitialElements>(initialElements);
   const [files, setFiles] = useState<BinaryFiles>(initialFiles);
+  const [ExcalidrawComponent, setExcalidrawComponent] = useState<
+    React.ComponentType<{
+      onChange: (
+        els: ExcalidrawInitialElements,
+        _: AppState,
+        fls: BinaryFiles,
+      ) => void;
+      excalidrawAPI: (api: ExcalidrawImperativeAPI | null) => void;
+      initialData: {
+        appState: AppState;
+        elements: ExcalidrawInitialElements;
+        files: BinaryFiles;
+      };
+    }> | null
+  >(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isShown) {
+      import('@excalidraw/excalidraw').then((module) => {
+        setExcalidrawComponent(() => module.Excalidraw);
+      });
+    }
+  }, [isShown]);
 
   useEffect(() => {
     excaliDrawModelRef.current?.focus();
@@ -191,6 +213,10 @@ export default function ExcalidrawModal({
     return null;
   }
 
+  if (typeof window === 'undefined' || !ExcalidrawComponent) {
+    return null;
+  }
+
   const onChange = (
     els: ExcalidrawInitialElements,
     _: AppState,
@@ -208,7 +234,7 @@ export default function ExcalidrawModal({
         tabIndex={-1}>
         <div className="ExcalidrawModal__row">
           {discardModalOpen && <ShowDiscardDialog />}
-          <Excalidraw
+          <ExcalidrawComponent
             onChange={onChange}
             excalidrawAPI={setExcalidrawAPI}
             initialData={{

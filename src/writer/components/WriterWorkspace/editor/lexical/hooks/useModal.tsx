@@ -1,36 +1,62 @@
-import { useState, useCallback } from 'react';
-import * as ReactDOM from 'react-dom';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
 
-type ModalContent = (onClose: () => void) => React.ReactNode;
+import type {JSX} from 'react';
 
-export default function useModal(): [React.ReactNode, (title: string, getContent: ModalContent) => void] {
-  const [modalContent, setModalContent] = useState<{
+import {useCallback, useMemo, useState} from 'react';
+import * as React from 'react';
+
+import Modal from '../ui/Modal';
+
+export default function useModal(): [
+  JSX.Element | null,
+  (title: string, showModal: (onClose: () => void) => JSX.Element) => void,
+] {
+  const [modalContent, setModalContent] = useState<null | {
+    closeOnClickOutside: boolean;
+    content: JSX.Element;
     title: string;
-    content: ModalContent;
-  } | null>(null);
+  }>(null);
 
   const onClose = useCallback(() => {
     setModalContent(null);
   }, []);
 
-  const showModal = useCallback((title: string, getContent: ModalContent) => {
-    setModalContent({ title, content: getContent });
-  }, []);
+  const modal = useMemo(() => {
+    if (modalContent === null) {
+      return null;
+    }
+    const {title, content, closeOnClickOutside} = modalContent;
+    return (
+      <Modal
+        onClose={onClose}
+        title={title}
+        closeOnClickOutside={closeOnClickOutside}>
+        {content}
+      </Modal>
+    );
+  }, [modalContent, onClose]);
 
-  const modal = modalContent
-    ? ReactDOM.createPortal(
-        <Dialog open={true} onOpenChange={onClose}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{modalContent.title}</DialogTitle>
-            </DialogHeader>
-            {modalContent.content(onClose)}
-          </DialogContent>
-        </Dialog>,
-        document.body
-      )
-    : null;
+  const showModal = useCallback(
+    (
+      title: string,
+      // eslint-disable-next-line no-shadow
+      getContent: (onClose: () => void) => JSX.Element,
+      closeOnClickOutside = false,
+    ) => {
+      setModalContent({
+        closeOnClickOutside,
+        content: getContent(onClose),
+        title,
+      });
+    },
+    [onClose],
+  );
 
   return [modal, showModal];
 }

@@ -6,8 +6,16 @@
  *
  */
 
-const hostName = window.location.hostname;
+const getHostName = (): string => {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+  return window.location.hostname;
+};
+
+const hostName = getHostName();
 export const isDevPlayground: boolean =
+  typeof window !== 'undefined' &&
   hostName !== 'playground.lexical.dev' &&
   hostName !== 'lexical-playground.vercel.app';
 
@@ -32,7 +40,7 @@ export const DEFAULT_SETTINGS = {
   shouldUseLexicalContextMenu: false,
   showNestedEditorTreeView: false,
   showTableOfContents: false,
-  showTreeView: true,
+  showTreeView: false,
   tableCellBackgroundColor: true,
   tableCellMerge: true,
   tableHorizontalScroll: true,

@@ -33,8 +33,8 @@ const nextConfig = {
     silenceDeprecations: ['import', 'legacy-js-api'],
   },
 
-  // Remove this. Only use transpilePackages for *external* workspace packages.
-  // transpilePackages: ['@magicborn/dialogue-forge'],
+  // Transpile external packages that need to be processed by Next.js
+  transpilePackages: ['@langchain/core', '@copilotkit/runtime'],
 
   webpack: (config) => {
     config.resolve.alias = {

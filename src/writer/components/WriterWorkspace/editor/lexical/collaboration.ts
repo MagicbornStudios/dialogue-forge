@@ -10,12 +10,22 @@ import {Provider} from '@lexical/yjs';
 import {WebsocketProvider} from 'y-websocket';
 import {Doc} from 'yjs';
 
-const url = new URL(window.location.href);
-const params = new URLSearchParams(url.search);
-const WEBSOCKET_ENDPOINT =
-  params.get('collabEndpoint') || 'ws://localhost:1234';
-const WEBSOCKET_SLUG = 'playground';
-const WEBSOCKET_ID = params.get('collabId') || '0';
+const getWebsocketConfig = () => {
+  if (typeof window === 'undefined') {
+    return {
+      endpoint: 'ws://localhost:1234',
+      slug: 'playground',
+      id: '0',
+    };
+  }
+  const url = new URL(window.location.href);
+  const params = new URLSearchParams(url.search);
+  return {
+    endpoint: params.get('collabEndpoint') || 'ws://localhost:1234',
+    slug: 'playground',
+    id: params.get('collabId') || '0',
+  };
+};
 
 // parent dom -> child doc
 export function createWebsocketProvider(
@@ -35,10 +45,11 @@ export function createWebsocketProvider(
 }
 
 export function createWebsocketProviderWithDoc(id: string, doc: Doc): Provider {
+  const config = getWebsocketConfig();
   // @ts-expect-error
   return new WebsocketProvider(
-    WEBSOCKET_ENDPOINT,
-    WEBSOCKET_SLUG + '/' + WEBSOCKET_ID + '/' + id,
+    config.endpoint,
+    config.slug + '/' + config.id + '/' + id,
     doc,
     {
       connect: false,

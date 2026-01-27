@@ -15,8 +15,8 @@ export function WriterLayout({ sidebar, editor, className }: WriterLayoutProps) 
   const hasActivePage = activePageId !== null;
   const contextNodeType = hasActivePage ? FORGE_NODE_TYPE.PAGE : null;
   const isFullWidth = activePageId
-    ? pageLayout.fullWidthByPageId[activePageId] ?? false
-    : false;
+    ? pageLayout.fullWidthByPageId[activePageId] ?? true // Default to full-width for playground-style editor
+    : true;
   const contentClassName = isFullWidth
     ? 'w-full'
     : 'mx-auto w-full max-w-4xl';

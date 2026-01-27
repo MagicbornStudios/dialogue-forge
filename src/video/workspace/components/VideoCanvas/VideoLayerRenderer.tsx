@@ -7,6 +7,7 @@ import { cn } from '@/shared/lib/utils';
 
 interface VideoLayerRendererProps {
   layer: VideoLayer;
+  layerIndex: number;
   scale: number;
   isSelected: boolean;
   onSelect: () => void;
@@ -16,6 +17,7 @@ interface VideoLayerRendererProps {
 
 export function VideoLayerRenderer({
   layer,
+  layerIndex,
   scale,
   isSelected,
   onSelect,
@@ -182,6 +184,7 @@ export function VideoLayerRenderer({
         top: `${displayY * scale}px`,
         width: `${width * scale}px`,
         height: `${height * scale}px`,
+        zIndex: layerIndex + 1,
         transform: `rotate(${rotation}deg)`,
         transformOrigin: `${anchorX * 100}% ${anchorY * 100}%`,
         opacity,

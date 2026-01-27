@@ -15,6 +15,8 @@ export interface PanelLayout {
   properties: { visible: boolean };
 }
 
+export type OverrideTab = 'default' | 'override';
+
 export interface ViewStateSlice {
   // Modal management
   activeModal: ModalType;
@@ -22,6 +24,10 @@ export interface ViewStateSlice {
   
   // Panel layout
   panelLayout: PanelLayout;
+  
+  // Override editor state
+  overrideTab: OverrideTab;
+  isPreviewMode: boolean;
   
   // Selection state
   selectedSceneId: string | null;
@@ -46,6 +52,8 @@ export interface ViewStateActions {
   togglePanel: (panel: keyof PanelLayout) => void;
   setPanelVisibility: (panel: keyof PanelLayout, visible: boolean) => void;
   dockPanel: (panel: keyof PanelLayout, docked: boolean) => void;
+  setOverrideTab: (tab: OverrideTab) => void;
+  setPreviewMode: (isPreview: boolean) => void;
   setSelectedSceneId: (id: string | null) => void;
   setSelectedLayerId: (id: string | null) => void;
   setSelectedLayerIds: (ids: string[]) => void;
@@ -77,6 +85,10 @@ export function createViewStateSlice(
       timeline: { visible: true, isDocked: false },
       properties: { visible: false }, // Hidden by default, shows when element selected
     },
+    
+    // Override editor state
+    overrideTab: 'default',
+    isPreviewMode: false,
     
     // Selection state
     selectedSceneId: null,
@@ -143,6 +155,25 @@ export function createViewStateSlice(
           },
         },
       }));
+    },
+    
+    setOverrideTab: (tab: OverrideTab) => {
+      set({ overrideTab: tab });
+      
+      // Auto-disable preview mode when switching to default tab
+      if (tab === 'default') {
+        set({ isPreviewMode: false });
+      }
+    },
+    
+    setPreviewMode: (isPreview: boolean) => {
+      set({ isPreviewMode: isPreview });
+      
+      // Clear selection when entering preview mode (readonly)
+      if (isPreview) {
+        const state = get();
+        state.actions.clearSelection();
+      }
     },
     
     setSelectedSceneId: (id: string | null) => {

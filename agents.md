@@ -377,10 +377,220 @@ if (node.type === NODE_TYPE.PLAYER) {  // ✅ Constant
 const [viewMode, setViewMode] = useState<ViewMode>(VIEW_MODE.GRAPH);  // ✅ Constant
 ```
 
+## Video Domain
+
+### Overview
+
+The video domain provides a **Canva-like visual template editor** for creating video compositions with Remotion integration. Templates consist of scenes containing layers with visual and style properties.
+
+**Location**: `src/video/`
+
+**Key Components**:
+- Template system (`src/video/templates/`)
+- Video workspace UI (`src/video/workspace/`)
+- Remotion integration (`src/video/player/`, `app/lib/video/`)
+
+### Video Architecture
+
+**Template Hierarchy**:
+```
+VideoTemplate
+  ├── scenes: VideoScene[]
+  │   └── layers: VideoLayer[]
+  │       ├── kind: VideoLayerKind
+  │       ├── visual: { x, y, width, height, rotation, scale, anchor }
+  │       ├── style: { colors, fonts, borders }
+  │       └── inputs: { content, imageUrl, etc. }
+```
+
+**Workspace Store** (4 slices):
+1. **Template Slice** - Template cache and history
+2. **Draft Slice** - Draft/commit workflow (shared pattern)
+3. **View State Slice** - UI state (modals, panels, selection, canvas, timeline)
+4. **Project Slice** - Project selection sync
+
+### Video Constants
+
+All video constants are in `src/video/templates/types/video-layer.ts`:
+
+**Layer Kinds** (`VIDEO_LAYER_KIND`):
+```typescript
+VIDEO_LAYER_KIND.TEXT          // Text layer
+VIDEO_LAYER_KIND.RECTANGLE     // Colored rectangle
+VIDEO_LAYER_KIND.CIRCLE        // Colored circle
+VIDEO_LAYER_KIND.IMAGE         // Image layer
+VIDEO_LAYER_KIND.VIDEO         // Video clip
+VIDEO_LAYER_KIND.BACKGROUND    // Full-canvas background
+VIDEO_LAYER_KIND.DIALOGUE_CARD // Dialogue bubble (for Forge)
+VIDEO_LAYER_KIND.PORTRAIT      // Character portrait
+VIDEO_LAYER_KIND.LOWER_THIRD   // Name plate overlay
+```
+
+**Always use constants**, never string literals!
+
+### Common Video Patterns
+
+**Creating a layer**:
+```typescript
+import { VIDEO_LAYER_KIND } from '@/video/templates/types/video-layer';
+
+const newLayer: Partial<VideoLayer> = {
+  id: `layer_${Date.now()}`,
+  name: 'My Text Layer',
+  kind: VIDEO_LAYER_KIND.TEXT,  // ✅ Constant
+  startMs: 0,
+  durationMs: 5000,
+  opacity: 1,
+  visual: {
+    x: 960,        // Center of 1920px canvas
+    y: 540,        // Center of 1080px canvas
+    width: 400,
+    height: 100,
+    rotation: 0,
+    scale: 1,
+    anchorX: 0.5,  // 0.5 = center, 0 = left, 1 = right
+    anchorY: 0.5,  // 0.5 = middle, 0 = top, 1 = bottom
+  },
+  style: {
+    fontFamily: 'system-ui',
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
+  },
+  inputs: {
+    content: 'Hello World',
+  },
+};
+
+// Add to draft
+store.actions.addLayer(newLayer);
+```
+
+**Updating a layer**:
+```typescript
+// Update position
+store.actions.moveLayer('layer_123', 500, 300);
+
+// Update size
+store.actions.resizeLayer('layer_123', 600, 150);
+
+// Update properties
+store.actions.updateLayer('layer_123', {
+  opacity: 0.8,
+  style: { color: '#ff0000' },
+});
+```
+
+### Video Workspace Guidelines
+
+1. **Always use draft system** - Never mutate templates directly
+2. **Layer operations through store actions** - Use addLayer, updateLayer, moveLayer, resizeLayer
+3. **Anchor-based positioning** - Position (x,y) is the anchor point, not top-left
+4. **Timeline is source of truth** - All layers must have startMs and durationMs
+5. **Canvas is visual editor** - Shows current frame layers
+6. **Remotion is the renderer** - Compile template → Remotion composition → video export
+
+### Current State (Jan 2026)
+
+**✅ Working**:
+- Template editing with visual canvas
+- Drag-and-drop layer creation
+- Property inspector (position, size, rotation, opacity, text, colors)
+- Timeline with playback and scrubbing
+- Project switching and template persistence to PayloadCMS
+- Draft system integration with auto-save
+
+**🚧 In Progress**:
+- Default/Override tab system for runtime data injection
+- Remotion layer rendering components (TEXT/RECTANGLE/CIRCLE/IMAGE/VIDEO)
+- Export modal with progress tracking
+
+**❌ Planned**:
+- Animation keyframes
+- Audio tracks
+- Export from Forge workspace (dialogue → video)
+- Template marketplace
+
+### Critical Issues (Always Check Before Working)
+
+**Known Bugs** (see `src/video/VIDEO_ISSUES.md`):
+1. **P0**: Pointer events bug - layers can't be moved immediately after drop (fix ready)
+2. **P0**: Missing z-index - layers render behind overlays (fix ready)
+
+**Architecture Changes**:
+- Video workspace was rebuilt from scratch in Jan 2026
+- Draft system integrated across all workspaces
+- Template loading now uses `resetDraft()` instead of template cache
+- Always read from `draftGraph`, never from template cache directly
+
+### Video Development History
+
+**Important Context for Agents**:
+- Video workspace store was **removed** at some point, then **brought back** with improved architecture
+- We've transitioned from template cache pattern to draft system pattern
+- Legacy components exist but should not be used (see VIDEO_ISSUES.md cleanup section)
+- Always check git history (`git log src/video`) when working on video features to understand evolution
+
+## Development Tracking
+
+### Always Review Before Working
+
+When working on any domain, **ALWAYS** review these documents first:
+
+1. **[ROADMAP.md](./ROADMAP.md)** - Current priorities and feature status
+2. **[CHANGELOG.md](./CHANGELOG.md)** - Recent changes and history
+3. **Domain-specific issues**:
+   - `src/video/VIDEO_ISSUES.md` - Video bugs and TODOs
+   - (Future: `src/forge/FORGE_ISSUES.md`, `src/writer/WRITER_ISSUES.md`)
+
+### Updating Documentation
+
+**After completing any task**:
+
+1. **Update ROADMAP.md** - Mark features complete, update percentages
+2. **Update CHANGELOG.md** - Add entry under "Unreleased" section
+3. **Update domain issues** - Close fixed bugs, add new issues found
+4. **Update this file (AGENTS.md)** - Add new patterns, update "Current State"
+
+### Example Workflow
+
+```
+Before coding:
+1. Read ROADMAP.md → Understand priorities
+2. Read CHANGELOG.md → See recent changes
+3. Read VIDEO_ISSUES.md → Check known bugs
+4. Review relevant components
+
+While coding:
+1. Follow coding preferences (constants, type independence)
+2. Check architecture boundaries
+3. Add console logs for debugging
+4. Test incrementally
+
+After coding:
+1. Update ROADMAP.md → Mark tasks complete
+2. Update CHANGELOG.md → Document changes
+3. Update VIDEO_ISSUES.md → Close fixed bugs
+4. Update AGENTS.md → Add new patterns learned
+```
+
+### Critical: Compound Knowledge
+
+**When updating documentation, COMPOUND, don't replace**:
+- Add to existing sections, don't delete history
+- Preserve context from previous work
+- Link related sections
+- Keep changelog chronological
+- Keep roadmap priorities current
+
 ## Questions?
 
 When in doubt:
 1. Check `src/shared/types/constants.ts` for available constants
-2. Look at existing component implementations
-3. Follow the patterns in `DialogueGraphEditor.tsx`
-4. Ensure demo works independently
+2. Check **[ROADMAP.md](./ROADMAP.md)** for current priorities
+3. Check domain-specific issue files for known bugs
+4. Look at existing component implementations
+5. Follow the patterns in workspace components
+6. Review git history for context: `git log --oneline src/[domain]`
+7. Ensure demo works independently

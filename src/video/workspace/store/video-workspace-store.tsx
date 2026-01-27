@@ -38,6 +38,8 @@ export interface VideoWorkspaceState {
   activeModal: ReturnType<typeof createViewStateSlice>['activeModal'];
   modalData: ReturnType<typeof createViewStateSlice>['modalData'];
   panelLayout: ReturnType<typeof createViewStateSlice>['panelLayout'];
+  overrideTab: ReturnType<typeof createViewStateSlice>['overrideTab'];
+  isPreviewMode: ReturnType<typeof createViewStateSlice>['isPreviewMode'];
   selectedSceneId: ReturnType<typeof createViewStateSlice>['selectedSceneId'];
   selectedLayerId: ReturnType<typeof createViewStateSlice>['selectedLayerId'];
   selectedLayerIds: ReturnType<typeof createViewStateSlice>['selectedLayerIds'];
@@ -92,6 +94,8 @@ export interface VideoWorkspaceState {
     togglePanel: ReturnType<typeof createViewStateSlice>['togglePanel'];
     setPanelVisibility: ReturnType<typeof createViewStateSlice>['setPanelVisibility'];
     dockPanel: ReturnType<typeof createViewStateSlice>['dockPanel'];
+    setOverrideTab: ReturnType<typeof createViewStateSlice>['setOverrideTab'];
+    setPreviewMode: ReturnType<typeof createViewStateSlice>['setPreviewMode'];
     setSelectedSceneId: ReturnType<typeof createViewStateSlice>['setSelectedSceneId'];
     setSelectedLayerId: ReturnType<typeof createViewStateSlice>['setSelectedLayerId'];
     setSelectedLayerIds: ReturnType<typeof createViewStateSlice>['setSelectedLayerIds'];

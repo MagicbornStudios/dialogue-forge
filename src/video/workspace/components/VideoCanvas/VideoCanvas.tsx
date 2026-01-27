@@ -13,6 +13,7 @@ export interface VideoCanvasProps {
   selectedLayerId: string | null;
   showGrid?: boolean;
   zoom?: number;
+  readonly?: boolean;
   onLayerSelect: (layerId: string | null) => void;
   onLayerMove: (layerId: string, x: number, y: number) => void;
   onLayerResize: (layerId: string, width: number, height: number) => void;
@@ -25,6 +26,7 @@ export function VideoCanvas({
   selectedLayerId,
   showGrid = true,
   zoom = 1,
+  readonly = false,
   onLayerSelect,
   onLayerMove,
   onLayerResize,
@@ -78,13 +80,15 @@ export function VideoCanvas({
   }, [templateWidth, templateHeight, zoom]);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
+    if (readonly) return;
     // Click on canvas background - deselect
     if (e.target === e.currentTarget) {
       onLayerSelect(null);
     }
-  }, [onLayerSelect]);
+  }, [readonly, onLayerSelect]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
+    if (readonly) return;
     e.preventDefault();
     
     if (!draggedElementType || !canvasRef.current) return;
@@ -183,22 +187,23 @@ export function VideoCanvas({
         </div>
 
         {/* Render layers */}
-        {layers.map((layer) => (
+        {layers.map((layer, index) => (
           <VideoLayerRenderer
             key={layer.id}
             layer={layer}
+            layerIndex={index}
             scale={canvasScale}
             isSelected={selectedLayerId === layer.id}
             onSelect={() => onLayerSelect(layer.id)}
-            onMove={(x, y) => onLayerMove(layer.id, x, y)}
-            onResize={(width, height) => onLayerResize(layer.id, width, height)}
+            onMove={(x: number, y: number) => onLayerMove(layer.id, x, y)}
+            onResize={(width: number, height: number) => onLayerResize(layer.id, width, height)}
           />
         ))}
 
         {/* Drop zone indicator */}
         {draggedElementType && (
           <div className="absolute inset-0 border-2 border-dashed border-[var(--color-df-video)] bg-[var(--color-df-video)]/5 pointer-events-none flex items-center justify-center">
-            <div className="px-4 py-2 rounded bg-[var(--color-df-video-bg)] text-[var(--color-df-video)] text-sm font-medium">
+            <div className="px-4 py-2 rounded bg-[var(--color-df-video-bg)] text-[var(--color-df-video)] text-sm font-medium pointer-events-none">
               Drop to add {draggedElementType} layer
             </div>
           </div>

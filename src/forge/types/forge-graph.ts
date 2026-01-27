@@ -5,6 +5,7 @@ export {
   FORGE_NODE_TYPE,
   FORGE_STORYLET_CALL_MODE,
   NARRATIVE_FORGE_NODE_TYPE,
+  EDITABLE_NARRATIVE_NODE_TYPES,
 } from '@/shared/types/forge-graph';
 export type {
   ForgeChoice,
@@ -24,4 +25,5 @@ export type {
   ForgeStoryletCall,
   ForgeStoryletCallMode,
   NarrativeForgeNodeType,
+  EditableNarrativeNodeType,
 } from '@/shared/types/forge-graph';

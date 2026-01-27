@@ -8,14 +8,9 @@ import type { WriterForgeDataAdapter } from '@/writer/types/forge-data-adapter';
 import { createFlowNode } from '@/shared/utils/forge-graph-helpers';
 import { findLastNodeInHierarchy, findNodeByPageId } from '@/shared/lib/graph-validation';
 import { useToast } from '@/shared/ui/toast';
-import { calculateDelta } from '@/shared/lib/draft/draft-helpers';
 
 export interface UseGraphPageSyncOptions {
   graph: ForgeGraphDoc | null;
-  committedGraph?: ForgeGraphDoc | null;
-  draftGraph?: ForgeGraphDoc | null;
-  applyDelta?: (delta: ReturnType<typeof calculateDelta>) => void;
-  commitDraft?: () => Promise<void>;
   pages: ForgePage[];
   projectId: number | null;
   dataAdapter?: WriterDataAdapter;
@@ -162,26 +157,16 @@ export function useGraphPageSync({
         updatedGraph.startNodeId = newNode.id;
       }
 
-      const hasDraftPipeline = Boolean(applyDelta && commitDraft && (committedGraph ?? effectiveGraph));
-      if (!hasDraftPipeline && !forgeDataAdapter) {
+      if (!forgeDataAdapter) {
         throw new Error('ForgeDataAdapter not available');
       }
 
-      if (hasDraftPipeline) {
-        const committedGraphForDelta = committedGraph ?? effectiveGraph;
-        if (!committedGraphForDelta) {
-          throw new Error('Committed graph not available');
-        }
-        applyDelta?.(calculateDelta(committedGraphForDelta, updatedGraph));
-        await commitDraft?.();
-      } else if (forgeDataAdapter) {
-        const persistedGraph = await forgeDataAdapter.updateGraph(updatedGraph.id, {
-          flow: updatedGraph.flow,
-          startNodeId: updatedGraph.startNodeId,
-          endNodeIds: updatedGraph.endNodeIds,
-        });
-        onGraphUpdate?.(persistedGraph);
-      }
+      const persistedGraph = await forgeDataAdapter.updateGraph(updatedGraph.id, {
+        flow: updatedGraph.flow,
+        startNodeId: updatedGraph.startNodeId,
+        endNodeIds: updatedGraph.endNodeIds,
+      });
+      onGraphUpdate?.(persistedGraph);
 
       onPagesUpdate([...safePages, newPage]);
       
@@ -193,7 +178,7 @@ export function useGraphPageSync({
       toast.error(`Failed to create ${input.pageType.toLowerCase()}`);
       return null;
     }
-  }, [applyDelta, commitDraft, committedGraph, effectiveGraph, pages, projectId, dataAdapter, forgeDataAdapter, onGraphUpdate, onPagesUpdate, toast]);
+  }, [effectiveGraph, pages, projectId, dataAdapter, forgeDataAdapter, onGraphUpdate, onPagesUpdate, toast]);
   
   return { createPageWithNode };
 }

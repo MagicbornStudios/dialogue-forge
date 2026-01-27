@@ -12,6 +12,7 @@ interface DetourNodeFieldsProps {
   graph: ForgeGraphDoc;
   onUpdate: (updates: Partial<ForgeNode>) => void;
   onFocusNode?: (nodeId: string) => void;
+  onUpdateStoryletCall: (updates: Partial<NonNullable<ForgeNode['storyletCall']>>) => void;
 }
 
 export function DetourNodeFields({
@@ -19,6 +20,7 @@ export function DetourNodeFields({
   graph,
   onUpdate,
   onFocusNode,
+  onUpdateStoryletCall,
 }: DetourNodeFieldsProps) {
   const workspaceActions = useForgeWorkspaceActions();
   const pushBreadcrumb = useForgeWorkspaceStore((s) => s.actions.pushBreadcrumb);
@@ -86,19 +88,19 @@ export function DetourNodeFields({
           value={storyletId || ''}
           onChange={(event) => {
             const newGraphId = event.target.value ? parseInt(event.target.value) : undefined;
-            onUpdate({
-              storyletCall: newGraphId && node.storyletCall?.mode ? {
+            if (newGraphId) {
+              // If mode exists, preserve it; otherwise default to DETOUR_RETURN
+              const mode = node.storyletCall?.mode || FORGE_STORYLET_CALL_MODE.DETOUR_RETURN;
+              onUpdateStoryletCall({ 
                 targetGraphId: newGraphId,
-                mode: node.storyletCall.mode,
+                mode,
                 targetStartNodeId: node.storyletCall?.targetStartNodeId,
                 returnNodeId: node.storyletCall?.returnNodeId,
-              } : newGraphId ? {
-                targetGraphId: newGraphId,
-                mode: FORGE_STORYLET_CALL_MODE.DETOUR_RETURN,
-                targetStartNodeId: node.storyletCall?.targetStartNodeId,
-                returnNodeId: node.storyletCall?.returnNodeId,
-              } : undefined,
-            });
+              });
+            } else {
+              // Clear storylet call if no graph selected
+              onUpdate({ storyletCall: undefined });
+            }
           }}
           className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-detour-accent)] outline-none"
         >
@@ -119,11 +121,8 @@ export function DetourNodeFields({
           onChange={(event) => {
             const returnNodeId = event.target.value || undefined;
             if (node.storyletCall?.targetGraphId) {
-              onUpdate({
-                storyletCall: {
-                  ...node.storyletCall,
-                  returnNodeId,
-                },
+              onUpdateStoryletCall({
+                returnNodeId,
               });
             }
           }}

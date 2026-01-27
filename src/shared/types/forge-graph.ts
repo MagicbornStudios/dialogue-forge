@@ -46,6 +46,17 @@ export const NARRATIVE_FORGE_NODE_TYPE = {
 export type NarrativeForgeNodeType = typeof NARRATIVE_FORGE_NODE_TYPE[keyof typeof NARRATIVE_FORGE_NODE_TYPE];
 
 /**
+ * Editable narrative node types - only Detour and Conditional can be created/edited
+ * in the narrative graph editor. Act, Chapter, and Page nodes are managed in Writer workspace.
+ */
+export const EDITABLE_NARRATIVE_NODE_TYPES = {
+  DETOUR: FORGE_NODE_TYPE.DETOUR,
+  CONDITIONAL: FORGE_NODE_TYPE.CONDITIONAL,
+} as const;
+
+export type EditableNarrativeNodeType = typeof EDITABLE_NARRATIVE_NODE_TYPES[keyof typeof EDITABLE_NARRATIVE_NODE_TYPES];
+
+/**
  * Forge edge kind constants
  */
 export const FORGE_EDGE_KIND = {

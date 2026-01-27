@@ -102,13 +102,32 @@ export function resolveNodeCollisions(
     if (!hasCollision) break;
   }
 
-  // Build updated dialogue with new positions
-  const updatedNodes: Record<string, ForgeNode> = {};
-  for (const pos of nodePositions) {
-    updatedNodes[pos.id] = { ...graph.flow.nodes[pos.id as unknown as number].data, x: pos.x, y: pos.y };
-  }
+  // Build updated nodes array with new positions
+  // graph.flow.nodes is an array, not an object, so we need to find nodes by ID
+  const updatedNodes = graph.flow.nodes.map(node => {
+    const pos = nodePositions.find(p => p.id === node.id);
+    if (!pos) {
+      // Node not found in positions (shouldn't happen, but handle gracefully)
+      return node;
+    }
+    
+    // Update position while preserving all other node properties
+    return {
+      ...node,
+      position: {
+        x: pos.x,
+        y: pos.y,
+      },
+    };
+  });
 
-  return { ...graph, flow: { ...graph.flow, nodes: Object.values(updatedNodes) as ForgeReactFlowNode[] } };
+  return { 
+    ...graph, 
+    flow: { 
+      ...graph.flow, 
+      nodes: updatedNodes 
+    } 
+  };
 }
 
 

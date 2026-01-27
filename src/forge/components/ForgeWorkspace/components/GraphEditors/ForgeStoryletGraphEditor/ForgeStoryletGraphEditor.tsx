@@ -88,19 +88,7 @@ import {
   useForgeEditorActions,
 } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { useForgeGraphEditorActions } from '@/forge/copilotkit';
-
-const nodeTypes = {
-  CHARACTER: CharacterNode,
-  PLAYER: PlayerNode,
-  CONDITIONAL: ConditionalNode,
-  STORYLET_REF: StoryletNode,
-  DETOUR: DetourNode,
-} as const;
-
-const edgeTypes = {
-  choice: ChoiceEdge,
-  default: ForgeEdge,
-} as const;
+import { debugLog } from '@/shared/utils/debug';
 
 // Registry map for EdgeDropMenu components by node type
 const storyletEdgeDropMenuByNodeType: Record<ForgeNodeType, React.ComponentType<any>> = {
@@ -145,6 +133,27 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
   // Use gameState.flags if available, fallback to gameStateFlags for backward compatibility
   const resolvedGameStateFlags = gameState?.flags || gameStateFlags;
   
+  // Memoize nodeTypes and edgeTypes to prevent React Flow warnings
+  // These should be stable references that don't change between renders
+  const nodeTypes = React.useMemo(() => {
+    debugLog('reactflow', 'Creating storylet nodeTypes');
+    return {
+      CHARACTER: CharacterNode,
+      PLAYER: PlayerNode,
+      CONDITIONAL: ConditionalNode,
+      STORYLET_REF: StoryletNode,
+      DETOUR: DetourNode,
+    } as const;
+  }, []);
+
+  const edgeTypes = React.useMemo(() => {
+    debugLog('reactflow', 'Creating storylet edgeTypes');
+    return {
+      choice: ChoiceEdge,
+      default: ForgeEdge,
+    } as const;
+  }, []);
+  
   const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
   const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
   const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
@@ -171,14 +180,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     }))
   );
 
-  const { committedGraph, draftGraph, applyDelta, resetDraft } = useForgeWorkspaceStore(
-    useShallow((s) => ({
-      committedGraph: s.committedGraph,
-      draftGraph: s.draftGraph,
-      applyDelta: s.actions.applyDelta,
-      resetDraft: s.actions.resetDraft,
-    }))
-  );
 
   const reactFlow = useReactFlow();
 
@@ -224,29 +225,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     [sessionStore]
   );
 
-  // Create handler for creating new graph
-  const handleCreateNewGraph = React.useCallback(async () => {
-    if (!dataAdapter || !selectedProjectId) return;
-    
-    const { createEmptyForgeGraphDoc } = await import('@/forge/lib/utils/forge-flow-helpers');
-    const { FORGE_GRAPH_KIND } = await import('@/forge/types/forge-graph');
-    const emptyGraph = createEmptyForgeGraphDoc({
-      projectId: selectedProjectId,
-      kind: FORGE_GRAPH_KIND.STORYLET,
-      title: 'New Storylet'
-    });
-    
-    const createdGraph = await dataAdapter.createGraph({
-      projectId: selectedProjectId,
-      kind: FORGE_GRAPH_KIND.STORYLET,
-      title: 'New Storylet',
-      flow: emptyGraph.flow,
-      startNodeId: emptyGraph.startNodeId,
-      endNodeIds: emptyGraph.endNodeIds,
-    });
-    
-    openGraphInScope('storylet', String(createdGraph.id));
-  }, [dataAdapter, selectedProjectId, openGraphInScope]);
 
   // Create a default empty graph if none exists, with correct kind for storylet
   const effectiveGraph = React.useMemo(() => {
@@ -260,17 +238,12 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     });
   }, [graph, selectedProjectId]);
 
-  React.useEffect(() => {
-    if (!committedGraph || committedGraph.id !== effectiveGraph.id) {
-      resetDraft(effectiveGraph);
-    }
-  }, [committedGraph, effectiveGraph, resetDraft]);
-
   // Shell is still the only "graph mutation" boundary.
   const shell = useForgeFlowEditorShell({
-    committedGraph: committedGraph ?? effectiveGraph,
-    draftGraph: draftGraph ?? effectiveGraph,
-    applyDelta,
+    graph: effectiveGraph,
+    onChange: (updatedGraph) => {
+      onChange(updatedGraph);
+    },
     reactFlow,
     sessionStore,
   });
@@ -294,7 +267,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     shell.effectiveGraph
   );
 
-  const { addedNodeIds, modifiedNodeIds, addedEdgeIds, modifiedEdgeIds } = useDraftVisualIndicators();
 
   // Consume focus requests from workspace
   React.useEffect(() => {
@@ -334,9 +306,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
       const isStartNode = n.id === startId;
       const isEndNode = shell.endNodeIds.has(n.id);
-      const isDraftAdded = addedNodeIds.has(n.id);
-      const isDraftUpdated = modifiedNodeIds.has(n.id);
-
       const baseNodeData = (flowNode?.data ?? {}) as ForgeNode;
 
       return {
@@ -350,8 +319,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
             isInPath: inPath,
             isStartNode,
             isEndNode,
-            isDraftAdded,
-            isDraftUpdated,
           },
 
           // Read-only context
@@ -370,8 +337,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     flagSchema,
     resolvedGameStateFlags,
     layoutDirection,
-    addedNodeIds,
-    modifiedNodeIds,
     nodeDepths,
     showPathHighlight,
     shell.effectiveGraph.startNodeId,
@@ -442,16 +407,12 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
           isInPathToSelected: isInPath,
           isBackEdge,
           isDimmed,
-          isDraftAdded,
-          isDraftUpdated,
           insertElementTypes,
           sourceNode: sourceFlowNode,
         },
       } as any;
     });
   }, [
-    addedEdgeIds,
-    modifiedEdgeIds,
     edgesToSelectedNode,
     layoutDirection,
     showBackEdges,
@@ -469,6 +430,8 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
         reactFlow={reactFlow}
         nodesWithMeta={nodesWithMeta}
         edgesWithMeta={edgesWithMeta}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         layoutDirection={layoutDirection}
         showPathHighlight={showPathHighlight}
         showBackEdges={showBackEdges}
@@ -479,7 +442,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
         openPlayModal={openPlayModal}
         openCopilotChat={openCopilotChat}
         handleClick={handleClick}
-        handleCreateNewGraph={handleCreateNewGraph}
         setLayoutDirection={setLayoutDirection}
         setAutoOrganize={setAutoOrganize}
         setShowPathHighlight={setShowPathHighlight}
@@ -500,6 +462,8 @@ function ForgeStoryletGraphEditorContent({
   reactFlow,
   nodesWithMeta,
   edgesWithMeta,
+  nodeTypes,
+  edgeTypes,
   layoutDirection,
   showPathHighlight,
   showBackEdges,
@@ -510,7 +474,6 @@ function ForgeStoryletGraphEditorContent({
   openPlayModal,
   openCopilotChat,
   handleClick,
-  handleCreateNewGraph,
   setLayoutDirection,
   setAutoOrganize,
   setShowPathHighlight,
@@ -525,6 +488,8 @@ function ForgeStoryletGraphEditorContent({
   reactFlow: ReturnType<typeof useReactFlow>;
   nodesWithMeta: any[];
   edgesWithMeta: any[];
+  nodeTypes: Record<string, React.ComponentType<any>>;
+  edgeTypes: Record<string, React.ComponentType<any>>;
   layoutDirection: LayoutDirection;
   showPathHighlight: boolean;
   showBackEdges: boolean;
@@ -535,7 +500,6 @@ function ForgeStoryletGraphEditorContent({
   openPlayModal: () => void;
   openCopilotChat: () => void;
   handleClick: () => void;
-  handleCreateNewGraph: () => Promise<void>;
   setLayoutDirection: (dir: LayoutDirection) => void;
   setAutoOrganize: (value: boolean) => void;
   setShowPathHighlight: (value: boolean) => void;
@@ -549,6 +513,15 @@ function ForgeStoryletGraphEditorContent({
   useForgeGraphEditorActions();
   
   const actions = useForgeEditorActions();
+  
+  // Debug logging for component render
+  React.useEffect(() => {
+    debugLog('components', 'ForgeStoryletGraphEditorContent rendered', { 
+      graphId: graph?.id,
+      nodeCount: nodesWithMeta.length,
+      edgeCount: edgesWithMeta.length 
+    });
+  });
 
   return (
     <div 
@@ -572,7 +545,6 @@ function ForgeStoryletGraphEditorContent({
           <div className="flex items-center gap-2">
             <GraphEditorToolbar 
               scope="storylet" 
-              onCreateNew={handleCreateNewGraph}
             />
             <button
               onClick={openYarnModal}

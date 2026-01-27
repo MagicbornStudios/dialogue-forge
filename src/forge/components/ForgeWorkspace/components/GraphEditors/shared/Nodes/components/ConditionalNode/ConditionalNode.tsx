@@ -29,8 +29,6 @@ interface ConditionalNodeData {
     isInPath?: boolean;
     isStartNode?: boolean;
     isEndNode?: boolean;
-    isDraftAdded?: boolean;
-    isDraftUpdated?: boolean;
   };
   layoutDirection?: LayoutDirection;
 }
@@ -118,7 +116,6 @@ export const ConditionalNode = React.memo(function ConditionalNode({ data, selec
           data-selected={selected ? 'true' : 'false'}
           data-in-path={isInPath ? 'true' : 'false'}
           data-dimmed={isDimmed ? 'true' : 'false'}
-          data-draft={isDraftAdded ? 'added' : isDraftUpdated ? 'modified' : undefined}
           data-start={isStartNode ? 'true' : 'false'}
           data-end={isEndNode ? 'true' : 'false'}
           className="forge-node rounded-lg border-2 transition-all duration-300 border-node bg-node text-node min-w-[320px] max-w-[450px] relative overflow-hidden"

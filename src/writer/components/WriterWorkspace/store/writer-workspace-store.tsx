@@ -17,7 +17,6 @@ import { createEditorSlice } from './slices/editor.slice';
 import { createAiSlice } from './slices/ai.slice';
 import { createNavigationSlice } from './slices/navigation.slice';
 import { createViewStateSlice } from './slices/viewState.slice';
-import { createWriterDraftSlice } from './slices/draft.slice';
 import type { EventSink } from '@/writer/events/writer-events';
 import { createEvent } from '@/writer/events/events';
 import { WRITER_EVENT_TYPE } from '@/writer/events/writer-events';
@@ -83,14 +82,6 @@ export interface WriterWorkspaceState {
   narrativeGraph: ForgeGraphDoc | null;
   narrativeHierarchy: NarrativeHierarchy | null;
 
-  // Draft slice
-  committedGraph: ReturnType<typeof createWriterDraftSlice>['committedGraph'];
-  draftGraph: ReturnType<typeof createWriterDraftSlice>['draftGraph'];
-  deltas: ReturnType<typeof createWriterDraftSlice>['deltas'];
-  validation: ReturnType<typeof createWriterDraftSlice>['validation'];
-  hasUncommittedChanges: ReturnType<typeof createWriterDraftSlice>['hasUncommittedChanges'];
-  lastCommittedAt: ReturnType<typeof createWriterDraftSlice>['lastCommittedAt'];
-
   // Data adapters
   dataAdapter?: WriterDataAdapter;
   forgeDataAdapter?: WriterForgeDataAdapter;
@@ -138,14 +129,6 @@ export interface WriterWorkspaceState {
     setNarrativeGraph: (graph: ForgeGraphDoc | null) => void;
     setNarrativeHierarchy: (hierarchy: NarrativeHierarchy | null) => void;
     createNarrativeGraph: (projectId: number) => Promise<ForgeGraphDoc>;
-
-    // Draft actions
-    applyDelta: ReturnType<typeof createWriterDraftSlice>['applyDelta'];
-    commitDraft: ReturnType<typeof createWriterDraftSlice>['commitDraft'];
-    discardDraft: ReturnType<typeof createWriterDraftSlice>['discardDraft'];
-    resetDraft: ReturnType<typeof createWriterDraftSlice>['resetDraft'];
-    getDraftGraph: ReturnType<typeof createWriterDraftSlice>['getDraftGraph'];
-    getCommittedGraph: ReturnType<typeof createWriterDraftSlice>['getCommittedGraph'];
   };
 }
 
@@ -180,7 +163,6 @@ export function createWriterWorkspaceStore(
         const aiSlice = createAiSlice(setTyped, getTyped, { setDraftContent: editorSlice.setDraftContent, setDraftTitle: editorSlice.setDraftTitle });
         const navigationSlice = createNavigationSlice(setTyped, getTyped, initialActivePageId);
         const viewStateSlice = createViewStateSlice(setTyped, getTyped);
-        const draftSlice = createWriterDraftSlice(setTyped, getTyped);
 
         // Wrap actions to emit events
         const setPagesWithEvents = (pages: ForgePage[]) => {
@@ -226,7 +208,6 @@ export function createWriterWorkspaceStore(
           ...aiSlice,
           ...navigationSlice,
           ...viewStateSlice,
-          ...draftSlice,
           pageMap: contentSlice.pageMap, // Include pageMap from content slice
           narrativeGraphs: [],
           selectedNarrativeGraphId: null,
@@ -248,7 +229,6 @@ export function createWriterWorkspaceStore(
             setSelectedNarrativeGraphId: (graphId: number | null) => set({ selectedNarrativeGraphId: graphId }),
             setNarrativeGraph: (graph: ForgeGraphDoc | null) => {
               set({ narrativeGraph: graph });
-              draftSlice.resetDraft(graph ?? null);
             },
             setNarrativeHierarchy: (hierarchy: NarrativeHierarchy | null) => set({ narrativeHierarchy: hierarchy }),
             createNarrativeGraph: async (projectId: number) => {
@@ -280,7 +260,6 @@ export function createWriterWorkspaceStore(
               
               // Also set as the active narrative graph
               set({ narrativeGraph: graph });
-              draftSlice.resetDraft(graph);
               
               return graph;
             },
@@ -291,28 +270,6 @@ export function createWriterWorkspaceStore(
             saveNow: saveNowWithEvents,
             createDraftForPage: editorSlice.createDraftForPage,
             setEditorError: editorSlice.setEditorError,
-
-            // Draft actions
-            applyDelta: draftSlice.applyDelta,
-            commitDraft: async () => {
-              await draftSlice.commitDraft();
-              const committed = get().committedGraph;
-              set({ narrativeGraph: committed ?? null });
-            },
-            discardDraft: async () => {
-              await draftSlice.discardDraft();
-              const committed = get().committedGraph;
-              set({ narrativeGraph: committed ?? null });
-            },
-            resetDraft: (nextCommitted?: ForgeGraphDoc | null) => {
-              draftSlice.resetDraft(nextCommitted ?? null);
-              if (typeof nextCommitted !== 'undefined') {
-                set({ narrativeGraph: nextCommitted ?? null });
-              }
-            },
-            getDraftGraph: draftSlice.getDraftGraph,
-            getCommittedGraph: draftSlice.getCommittedGraph,
-
             // AI actions
             setAiSelection: aiSlice.setAiSelection,
             proposeAiEdits: async (instruction?: string) => {

@@ -10,8 +10,7 @@ import { useGraphPageSync } from '@/writer/hooks/use-graph-page-sync';
 import { useToast } from '@/shared/ui/toast';
 import { validateNarrativeGraph } from '@/shared/lib/graph-validation';
 import type { ForgeGraphDoc } from '@/shared/types/forge-graph';
-import { FORGE_NODE_TYPE } from '@/shared/types/forge-graph';
-import { calculateDelta } from '@/shared/lib/draft/draft-helpers';
+import { FORGE_NODE_TYPE, type ForgeNodeType } from '@/shared/types/forge-graph';
 
 interface WriterTreeProps {
   className?: string;
@@ -150,28 +149,20 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
   const narrativeGraphs = useWriterWorkspaceStore((state) => state.narrativeGraphs);
   const selectedNarrativeGraphId = useWriterWorkspaceStore((state) => state.selectedNarrativeGraphId);
   const narrativeGraph = useWriterWorkspaceStore((state) => state.narrativeGraph);
-  const committedGraph = useWriterWorkspaceStore((state) => state.committedGraph);
-  const draftGraph = useWriterWorkspaceStore((state) => state.draftGraph);
   
   const setActivePageId = useWriterWorkspaceStore((state) => state.actions.setActivePageId);
   const setPages = useWriterWorkspaceStore((state) => state.actions.setPages);
   const setNarrativeGraph = useWriterWorkspaceStore((state) => state.actions.setNarrativeGraph);
   const setSelectedNarrativeGraphId = useWriterWorkspaceStore((state) => state.actions.setSelectedNarrativeGraphId);
   const createNarrativeGraph = useWriterWorkspaceStore((state) => state.actions.createNarrativeGraph);
-  const applyDelta = useWriterWorkspaceStore((state) => state.actions.applyDelta);
-  const commitDraft = useWriterWorkspaceStore((state) => state.actions.commitDraft);
 
-  const effectiveGraph = draftGraph ?? narrativeGraph;
+  const effectiveGraph = narrativeGraph;
 
   const projectId = projectIdProp ?? pages[0]?.project ?? null;
 
   // Graph-page sync hook
   const { createPageWithNode } = useGraphPageSync({
     graph: narrativeGraph,
-    committedGraph,
-    draftGraph,
-    applyDelta,
-    commitDraft,
     pages,
     projectId,
     dataAdapter,
@@ -356,54 +347,6 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
     }
   }, [isCreating, projectId, dataAdapter, pages, effectiveGraph, createNarrativeGraph, createPageWithNode, setActivePageId, setNarrativeGraph, toast]);
 
-  // Handle page rename
-  const handleRenamePage = useCallback(async (page: ForgePage) => {
-    const newTitle = prompt('Rename page:', page.title);
-    if (!newTitle || newTitle === page.title) return;
-
-    try {
-      if (dataAdapter?.updatePage) {
-        await dataAdapter.updatePage(page.id, { title: newTitle });
-        
-        const updatedPages = pages.map(p =>
-          p.id === page.id ? { ...p, title: newTitle } : p
-        );
-        setPages(updatedPages);
-
-        // Update graph node if it exists
-        if (effectiveGraph) {
-          const nodeToUpdate = Object.values(effectiveGraph.flow.nodes).find(
-            n => n.data?.pageId === page.id
-          );
-          if (nodeToUpdate) {
-            const updatedGraph: ForgeGraphDoc = {
-              ...effectiveGraph,
-              flow: {
-                ...effectiveGraph.flow,
-                nodes: effectiveGraph.flow.nodes.map((node) =>
-                  node.id === nodeToUpdate.id
-                    ? {
-                        ...node,
-                        data: { ...node.data, title: newTitle, label: newTitle },
-                      }
-                    : node
-                ),
-              },
-            };
-
-            const committedGraphForDelta = committedGraph ?? effectiveGraph;
-            applyDelta(calculateDelta(committedGraphForDelta, updatedGraph));
-            await commitDraft();
-          }
-        }
-        
-        toast.success('Page renamed');
-      }
-    } catch (error) {
-      console.error('Failed to rename page:', error);
-      toast.error('Failed to rename page');
-    }
-  }, [applyDelta, commitDraft, committedGraph, dataAdapter, effectiveGraph, pages, setPages, toast]);
 
   // Handle page deletion
   const handleDeletePage = useCallback(async (page: ForgePage) => {
@@ -413,6 +356,29 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
     if (hasChildren) {
       toast.warning('Cannot delete page with children. Delete children first.');
       return;
+    }
+    
+    // Check if page has a corresponding node in the narrative graph
+    if (effectiveGraph) {
+      const correspondingNode = effectiveGraph.flow.nodes.find(
+        n => (n.data as any)?.pageId === page.id
+      );
+      
+      if (correspondingNode) {
+        const nodeType = (correspondingNode.type as ForgeNodeType | undefined) ?? 
+                        ((correspondingNode.data as any)?.type);
+        
+        // Only allow deletion if node type is DETOUR or CONDITIONAL
+        // Act, Chapter, and Page nodes must be deleted from graph editor first
+        if (nodeType !== FORGE_NODE_TYPE.DETOUR && 
+            nodeType !== FORGE_NODE_TYPE.CONDITIONAL) {
+          const nodeTypeName = nodeType === FORGE_NODE_TYPE.ACT ? 'Act' :
+                              nodeType === FORGE_NODE_TYPE.CHAPTER ? 'Chapter' :
+                              nodeType === FORGE_NODE_TYPE.PAGE ? 'Page' : 'node';
+          toast.error(`Cannot delete page. Delete the corresponding ${nodeTypeName} node from the narrative graph editor first.`);
+          return;
+        }
+      }
     }
     
     if (!confirm(`Delete "${page.title}"?`)) return;
@@ -428,10 +394,10 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
           setActivePageId(null);
         }
 
-        // Remove from graph
+        // Remove from graph if node exists
         if (effectiveGraph) {
           const nodeToDelete = effectiveGraph.flow.nodes.find(
-            n => n.data?.pageId === page.id
+            n => (n.data as any)?.pageId === page.id
           );
           
           if (nodeToDelete) {
@@ -450,9 +416,18 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
               },
             };
 
-            const committedGraphForDelta = committedGraph ?? effectiveGraph;
-            applyDelta(calculateDelta(committedGraphForDelta, updatedGraph));
-            await commitDraft();
+            setNarrativeGraph(updatedGraph);
+            
+            // Also update via forgeDataAdapter if available
+            if (forgeDataAdapter) {
+              await forgeDataAdapter.updateGraph(updatedGraph.id, {
+                title: updatedGraph.title,
+                flow: updatedGraph.flow,
+                startNodeId: updatedGraph.startNodeId,
+                endNodeIds: updatedGraph.endNodeIds,
+                compiledYarn: updatedGraph.compiledYarn ?? null,
+              });
+            }
           }
         }
         
@@ -462,7 +437,7 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
       console.error('Failed to delete page:', error);
       toast.error('Failed to delete page');
     }
-  }, [applyDelta, commitDraft, committedGraph, dataAdapter, effectiveGraph, pages, setPages, activePageId, setActivePageId, toast]);
+  }, [dataAdapter, effectiveGraph, forgeDataAdapter, pages, setPages, activePageId, setActivePageId, setNarrativeGraph, toast]);
 
   // Handle adding Act at top level
   const handleAddAct = useCallback(async () => {

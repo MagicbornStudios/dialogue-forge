@@ -1,6 +1,7 @@
 import type { StateCreator } from "zustand"
 import type { ForgeWorkspaceState } from "../forge-workspace-store"
 import type { ForgeNodeType } from "@/forge/types/forge-graph"
+import { debugStoreMutation } from "@/shared/utils/debug"
 
 export interface PanelLayoutState {
   sidebar: {
@@ -103,98 +104,121 @@ export function createViewStateSlice(
     setGraphScope: scope => set({ graphScope: scope }),
     setStoryletFocusId: id => set({ storyletFocusId: id }),
     requestFocus: (scope, graphId, nodeId) => {
-      set((state) => ({
-        pendingFocusByScope: {
-          ...state.pendingFocusByScope,
-          [scope]: { graphId, nodeId },
-        },
-      }))
+      set((state) => {
+        // Mutate the draft state directly (Immer pattern)
+        state.pendingFocusByScope[scope] = { graphId, nodeId };
+        debugStoreMutation('viewState', 'requestFocus', { scope, graphId, nodeId });
+      })
     },
     clearFocus: (scope) => {
       set((state) => {
-        const next = { ...state.pendingFocusByScope }
-        delete next[scope]
-        return { pendingFocusByScope: next }
+        // Mutate the draft state directly (Immer pattern)
+        delete state.pendingFocusByScope[scope];
+        debugStoreMutation('viewState', 'clearFocus', { scope });
       })
     },
     setContextNodeType: (scope, nodeType) => {
-      set((state) => ({
-        contextNodeTypeByScope: {
-          ...state.contextNodeTypeByScope,
-          [scope]: nodeType,
-        },
-      }))
+      set((state) => {
+        // Mutate the draft state directly (Immer pattern)
+        state.contextNodeTypeByScope[scope] = nodeType;
+        debugStoreMutation('viewState', 'setContextNodeType', { scope, nodeType });
+      })
     },
     togglePanel: (panel) => {
-      set((state) => ({
-        panelLayout: {
-          ...state.panelLayout,
-          [panel]: {
-            ...state.panelLayout[panel],
-            visible: !state.panelLayout[panel].visible,
-          },
-        },
-      }))
+      set((state) => {
+        // Mutate the draft state directly (Immer pattern)
+        state.panelLayout[panel].visible = !state.panelLayout[panel].visible;
+        debugStoreMutation('viewState', 'togglePanel', { panel });
+      })
     },
     dockPanel: (panel) => {
       set((state) => {
         // When docking a panel, undock all others
-        const updatedLayout: PanelLayoutState = {
-          sidebar: { ...state.panelLayout.sidebar, isDocked: panel === 'sidebar' },
-          narrativeEditor: { ...state.panelLayout.narrativeEditor, isDocked: panel === 'narrativeEditor' },
-          storyletEditor: { ...state.panelLayout.storyletEditor, isDocked: panel === 'storyletEditor' },
-          nodeEditor: { ...state.panelLayout.nodeEditor, isDocked: panel === 'nodeEditor' },
-        };
-        updatedLayout[panel] = {
-          ...updatedLayout[panel],
-          isDocked: true,
-          visible: true, // Ensure panel is visible when docking
-        };
-        return { panelLayout: updatedLayout };
+        // Mutate the draft state directly (Immer pattern)
+        state.panelLayout.sidebar.isDocked = panel === 'sidebar';
+        state.panelLayout.narrativeEditor.isDocked = panel === 'narrativeEditor';
+        state.panelLayout.storyletEditor.isDocked = panel === 'storyletEditor';
+        state.panelLayout.nodeEditor.isDocked = panel === 'nodeEditor';
+        
+        // Ensure the docked panel is visible
+        state.panelLayout[panel].isDocked = true;
+        state.panelLayout[panel].visible = true;
+        debugStoreMutation('viewState', 'dockPanel', { panel });
       })
     },
     undockPanel: (panel) => {
-      set((state) => ({
-        panelLayout: {
-          ...state.panelLayout,
-          [panel]: {
-            ...state.panelLayout[panel],
-            isDocked: false,
-          },
-        },
-      }))
+      set((state) => {
+        // Mutate the draft state directly (Immer pattern)
+        state.panelLayout[panel].isDocked = false;
+        debugStoreMutation('viewState', 'undockPanel', { panel });
+      })
     },
-    setFocusedEditor: (editor) => set({ focusedEditor: editor }),
-    openPlayModal: () => set((state) => ({
-      modalState: { ...state.modalState, isPlayModalOpen: true }
-    })),
-    closePlayModal: () => set((state) => ({
-      modalState: { ...state.modalState, isPlayModalOpen: false }
-    })),
-    openYarnModal: () => set((state) => ({
-      modalState: { ...state.modalState, isYarnModalOpen: true }
-    })),
-    closeYarnModal: () => set((state) => ({
-      modalState: { ...state.modalState, isYarnModalOpen: false }
-    })),
-    openFlagModal: () => set((state) => ({
-      modalState: { ...state.modalState, isFlagModalOpen: true }
-    })),
-    closeFlagModal: () => set((state) => ({
-      modalState: { ...state.modalState, isFlagModalOpen: false }
-    })),
-    openGuide: () => set((state) => ({
-      modalState: { ...state.modalState, isGuideOpen: true }
-    })),
-    closeGuide: () => set((state) => ({
-      modalState: { ...state.modalState, isGuideOpen: false }
-    })),
-    openCopilotChat: () => set((state) => ({
-      modalState: { ...state.modalState, isCopilotChatOpen: true }
-    })),
-    closeCopilotChat: () => set((state) => ({
-      modalState: { ...state.modalState, isCopilotChatOpen: false }
-    })),
+    setFocusedEditor: (editor) => {
+      set((state) => {
+        state.focusedEditor = editor;
+        debugStoreMutation('viewState', 'setFocusedEditor', { editor });
+      })
+    },
+    openPlayModal: () => {
+      set((state) => {
+        state.modalState.isPlayModalOpen = true;
+        debugStoreMutation('viewState', 'openPlayModal');
+      })
+    },
+    closePlayModal: () => {
+      set((state) => {
+        state.modalState.isPlayModalOpen = false;
+        debugStoreMutation('viewState', 'closePlayModal');
+      })
+    },
+    openYarnModal: () => {
+      set((state) => {
+        state.modalState.isYarnModalOpen = true;
+        debugStoreMutation('viewState', 'openYarnModal');
+      })
+    },
+    closeYarnModal: () => {
+      set((state) => {
+        state.modalState.isYarnModalOpen = false;
+        debugStoreMutation('viewState', 'closeYarnModal');
+      })
+    },
+    openFlagModal: () => {
+      set((state) => {
+        state.modalState.isFlagModalOpen = true;
+        debugStoreMutation('viewState', 'openFlagModal');
+      })
+    },
+    closeFlagModal: () => {
+      set((state) => {
+        state.modalState.isFlagModalOpen = false;
+        debugStoreMutation('viewState', 'closeFlagModal');
+      })
+    },
+    openGuide: () => {
+      set((state) => {
+        state.modalState.isGuideOpen = true;
+        debugStoreMutation('viewState', 'openGuide');
+      })
+    },
+    closeGuide: () => {
+      set((state) => {
+        state.modalState.isGuideOpen = false;
+        debugStoreMutation('viewState', 'closeGuide');
+      })
+    },
+    openCopilotChat: () => {
+      set((state) => {
+        state.modalState.isCopilotChatOpen = true;
+        debugStoreMutation('viewState', 'openCopilotChat');
+      })
+    },
+    closeCopilotChat: () => {
+      set((state) => {
+        state.modalState.isCopilotChatOpen = false;
+        debugStoreMutation('viewState', 'closeCopilotChat');
+      })
+    },
     setCopilotVisible: (visible) => set({ copilotVisible: visible }),
   }
 }

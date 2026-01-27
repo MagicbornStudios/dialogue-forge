@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronRight, Home, Edit } from 'lucide-react';
 import { useForgeWorkspaceStoreInstance } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { useStore } from 'zustand';
@@ -15,6 +15,7 @@ import { Kbd } from '@/shared/ui/kbd';
 import { InlineRenameInput } from '@/forge/components/ForgeWorkspace/components/ForgeSideBar/InlineRenameInput';
 import { cn } from '@/shared/lib/utils';
 import { EditorExpandControls } from './EditorExpandControls';
+import { debugRender } from '@/shared/utils/debug';
 
 interface ForgeGraphBreadcrumbsProps {
   scope: "narrative" | "storylet";
@@ -48,6 +49,15 @@ export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
   }, [storeState.activeGraphId, storeState.graphs]);
   
   const currentGraphTitle = currentGraph?.title || 'Untitled Graph';
+  
+  // Debug logging for component render
+  useEffect(() => {
+    debugRender('ForgeGraphBreadcrumbs', { 
+      scope, 
+      activeGraphId: storeState.activeGraphId,
+      breadcrumbCount: storeState.breadcrumbHistory.length 
+    });
+  });
   
   // F2 hotkey for renaming
   useHotkeys('f2', () => {

@@ -13,7 +13,7 @@ import {
   ArrowRight,
   CircleStop,
 } from 'lucide-react';
-import { FORGE_NODE_TYPE, NARRATIVE_FORGE_NODE_TYPE, type ForgeNodeType } from '@/forge/types/forge-graph';
+import { FORGE_NODE_TYPE, NARRATIVE_FORGE_NODE_TYPE, EDITABLE_NARRATIVE_NODE_TYPES, type ForgeNodeType } from '@/forge/types/forge-graph';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { useNodeDrag } from '@/forge/components/ForgeWorkspace/hooks/useNodeDrag';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
@@ -153,8 +153,9 @@ export function NodePalette({ className }: NodePaletteProps) {
   // Determine which node types to show based on focused editor
   const allowedNodeTypes = useMemo(() => {
     if (focusedEditor === 'narrative') {
-      // Narrative editor: show narrative node types
-      return Object.values(NARRATIVE_FORGE_NODE_TYPE);
+      // Narrative editor: only show editable node types (Detour and Conditional)
+      // Act, Chapter, and Page nodes are managed in Writer workspace
+      return Object.values(EDITABLE_NARRATIVE_NODE_TYPES);
     } else if (focusedEditor === 'storylet') {
       // Storylet editor: show storylet node types
       return [

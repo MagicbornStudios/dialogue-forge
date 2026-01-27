@@ -128,6 +128,7 @@ export function NodeEditorFields({
           graph={graph}
           onUpdate={onUpdate}
           onFocusNode={onFocusNode}
+          onUpdateStoryletCall={onUpdateStoryletCall}
         />
       );
 

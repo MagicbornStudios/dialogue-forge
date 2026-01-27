@@ -97,7 +97,6 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
   const aiError = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.aiError);
   const aiSnapshot = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.aiSnapshot);
   const aiUndoSnapshot = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.aiUndoSnapshot);
-  const setDraftTitle = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.setDraftTitle);
   const setDraftContent = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.setDraftContent);
   const saveNow = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.saveNow);
   const applyAiEdits = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.applyAiEdits);
@@ -187,19 +186,9 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
         <div className="flex items-center justify-between px-3 py-2 mb-2">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <FileText size={14} className="text-df-text-tertiary" />
-            <input
-              type="text"
-              className="w-full bg-transparent text-sm font-medium text-df-text-primary outline-none placeholder:text-df-text-tertiary"
-              placeholder="Untitled"
-              value={draft?.title ?? activePage?.title ?? ''}
-              onChange={(event) => {
-                if (!activePageId) {
-                  return;
-                }
-                setDraftTitle(activePageId, event.target.value);
-              }}
-              disabled={!activePageId}
-            />
+            <span className="text-sm font-medium text-df-text-primary truncate">
+              {activePage?.title ?? 'Untitled'}
+            </span>
           </div>
           <span
             className={`rounded-full px-3 py-1 text-[11px] uppercase tracking-wide ${saveStatus.tone}`}

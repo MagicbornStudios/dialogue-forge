@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
+import { useShallow } from 'zustand/shallow';
 import { cn } from '@/shared/lib/utils';
+import { debugRender } from '@/shared/utils/debug';
 
 interface EditorExpandControlsProps {
   editorType: 'narrativeEditor' | 'storyletEditor' | 'nodeEditor';
@@ -49,28 +51,42 @@ function MinimizeIcon({ className }: { className?: string }) {
   );
 }
 
-export function EditorExpandControls({ editorType, className }: EditorExpandControlsProps) {
-  const panelLayout = useForgeWorkspaceStore((s) => s.panelLayout[editorType]);
+function EditorExpandControlsComponent({ editorType, className }: EditorExpandControlsProps) {
+  // Use separate selectors - actions are stable, only isDocked needs to be reactive
+  const isDocked = useForgeWorkspaceStore((s) => s.panelLayout[editorType]?.isDocked ?? false);
+  // Actions are stable references in Zustand, so we can select them directly
   const dockPanel = useForgeWorkspaceStore((s) => s.actions.dockPanel);
   const undockPanel = useForgeWorkspaceStore((s) => s.actions.undockPanel);
+  
+  // Debug logging for component render
+  useEffect(() => {
+    debugRender('EditorExpandControls', { editorType, isDocked });
+  });
 
-  const isDocked = panelLayout?.isDocked ?? false;
-
-  // Determine color based on editor type
-  const iconColorClass = 
+  // Memoize color class to prevent recalculation
+  const iconColorClass = useMemo(() => 
     editorType === 'narrativeEditor' 
       ? 'text-[var(--color-df-info)]' 
       : editorType === 'storyletEditor'
       ? 'text-[var(--color-df-edge-choice-1)]'
-      : 'text-[var(--color-df-text-secondary)]';
+      : 'text-[var(--color-df-text-secondary)]',
+    [editorType]
+  );
 
-  const handleToggle = () => {
+  // Memoize toggle handler to prevent function recreation
+  const handleToggle = useCallback(() => {
     if (isDocked) {
       undockPanel(editorType);
     } else {
       dockPanel(editorType);
     }
-  };
+  }, [isDocked, dockPanel, undockPanel, editorType]);
+
+  // Memoize tooltip text
+  const tooltipText = useMemo(() => 
+    isDocked ? 'Minimize editor' : 'Expand editor to fullscreen',
+    [isDocked]
+  );
 
   return (
     <TooltipProvider>
@@ -81,7 +97,7 @@ export function EditorExpandControls({ editorType, className }: EditorExpandCont
             size="icon"
             onClick={handleToggle}
             className={cn('h-7 w-7 transition-all duration-200', className)}
-            title={isDocked ? 'Minimize editor' : 'Expand editor to fullscreen'}
+            title={tooltipText}
           >
             {isDocked ? (
               <MinimizeIcon className={cn('transition-all duration-200', iconColorClass)} />
@@ -91,9 +107,12 @@ export function EditorExpandControls({ editorType, className }: EditorExpandCont
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{isDocked ? 'Minimize editor' : 'Expand editor to fullscreen'}</p>
+          <p>{tooltipText}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+export const EditorExpandControls = React.memo(EditorExpandControlsComponent);

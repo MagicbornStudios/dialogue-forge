@@ -37,6 +37,7 @@ export {
   FORGE_EDGE_KIND,
   FORGE_STORYLET_CALL_MODE,
   NARRATIVE_FORGE_NODE_TYPE,
+  EDITABLE_NARRATIVE_NODE_TYPES,
 } from '@/forge/types/forge-graph';
 
 

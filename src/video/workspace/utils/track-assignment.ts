@@ -1,4 +1,12 @@
 import type { VideoLayer } from '@/video/templates/types/video-layer';
+import { VIDEO_LAYER_KIND } from '@/video/templates/types/video-layer';
+
+/**
+ * Checks if a layer is a background layer (should always be on base layer)
+ */
+function isBackgroundLayer(layer: VideoLayer): boolean {
+  return layer.kind === VIDEO_LAYER_KIND.BACKGROUND;
+}
 
 /**
  * Checks if two layers overlap in time
@@ -15,6 +23,7 @@ function layersOverlap(layer1: VideoLayer, layer2: VideoLayer): boolean {
 /**
  * Assigns layers to tracks based on time overlap.
  * Overlapping layers are placed on different tracks.
+ * Background layers are excluded (they should be on the base layer).
  * Returns a map of layerId -> trackIndex (0-based)
  */
 export function assignLayersToTracks(
@@ -22,7 +31,9 @@ export function assignLayersToTracks(
   durationMs: number
 ): Map<string, number> {
   const assignments = new Map<string, number>();
-  const sortedLayers = [...layers].sort((a, b) => (a.startMs ?? 0) - (b.startMs ?? 0));
+  // Filter out background layers - they should always be on the base layer
+  const nonBackgroundLayers = layers.filter(l => !isBackgroundLayer(l));
+  const sortedLayers = [...nonBackgroundLayers].sort((a, b) => (a.startMs ?? 0) - (b.startMs ?? 0));
   const tracks: VideoLayer[][] = [];
   
   for (const layer of sortedLayers) {
@@ -54,6 +65,7 @@ export function assignLayersToTracks(
 /**
  * Finds the first available track for a layer at a given start time and duration.
  * Returns the track index, or -1 if a new track needs to be created.
+ * Background layers are excluded from track assignment.
  */
 export function findAvailableTrack(
   layers: VideoLayer[],
@@ -61,10 +73,12 @@ export function findAvailableTrack(
   durationMs: number,
   excludeLayerId?: string
 ): number {
-  // Filter out the excluded layer if provided
-  const otherLayers = excludeLayerId
-    ? layers.filter(l => l.id !== excludeLayerId)
-    : layers;
+  // Filter out background layers and the excluded layer if provided
+  const otherLayers = layers.filter(l => {
+    if (isBackgroundLayer(l)) return false;
+    if (excludeLayerId && l.id === excludeLayerId) return false;
+    return true;
+  });
   
   // Create a temporary layer for overlap checking
   const tempLayer: VideoLayer = {

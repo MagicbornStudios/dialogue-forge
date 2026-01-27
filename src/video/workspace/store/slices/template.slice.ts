@@ -420,6 +420,8 @@ export function createTemplateSlice(
       const finalDuration = Math.max(durationMs, MIN_DURATION_MS);
       
       const updatedTemplate = { ...draftTemplate };
+      // Create a new scenes array to avoid read-only mutation
+      updatedTemplate.scenes = [...draftTemplate.scenes];
       if (updatedTemplate.scenes[sceneIndex]) {
         updatedTemplate.scenes[sceneIndex] = {
           ...updatedTemplate.scenes[sceneIndex],

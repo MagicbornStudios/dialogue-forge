@@ -3,6 +3,7 @@
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import type { VideoTemplate } from '@/video/templates/types/video-template';
 import type { VideoLayer } from '@/video/templates/types/video-layer';
+import { VIDEO_LAYER_KIND } from '@/video/templates/types/video-layer';
 import { cn } from '@/shared/lib/utils';
 import { Play, Pause } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
@@ -47,20 +48,34 @@ export function VideoTimeline({
   } | null>(null);
 
   const scene = template?.scenes[0];
-  const layers = scene?.layers ?? [];
+  const allLayers = scene?.layers ?? [];
   const durationMs = scene?.durationMs ?? 5000;
   const frameRate = template?.frameRate ?? 30;
   const totalFrames = Math.ceil(durationMs / (1000 / frameRate));
 
-  // Assign layers to tracks
-  const trackAssignments = useMemo(() => {
-    return assignLayersToTracks(layers, durationMs);
-  }, [layers, durationMs]);
+  // Separate background layers from other layers
+  const { backgroundLayers, regularLayers } = useMemo(() => {
+    const backgrounds: VideoLayer[] = [];
+    const regular: VideoLayer[] = [];
+    allLayers.forEach(layer => {
+      if (layer.kind === VIDEO_LAYER_KIND.BACKGROUND) {
+        backgrounds.push(layer);
+      } else {
+        regular.push(layer);
+      }
+    });
+    return { backgroundLayers: backgrounds, regularLayers: regular };
+  }, [allLayers]);
 
-  // Group layers by track
+  // Assign regular layers to tracks (background layers excluded)
+  const trackAssignments = useMemo(() => {
+    return assignLayersToTracks(regularLayers, durationMs);
+  }, [regularLayers, durationMs]);
+
+  // Group regular layers by track
   const layersByTrack = useMemo(() => {
     const grouped = new Map<number, VideoLayer[]>();
-    layers.forEach(layer => {
+    regularLayers.forEach(layer => {
       const trackIndex = trackAssignments.get(layer.id) ?? 0;
       if (!grouped.has(trackIndex)) {
         grouped.set(trackIndex, []);
@@ -68,13 +83,13 @@ export function VideoTimeline({
       grouped.get(trackIndex)!.push(layer);
     });
     return grouped;
-  }, [layers, trackAssignments]);
+  }, [regularLayers, trackAssignments]);
 
   // Get max track index
   const maxTrackIndex = useMemo(() => {
-    if (layers.length === 0) return -1;
+    if (regularLayers.length === 0) return -1;
     return Math.max(...Array.from(trackAssignments.values()));
-  }, [trackAssignments, layers.length]);
+  }, [trackAssignments, regularLayers.length]);
 
   // Playback loop
   useEffect(() => {
@@ -118,7 +133,15 @@ export function VideoTimeline({
         const frame = Math.floor(percentage * totalFrames);
         onFrameChange(frame);
       } else if (dragState) {
-        // Layer dragging
+        // Layer dragging - prevent background layers from being moved
+        if (dragState.layerId) {
+          const layer = allLayers.find(l => l.id === dragState.layerId);
+          if (layer && layer.kind === VIDEO_LAYER_KIND.BACKGROUND) {
+            // Don't allow dragging background layers
+            return;
+          }
+        }
+        
         const deltaX = x - dragState.startX;
         const deltaMs = (deltaX / rect.width) * durationMs;
         
@@ -225,33 +248,62 @@ export function VideoTimeline({
         </div>
       </div>
 
-      {/* Base Layer (controls template duration) */}
+      {/* Base Layer (background layer serves as base layer, or template duration control if no background) */}
       <div className="py-2 border-b border-border">
         <div className="relative h-6 mx-2">
           <div className="absolute inset-0 bg-[var(--video-timeline-bg)] rounded border border-border" />
-          <div
-            className="absolute h-full bg-blue-500/20 border border-blue-500 rounded cursor-ew-resize"
-            style={{ width: '100%' }}
-            onMouseDown={(e) => {
-              e.stopPropagation();
-              if (!timelineRef.current || onSceneDurationChange === undefined) return;
-              const rect = timelineRef.current.getBoundingClientRect();
-              setDragState({
-                type: 'scene-duration',
-                layerId: null,
-                sceneIndex: 0,
-                startX: e.clientX - rect.left,
-                initialStartMs: 0,
-                initialDurationMs: durationMs,
-              });
-            }}
-          >
-            <div className="h-full flex items-center px-2 text-xs font-medium text-blue-400">
-              Base Layer (Template Duration)
-            </div>
-            {/* Right edge handle */}
+          
+          {backgroundLayers.length > 0 ? (
+            // Use background layer as the base layer
+            backgroundLayers.map((layer) => {
+              const startPercent = ((layer.startMs ?? 0) / durationMs) * 100;
+              const widthPercent = ((layer.durationMs ?? 1000) / durationMs) * 100;
+              const isSelected = selectedLayerId === layer.id;
+
+              return (
+                <div
+                  key={layer.id}
+                  className={cn(
+                    'absolute top-0 h-full',
+                    isSelected && 'ring-1 ring-[var(--color-df-video)]'
+                  )}
+                  style={{
+                    left: `${startPercent}%`,
+                    width: `${widthPercent}%`,
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onLayerSelect(layer.id);
+                  }}
+                >
+                  <div className="h-full bg-blue-500/20 border border-blue-500 rounded flex items-center px-2 text-xs font-medium text-blue-400">
+                    {layer.name ?? 'Background'} (Template Duration)
+                  </div>
+                  {/* Right edge handle for duration control */}
+                  <div
+                    className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize bg-blue-500/50 hover:bg-blue-500"
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      if (!timelineRef.current || onSceneDurationChange === undefined) return;
+                      const rect = timelineRef.current.getBoundingClientRect();
+                      setDragState({
+                        type: 'scene-duration',
+                        layerId: null,
+                        sceneIndex: 0,
+                        startX: e.clientX - rect.left,
+                        initialStartMs: 0,
+                        initialDurationMs: durationMs,
+                      });
+                    }}
+                  />
+                </div>
+              );
+            })
+          ) : (
+            // No background layer - show template duration control
             <div
-              className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize bg-blue-500/50 hover:bg-blue-500"
+              className="absolute h-full bg-blue-500/20 border border-blue-500 rounded cursor-ew-resize"
+              style={{ width: '100%' }}
               onMouseDown={(e) => {
                 e.stopPropagation();
                 if (!timelineRef.current || onSceneDurationChange === undefined) return;
@@ -265,14 +317,35 @@ export function VideoTimeline({
                   initialDurationMs: durationMs,
                 });
               }}
-            />
-          </div>
+            >
+              <div className="h-full flex items-center px-2 text-xs font-medium text-blue-400">
+                Base Layer (Template Duration)
+              </div>
+              {/* Right edge handle */}
+              <div
+                className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize bg-blue-500/50 hover:bg-blue-500"
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  if (!timelineRef.current || onSceneDurationChange === undefined) return;
+                  const rect = timelineRef.current.getBoundingClientRect();
+                  setDragState({
+                    type: 'scene-duration',
+                    layerId: null,
+                    sceneIndex: 0,
+                    startX: e.clientX - rect.left,
+                    initialStartMs: 0,
+                    initialDurationMs: durationMs,
+                  });
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
       {/* Layer Tracks */}
       <div className="flex-1 overflow-y-auto">
-        {layers.length === 0 ? (
+        {regularLayers.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-xs text-muted-foreground">No layers yet</div>
           </div>
@@ -322,6 +395,11 @@ export function VideoTimeline({
                             )}
                             onMouseDown={(e) => {
                               e.stopPropagation();
+                              // Prevent dragging background layers
+                              if (layer.kind === VIDEO_LAYER_KIND.BACKGROUND) {
+                                onLayerSelect(layer.id);
+                                return;
+                              }
                               if (!timelineRef.current || onLayerStartChange === undefined) return;
                               const rect = timelineRef.current.getBoundingClientRect();
                               const barRect = e.currentTarget.getBoundingClientRect();
@@ -371,6 +449,8 @@ export function VideoTimeline({
                               className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize bg-white/20 hover:bg-white/40 opacity-0 group-hover:opacity-100 transition-opacity"
                               onMouseDown={(e) => {
                                 e.stopPropagation();
+                                // Prevent resizing background layers
+                                if (layer.kind === VIDEO_LAYER_KIND.BACKGROUND) return;
                                 if (!timelineRef.current || onLayerStartChange === undefined) return;
                                 const rect = timelineRef.current.getBoundingClientRect();
                                 setDragState({
@@ -388,6 +468,8 @@ export function VideoTimeline({
                               className="absolute right-0 top-0 bottom-0 w-1 cursor-ew-resize bg-white/20 hover:bg-white/40 opacity-0 group-hover:opacity-100 transition-opacity"
                               onMouseDown={(e) => {
                                 e.stopPropagation();
+                                // Prevent resizing background layers
+                                if (layer.kind === VIDEO_LAYER_KIND.BACKGROUND) return;
                                 if (!timelineRef.current || onLayerDurationChange === undefined) return;
                                 const rect = timelineRef.current.getBoundingClientRect();
                                 setDragState({

@@ -20,11 +20,17 @@ export function setupVideoWorkspaceSubscriptions(
 
   // Subscribe to project changes
   let prevProjectId = store.getState().selectedProjectId;
+  let isHandlingProjectChange = false;
+  
   const unsubProject = store.subscribe((state) => {
-    if (state.selectedProjectId !== prevProjectId) {
-      // Clear template cache when project changes
-      // (templates are project-specific)
-      state.actions.clearTemplateHistory();
+    if (state.selectedProjectId !== prevProjectId && !isHandlingProjectChange) {
+      isHandlingProjectChange = true;
+      
+      // Clear template history synchronously (no actions to avoid recursion)
+      store.setState({
+        templateHistory: [],
+        historyIndex: -1,
+      });
       
       // Emit project changed event
       state.eventSink?.emit({
@@ -33,6 +39,7 @@ export function setupVideoWorkspaceSubscriptions(
       });
       
       prevProjectId = state.selectedProjectId;
+      isHandlingProjectChange = false;
     }
   });
   unsubscribers.push(unsubProject);

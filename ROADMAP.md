@@ -82,27 +82,30 @@ Overall:            ████████████░░░░░  60%
 - [ ] **P0**: Add z-index to layers (VideoLayerRenderer.tsx) - Pass layerIndex, apply zIndex
 - [ ] Test drag-drop-move-edit workflow works perfectly
 
-### Day 2-3: Default/Override Tabs (4-6 hours)
-- [ ] Create OverrideEditor component with tab switcher
-- [ ] Build DefaultTab (current canvas - editable)
-- [ ] Build OverrideTab (override form + preview)
-- [ ] Add canvas readonly mode (lock during preview)
-- [ ] Wire to store (overrideEditorState slice)
-- [ ] Add preview toggle button
-- [ ] Show lock overlay when preview active
+### Day 2-3: Default/Override Tabs (4-6 hours) ✅ COMPLETE
+- [x] Create OverrideEditor component with tab switcher
+- [x] Build DefaultTab (current canvas - editable)
+- [x] Build OverrideTab (override form + preview)
+- [x] Add canvas readonly mode (lock during preview)
+- [x] Wire to store (overrideEditorState slice)
+- [x] Add preview toggle button
+- [x] Show lock overlay when preview active
 
-**Deliverable**: Can switch between editing template defaults and previewing with overrides
+**Deliverable**: ✅ Can switch between editing template defaults and previewing with overrides
 
-### Day 3-4: Remotion Export Core (6-8 hours)
-- [ ] Implement Text layer component (Remotion)
-- [ ] Implement Rectangle layer component
-- [ ] Implement Circle layer component
-- [ ] Update VideoCompositionRenderer to use real components
-- [ ] Build export modal UI (settings: format, resolution, FPS)
+### Day 3-4: Remotion Export Core (6-8 hours) ✅ MOSTLY COMPLETE
+- [x] Implement Text layer component (Remotion)
+- [x] Implement Rectangle layer component
+- [x] Implement Circle layer component
+- [x] Implement Image layer component
+- [x] Implement Video layer component
+- [x] Implement Background layer component
+- [x] Update VideoCompositionRenderer to use real components
+- [ ] Build export modal UI (settings: format, resolution, FPS) ← IN PROGRESS
 - [ ] Wire export button to modal
 - [ ] Integrate with existing Remotion API
 
-**Deliverable**: Can export simple videos (text + shapes) as MP4
+**Deliverable**: 85% - Remotion rendering ready, need export UI
 
 ---
 

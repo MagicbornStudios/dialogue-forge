@@ -36,9 +36,11 @@ const mapVideoTemplate = (doc: PayloadVideoTemplateDoc): VideoTemplate => {
     throw new Error(`Video template ${doc.id} is missing template JSON.`);
   }
   const template = doc.template as Partial<VideoTemplate>;
+  // Always use the PayloadCMS document ID so saves update the existing record
+  // This ensures that when you load a template and save it, it updates rather than creating a new one
   return {
     ...(template as VideoTemplate),
-    id: template.id ?? String(doc.id),
+    id: String(doc.id), // Always use PayloadCMS ID
     name: template.name ?? doc.title,
   };
 };
@@ -121,6 +123,17 @@ export function makePayloadVideoTemplateAdapter(opts?: {
         },
       })) as PayloadVideoTemplateDoc;
       return mapVideoTemplate(doc);
+    },
+
+    async deleteTemplate(templateId: string): Promise<void> {
+      const parsedId = getTemplateId(templateId);
+      if (!parsedId) {
+        throw new Error(`Invalid template ID: ${templateId}`);
+      }
+      await payload.delete({
+        collection: PAYLOAD_COLLECTIONS.VIDEO_TEMPLATES,
+        id: parsedId,
+      });
     },
 
     async resolveMedia(request: VideoTemplateMediaRequest): Promise<VideoTemplateMediaResolution | null> {

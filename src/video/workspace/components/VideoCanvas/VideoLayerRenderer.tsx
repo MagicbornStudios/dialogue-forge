@@ -39,16 +39,20 @@ export function VideoLayerRenderer({
   const height = visual.height ?? 200;
   const rotation = visual.rotation ?? 0;
   const opacity = layer.opacity ?? 1;
-  const anchorX = visual.anchorX ?? 0.5;
-  const anchorY = visual.anchorY ?? 0.5;
+  const anchorX = visual.anchorX ?? 0; // Default to top-left corner
+  const anchorY = visual.anchorY ?? 0;
   
   // Calculate position accounting for anchor point
-  // Anchor 0.5, 0.5 means center, so we offset by half width/height
+  // Anchor 0, 0 means top-left corner, so x and y are the top-left position
+  // For other anchors, we offset by the anchor ratio
   const displayX = x - (width * anchorX);
   const displayY = y - (height * anchorY);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
+    
+    // Always select on mouse down
     onSelect();
     
     if (e.button === 0) {

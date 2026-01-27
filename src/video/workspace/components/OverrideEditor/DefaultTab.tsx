@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useVideoWorkspaceStore } from '../../store/video-workspace-store';
 import { VideoCanvas } from '../VideoCanvas';
 import { VideoTimeline } from '../VideoTimeline';
-import { PropertyInspector } from '../PropertyInspector';
+import { LevaPropertyInspector } from '../PropertyInspector/LevaPropertyInspector';
 import type { VideoLayer } from '@/video/templates/types/video-layer';
 
 export function DefaultTab() {
@@ -20,14 +20,27 @@ export function DefaultTab() {
   const resizeLayer = useVideoWorkspaceStore((s) => s.actions.resizeLayer);
   const addLayer = useVideoWorkspaceStore((s) => s.actions.addLayer);
   const updateLayer = useVideoWorkspaceStore((s) => s.actions.updateLayer);
+  const updateLayerStart = useVideoWorkspaceStore((s) => s.actions.updateLayerStart);
+  const updateLayerDuration = useVideoWorkspaceStore((s) => s.actions.updateLayerDuration);
+  const updateSceneDuration = useVideoWorkspaceStore((s) => s.actions.updateSceneDuration);
   const setCurrentFrame = useVideoWorkspaceStore((s) => s.actions.setCurrentFrame);
   const setIsPlaying = useVideoWorkspaceStore((s) => s.actions.setIsPlaying);
   
-  // Get selected layer
-  const selectedLayer = draftTemplate?.scenes[0]?.layers.find((l) => l.id === selectedLayerId) ?? null;
+  // Get selected layer from all scenes
+  const selectedLayer = useMemo(() => {
+    if (!draftTemplate || !selectedLayerId) return null;
+    
+    // Search through all scenes to find the layer
+    for (const scene of draftTemplate.scenes) {
+      const layer = scene.layers.find((l) => l.id === selectedLayerId);
+      if (layer) return layer;
+    }
+    return null;
+  }, [draftTemplate, selectedLayerId]);
   
   // Handlers
   const handleLayerSelect = useCallback((layerId: string | null) => {
+    console.log('🎯 DefaultTab handleLayerSelect:', layerId);
     setSelectedLayerId(layerId);
   }, [setSelectedLayerId]);
   
@@ -69,34 +82,21 @@ export function DefaultTab() {
             onFrameChange={setCurrentFrame}
             onPlayToggle={() => setIsPlaying(!isPlaying)}
             onLayerSelect={handleLayerSelect}
+            onLayerStartChange={updateLayerStart}
+            onLayerDurationChange={updateLayerDuration}
+            onSceneDurationChange={updateSceneDuration}
           />
         </div>
       </div>
 
-      {/* Property Inspector (Right Panel) */}
+      {/* Leva Property Inspector - Renders its own floating panel */}
       {selectedLayerId && selectedLayer && (
-        <div 
-          className="w-80 border-l border-border bg-background relative group animate-in slide-in-from-right duration-200"
-        >
-          <div className="absolute inset-y-0 left-0 w-[1px] bg-[var(--editor-border-hover)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
-          <div className="relative h-full">
-            {/* Close button */}
-            <button
-              onClick={() => handleLayerSelect(null)}
-              className="absolute top-2 right-2 z-10 p-1.5 rounded-md hover:bg-muted transition-colors"
-              aria-label="Close inspector"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-muted-foreground">
-                <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </button>
-            
-            <PropertyInspector
-              layer={selectedLayer}
-              onUpdate={updateLayer}
-            />
-          </div>
-        </div>
+        <LevaPropertyInspector
+          key={`${selectedLayerId}-${Math.round(selectedLayer.visual?.x ?? 0)}-${Math.round(selectedLayer.visual?.y ?? 0)}-${Math.round(selectedLayer.visual?.width ?? 200)}-${Math.round(selectedLayer.visual?.height ?? 200)}`}
+          layer={selectedLayer}
+          onUpdate={updateLayer}
+          onClose={() => handleLayerSelect(null)}
+        />
       )}
     </div>
   );

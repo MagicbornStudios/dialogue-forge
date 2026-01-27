@@ -91,7 +91,12 @@ export function VideoCanvas({
     if (readonly) return;
     e.preventDefault();
     
-    if (!draggedElementType || !canvasRef.current) return;
+    console.log('🎨 Canvas drop event:', { draggedElementType, hasCanvas: !!canvasRef.current });
+    
+    if (!draggedElementType || !canvasRef.current) {
+      console.warn('❌ Drop cancelled - no element type or canvas ref');
+      return;
+    }
     
     // Get drop position relative to canvas (in template coordinates)
     const rect = canvasRef.current.getBoundingClientRect();
@@ -101,9 +106,9 @@ export function VideoCanvas({
     const width = draggedElementType === 'text' ? 400 : 200;
     const height = draggedElementType === 'text' ? 100 : 200;
     
-    // Center the element at drop position (anchor 0.5, 0.5)
-    const centerX = Math.round(x);
-    const centerY = Math.round(y);
+    // Position element at drop position (anchor 0, 0 = top-left corner)
+    const dropX = Math.round(x);
+    const dropY = Math.round(y);
     
     // Create new layer
     const newLayer: Partial<VideoLayer> = {
@@ -111,17 +116,17 @@ export function VideoCanvas({
       name: `${draggedElementType} Layer`,
       kind: draggedElementType,
       startMs: 0,
-      durationMs: 5000,
+      durationMs: 1000, // 1 second default
       opacity: 1,
       visual: {
-        x: centerX,
-        y: centerY,
+        x: dropX,
+        y: dropY,
         width,
         height,
         rotation: 0,
         scale: 1,
-        anchorX: 0.5,
-        anchorY: 0.5,
+        anchorX: 0, // Top-left corner
+        anchorY: 0,
       },
       style: {
         backgroundColor: draggedElementType === 'text' ? 'transparent' : '#3b82f6',
@@ -136,7 +141,10 @@ export function VideoCanvas({
       } : undefined,
     };
     
+    console.log('🎨 Calling onLayerAdd with:', newLayer);
     onLayerAdd(newLayer);
+    
+    console.log('🎨 Clearing drag state');
     setDraggedElementType(null);
   }, [draggedElementType, canvasScale, onLayerAdd, setDraggedElementType]);
 

@@ -38,6 +38,9 @@ export interface TemplateActions {
   deleteLayer: (layerId: string) => void;
   moveLayer: (layerId: string, x: number, y: number) => void;
   resizeLayer: (layerId: string, width: number, height: number) => void;
+  updateLayerStart: (layerId: string, startMs: number) => void;
+  updateLayerDuration: (layerId: string, durationMs: number) => void;
+  updateSceneDuration: (sceneIndex: number, durationMs: number) => void;
 }
 
 export function createTemplateSlice(
@@ -56,10 +59,20 @@ export function createTemplateSlice(
     historyIndex: -1,
     
     setTemplate: (id: string, template: VideoTemplate) => {
+      // Ensure minimum scene duration of 1 second
+      const MIN_DURATION_MS = 1000;
+      const normalizedTemplate = {
+        ...template,
+        scenes: template.scenes.map(scene => ({
+          ...scene,
+          durationMs: Math.max(scene.durationMs, MIN_DURATION_MS),
+        })),
+      };
+      
       set((state) => ({
         templates: {
           ...state.templates,
-          byId: { ...state.templates.byId, [id]: template },
+          byId: { ...state.templates.byId, [id]: normalizedTemplate },
           statusById: { ...state.templates.statusById, [id]: 'ready' },
         },
       }));
@@ -173,10 +186,20 @@ export function createTemplateSlice(
     addLayer: (layer: Partial<VideoLayer>, sceneIndex = 0) => {
       const state = get();
       
+      console.log('📦 addLayer called with:', { layerKind: layer.kind, sceneIndex });
+      
       // Get current draft template
       const draftTemplate = state.draftGraph;
       if (!draftTemplate) {
         console.error('❌ No draft template');
+        return;
+      }
+      
+      console.log('📦 Draft template found:', draftTemplate.name, 'Current layers:', draftTemplate.scenes[sceneIndex]?.layers.length);
+      
+      // Validate scene exists
+      if (!draftTemplate.scenes[sceneIndex]) {
+        console.error('❌ Scene not found:', sceneIndex);
         return;
       }
       
@@ -186,12 +209,18 @@ export function createTemplateSlice(
         name: layer.name ?? 'New Layer',
         kind: layer.kind!,
         startMs: layer.startMs ?? 0,
-        durationMs: layer.durationMs ?? 5000,
+        durationMs: layer.durationMs ?? 1000, // 1 second default
         opacity: layer.opacity ?? 1,
-        visual: layer.visual,
+        visual: {
+          ...layer.visual,
+          anchorX: layer.visual?.anchorX ?? 0, // Default to top-left
+          anchorY: layer.visual?.anchorY ?? 0,
+        },
         style: layer.style,
         inputs: layer.inputs,
       };
+      
+      console.log('📦 Created layer:', newLayer.id, newLayer.kind);
       
       // Clone template and add layer to scene
       const updatedTemplate = { ...draftTemplate };
@@ -201,10 +230,15 @@ export function createTemplateSlice(
         layers: [...updatedTemplate.scenes[sceneIndex].layers, newLayer],
       };
       
+      console.log('📦 Updated template layers:', updatedTemplate.scenes[sceneIndex].layers.length);
+      
       // Apply to draft (this will trigger re-render)
       set({ draftGraph: updatedTemplate });
       
-      console.log('✅ Layer added:', newLayer.kind, 'Total layers:', updatedTemplate.scenes[sceneIndex].layers.length);
+      console.log('✅ Layer added successfully!');
+      
+      // Auto-select the new layer
+      state.actions.setSelectedLayerId(newLayer.id);
       
       // Emit event
       state.eventSink?.emit({
@@ -218,13 +252,48 @@ export function createTemplateSlice(
       const draftTemplate = state.draftGraph;
       if (!draftTemplate) return;
       
-      // Find layer and update it
+      // Validate duration if provided
+      const MIN_DURATION_MS = 1000; // 1 second minimum
+      if (updates.durationMs !== undefined && updates.durationMs < MIN_DURATION_MS) {
+        updates.durationMs = MIN_DURATION_MS;
+      }
+      
+      // Find layer and update it with proper nested merging
       const updatedTemplate = { ...draftTemplate };
       updatedTemplate.scenes = draftTemplate.scenes.map(scene => ({
         ...scene,
-        layers: scene.layers.map(layer =>
-          layer.id === layerId ? { ...layer, ...updates } : layer
-        ),
+        layers: scene.layers.map(layer => {
+          if (layer.id !== layerId) return layer;
+          
+          // Merge nested objects properly
+          const updatedLayer = { ...layer };
+          
+          // Merge visual properties
+          if (updates.visual) {
+            updatedLayer.visual = { ...layer.visual, ...updates.visual };
+          }
+          
+          // Merge style properties
+          if (updates.style) {
+            updatedLayer.style = { ...layer.style, ...updates.style };
+          }
+          
+          // Merge inputs properties
+          if (updates.inputs) {
+            updatedLayer.inputs = { ...layer.inputs, ...updates.inputs };
+          }
+          
+          // Merge top-level properties (excluding nested objects)
+          const { visual, style, inputs, ...topLevelUpdates } = updates;
+          const finalLayer = { ...updatedLayer, ...topLevelUpdates };
+          
+          // Ensure final duration is at least minimum
+          if (finalLayer.durationMs < MIN_DURATION_MS) {
+            finalLayer.durationMs = MIN_DURATION_MS;
+          }
+          
+          return finalLayer;
+        }),
       }));
       
       set({ draftGraph: updatedTemplate });
@@ -297,6 +366,64 @@ export function createTemplateSlice(
             : layer
         ),
       }));
+      
+      set({ draftGraph: updatedTemplate });
+    },
+    
+    updateLayerStart: (layerId: string, startMs: number) => {
+      const state = get();
+      const draftTemplate = state.draftGraph;
+      if (!draftTemplate) return;
+      
+      const updatedTemplate = { ...draftTemplate };
+      updatedTemplate.scenes = draftTemplate.scenes.map(scene => ({
+        ...scene,
+        layers: scene.layers.map(layer =>
+          layer.id === layerId
+            ? { ...layer, startMs: Math.max(0, startMs) }
+            : layer
+        ),
+      }));
+      
+      set({ draftGraph: updatedTemplate });
+    },
+    
+    updateLayerDuration: (layerId: string, durationMs: number) => {
+      const state = get();
+      const draftTemplate = state.draftGraph;
+      if (!draftTemplate) return;
+      
+      const MIN_DURATION_MS = 1000;
+      const finalDuration = Math.max(durationMs, MIN_DURATION_MS);
+      
+      const updatedTemplate = { ...draftTemplate };
+      updatedTemplate.scenes = draftTemplate.scenes.map(scene => ({
+        ...scene,
+        layers: scene.layers.map(layer =>
+          layer.id === layerId
+            ? { ...layer, durationMs: finalDuration }
+            : layer
+        ),
+      }));
+      
+      set({ draftGraph: updatedTemplate });
+    },
+    
+    updateSceneDuration: (sceneIndex: number, durationMs: number) => {
+      const state = get();
+      const draftTemplate = state.draftGraph;
+      if (!draftTemplate) return;
+      
+      const MIN_DURATION_MS = 1000;
+      const finalDuration = Math.max(durationMs, MIN_DURATION_MS);
+      
+      const updatedTemplate = { ...draftTemplate };
+      if (updatedTemplate.scenes[sceneIndex]) {
+        updatedTemplate.scenes[sceneIndex] = {
+          ...updatedTemplate.scenes[sceneIndex],
+          durationMs: finalDuration,
+        };
+      }
       
       set({ draftGraph: updatedTemplate });
     },

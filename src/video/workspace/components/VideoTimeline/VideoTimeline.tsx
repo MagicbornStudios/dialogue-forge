@@ -15,6 +15,9 @@ interface VideoTimelineProps {
   onFrameChange: (frame: number) => void;
   onPlayToggle: () => void;
   onLayerSelect: (layerId: string | null) => void;
+  onLayerStartChange?: (layerId: string, startMs: number) => void;
+  onLayerDurationChange?: (layerId: string, durationMs: number) => void;
+  onSceneDurationChange?: (sceneIndex: number, durationMs: number) => void;
   className?: string;
 }
 
@@ -26,10 +29,21 @@ export function VideoTimeline({
   onFrameChange,
   onPlayToggle,
   onLayerSelect,
+  onLayerStartChange,
+  onLayerDurationChange,
+  onSceneDurationChange,
   className,
 }: VideoTimelineProps) {
   const timelineRef = useRef<HTMLDivElement>(null);
   const [isDraggingPlayhead, setIsDraggingPlayhead] = useState(false);
+  const [dragState, setDragState] = useState<{
+    type: 'start' | 'duration' | 'move' | 'scene-duration' | null;
+    layerId: string | null;
+    sceneIndex: number | null;
+    startX: number;
+    initialStartMs: number;
+    initialDurationMs: number;
+  } | null>(null);
 
   const scene = template?.scenes[0];
   const layers = scene?.layers ?? [];
@@ -65,7 +79,7 @@ export function VideoTimeline({
   }, []);
 
   useEffect(() => {
-    if (!isDraggingPlayhead) return;
+    if (!isDraggingPlayhead && !dragState) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!timelineRef.current) return;
@@ -73,13 +87,35 @@ export function VideoTimeline({
       const rect = timelineRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const percentage = Math.max(0, Math.min(1, x / rect.width));
-      const frame = Math.floor(percentage * totalFrames);
       
-      onFrameChange(frame);
+      if (isDraggingPlayhead) {
+        // Playhead dragging
+        const frame = Math.floor(percentage * totalFrames);
+        onFrameChange(frame);
+      } else if (dragState) {
+        // Layer dragging
+        const deltaX = x - dragState.startX;
+        const deltaMs = (deltaX / rect.width) * durationMs;
+        
+        if (dragState.type === 'start' && dragState.layerId && onLayerStartChange) {
+          const newStartMs = Math.max(0, dragState.initialStartMs + deltaMs);
+          onLayerStartChange(dragState.layerId, newStartMs);
+        } else if (dragState.type === 'duration' && dragState.layerId && onLayerDurationChange) {
+          const newDurationMs = Math.max(1000, dragState.initialDurationMs + deltaMs);
+          onLayerDurationChange(dragState.layerId, newDurationMs);
+        } else if (dragState.type === 'move' && dragState.layerId && onLayerStartChange) {
+          const newStartMs = Math.max(0, dragState.initialStartMs + deltaMs);
+          onLayerStartChange(dragState.layerId, newStartMs);
+        } else if (dragState.type === 'scene-duration' && dragState.sceneIndex !== null && onSceneDurationChange) {
+          const newDurationMs = Math.max(1000, dragState.initialDurationMs + deltaMs);
+          onSceneDurationChange(dragState.sceneIndex, newDurationMs);
+        }
+      }
     };
 
     const handleMouseUp = () => {
       setIsDraggingPlayhead(false);
+      setDragState(null);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -89,7 +125,7 @@ export function VideoTimeline({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDraggingPlayhead, totalFrames, onFrameChange]);
+  }, [isDraggingPlayhead, dragState, totalFrames, durationMs, onFrameChange, onLayerStartChange, onLayerDurationChange, onSceneDurationChange]);
 
   const formatTime = (ms: number) => {
     const seconds = Math.floor(ms / 1000);
@@ -164,6 +200,51 @@ export function VideoTimeline({
         </div>
       </div>
 
+      {/* Base Layer (controls template duration) */}
+      <div className="py-2 border-b border-border">
+        <div className="relative h-6 mx-2">
+          <div className="absolute inset-0 bg-[var(--video-timeline-bg)] rounded border border-border" />
+          <div
+            className="absolute h-full bg-blue-500/20 border border-blue-500 rounded cursor-ew-resize"
+            style={{ width: '100%' }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              if (!timelineRef.current || onSceneDurationChange === undefined) return;
+              const rect = timelineRef.current.getBoundingClientRect();
+              setDragState({
+                type: 'scene-duration',
+                layerId: null,
+                sceneIndex: 0,
+                startX: e.clientX - rect.left,
+                initialStartMs: 0,
+                initialDurationMs: durationMs,
+              });
+            }}
+          >
+            <div className="h-full flex items-center px-2 text-xs font-medium text-blue-400">
+              Base Layer (Template Duration)
+            </div>
+            {/* Right edge handle */}
+            <div
+              className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize bg-blue-500/50 hover:bg-blue-500"
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                if (!timelineRef.current || onSceneDurationChange === undefined) return;
+                const rect = timelineRef.current.getBoundingClientRect();
+                setDragState({
+                  type: 'scene-duration',
+                  layerId: null,
+                  sceneIndex: 0,
+                  startX: e.clientX - rect.left,
+                  initialStartMs: 0,
+                  initialDurationMs: durationMs,
+                });
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Layer Tracks */}
       <div className="flex-1 overflow-y-auto">
         {layers.length === 0 ? (
@@ -181,10 +262,9 @@ export function VideoTimeline({
                 <div
                   key={layer.id}
                   className={cn(
-                    'relative h-8 mx-2 mb-1 cursor-pointer group',
+                    'relative h-8 mx-2 mb-1 group',
                     isSelected && 'ring-1 ring-[var(--color-df-video)]'
                   )}
-                  onClick={() => onLayerSelect(layer.id)}
                 >
                   {/* Layer track background */}
                   <div className="absolute inset-0 bg-[var(--video-timeline-bg)] rounded border border-border" />
@@ -192,17 +272,93 @@ export function VideoTimeline({
                   {/* Layer duration bar */}
                   <div
                     className={cn(
-                      'absolute h-full video-timeline-track transition-all',
+                      'absolute h-full video-timeline-track transition-all cursor-move',
                       isSelected && 'video-timeline-track-selected'
                     )}
                     style={{
                       left: `${startPercent}%`,
                       width: `${widthPercent}%`,
                     }}
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      if (!timelineRef.current || onLayerStartChange === undefined) return;
+                      const rect = timelineRef.current.getBoundingClientRect();
+                      const barRect = e.currentTarget.getBoundingClientRect();
+                      const localX = e.clientX - barRect.left;
+                      const barWidth = barRect.width;
+                      
+                      // Check if clicking on edges (within 4px)
+                      if (localX < 4) {
+                        // Left edge - resize start
+                        setDragState({
+                          type: 'start',
+                          layerId: layer.id,
+                          sceneIndex: null,
+                          startX: e.clientX - rect.left,
+                          initialStartMs: layer.startMs ?? 0,
+                          initialDurationMs: layer.durationMs ?? 1000,
+                        });
+                      } else if (localX > barWidth - 4) {
+                        // Right edge - resize duration
+                        setDragState({
+                          type: 'duration',
+                          layerId: layer.id,
+                          sceneIndex: null,
+                          startX: e.clientX - rect.left,
+                          initialStartMs: layer.startMs ?? 0,
+                          initialDurationMs: layer.durationMs ?? 1000,
+                        });
+                      } else {
+                        // Middle - move layer
+                        onLayerSelect(layer.id);
+                        setDragState({
+                          type: 'move',
+                          layerId: layer.id,
+                          sceneIndex: null,
+                          startX: e.clientX - rect.left,
+                          initialStartMs: layer.startMs ?? 0,
+                          initialDurationMs: layer.durationMs ?? 1000,
+                        });
+                      }
+                    }}
                   >
                     <div className="h-full flex items-center px-2 text-xs font-medium text-white truncate">
                       {layer.name ?? layer.id}
                     </div>
+                    {/* Left edge handle */}
+                    <div
+                      className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize bg-white/20 hover:bg-white/40"
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        if (!timelineRef.current || onLayerStartChange === undefined) return;
+                        const rect = timelineRef.current.getBoundingClientRect();
+                        setDragState({
+                          type: 'start',
+                          layerId: layer.id,
+                          sceneIndex: null,
+                          startX: e.clientX - rect.left,
+                          initialStartMs: layer.startMs ?? 0,
+                          initialDurationMs: layer.durationMs ?? 1000,
+                        });
+                      }}
+                    />
+                    {/* Right edge handle */}
+                    <div
+                      className="absolute right-0 top-0 bottom-0 w-1 cursor-ew-resize bg-white/20 hover:bg-white/40"
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        if (!timelineRef.current || onLayerDurationChange === undefined) return;
+                        const rect = timelineRef.current.getBoundingClientRect();
+                        setDragState({
+                          type: 'duration',
+                          layerId: layer.id,
+                          sceneIndex: null,
+                          startX: e.clientX - rect.left,
+                          initialStartMs: layer.startMs ?? 0,
+                          initialDurationMs: layer.durationMs ?? 1000,
+                        });
+                      }}
+                    />
                   </div>
 
                   {/* Layer name on left */}
@@ -219,3 +375,4 @@ export function VideoTimeline({
       </div>
     </div>
   );
+}

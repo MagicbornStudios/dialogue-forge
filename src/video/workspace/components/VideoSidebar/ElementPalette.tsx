@@ -62,17 +62,14 @@ export function ElementPalette({ className }: ElementPaletteProps) {
   const { setDraggedElementType } = useElementDrag();
 
   const handleDragStart = (e: React.DragEvent, elementKind: VideoLayerKind) => {
+    console.log('🎨 Drag started:', elementKind);
     setDraggedElementType(elementKind);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('application/video-element', elementKind);
-    
-    // Add visual feedback
-    if (e.currentTarget instanceof HTMLElement) {
-      e.currentTarget.style.opacity = '0.5';
-    }
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('text/plain', elementKind); // Add data for compatibility
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
+    console.log('🎨 Drag ended');
     setDraggedElementType(null);
     if (e.currentTarget instanceof HTMLElement) {
       e.currentTarget.style.opacity = '1';

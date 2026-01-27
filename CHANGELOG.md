@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Video Workspace Reconstruction** (January 27, 2026)
+- **Video Workspace Complete Rebuild** (January 27, 2026)
   - Complete 4-panel workspace layout matching Forge architecture
   - VideoCanvas with drag-and-drop layer creation
   - VideoLayerRenderer with move/resize capabilities
@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Template/Draft/ViewState/Project store slices
   - Event system with auto-save on commit
   - PayloadCMS adapter for template persistence
+  - **Default/Override tab system** for runtime data injection
+  - **Save As template** functionality with dialog
+  - **Duplicate template** via context menu
+  - **Rename template** with inline editing
+  - **Reload template** from server via context menu
+  - **Remotion layer rendering components** (Text, Rectangle, Circle, Image, Video, Background)
+  - **CopilotKit integration** with video workspace actions
+  - **AI actions** for layer manipulation and template queries
 
 ### Changed
 - Simplified template palette to show only "Blank Canvas" template
@@ -32,18 +40,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Menu bar shows template name and project switcher
 
 ### Fixed
+- **Critical**: Call stack size error in template subscriptions (infinite loop)
+- **Critical**: Pointer events bug preventing layer interaction after drop
+- **Critical**: Z-index management for proper layer stacking
+- **Critical**: "projectId is required" error when saving templates (now validates project selection)
 - Template loading from draft system
-- Inspector blocking canvas interaction (moved to side panel)
+- Inspector blocking canvas interaction (now proper side panel)
 - Canvas coordinate transformation for anchor-based positioning
 - Layer rendering with proper anchor point calculations
 - Project switching triggering template reload
+- Template listing now shows user templates from PayloadCMS
+- Duplicate "Templates" header text removed
+- Property inspector overflow (replaced with Leva floating panel)
+
+### Completed
+- ✅ Remotion layer rendering components (Text, Rectangle, Circle, Image, Video, Background)
+- ✅ VideoCompositionRenderer updated to use real components
+- ✅ CopilotKit integration with video workspace actions
+- ✅ Leva-based property inspector for professional UI
+- ✅ Save As, Duplicate, Rename, Reload template functionality
 
 ### In Progress
-- Fixing pointer events bug preventing layer interaction after drop
-- Adding z-index management for layer stacking
-- Building Default/Override tab system
-- Implementing Remotion layer rendering components
-- Building export modal with progress tracking
+- Export modal UI with settings and progress tracking
+- Debugging template loading and drag-drop issues
 
 ---
 

@@ -20,7 +20,13 @@ export function VideoWorkspaceMenuBar({ headerLinks, projectAdapter, onProjectCh
   const resetDraft = useVideoWorkspaceStore((s) => s.actions.resetDraft);
 
   const handleNewTemplate = () => {
-    console.log('Creating new template...');
+    if (!selectedProjectId) {
+      alert('Please select a project first before creating templates.');
+      return;
+    }
+    
+    console.log('Creating new template for project:', selectedProjectId);
+    
     // Create a blank template
     const blankTemplate = {
       id: `template_${Date.now()}`,

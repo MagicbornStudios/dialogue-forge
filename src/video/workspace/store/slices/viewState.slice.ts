@@ -184,11 +184,6 @@ export function createViewStateSlice(
       set({ 
         selectedLayerId: id,
         selectedLayerIds: id ? [id] : [],
-        // Show properties panel when layer selected
-        panelLayout: {
-          ...get().panelLayout,
-          properties: { visible: id !== null },
-        },
       });
     },
     

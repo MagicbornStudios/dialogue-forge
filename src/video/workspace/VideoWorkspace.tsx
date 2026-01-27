@@ -17,6 +17,7 @@ import {
 import { setupVideoWorkspaceSubscriptions } from '@/video/workspace/store/slices/subscriptions';
 import { CopilotKitProvider } from '@/ai/copilotkit';
 import { DEFAULT_BLANK_TEMPLATE } from '@/video/templates/default-templates';
+import { useVideoWorkspaceActions, useVideoCopilotContext } from './copilot';
 
 export interface HeaderLink {
   label: string;
@@ -103,6 +104,14 @@ export function VideoWorkspace({
     }
   }, [selectedProjectId]);
 
+  // Sync adapter from props (when project changes, adapter is recreated)
+  useEffect(() => {
+    const store = storeRef.current;
+    if (adapter && store.getState().adapter !== adapter) {
+      store.setState({ adapter });
+    }
+  }, [adapter]);
+
   // Emit project change events
   useEffect(() => {
     const store = storeRef.current;
@@ -122,8 +131,12 @@ export function VideoWorkspace({
 
   return (
     <VideoWorkspaceStoreProvider store={storeRef.current}>
-      <CopilotKitProvider>
-        <ElementDragProvider>
+      <CopilotKitProvider
+        instructions="You are an AI assistant for the Video workspace. Help users create and edit video templates, manage layers, and design professional video content."
+        defaultOpen={false}
+      >
+        <VideoWorkspaceActionsWrapper store={storeRef.current}>
+          <ElementDragProvider>
           <div 
             className={`flex h-full w-full flex-col ${className}`}
             data-domain="video"
@@ -138,7 +151,21 @@ export function VideoWorkspace({
             <VideoWorkspaceModals />
           </div>
         </ElementDragProvider>
+        </VideoWorkspaceActionsWrapper>
       </CopilotKitProvider>
     </VideoWorkspaceStoreProvider>
   );
+}
+
+// Wrapper component to register Copilot actions
+function VideoWorkspaceActionsWrapper({
+  children,
+  store,
+}: {
+  children: React.ReactNode;
+  store: ReturnType<typeof createVideoWorkspaceStore>;
+}) {
+  useVideoWorkspaceActions(store);
+  useVideoCopilotContext(store);
+  return <>{children}</>;
 }

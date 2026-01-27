@@ -1,0 +1,1 @@
+export { PropertyInspector } from './PropertyInspector';

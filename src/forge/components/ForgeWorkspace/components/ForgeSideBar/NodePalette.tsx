@@ -29,6 +29,7 @@ function getNodeIconColor(nodeType: ForgeNodeType): string {
     [FORGE_NODE_TYPE.CHARACTER]: 'var(--editor-npc-border)',
     [FORGE_NODE_TYPE.PLAYER]: 'var(--editor-player-border)',
     [FORGE_NODE_TYPE.CONDITIONAL]: 'var(--editor-conditional-border)',
+    [FORGE_NODE_TYPE.NARRATIVE_CONDITIONAL]: '#60a5fa', // Light blue
     [FORGE_NODE_TYPE.ACT]: '#8b5cf6', // Purple
     [FORGE_NODE_TYPE.CHAPTER]: '#06b6d4', // Cyan
     [FORGE_NODE_TYPE.PAGE]: '#22c55e', // Green
@@ -109,6 +110,13 @@ const NODE_TYPE_INFO: Record<ForgeNodeType, NodeTypeInfo> = {
     category: 'logic',
     description: 'Conditional branching',
   },
+  [FORGE_NODE_TYPE.NARRATIVE_CONDITIONAL]: {
+    type: FORGE_NODE_TYPE.NARRATIVE_CONDITIONAL,
+    label: 'Narrative Conditional',
+    icon: <GitBranch size={14} />,
+    category: 'logic',
+    description: 'Conditional routing to narrative graphs',
+  },
   [FORGE_NODE_TYPE.DETOUR]: {
     type: FORGE_NODE_TYPE.DETOUR,
     label: 'Detour',
@@ -153,9 +161,13 @@ export function NodePalette({ className }: NodePaletteProps) {
   // Determine which node types to show based on focused editor
   const allowedNodeTypes = useMemo(() => {
     if (focusedEditor === 'narrative') {
-      // Narrative editor: only show editable node types (Detour and Conditional)
+      // Narrative editor: only show editable node types (Detour and Narrative Conditional)
       // Act, Chapter, and Page nodes are managed in Writer workspace
-      return Object.values(EDITABLE_NARRATIVE_NODE_TYPES);
+      // CONDITIONAL is excluded - only NARRATIVE_CONDITIONAL is allowed
+      return [
+        FORGE_NODE_TYPE.DETOUR,
+        FORGE_NODE_TYPE.NARRATIVE_CONDITIONAL,
+      ];
     } else if (focusedEditor === 'storylet') {
       // Storylet editor: show storylet node types
       return [

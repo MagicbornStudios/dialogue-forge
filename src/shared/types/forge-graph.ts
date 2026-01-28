@@ -22,6 +22,7 @@ export const FORGE_NODE_TYPE = {
   PLAYER: 'PLAYER',
   CHARACTER: 'CHARACTER',
   CONDITIONAL: 'CONDITIONAL',
+  NARRATIVE_CONDITIONAL: 'NARRATIVE_CONDITIONAL',
   DETOUR: 'DETOUR',
   JUMP: 'JUMP',
   END: 'END',
@@ -52,6 +53,7 @@ export type NarrativeForgeNodeType = typeof NARRATIVE_FORGE_NODE_TYPE[keyof type
 export const EDITABLE_NARRATIVE_NODE_TYPES = {
   DETOUR: FORGE_NODE_TYPE.DETOUR,
   CONDITIONAL: FORGE_NODE_TYPE.CONDITIONAL,
+  NARRATIVE_CONDITIONAL: FORGE_NODE_TYPE.NARRATIVE_CONDITIONAL,
 } as const;
 
 export type EditableNarrativeNodeType = typeof EDITABLE_NARRATIVE_NODE_TYPES[keyof typeof EDITABLE_NARRATIVE_NODE_TYPES];
@@ -172,6 +174,9 @@ export type ForgeNode = {
 
   // detour/jump
   storyletCall?: ForgeStoryletCall;
+  
+  // narrative conditional
+  narrativeConditionalCall?: ForgeNarrativeConditionalCall;
 
   // narrative content references (PayloadCMS IDs)
   actId?: number;

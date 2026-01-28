@@ -15,11 +15,12 @@ interface NarrativeGraphEditorPaneContextMenuProps {
 }
 
 // Available node types for pane context menu in narrative editor
-// Only Detour and Conditional nodes can be created in narrative graph editor
+// Only Detour and Narrative Conditional nodes can be created in narrative graph editor
+// CONDITIONAL is not allowed - only NARRATIVE_CONDITIONAL
 // Act, Chapter, and Page nodes are managed in Writer workspace
 const availableNodeTypes: ForgeNodeType[] = [
   FORGE_NODE_TYPE.DETOUR,
-  FORGE_NODE_TYPE.CONDITIONAL,
+  FORGE_NODE_TYPE.NARRATIVE_CONDITIONAL,
 ];
 
 export function NarrativeGraphEditorPaneContextMenu({

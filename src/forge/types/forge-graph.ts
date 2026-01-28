@@ -18,6 +18,7 @@ export type {
   ForgeNode,
   ForgeNodePresentation,
   ForgeNodeType,
+  ForgeNarrativeConditionalCall,
   ForgeReactFlowEdge,
   ForgeReactFlowJson,
   ForgeReactFlowNode,

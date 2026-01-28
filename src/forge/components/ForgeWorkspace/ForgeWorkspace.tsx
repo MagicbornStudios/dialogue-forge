@@ -259,7 +259,23 @@ function ForgeWorkspaceContent({
         } catch (error) {
           console.error('Failed to create graph:', error);
         }
+      } else if (next.id > 0 && dataAdapter) {
+        // Update existing graph in database
+        try {
+          await dataAdapter.updateGraph(next.id, {
+            flow: next.flow,
+            startNodeId: next.startNodeId,
+            endNodeIds: next.endNodeIds,
+          });
+          // Update store after successful database update
+          setGraph(String(next.id), next);
+        } catch (error) {
+          console.error('Failed to update graph:', error);
+          // Still update store even if database update fails (optimistic update)
+          setGraph(String(next.id), next);
+        }
       } else {
+        // No ID or no adapter - just update store
         setGraph(String(next.id), next);
       }
     },
@@ -307,7 +323,23 @@ function ForgeWorkspaceContent({
         } catch (error) {
           console.error('Failed to create graph:', error);
         }
+      } else if (next.id > 0 && dataAdapter) {
+        // Update existing graph in database
+        try {
+          await dataAdapter.updateGraph(next.id, {
+            flow: next.flow,
+            startNodeId: next.startNodeId,
+            endNodeIds: next.endNodeIds,
+          });
+          // Update store after successful database update
+          setGraph(String(next.id), next);
+        } catch (error) {
+          console.error('Failed to update graph:', error);
+          // Still update store even if database update fails (optimistic update)
+          setGraph(String(next.id), next);
+        }
       } else {
+        // No ID or no adapter - just update store
         setGraph(String(next.id), next);
       }
     },

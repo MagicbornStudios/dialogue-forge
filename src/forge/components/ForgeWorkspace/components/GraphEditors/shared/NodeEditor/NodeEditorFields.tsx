@@ -7,6 +7,7 @@ import { StoryletNodeFields } from '@/forge/components/ForgeWorkspace/components
 import { ConditionalNodeFields } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNodeFields';
 import { PlayerNodeFields } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PlayerNode/PlayerNodeFields';
 import { DetourNodeFields } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode/DetourNodeFields';
+import { NarrativeConditionalNodeFields } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/NarrativeConditionalNode/NarrativeConditionalNodeFields';
 
 interface NodeEditorFieldsProps {
   node: ForgeNode;
@@ -129,6 +130,17 @@ export function NodeEditorFields({
           onUpdate={onUpdate}
           onFocusNode={onFocusNode}
           onUpdateStoryletCall={onUpdateStoryletCall}
+        />
+      );
+
+    case FORGE_NODE_TYPE.NARRATIVE_CONDITIONAL:
+      return (
+        <NarrativeConditionalNodeFields
+          node={node}
+          graph={graph}
+          onUpdate={onUpdate}
+          onFocusNode={onFocusNode}
+          flagSchema={flagSchema}
         />
       );
 

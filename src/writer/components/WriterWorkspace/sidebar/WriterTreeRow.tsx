@@ -20,6 +20,7 @@ interface WriterTreeRowProps {
   onAddChild?: () => void;
   canAddChild?: boolean;
   hasDetour?: boolean;
+  hasConditional?: boolean;
   isEndNode?: boolean;
 }
 
@@ -33,6 +34,7 @@ export function WriterTreeRow({
   onAddChild,
   canAddChild = false,
   hasDetour = false,
+  hasConditional = false,
   isEndNode = false,
 }: WriterTreeRowProps) {
   const rowContent = (
@@ -60,6 +62,16 @@ export function WriterTreeRow({
               size={8} 
               fill="currentColor" 
               className="text-orange-600 dark:text-orange-500 flex-shrink-0" 
+            />
+          </span>
+        )}
+        {/* Conditional indicator - blue/purple bullet */}
+        {hasConditional && (
+          <span title="Has conditional connection">
+            <Circle 
+              size={8} 
+              fill="currentColor" 
+              className="text-blue-600 dark:text-blue-500 flex-shrink-0" 
             />
           </span>
         )}

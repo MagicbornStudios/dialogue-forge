@@ -23,6 +23,7 @@ type TreeNode = {
   page: ForgePage;
   children?: TreeNode[];
   hasDetour?: boolean;
+  hasConditional?: boolean;
   isEndNode?: boolean;
 };
 
@@ -41,6 +42,7 @@ function getIconForPageType(pageType: string) {
 
 /**
  * Check if a node has outgoing edges to DETOUR nodes
+ * Also checks for incoming edges FROM detour nodes (detour connected to this node)
  */
 function hasDetourConnection(graph: ForgeGraphDoc | null, nodeId: string | null): boolean {
   if (!graph || !nodeId) return false;
@@ -48,10 +50,46 @@ function hasDetourConnection(graph: ForgeGraphDoc | null, nodeId: string | null)
   const node = graph.flow.nodes.find(n => n.id === nodeId);
   if (!node) return false;
   
+  // Check outgoing edges TO detour nodes
+  const outgoingEdges = graph.flow.edges.filter(e => e.source === nodeId);
+  const hasOutgoingToDetour = outgoingEdges.some(edge => {
+    const targetNode = graph.flow.nodes.find(n => n.id === edge.target);
+    if (!targetNode) return false;
+    // Check both node.type and node.data.type for compatibility
+    const nodeType = targetNode.type || targetNode.data?.type;
+    return nodeType === FORGE_NODE_TYPE.DETOUR;
+  });
+  
+  // Check incoming edges FROM detour nodes (detour connected to this node)
+  const incomingEdges = graph.flow.edges.filter(e => e.target === nodeId);
+  const hasIncomingFromDetour = incomingEdges.some(edge => {
+    const sourceNode = graph.flow.nodes.find(n => n.id === edge.source);
+    if (!sourceNode) return false;
+    // Check both node.type and node.data.type for compatibility
+    const nodeType = sourceNode.type || sourceNode.data?.type;
+    return nodeType === FORGE_NODE_TYPE.DETOUR;
+  });
+  
+  return hasOutgoingToDetour || hasIncomingFromDetour;
+}
+
+/**
+ * Check if a node has outgoing edges to CONDITIONAL nodes
+ */
+function hasConditionalConnection(graph: ForgeGraphDoc | null, nodeId: string | null): boolean {
+  if (!graph || !nodeId) return false;
+  
+  const node = graph.flow.nodes.find(n => n.id === nodeId);
+  if (!node) return false;
+  
+  // Check if node has outgoing edges to CONDITIONAL nodes
   const outgoingEdges = graph.flow.edges.filter(e => e.source === nodeId);
   return outgoingEdges.some(edge => {
     const targetNode = graph.flow.nodes.find(n => n.id === edge.target);
-    return targetNode?.type === FORGE_NODE_TYPE.DETOUR;
+    if (!targetNode) return false;
+    // Check both node.type and node.data.type for compatibility
+    const nodeType = targetNode.type || targetNode.data?.type;
+    return nodeType === FORGE_NODE_TYPE.CONDITIONAL;
   });
 }
 
@@ -67,11 +105,25 @@ function isEndNode(graph: ForgeGraphDoc | null, nodeId: string | null): boolean 
 
 /**
  * Find the graph node ID for a given page ID
+ * CRITICAL: Only returns nodes that are ACT, CHAPTER, or PAGE types
+ * Detour and Conditional nodes are explicitly excluded
  */
 function findNodeIdByPageId(graph: ForgeGraphDoc | null, pageId: number): string | null {
   if (!graph) return null;
   const node = graph.flow.nodes.find(n => n.data?.pageId === pageId);
-  return node?.id || null;
+  if (!node) return null;
+  
+  // CRITICAL: Validate node type - only return ACT, CHAPTER, or PAGE nodes
+  const nodeType = node.type || node.data?.type;
+  if (nodeType !== FORGE_NODE_TYPE.ACT && 
+      nodeType !== FORGE_NODE_TYPE.CHAPTER && 
+      nodeType !== FORGE_NODE_TYPE.PAGE) {
+    // This is a detour/conditional node - don't return it
+    console.warn(`[WriterTree] Node with pageId ${pageId} is not a narrative node (type: ${nodeType}). Ignoring.`);
+    return null;
+  }
+  
+  return node.id;
 }
 
 // Helper to get all node IDs recursively for initial expansion
@@ -86,53 +138,150 @@ function getAllNodeIds(nodes: TreeNode[]): string[] {
   return ids;
 }
 
+/**
+ * Build tree data from graph traversal (GRAPH-FIRST approach)
+ * Traverses the graph linearly from startNodeId, following edges
+ */
+function buildTreeDataFromGraph(
+  graph: ForgeGraphDoc | null,
+  pagesMap: Map<number, ForgePage>,
+  drafts: Record<number, { title: string }>
+): TreeNode[] {
+  if (!graph || !graph.startNodeId) {
+    return [];
+  }
+
+  const nodeMap = new Map(graph.flow.nodes.map(n => [n.id, n]));
+  const outgoingEdges = new Map<string, string[]>();
+  for (const edge of graph.flow.edges) {
+    if (!outgoingEdges.has(edge.source)) {
+      outgoingEdges.set(edge.source, []);
+    }
+    outgoingEdges.get(edge.source)!.push(edge.target);
+  }
+
+  const visited = new Set<string>();
+  const treeNodes: TreeNode[] = [];
+  let currentAct: TreeNode | null = null;
+  let currentChapter: TreeNode | null = null;
+
+  function getDisplayTitle(page: ForgePage): string {
+    const draftTitle = drafts[page.id]?.title?.trim();
+    return draftTitle || page.title;
+  }
+
+  function traverseNode(nodeId: string) {
+    if (visited.has(nodeId)) return;
+    visited.add(nodeId);
+
+    const node = nodeMap.get(nodeId);
+    if (!node) return;
+
+    const nodeType = node.type || node.data?.type;
+    const nodeData = node.data as any;
+
+    // Skip non-narrative nodes (they exist on graph but not in tree)
+    if (nodeType === FORGE_NODE_TYPE.DETOUR || 
+        nodeType === FORGE_NODE_TYPE.CONDITIONAL) {
+      // Continue traversal but don't add to tree
+      const targets = outgoingEdges.get(nodeId) || [];
+      for (const targetId of targets) {
+        traverseNode(targetId);
+      }
+      return;
+    }
+
+    // Handle ACT nodes
+    if (nodeType === FORGE_NODE_TYPE.ACT && nodeData?.pageId) {
+      const page = pagesMap.get(nodeData.pageId);
+      if (page) {
+        currentAct = {
+          id: `page-${page.id}`,
+          name: getDisplayTitle(page),
+          page,
+          hasDetour: hasDetourConnection(graph, nodeId),
+          hasConditional: hasConditionalConnection(graph, nodeId),
+          isEndNode: isEndNode(graph, nodeId),
+          children: [],
+        };
+        treeNodes.push(currentAct);
+        currentChapter = null; // Reset chapter when new act starts
+      }
+    }
+    // Handle CHAPTER nodes
+    else if (nodeType === FORGE_NODE_TYPE.CHAPTER && nodeData?.pageId) {
+      const page = pagesMap.get(nodeData.pageId);
+      if (page && currentAct && currentAct.children) {
+        currentChapter = {
+          id: `page-${page.id}`,
+          name: getDisplayTitle(page),
+          page,
+          hasDetour: hasDetourConnection(graph, nodeId),
+          hasConditional: hasConditionalConnection(graph, nodeId),
+          isEndNode: isEndNode(graph, nodeId),
+          children: [],
+        };
+        currentAct.children.push(currentChapter);
+      }
+    }
+    // Handle PAGE nodes
+    else if (nodeType === FORGE_NODE_TYPE.PAGE && nodeData?.pageId) {
+      const page = pagesMap.get(nodeData.pageId);
+      if (page && currentChapter) {
+        // Ensure children array exists
+        if (!currentChapter.children) {
+          currentChapter.children = [];
+        }
+        const pageNode: TreeNode = {
+          id: `page-${page.id}`,
+          name: getDisplayTitle(page),
+          page,
+          hasDetour: hasDetourConnection(graph, nodeId),
+          hasConditional: hasConditionalConnection(graph, nodeId),
+          isEndNode: isEndNode(graph, nodeId),
+        };
+        currentChapter.children.push(pageNode);
+      }
+    }
+
+    // Continue traversal to next nodes
+    const targets = outgoingEdges.get(nodeId) || [];
+    for (const targetId of targets) {
+      traverseNode(targetId);
+    }
+  }
+
+  // Start traversal from startNodeId
+  traverseNode(graph.startNodeId);
+
+  return treeNodes;
+}
+
+/**
+ * Build tree data from graph (GRAPH-FIRST approach)
+ * Graph is the source of truth for structure and order
+ */
 function buildTreeData(
   pages: ForgePage[], 
   graph: ForgeGraphDoc | null,
   drafts: Record<number, { title: string }>
 ): TreeNode[] {
-  if (!pages || !Array.isArray(pages) || pages.length === 0) {
+  if (!graph || !graph.startNodeId) {
     return [];
   }
-  
-  const hierarchy = buildNarrativeHierarchy(pages);
-  
-  // Helper to get display title (draft title if available, otherwise page title)
-  const getDisplayTitle = (page: ForgePage): string => {
-    const draftTitle = drafts[page.id]?.title?.trim();
-    return draftTitle || page.title;
-  };
-  
-  return hierarchy.acts.map(({ page: actPage, chapters }) => {
-    const actNodeId = findNodeIdByPageId(graph, actPage.id);
-    return {
-      id: `page-${actPage.id}`,
-      name: getDisplayTitle(actPage),
-      page: actPage,
-      hasDetour: hasDetourConnection(graph, actNodeId),
-      isEndNode: isEndNode(graph, actNodeId),
-      children: chapters.map(({ page: chapterPage, pages: contentPages }) => {
-        const chapterNodeId = findNodeIdByPageId(graph, chapterPage.id);
-        return {
-          id: `page-${chapterPage.id}`,
-          name: getDisplayTitle(chapterPage),
-          page: chapterPage,
-          hasDetour: hasDetourConnection(graph, chapterNodeId),
-          isEndNode: isEndNode(graph, chapterNodeId),
-          children: contentPages.map(page => {
-            const pageNodeId = findNodeIdByPageId(graph, page.id);
-            return {
-              id: `page-${page.id}`,
-              name: getDisplayTitle(page),
-              page,
-              hasDetour: hasDetourConnection(graph, pageNodeId),
-              isEndNode: isEndNode(graph, pageNodeId),
-            };
-          }),
-        };
-      }),
-    };
-  });
+
+  // Build pages map for quick lookup by pageId
+  const pagesMap = new Map<number, ForgePage>();
+  for (const page of pages || []) {
+    if (page && (page.pageType === PAGE_TYPE.ACT || 
+                 page.pageType === PAGE_TYPE.CHAPTER || 
+                 page.pageType === PAGE_TYPE.PAGE)) {
+      pagesMap.set(page.id, page);
+    }
+  }
+
+  // Build tree from graph traversal
+  return buildTreeDataFromGraph(graph, pagesMap, drafts);
 }
 
 export function WriterTree({ className, projectId: projectIdProp }: WriterTreeProps) {
@@ -141,14 +290,18 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
   const treeContainerRef = React.useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
+  // Get store values - use separate selectors to ensure updates are detected
+  // Using useShallow would require accessing the store directly, so we use separate selectors
+  // which will trigger re-renders when any of these values change
   const pages = useWriterWorkspaceStore((state) => state.pages);
+  const narrativeGraph = useWriterWorkspaceStore((state) => state.narrativeGraph);
   const drafts = useWriterWorkspaceStore((state) => state.drafts);
+  
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const dataAdapter = useWriterWorkspaceStore((state) => state.dataAdapter);
   const forgeDataAdapter = useWriterWorkspaceStore((state) => state.forgeDataAdapter);
   const narrativeGraphs = useWriterWorkspaceStore((state) => state.narrativeGraphs);
   const selectedNarrativeGraphId = useWriterWorkspaceStore((state) => state.selectedNarrativeGraphId);
-  const narrativeGraph = useWriterWorkspaceStore((state) => state.narrativeGraph);
   
   const setActivePageId = useWriterWorkspaceStore((state) => state.actions.setActivePageId);
   const setPages = useWriterWorkspaceStore((state) => state.actions.setPages);
@@ -171,8 +324,34 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
     onPagesUpdate: setPages,
   });
 
-  // Build tree data from pages with graph metadata, using draft titles when available
-  const treeNodes = useMemo(() => buildTreeData(pages || [], narrativeGraph, drafts), [pages, narrativeGraph, drafts]);
+  // Build tree data from graph (GRAPH-FIRST approach)
+  // Graph is the source of truth, so memo primarily depends on graph changes
+  const treeNodes = useMemo(
+    () => {
+      console.log('[WriterTree] Recalculating treeNodes from graph:', {
+        graphId: narrativeGraph?.id,
+        startNodeId: narrativeGraph?.startNodeId,
+        nodesCount: narrativeGraph?.flow.nodes.length || 0,
+        pagesCount: pages?.length || 0,
+      });
+      return buildTreeData(pages || [], narrativeGraph, drafts);
+    }, 
+    [narrativeGraph, narrativeGraph?.startNodeId, narrativeGraph?.flow.nodes.length, pages, drafts]
+  );
+  
+  // Debug logging to track when tree updates
+  useEffect(() => {
+    console.log('[WriterTree] Tree data updated:', {
+      pagesCount: pages?.length || 0,
+      graphId: narrativeGraph?.id,
+      startNodeId: narrativeGraph?.startNodeId,
+      nodesCount: narrativeGraph?.flow.nodes.length || 0,
+      treeNodesCount: treeNodes.length,
+      validPages: pages?.filter(p => 
+        p && (p.pageType === PAGE_TYPE.ACT || p.pageType === PAGE_TYPE.CHAPTER || p.pageType === PAGE_TYPE.PAGE)
+      ).length || 0,
+    });
+  }, [pages, narrativeGraph, treeNodes]);
   
   // Convert to react-arborist format
   const treeData = useMemo(() => {
@@ -181,6 +360,7 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
       name: node.name,
       page: node.page,
       hasDetour: node.hasDetour,
+      hasConditional: node.hasConditional,
       isEndNode: node.isEndNode,
       children: node.children?.map(convertNode) || [],
     });
@@ -444,13 +624,46 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
     await handleAddChild(null, PAGE_TYPE.ACT);
   }, [handleAddChild]);
 
+  // Handle creating a new narrative graph
+  const handleCreateNarrativeGraph = useCallback(async () => {
+    if (!projectId || !forgeDataAdapter || isCreating) {
+      if (!projectId) {
+        toast.error('No project selected');
+      }
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+      const newGraph = await createNarrativeGraph(projectId);
+      if (newGraph) {
+        toast.success('Narrative graph created');
+      }
+    } catch (error) {
+      console.error('[WriterTree] Failed to create narrative graph:', error);
+      toast.error('Failed to create narrative graph');
+    } finally {
+      setIsCreating(false);
+    }
+  }, [projectId, forgeDataAdapter, isCreating, createNarrativeGraph, toast]);
+
   return (
     <div className={`flex h-full min-h-0 flex-col gap-2 ${className ?? ''}`}>
       {/* Graph Selector - Always show */}
       <div className="flex-shrink-0 px-3 pt-3">
-        <label className="text-[11px] font-semibold uppercase tracking-wide text-df-text-tertiary">
-          Narrative Graph
-        </label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-[11px] font-semibold uppercase tracking-wide text-df-text-tertiary">
+            Narrative Graph
+          </label>
+          <button
+            onClick={handleCreateNarrativeGraph}
+            disabled={!projectId || isCreating || !forgeDataAdapter}
+            className="flex items-center justify-center h-5 w-5 rounded border border-df-node-border bg-df-control-bg hover:bg-df-control-hover text-df-text-secondary hover:text-df-text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Create new narrative graph"
+          >
+            <Plus size={12} />
+          </button>
+        </div>
         <select
           className="mt-1 w-full rounded-md border border-df-node-border bg-df-control-bg px-2 py-1 text-xs text-df-text-primary"
           value={selectedNarrativeGraphId ?? ''}
@@ -510,6 +723,7 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
           </div>
         ) : (
           <Tree
+            key={`tree-${narrativeGraph?.id || 'no-graph'}-${narrativeGraph?.flow.nodes.length || 0}`}
             initialData={treeData}
             height={treeHeight}
             width="100%"
@@ -556,6 +770,7 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
                   }}
                   canAddChild={canAddChild}
                   hasDetour={hasDetour}
+                  hasConditional={props.node.data?.hasConditional ?? false}
                   isEndNode={isEndNode}
                 />
               );

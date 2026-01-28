@@ -95,6 +95,7 @@ export const PageNode = React.memo(function PageNode({ data, selected, id }: Nod
           onEdit={handleEditPage}
           onSetAsStart={handleSetAsStart}
           onDelete={handleDelete}
+          showDelete={false}
           editLabel="Edit Page Details"
           beforeStandardItems={
             <>

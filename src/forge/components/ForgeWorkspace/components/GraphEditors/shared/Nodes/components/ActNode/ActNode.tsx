@@ -86,6 +86,7 @@ export const ActNode = React.memo(function ActNode({ data, selected, id }: NodeP
           onEdit={handleEdit}
           onSetAsStart={handleSetAsStart}
           onDelete={handleDelete}
+          showDelete={false}
           editLabel="Edit Act"
           afterEditItems={
             <ContextMenuItem onSelect={handleAddChapter}>

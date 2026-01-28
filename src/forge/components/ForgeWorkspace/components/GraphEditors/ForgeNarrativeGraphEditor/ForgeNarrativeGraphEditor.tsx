@@ -43,6 +43,7 @@ import { useForgeGraphEditorActions } from '@/forge/copilotkit';
 import { NarrativeGraphEditorPaneContextMenu } from '@/forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/NarrativeGraphEditorPaneContextMenu';
 import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/ForgeGraphBreadcrumbs';
 import { ConditionalNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ConditionalNode/ConditionalNode';
+import { NarrativeConditionalNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/NarrativeConditionalNode';
 import { GraphLeftToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLeftToolbar';
 import { GraphLayoutControls } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphLayoutControls';
 import { GraphEditorToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorToolbar';
@@ -91,6 +92,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
       [FORGE_NODE_TYPE.PAGE]: PageNode,
       [FORGE_NODE_TYPE.STORYLET]: StoryletNode,
       [FORGE_NODE_TYPE.CONDITIONAL]: ConditionalNode,
+      [FORGE_NODE_TYPE.NARRATIVE_CONDITIONAL]: NarrativeConditionalNode,
       [FORGE_NODE_TYPE.DETOUR]: DetourNode,
     } as const;
   }, []);
@@ -445,13 +447,11 @@ function ForgeNarrativeGraphEditorContent({
       
       const nodeType = (flowNode.type as ForgeNodeType | undefined) ?? 
                       ((flowNode.data as ForgeNode | undefined)?.type);
-      const nodeData = (flowNode.data ?? {}) as ForgeNode;
       
-      // Check if this is a protected node type with a pageId
-      if ((nodeType === FORGE_NODE_TYPE.ACT || 
-           nodeType === FORGE_NODE_TYPE.CHAPTER || 
-           nodeType === FORGE_NODE_TYPE.PAGE) && 
-          nodeData.pageId) {
+      // Check if this is a protected node type (ALL ACT/CHAPTER/PAGE nodes are protected)
+      if (nodeType === FORGE_NODE_TYPE.ACT || 
+          nodeType === FORGE_NODE_TYPE.CHAPTER || 
+          nodeType === FORGE_NODE_TYPE.PAGE) {
         protectedNodes.push(node);
       }
     }
@@ -539,8 +539,9 @@ function ForgeNarrativeGraphEditorContent({
                 event.preventDefault();
                 const nodeType = event.dataTransfer.getData('application/reactflow') as ForgeNodeType;
                 
-                // Only allow Detour and Conditional nodes in narrative graph editor
-                const allowedTypes = [FORGE_NODE_TYPE.DETOUR, FORGE_NODE_TYPE.CONDITIONAL];
+                // Only allow Detour and Narrative Conditional nodes in narrative graph editor
+                // CONDITIONAL is not allowed - only NARRATIVE_CONDITIONAL
+                const allowedTypes = [FORGE_NODE_TYPE.DETOUR, FORGE_NODE_TYPE.NARRATIVE_CONDITIONAL];
                 if (!nodeType || !allowedTypes.includes(nodeType as any)) {
                   return;
                 }
@@ -625,9 +626,27 @@ function ForgeNarrativeGraphEditorContent({
                 }
               }}
               onDelete={() => {
-                if (shell.selectedNode?.id) {
-                  actions.deleteNode(shell.selectedNode.id);
+                const selectedNode = shell.selectedNode;
+                if (!selectedNode?.id) return;
+                
+                const selectedNodeId = selectedNode.id;
+                const flowNode = shell.effectiveGraph.flow.nodes.find(n => n.id === selectedNodeId);
+                if (flowNode) {
+                  const nodeType = (flowNode.type as ForgeNodeType | undefined) ?? 
+                                  ((flowNode.data as ForgeNode | undefined)?.type);
+                  
+                  // Prevent deletion of protected node types
+                  if (nodeType === FORGE_NODE_TYPE.ACT || 
+                      nodeType === FORGE_NODE_TYPE.CHAPTER || 
+                      nodeType === FORGE_NODE_TYPE.PAGE) {
+                    const nodeTypeName = nodeType === FORGE_NODE_TYPE.ACT ? 'Act' :
+                                        nodeType === FORGE_NODE_TYPE.CHAPTER ? 'Chapter' :
+                                        'Page';
+                    toast.error(`Cannot delete ${nodeTypeName} nodes. Delete them from the Writer workspace sidebar first.`);
+                    return;
+                  }
                 }
+                actions.deleteNode(selectedNodeId);
               }}
             />
           )}

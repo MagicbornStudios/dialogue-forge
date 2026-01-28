@@ -431,6 +431,57 @@ export const executeGraphToFrames = async (
       }
     }
 
+    // Handle narrative conditional call - evaluate conditions and route to narrative graph
+    if (nodeType === FORGE_NODE_TYPE.NARRATIVE_CONDITIONAL && nodeData.narrativeConditionalCall && options.resolveGraph) {
+      const call = nodeData.narrativeConditionalCall;
+      const conditions = call.conditions || [];
+      
+      // Evaluate conditions
+      const conditionsMet = conditions.length === 0 || evaluateConditions(conditions, state);
+      
+      if (conditionsMet) {
+        frames.push({
+          id: buildFrameId(currentGraph.id, currentNodeId, steps),
+          kind: FRAME_KIND.SYSTEM,
+          source: baseSource,
+          directives,
+          mutations: nodeMutations,
+          presentation: resolvePresentationForFrame(directives),
+          content: 'Conditional routing to narrative graph',
+        });
+
+        // Resolve target narrative graph
+        const targetGraph = await options.resolveGraph?.(String(call.targetGraphId));
+        if (targetGraph) {
+          // Push current graph to stack for return
+          graphStack.push({
+            graph: currentGraph,
+            returnNodeId: getDefaultNextNodeId(currentNodeId ?? '', nodeData, graphIndex.edgesBySource),
+          });
+
+          // Switch to target graph
+          currentGraph = targetGraph;
+          graphIndex = buildGraphIndex(currentGraph);
+          
+          // Start at specified node or graph start
+          currentNodeId = call.targetStartNodeId ?? targetGraph.startNodeId;
+          steps += 1;
+          continue;
+        }
+      } else {
+        // Conditions not met - continue to next node
+        frames.push({
+          id: buildFrameId(currentGraph.id, currentNodeId, steps),
+          kind: FRAME_KIND.SYSTEM,
+          source: baseSource,
+          directives,
+          mutations: nodeMutations,
+          presentation: resolvePresentationForFrame(directives),
+          content: 'Conditional conditions not met, continuing',
+        });
+      }
+    }
+
     if (nodeData.content || nodeData.speaker) {
       frames.push({
         id: buildFrameId(currentGraph.id, currentNodeId, steps),

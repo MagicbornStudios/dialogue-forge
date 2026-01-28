@@ -86,6 +86,7 @@ export const ChapterNode = React.memo(function ChapterNode({ data, selected, id 
           onEdit={handleEdit}
           onSetAsStart={handleSetAsStart}
           onDelete={handleDelete}
+          showDelete={false}
           editLabel="Edit Chapter"
           afterEditItems={
             <ContextMenuItem onSelect={handleAddPage}>

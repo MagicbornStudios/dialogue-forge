@@ -14,11 +14,12 @@ import {
 } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 import { COMMENT_DELETION_TAG } from './CommentPlugin';
 
-// Debounce for updating store (marking as DIRTY) - increased to reduce stuttering
-const STORE_UPDATE_DEBOUNCE_MS = 1500; // 1.5 seconds
+// Debounce for updating store (marking as DIRTY) - optimized for smooth typing
+const STORE_UPDATE_DEBOUNCE_MS = 300; // 300ms - fast enough to feel responsive
 
 // Delay before actually saving to Payload (only if autosave enabled)
-const AUTOSAVE_DELAY_MS = 5000; // 5 seconds after typing stops
+// Standard autosave delay like Notion/Google Docs: 2-3 seconds after typing stops
+const AUTOSAVE_DELAY_MS = 2000; // 2 seconds after typing stops
 
 export function AutosavePlugin(): null {
   const [editor] = useLexicalComposerContext();
@@ -47,6 +48,8 @@ export function AutosavePlugin(): null {
     if (!activePageId) {
       return;
     }
+
+    console.log('[AutosavePlugin] Page changed, resetting timers:', activePageId);
 
     // Reset when page changes
     lastSerializedRef.current = '';

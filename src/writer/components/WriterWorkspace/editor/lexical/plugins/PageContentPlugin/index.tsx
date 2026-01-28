@@ -17,8 +17,9 @@ export default function PageContentPlugin(): null {
   const lastContentRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // Only update if page actually changed
-    if (pageId === lastPageIdRef.current && pageContent === lastContentRef.current) {
+    // CRITICAL: Only update when pageId changes, NOT when pageContent changes during typing
+    // This prevents cursor loss and editor state resets during active editing
+    if (pageId === lastPageIdRef.current) {
       return;
     }
 
@@ -29,7 +30,7 @@ export default function PageContentPlugin(): null {
       return;
     }
 
-    // If page changed, update the editor with new content (or empty if no content)
+    // Page changed - update the editor with new content (or empty if no content)
     try {
       if (pageContent && pageContent.trim() !== '') {
         // Parse and set the new editor state
@@ -56,13 +57,13 @@ export default function PageContentPlugin(): null {
         }, { discrete: true });
       }
       
-      // Update refs
+      // Update refs - track pageId and initial content for this page
       lastPageIdRef.current = pageId;
       lastContentRef.current = pageContent ?? null;
     } catch (error) {
       console.error('Error updating editor state for page:', error);
     }
-  }, [editor, pageId, pageContent]);
+  }, [editor, pageId]); // Removed pageContent from dependencies - only react to pageId changes
 
   return null;
 }

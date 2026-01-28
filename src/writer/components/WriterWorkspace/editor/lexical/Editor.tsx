@@ -69,7 +69,6 @@ import SpeechToTextPlugin from './plugins/SpeechToTextPlugin';
 import TabFocusPlugin from './plugins/TabFocusPlugin';
 import TableCellActionMenuPlugin from './plugins/TableActionMenuPlugin';
 import TableCellResizer from './plugins/TableCellResizer';
-import TableHoverActionsV2Plugin from './plugins/TableHoverActionsV2Plugin';
 import TableOfContentsPlugin from './plugins/TableOfContentsPlugin';
 import TableScrollShadowPlugin from './plugins/TableScrollShadowPlugin';
 import ToolbarPlugin from './plugins/ToolbarPlugin';
@@ -246,7 +245,6 @@ export default function Editor(): JSX.Element {
             {floatingAnchorElem && !isSmallWidthViewport && (
               <>
                 <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
-                <TableHoverActionsV2Plugin anchorElem={floatingAnchorElem} />
                 <FloatingTextFormatToolbarPlugin
                   anchorElem={floatingAnchorElem}
                   setIsLinkEditMode={setIsLinkEditMode}

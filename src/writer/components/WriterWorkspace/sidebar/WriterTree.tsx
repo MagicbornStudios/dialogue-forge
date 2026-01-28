@@ -768,6 +768,11 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
                       handleAddChild(page);
                     }
                   }}
+                  onDelete={() => {
+                    if (page) {
+                      handleDeletePage(page);
+                    }
+                  }}
                   canAddChild={canAddChild}
                   hasDetour={hasDetour}
                   hasConditional={props.node.data?.hasConditional ?? false}

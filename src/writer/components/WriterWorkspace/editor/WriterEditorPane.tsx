@@ -148,13 +148,16 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
     settings: {isCollab, emptyEditor, measureTypingPerf},
   } = useSettings();
 
+  // CRITICAL: Only use activePage?.bookBody for initial config, NOT draft content
+  // This prevents editor remounting when draft changes during typing
+  // The draft content will be loaded via PageContentPlugin when pageId changes
   const initialConfig = useMemo(
     () => ({
       editorState: isCollab
         ? null
         : emptyEditor
           ? undefined
-          : draft?.content.serialized ?? activePage?.bookBody ?? '',
+          : activePage?.bookBody ?? '',
       html: buildHTMLConfig(),
       namespace: 'Playground',
       nodes: PlaygroundNodes,
@@ -163,7 +166,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
         throw error;
       },
     }),
-    [emptyEditor, isCollab, draft?.content.serialized, activePage?.bookBody, activePageId],
+    [emptyEditor, isCollab, activePage?.bookBody, activePageId], // Removed draft dependency
   );
 
 
@@ -204,7 +207,10 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
             <div className="flex min-h-0 flex-[3] flex-col relative overflow-hidden">
               <FlashMessageContext>
                 <LexicalCollaboration>
-                  <LexicalComposer initialConfig={initialConfig}>
+                  <LexicalComposer 
+                    key={`editor-${activePageId ?? 'no-page'}`}
+                    initialConfig={initialConfig}
+                  >
                     <SharedHistoryContext>
                       <TableContext>
                         <ToolbarContext>

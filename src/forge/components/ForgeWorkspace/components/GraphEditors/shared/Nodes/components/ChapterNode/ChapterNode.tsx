@@ -12,6 +12,7 @@ import type { ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowE
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { StandardNodeContextMenuItems } from '../shared/StandardNodeContextMenuItems';
+import { useToast } from '@/shared/ui/toast';
 
 export const ChapterNode = React.memo(function ChapterNode({ data, selected, id }: NodeProps<ShellNodeData>) {
   const { node, ui = {} } = data;
@@ -21,6 +22,7 @@ export const ChapterNode = React.memo(function ChapterNode({ data, selected, id 
   const summary = node.content;
   
   const actions = useForgeEditorActions();
+  const { toast } = useToast();
   const handleEdit = useCallback(() => {
     if (id) actions.openNodeEditor(id);
   }, [actions, id]);
@@ -31,8 +33,8 @@ export const ChapterNode = React.memo(function ChapterNode({ data, selected, id 
     if (id) actions.setStartNode(id);
   }, [actions, id]);
   const handleDelete = useCallback(() => {
-    if (id) actions.deleteNode(id);
-  }, [actions, id]);
+    toast.error('Cannot delete Chapter nodes from the graph editor. Delete them from the Writer workspace sidebar instead.');
+  }, [toast]);
   const nodeType = node.type ?? FORGE_NODE_TYPE.CHAPTER;
 
   return (
@@ -86,7 +88,6 @@ export const ChapterNode = React.memo(function ChapterNode({ data, selected, id 
           onEdit={handleEdit}
           onSetAsStart={handleSetAsStart}
           onDelete={handleDelete}
-          showDelete={false}
           editLabel="Edit Chapter"
           afterEditItems={
             <ContextMenuItem onSelect={handleAddPage}>

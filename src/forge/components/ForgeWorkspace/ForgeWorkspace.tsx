@@ -28,6 +28,7 @@ import { useForgeCopilotContext } from '@/forge/copilotkit/hooks/useForgeCopilot
 import { CopilotKitProvider } from '@/ai/copilotkit/providers/CopilotKitProvider';
 import { CopilotChatModal } from './components/CopilotChatModal';
 import { CommandBar, useCommandBar } from './components/CommandBar/CommandBar';
+import { Toaster } from '@/shared/ui/toast';
 
 export interface HeaderLink {
   label: string;
@@ -423,6 +424,7 @@ function ForgeWorkspaceContent({
         onUpdateFlagSchema={handleUpdateFlagSchema}
         onUpdateGameState={handleUpdateGameState}
       />
+      <Toaster />
     </div>
   );
 }

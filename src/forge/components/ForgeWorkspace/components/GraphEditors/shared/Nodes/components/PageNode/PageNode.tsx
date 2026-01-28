@@ -12,6 +12,7 @@ import type { ShellNodeData } from '@/forge/lib/graph-editor/hooks/useForgeFlowE
 import { FORGE_NODE_TYPE } from '@/forge/types/forge-graph';
 import { useForgeEditorActions } from '@/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { StandardNodeContextMenuItems } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/StandardNodeContextMenuItems';
+import { useToast } from '@/shared/ui/toast';
 
 export const PageNode = React.memo(function PageNode({ data, selected, id }: NodeProps<ShellNodeData>) {
   const { node, ui = {} } = data;
@@ -21,6 +22,7 @@ export const PageNode = React.memo(function PageNode({ data, selected, id }: Nod
   const summary = node.content;
   
   const actions = useForgeEditorActions();
+  const { toast } = useToast();
   const handleAddPage = useCallback(() => {
     if (id) actions.openNodeEditor(id);
   }, [actions, id]);
@@ -40,8 +42,8 @@ export const PageNode = React.memo(function PageNode({ data, selected, id }: Nod
     if (id) actions.setStartNode(id);
   }, [actions, id]);
   const handleDelete = useCallback(() => {
-    if (id) actions.deleteNode(id);
-  }, [actions, id]);
+    toast.error('Cannot delete Page nodes from the graph editor. Delete them from the Writer workspace sidebar instead.');
+  }, [toast]);
   const nodeType = node.type ?? FORGE_NODE_TYPE.PAGE;
 
   return (
@@ -95,7 +97,6 @@ export const PageNode = React.memo(function PageNode({ data, selected, id }: Nod
           onEdit={handleEditPage}
           onSetAsStart={handleSetAsStart}
           onDelete={handleDelete}
-          showDelete={false}
           editLabel="Edit Page Details"
           beforeStandardItems={
             <>

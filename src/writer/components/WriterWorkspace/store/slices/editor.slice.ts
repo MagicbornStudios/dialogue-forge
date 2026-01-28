@@ -103,33 +103,23 @@ export function createEditorSlice(
     saveNow: async (itemId) => {
       const targetId = itemId ?? get().activePageId;
       if (!targetId) {
-        console.log('[saveNow] No target page ID, skipping save');
         return;
       }
       
       const draft = get().drafts[targetId];
       if (!draft) {
-        console.log('[saveNow] No draft found for page:', targetId);
         return;
       }
       
       // Skip if already saved and not dirty
       if (draft.status === WRITER_SAVE_STATUS.SAVED) {
-        console.log('[saveNow] Page already saved, skipping:', targetId);
         return;
       }
       
       // Skip if already saving
       if (draft.status === WRITER_SAVE_STATUS.SAVING) {
-        console.log('[saveNow] Page already saving, skipping:', targetId);
         return;
       }
-      
-      console.log('[saveNow] Starting save for page:', {
-        pageId: targetId,
-        status: draft.status,
-        revision: draft.revision,
-      });
       
       const startingRevision = draft.revision ?? 0;
       
@@ -232,7 +222,6 @@ export function createEditorSlice(
                 };
               }
               // Revision changed, mark as dirty
-              console.log('[saveNow] Content changed during save, marking as dirty:', targetId);
               return {
                 drafts: {
                   ...state.drafts,

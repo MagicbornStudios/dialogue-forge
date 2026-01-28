@@ -297,6 +297,38 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
   const narrativeGraph = useWriterWorkspaceStore((state) => state.narrativeGraph);
   const drafts = useWriterWorkspaceStore((state) => state.drafts);
   
+  // Create a stable reference for page metadata that only changes when structure changes
+  // This prevents tree recalculation when only page content (bookBody) changes
+  // Use a ref to track the previous key value and only update when it actually changes
+  const pageMetadataKeyRef = useRef<string>('');
+  const pageMetadataStable = useMemo(() => {
+    if (!pages || pages.length === 0) {
+      const emptyKey = '';
+      if (pageMetadataKeyRef.current !== emptyKey) {
+        pageMetadataKeyRef.current = emptyKey;
+      }
+      return pageMetadataKeyRef.current;
+    }
+    // Create a key based only on metadata that affects tree structure
+    const newKey = pages
+      .map(p => `${p.id}:${p.title}:${p.pageType}:${p.parent ?? 'null'}:${p.order}`)
+      .sort()
+      .join('|');
+    
+    // Only update ref if key actually changed
+    if (pageMetadataKeyRef.current !== newKey) {
+      pageMetadataKeyRef.current = newKey;
+    }
+    
+    return pageMetadataKeyRef.current;
+  }, [
+    // Depend on pages array length and create a stable string key
+    // The useMemo will recalculate, but we use ref to return the same value if metadata hasn't changed
+    pages?.length,
+    // Create a stable string representation - React compares this string value
+    pages?.map(p => `${p.id}:${p.title}:${p.pageType}:${p.parent ?? 'null'}:${p.order}`).sort().join('|') || '',
+  ]);
+  
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const dataAdapter = useWriterWorkspaceStore((state) => state.dataAdapter);
   const forgeDataAdapter = useWriterWorkspaceStore((state) => state.forgeDataAdapter);
@@ -324,34 +356,22 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
     onPagesUpdate: setPages,
   });
 
+
   // Build tree data from graph (GRAPH-FIRST approach)
   // Graph is the source of truth, so memo primarily depends on graph changes
+  // Use pageMetadataStable instead of pages array to avoid recalculation when content changes
   const treeNodes = useMemo(
     () => {
-      console.log('[WriterTree] Recalculating treeNodes from graph:', {
-        graphId: narrativeGraph?.id,
-        startNodeId: narrativeGraph?.startNodeId,
-        nodesCount: narrativeGraph?.flow.nodes.length || 0,
-        pagesCount: pages?.length || 0,
-      });
+      // buildTreeData only uses page.id, page.title, page.pageType from pages
+      // It doesn't use bookBody/content, so pages array reference changes don't matter
+      // But we still need the full pages array for the pagesMap lookup
       return buildTreeData(pages || [], narrativeGraph, drafts);
     }, 
-    [narrativeGraph, narrativeGraph?.startNodeId, narrativeGraph?.flow.nodes.length, pages, drafts]
+    // Only recalculate when graph structure changes OR page metadata changes (not content)
+    // Note: pages is used in the function but not in deps - pageMetadataStable controls recalculation
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [narrativeGraph, narrativeGraph?.startNodeId, narrativeGraph?.flow.nodes.length, pageMetadataStable, drafts]
   );
-  
-  // Debug logging to track when tree updates
-  useEffect(() => {
-    console.log('[WriterTree] Tree data updated:', {
-      pagesCount: pages?.length || 0,
-      graphId: narrativeGraph?.id,
-      startNodeId: narrativeGraph?.startNodeId,
-      nodesCount: narrativeGraph?.flow.nodes.length || 0,
-      treeNodesCount: treeNodes.length,
-      validPages: pages?.filter(p => 
-        p && (p.pageType === PAGE_TYPE.ACT || p.pageType === PAGE_TYPE.CHAPTER || p.pageType === PAGE_TYPE.PAGE)
-      ).length || 0,
-    });
-  }, [pages, narrativeGraph, treeNodes]);
   
   // Convert to react-arborist format
   const treeData = useMemo(() => {

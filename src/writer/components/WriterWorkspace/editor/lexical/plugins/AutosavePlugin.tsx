@@ -49,8 +49,6 @@ export function AutosavePlugin(): null {
       return;
     }
 
-    console.log('[AutosavePlugin] Page changed, resetting timers:', activePageId);
-
     // Reset when page changes
     lastSerializedRef.current = '';
     if (storeUpdateTimeoutRef.current) {

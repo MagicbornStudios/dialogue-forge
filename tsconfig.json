@@ -9,6 +9,9 @@
       "path": "./src/ai/tsconfig.json"
     },
     {
+      "path": "./src/characters/tsconfig.json"
+    },
+    {
       "path": "./src/forge/tsconfig.json"
     },
     {

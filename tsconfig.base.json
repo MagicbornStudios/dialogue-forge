@@ -21,6 +21,7 @@
       "@/forge/*": ["./src/forge/*"],
       "@/video/*": ["./src/video/*"],
       "@/writer/*": ["./src/writer/*"],
+      "@/characters/*": ["./src/characters/*"],
       "@/host/*": ["./app/lib/*"],
       "@/*": ["./*"],
       "@magicborn/dialogue-forge": ["./src"],

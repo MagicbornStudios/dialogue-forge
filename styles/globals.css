@@ -109,6 +109,7 @@ div[class*="poweredBy"] {
   --color-df-sidebar-border: var(--color-df-sidebar-border);
   --color-df-editor-bg: var(--color-df-editor-bg);
   --color-df-editor-border: var(--color-df-editor-border);
+  --color-df-border-selected: var(--color-df-border-selected);
 
   /* shadcn/ui color tokens (Tailwind v4) */
   --color-background: var(--background);

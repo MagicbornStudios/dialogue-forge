@@ -224,7 +224,6 @@ export function createCharactersSlice(
       if (activeChar) {
         activeChar.relationshipFlow = flow
       }
-      })
-    },
-  }
+    })
+  },
 }

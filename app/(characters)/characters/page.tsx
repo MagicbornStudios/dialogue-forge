@@ -1,6 +1,7 @@
 'use client';
 
 import { CharacterWorkspace } from '@/characters/components/CharacterWorkspace/CharacterWorkspace';
+import { CharacterWorkspaceStoreProvider, createCharacterWorkspaceStore } from '@/characters/components/CharacterWorkspace/store/character-workspace-store';
 import { makePayloadCharacterAdapter } from '@/app/lib/characters/payload-character-adapter';
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -18,14 +19,22 @@ export default function CharactersApp() {
     () => makePayloadCharacterAdapter({ 
       baseUrl: 'http://localhost:3000',
     }),
-    [selectedProjectId],
+    [],
+  );
+
+  // Create store instance
+  const store = useMemo(
+    () => createCharacterWorkspaceStore({ dataAdapter: characterAdapter }),
+    [characterAdapter]
   );
 
   return (
-    <CharacterWorkspace
-      dataAdapter={characterAdapter}
-      selectedProjectId={selectedProjectId}
-      onProjectChange={setSelectedProjectId}
-    />
+    <CharacterWorkspaceStoreProvider store={store}>
+      <CharacterWorkspace
+        dataAdapter={characterAdapter}
+        selectedProjectId={selectedProjectId}
+        onProjectChange={setSelectedProjectId}
+      />
+    </CharacterWorkspaceStoreProvider>
   );
 }

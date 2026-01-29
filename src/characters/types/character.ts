@@ -4,7 +4,7 @@
  */
 
 /**
- * Position in 2D space (used by both ReactFlow-like and JointJS formats)
+ * Position in 2D space (used by relationship graph and other graph formats)
  */
 export interface Position {
   x: number

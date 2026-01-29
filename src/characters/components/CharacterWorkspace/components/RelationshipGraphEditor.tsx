@@ -18,12 +18,14 @@ interface RelationshipGraphEditorProps {
   characters: CharacterDoc[];
   onGraphChange: (graph: RelationshipFlow) => void;
   onCharacterSelect?: (characterId: string) => void;
+  onCreateCharacter?: () => void;
   onCharacterUpdate?: (characterId: string, updates: { name?: string; description?: string; imageUrl?: string; avatarId?: string | null }) => Promise<void>;
   dataAdapter?: CharacterWorkspaceAdapter;
 }
 
 /**
- * Basic JointJS graph editor for relationship flows
+ * Relationship graph editor for character relationship flows
+ * Custom SVG-based graph visualization (not JointJS)
  * Shows nodes and edges, allows adding characters and relationships
  */
 export function RelationshipGraphEditor({
@@ -32,6 +34,7 @@ export function RelationshipGraphEditor({
   characters,
   onGraphChange,
   onCharacterSelect,
+  onCreateCharacter,
   onCharacterUpdate,
   dataAdapter,
 }: RelationshipGraphEditorProps) {
@@ -608,6 +611,7 @@ export function RelationshipGraphEditor({
                       characters={characters}
                       activeCharacterId={activeCharacterId}
                       onCharacterSelect={onCharacterSelect}
+                      onCreateCharacter={onCreateCharacter}
                       charactersInGraph={graph.nodes.map(n => n.id)}
                       graph={graph}
                       onGraphChange={onGraphChange}

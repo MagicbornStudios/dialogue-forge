@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { RelationshipFlow } from '@/characters/types';
+import type { RelationshipFlow, CharacterDoc } from '@/characters/types';
 import type { CharacterWorkspaceAdapter } from '@/characters/types';
 import type { CharacterGraphEditorConfig } from '../config/editor-config';
 
@@ -11,19 +11,21 @@ export function useDebouncedAutosave(
   characterId: string | null,
   dataAdapter: CharacterWorkspaceAdapter | undefined,
   config: CharacterGraphEditorConfig,
-  onSaveComplete?: () => void
+  onSaveComplete?: (savedCharacter: CharacterDoc) => void
 ) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedGraphRef = useRef<string | null>(null);
   const isSavingRef = useRef(false);
   const characterIdRef = useRef(characterId);
   const dataAdapterRef = useRef(dataAdapter);
+  const onSaveCompleteRef = useRef(onSaveComplete);
 
   // Keep refs in sync
   useEffect(() => {
     characterIdRef.current = characterId;
     dataAdapterRef.current = dataAdapter;
-  }, [characterId, dataAdapter]);
+    onSaveCompleteRef.current = onSaveComplete;
+  }, [characterId, dataAdapter, onSaveComplete]);
 
   useEffect(() => {
     // Don't autosave if disabled, no graph, no character, or no adapter
@@ -66,15 +68,15 @@ export function useDebouncedAutosave(
       isSavingRef.current = true;
       
       try {
-        await currentAdapter.updateCharacter(currentCharacterId, {
+        const saved = await currentAdapter.updateCharacter(currentCharacterId, {
           relationshipFlow: graphToSave,
         });
         
         // Update last saved reference
         lastSavedGraphRef.current = serializedToSave;
         
-        // Call completion callback
-        onSaveComplete?.();
+        // Call completion callback with saved doc (use ref to avoid effect re-running and clearing timeout)
+        onSaveCompleteRef.current?.(saved);
       } catch (error) {
         console.error('Failed to autosave character graph:', error);
         // On error, don't update lastSavedGraphRef so it will retry on next change
@@ -90,7 +92,7 @@ export function useDebouncedAutosave(
         timeoutRef.current = null;
       }
     };
-  }, [graph, characterId, dataAdapter, config.autosaveEnabled, config.autosaveDebounceMs, onSaveComplete]);
+  }, [graph, characterId, dataAdapter, config.autosaveEnabled, config.autosaveDebounceMs]);
 
   // Reset last saved when character changes
   useEffect(() => {

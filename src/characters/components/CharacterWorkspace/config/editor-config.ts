@@ -20,5 +20,5 @@ export interface CharacterGraphEditorConfig {
  */
 export const DEFAULT_EDITOR_CONFIG: CharacterGraphEditorConfig = {
   autosaveEnabled: true,
-  autosaveDebounceMs: 2000, // 2 seconds
+  autosaveDebounceMs: 800, // 800ms after last change
 };

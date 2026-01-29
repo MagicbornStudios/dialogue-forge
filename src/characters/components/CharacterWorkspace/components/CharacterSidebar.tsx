@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
-import { Users, Edit, Link2 } from 'lucide-react';
+import { Users, Edit, Link2, Plus } from 'lucide-react';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
@@ -20,6 +20,7 @@ interface CharacterSidebarProps {
   characters: CharacterDoc[];
   activeCharacterId: string | null;
   onCharacterSelect?: (characterId: string) => void;
+  onCreateCharacter?: () => void; // Open create character dialog
   charactersInGraph?: string[]; // Character IDs already in the graph
   graph?: RelationshipFlow | null; // Current graph with edges
   onGraphChange?: (graph: RelationshipFlow) => void; // Callback to update graph
@@ -30,6 +31,7 @@ export function CharacterSidebar({
   characters,
   activeCharacterId,
   onCharacterSelect,
+  onCreateCharacter,
   charactersInGraph = [],
   graph,
   onGraphChange,
@@ -228,6 +230,22 @@ export function CharacterSidebar({
           )}
         </ToggleGroupItem>
       </ToggleGroup>
+
+      {/* Create Character button - only on Characters tab */}
+      {activeTab === 'characters' && onCreateCharacter && (
+        <div className="px-2 py-1.5 border-b border-border">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full h-8 text-xs justify-center gap-1.5"
+            onClick={onCreateCharacter}
+            title="Create new character"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Create character
+          </Button>
+        </div>
+      )}
 
       {/* Search */}
       <div className="px-2 py-2 border-b border-border">

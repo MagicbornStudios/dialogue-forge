@@ -126,6 +126,10 @@ export const Characters: CollectionConfig = {
       name: 'relationshipFlow',
       type: 'json',
       required: false,
+      admin: {
+        description:
+          'POV graph: { nodes: [{ id, type, position: {x,y} }], edges: [{ id, source, target }] }. Must include a node with id = this character; all edges must have source = this character.',
+      },
       validate: (value, ctx: any) => {
         const basic = validateRelationshipFlowJson(value)
         if (basic !== true) return basic

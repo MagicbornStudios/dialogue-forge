@@ -263,8 +263,25 @@ export interface Character {
   id: number;
   project: number | Project;
   name: string;
+  description?: string | null;
+  /**
+   * URL to a character portrait. UI should fall back to a placeholder when empty.
+   */
+  imageUrl?: string | null;
   avatar?: (number | null) | Media;
   meta?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * POV graph: { nodes: [{ id, type, position: {x,y} }], edges: [{ id, source, target }] }. Must include a node with id = this character; all edges must have source = this character.
+   */
+  relationshipFlow?:
     | {
         [k: string]: unknown;
       }
@@ -601,8 +618,11 @@ export interface MediaSelect<T extends boolean = true> {
 export interface CharactersSelect<T extends boolean = true> {
   project?: T;
   name?: T;
+  description?: T;
+  imageUrl?: T;
   avatar?: T;
   meta?: T;
+  relationshipFlow?: T;
   archivedAt?: T;
   updatedAt?: T;
   createdAt?: T;

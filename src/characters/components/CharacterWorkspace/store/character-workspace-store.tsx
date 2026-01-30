@@ -46,6 +46,10 @@ export interface CharacterWorkspaceState
     setSidebarSearchQuery: ViewStateActions['setSidebarSearchQuery']
     setShowLabels: ViewStateActions['setShowLabels']
     setSelectedCharacterId: ViewStateActions['setSelectedCharacterId']
+    openCreateCharacterModal: ViewStateActions['openCreateCharacterModal']
+    closeCreateCharacterModal: ViewStateActions['closeCreateCharacterModal']
+    openDebugDrawer: ViewStateActions['openDebugDrawer']
+    closeDebugDrawer: ViewStateActions['closeDebugDrawer']
   }
 }
 
@@ -96,6 +100,10 @@ export function createCharacterWorkspaceStore(
             setSidebarSearchQuery: viewStateSlice.setSidebarSearchQuery,
             setShowLabels: viewStateSlice.setShowLabels,
             setSelectedCharacterId: viewStateSlice.setSelectedCharacterId,
+            openCreateCharacterModal: viewStateSlice.openCreateCharacterModal,
+            closeCreateCharacterModal: viewStateSlice.closeCreateCharacterModal,
+            openDebugDrawer: viewStateSlice.openDebugDrawer,
+            closeDebugDrawer: viewStateSlice.closeDebugDrawer,
           },
         }
       }),

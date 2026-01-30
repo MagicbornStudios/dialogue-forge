@@ -11,6 +11,8 @@ export interface ViewStateSlice {
   sidebarSearchQuery: string
   showLabels: boolean
   selectedCharacterId: string | null // Sidebar selection (not graph selection)
+  isCreateCharacterModalOpen: boolean
+  isDebugDrawerOpen: boolean
 }
 
 export interface ViewStateActions {
@@ -18,6 +20,10 @@ export interface ViewStateActions {
   setSidebarSearchQuery: (query: string) => void
   setShowLabels: (show: boolean) => void
   setSelectedCharacterId: (id: string | null) => void
+  openCreateCharacterModal: () => void
+  closeCreateCharacterModal: () => void
+  openDebugDrawer: () => void
+  closeDebugDrawer: () => void
 }
 
 export function createViewStateSlice(
@@ -30,6 +36,8 @@ export function createViewStateSlice(
   sidebarSearchQuery: '',
   showLabels: true,
   selectedCharacterId: null,
+  isCreateCharacterModalOpen: false,
+  isDebugDrawerOpen: false,
 
   // Actions
   setToolMode: (mode) => {
@@ -53,6 +61,30 @@ export function createViewStateSlice(
   setSelectedCharacterId: (id) => {
     set((state) => {
       state.selectedCharacterId = id
+    })
+  },
+
+  openCreateCharacterModal: () => {
+    set((state) => {
+      state.isCreateCharacterModalOpen = true
+    })
+  },
+
+  closeCreateCharacterModal: () => {
+    set((state) => {
+      state.isCreateCharacterModalOpen = false
+    })
+  },
+
+  openDebugDrawer: () => {
+    set((state) => {
+      state.isDebugDrawerOpen = true
+    })
+  },
+
+  closeDebugDrawer: () => {
+    set((state) => {
+      state.isDebugDrawerOpen = false
     })
   },
   }

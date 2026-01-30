@@ -28,6 +28,9 @@ if (fs.existsSync(payloadPackagePath)) {
 const nextConfig = {
   pageExtensions: ['ts', 'tsx', 'js', 'jsx'],
 
+  // Externalize sharp (native bindings) so Next resolves it from node_modules
+  serverExternalPackages: ['sharp'],
+
   // Silence Sass deprecation warnings from PayloadCMS node_modules and sass-loader
   sassOptions: {
     silenceDeprecations: ['import', 'legacy-js-api'],
@@ -45,6 +48,10 @@ const nextConfig = {
 
       // Payload config alias (server-side usage)
       '@payload-config': path.resolve(__dirname, './app/payload.config.ts'),
+
+      // Ensure nested @payloadcms packages resolve payload subpaths (e.g. payload/shared)
+      'payload/shared': path.resolve(__dirname, 'node_modules/payload/dist/exports/shared.js'),
+      'payload/internal': path.resolve(__dirname, 'node_modules/payload/dist/exports/internal.js'),
     };
 
     // Silence webpack warnings from PayloadCMS node_modules
@@ -63,6 +70,9 @@ const nextConfig = {
     resolveAlias: {
       '@magicborn/dialogue-forge': './src',
       '@payload-config': './app/payload.config.ts',
+      // Relative paths so Turbopack does not use Windows absolute paths (not implemented)
+      'payload/shared': './node_modules/payload/dist/exports/shared.js',
+      'payload/internal': './node_modules/payload/dist/exports/internal.js',
     },
   },
 };

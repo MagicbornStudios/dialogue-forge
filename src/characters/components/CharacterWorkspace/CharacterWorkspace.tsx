@@ -2,27 +2,12 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { CharacterWorkspaceAdapter, ProjectInfo, CharacterDoc, RelationshipFlow } from '@magicborn/dialogue-forge/src/characters/types';
-import { ChevronDown, Plus } from 'lucide-react';
-import { Button } from '@/shared/ui/button';
 import { useDebouncedAutosave } from './hooks/useDebouncedAutosave';
 import { DEFAULT_EDITOR_CONFIG } from './config/editor-config';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/shared/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog';
-import { Input } from '@/shared/ui/input';
-import { Label } from '@/shared/ui/label';
-import { RelationshipGraphEditor } from './components/RelationshipGraphEditor';
+import { CharacterWorkspaceHeader } from './components/CharacterWorkspaceHeader';
+import { CharacterWorkspaceModals } from './components/CharacterWorkspaceModals';
+import { GraphDebugDrawer } from './components/GraphDebugDrawer';
+import { RelationshipGraphEditor, type RelationshipGraphEditorRef } from './components/RelationshipGraphEditor';
 import { useCharacterWorkspaceStore } from './store/character-workspace-store';
 import { ProjectSync } from './components/ProjectSync';
 
@@ -66,11 +51,9 @@ export function CharacterWorkspace({
   // Local UI state
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newCharacterName, setNewCharacterName] = useState('');
-  const [newCharacterDescription, setNewCharacterDescription] = useState('');
-  const [newCharacterImageUrl, setNewCharacterImageUrl] = useState('');
+  const graphEditorRef = useRef<RelationshipGraphEditorRef>(null);
+
+  const isDebugDrawerOpen = useCharacterWorkspaceStore((s) => s.isDebugDrawerOpen);
 
   // Update store adapter when it changes
   useEffect(() => {
@@ -177,7 +160,6 @@ export function CharacterWorkspace({
     
     setCurrentGraphState(graph);
     actions.setActiveGraphFlow(graph);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only load when activeCharacterId changes; charactersById changes (e.g. after graph edit) must not overwrite local graph
   }, [activeCharacterId]);
 
   // Get current graph (use local state, fallback to active character's graph)
@@ -192,7 +174,6 @@ export function CharacterWorkspace({
   const characters = useMemo(() => Object.values(charactersById), [charactersById]);
   
   const selectedProject = projects.find(p => p.id === activeProjectId);
-  const relationshipCount = currentGraph?.edges.length || 0;
 
   // Debounced autosave
   useDebouncedAutosave(
@@ -214,35 +195,6 @@ export function CharacterWorkspace({
 
   const handleCharacterSelect = (characterId: string) => {
     actions.setActiveCharacterId(characterId);
-  };
-
-  const handleCreateCharacter = async () => {
-    if (!dataAdapter || !activeProjectId || !newCharacterName.trim()) return;
-
-    setIsCreating(true);
-    try {
-      const newCharacter = await dataAdapter.createCharacter(activeProjectId, {
-        name: newCharacterName.trim(),
-        description: newCharacterDescription.trim() || undefined,
-        imageUrl: newCharacterImageUrl.trim() || undefined,
-      });
-      
-      // Add to store
-      actions.upsertCharacter(newCharacter);
-      
-      // Select the new character
-      actions.setActiveCharacterId(newCharacter.id);
-      
-      // Reset form and close dialog
-      setNewCharacterName('');
-      setNewCharacterDescription('');
-      setNewCharacterImageUrl('');
-      setIsCreateDialogOpen(false);
-    } catch (err) {
-      console.error('Failed to create character:', err);
-    } finally {
-      setIsCreating(false);
-    }
   };
 
   const handleGraphChange = (graph: RelationshipFlow) => {
@@ -269,88 +221,28 @@ export function CharacterWorkspace({
     <>
       <ProjectSync selectedProjectId={selectedProjectId} />
       <div className="h-screen w-full flex flex-col">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between border-b border-border bg-background/80 px-3 py-2">
-          <div className="flex items-center gap-2">
-            {/* Project Switcher */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" disabled={isLoadingProjects}>
-                  <span className="truncate max-w-[120px]">
-                    {isLoadingProjects ? 'Loading...' : selectedProject ? selectedProject.title : 'No project'}
-                  </span>
-                  <ChevronDown className="ml-1.5 h-3 w-3 shrink-0" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="min-w-[200px]">
-                {projects.map((project) => (
-                  <DropdownMenuItem
-                    key={project.id}
-                    onClick={() => handleProjectSelect(project)}
-                    className={activeProjectId === project.id ? 'bg-accent' : ''}
-                  >
-                    {project.title}
-                  </DropdownMenuItem>
-                ))}
-                {projects.length === 0 && !isLoadingProjects && (
-                  <DropdownMenuItem disabled>No projects found</DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Create Character Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setIsCreateDialogOpen(true)}
-              disabled={!activeProjectId}
-              title="Create new character"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Character/Relationship Count */}
-            <div className="text-sm text-muted-foreground">
-              {characters.length} characters · {relationshipCount} relationships
-            </div>
-
-            {/* Admin and API Buttons */}
-            <div className="flex items-center gap-2 ml-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.open('/admin', '_blank')}
-                title="Open Payload Admin"
-              >
-                Admin
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.open('/api/graphql-playground', '_blank')}
-                title="Open GraphQL Playground (API Documentation)"
-              >
-                API
-              </Button>
-            </div>
-          </div>
-        </div>
-        
+        <CharacterWorkspaceHeader
+          projects={projects}
+          isLoadingProjects={isLoadingProjects}
+          selectedProject={selectedProject}
+          activeProjectId={activeProjectId}
+          onProjectSelect={handleProjectSelect}
+          onCreateCharacterClick={() => actions.openCreateCharacterModal()}
+          onDebugClick={() => actions.openDebugDrawer()}
+        />
         <div className="flex-1 p-6">
           {/* Relationship Graph Editor */}
           <div className="border rounded-lg bg-white flex flex-col h-full">
             {/* Relationship Graph Editor - Always shown when project is selected */}
             {currentGraph && activeProjectId ? (
               <RelationshipGraphEditor
+                ref={graphEditorRef}
                 graph={currentGraph}
                 activeCharacterId={activeCharacterId || ''}
                 characters={characters}
                 onGraphChange={handleGraphChange}
                 onCharacterSelect={handleCharacterSelect}
-                onCreateCharacter={() => setIsCreateDialogOpen(true)}
+                onCreateCharacter={() => actions.openCreateCharacterModal()}
                 onCharacterUpdate={handleCharacterUpdate}
                 dataAdapter={dataAdapter}
               />
@@ -365,66 +257,13 @@ export function CharacterWorkspace({
           </div>
         </div>
 
-        {/* Create Character Dialog */}
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Character</DialogTitle>
-              <DialogDescription>
-                Add a new character to the project. You can edit relationships after creation.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Name *</Label>
-                <Input
-                  id="name"
-                  value={newCharacterName}
-                  onChange={(e) => setNewCharacterName(e.target.value)}
-                  placeholder="Character name"
-                  autoFocus
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={newCharacterDescription}
-                  onChange={(e) => setNewCharacterDescription(e.target.value)}
-                  placeholder="Character description (optional)"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="imageUrl">Image URL</Label>
-                <Input
-                  id="imageUrl"
-                  value={newCharacterImageUrl}
-                  onChange={(e) => setNewCharacterImageUrl(e.target.value)}
-                  placeholder="https://example.com/character.jpg (optional)"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsCreateDialogOpen(false);
-                  setNewCharacterName('');
-                  setNewCharacterDescription('');
-                  setNewCharacterImageUrl('');
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateCharacter}
-                disabled={!newCharacterName.trim() || isCreating || !activeProjectId}
-              >
-                {isCreating ? 'Creating...' : 'Create Character'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <CharacterWorkspaceModals dataAdapter={dataAdapter} />
+        <GraphDebugDrawer
+          open={isDebugDrawerOpen}
+          onOpenChange={(open) => { if (!open) actions.closeDebugDrawer(); }}
+          graphEditorRef={graphEditorRef}
+          relationshipFlow={currentGraph}
+        />
       </div>
     </>
   );

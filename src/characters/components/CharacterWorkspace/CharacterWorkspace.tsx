@@ -1,23 +1,19 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { Users } from 'lucide-react';
-import type { CharacterWorkspaceAdapter, ProjectInfo, CharacterDoc, JointGraphJson } from '@magicborn/dialogue-forge/src/characters/types';
+import type { CharacterWorkspaceAdapter, ProjectInfo, CharacterDoc, JointGraphJson } from '@/characters/types';
 import { CharacterWorkspaceHeader } from './components/CharacterWorkspaceHeader';
 import { CharacterWorkspaceModals } from './components/CharacterWorkspaceModals';
 import { GraphDebugDrawer } from './components/GraphDebugDrawer';
-import { RelationshipGraphEditor, type RelationshipGraphEditorRef } from './components/RelationshipGraphEditor';
 import { RelationshipGraphEditorBlank } from './components/RelationshipGraphEditorBlank';
 
 /** Set to true to render paper + one circle only (no app data, no drag-and-drop). */
-const USE_BLANK_GRAPH_EDITOR = true;
 import { ActiveCharacterPanel } from './components/ActiveCharacterPanel';
 import { CharacterSidebar } from './components/CharacterSidebar';
 import { CharacterDetailsPanel } from './components/CharacterDetailsPanel';
-import { RelationshipLabelDialog } from './components/RelationshipLabelDialog';
 import { useCharacterWorkspaceStore } from './store/character-workspace-store';
 import { ProjectSync } from './components/ProjectSync';
+import { RelationshipGraphEditorBlankRef } from './components/RelationshipGraphEditorBlank/types';
 /**
  * Character workspace container component
  * Uses Zustand store for state management
@@ -43,16 +39,11 @@ export function CharacterWorkspace({
   // Local UI state
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
-  const graphEditorRef = useRef<RelationshipGraphEditorRef>(null);
+  const graphEditorRef = useRef<RelationshipGraphEditorBlankRef | null>(null);
 
   // Graph UI: selection, edge edit dialog, context menu (owned here for 3-column layout)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [editingEdgeId, setEditingEdgeId] = useState<string | null>(null);
-  const [labelDialogOpen, setLabelDialogOpen] = useState(false);
-  const [contextMenuNodeId, setContextMenuNodeId] = useState<string | null>(null);
-  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
-
-  const isDebugDrawerOpen = useCharacterWorkspaceStore((s) => s.isDebugDrawerOpen);
 
   const activeCharacter = useMemo(() => {
     if (!activeCharacterId) return null;
@@ -183,7 +174,10 @@ export function CharacterWorkspace({
 
   const handleCreateProject = dataAdapter?.createProject
     ? async (data: { name: string; description?: string }): Promise<ProjectInfo> => {
-        const newProject = await dataAdapter.createProject({ name: data.name });
+        const newProject = await dataAdapter.createProject?.({ name: data.name });
+        if (!newProject) {
+          throw new Error('Failed to create project');
+        }
         const list = await dataAdapter.listProjects();
         actionsRef.current.setProjects(list);
         actions.setActiveProjectId(newProject.id);
@@ -207,20 +201,6 @@ export function CharacterWorkspace({
       throw error;
     }
   };
-
-  // Close context menu when clicking outside
-  useEffect(() => {
-    if (!contextMenuNodeId) return;
-    const handleClick = () => {
-      setContextMenuNodeId(null);
-      setContextMenuPosition(null);
-    };
-    const t = setTimeout(() => document.addEventListener('click', handleClick), 0);
-    return () => {
-      clearTimeout(t);
-      document.removeEventListener('click', handleClick);
-    };
-  }, [contextMenuNodeId]);
 
   return (
     <>
@@ -254,53 +234,26 @@ export function CharacterWorkspace({
             {/* Center: Graph editor only */}
             <main className="flex-1 min-w-0 flex flex-col">
               {activeProjectId ? (
-                USE_BLANK_GRAPH_EDITOR ? (
                   <RelationshipGraphEditorBlank
                     ref={graphEditorRef}
-                    graph={{ nodes: [], edges: [] }}
                     activeCharacterId={activeCharacterId || ''}
                     characters={characters}
                     selectedNodeId={selectedNodeId}
                     initialGraphJson={currentGraphJson}
-                    onGraphChange={() => {}}
+                    onGraphChange={(graphJson) => {
+                      setCurrentGraphJson(graphJson);
+                    }}
                     onNodeSelect={setSelectedNodeId}
                     onEdgeClick={(edgeId) => {
                       setEditingEdgeId(edgeId);
-                      setLabelDialogOpen(true);
-                    }}
-                    onNodeContextMenu={(nodeId, position) => {
-                      setContextMenuNodeId(nodeId);
-                      setContextMenuPosition(position);
                     }}
                     onCharacterSelect={handleCharacterSelect}
                     onCreateCharacter={() => actions.openCreateCharacterModal()}
                     onCharacterUpdate={handleCharacterUpdate}
                     dataAdapter={dataAdapter}
                   />
-                ) : (
-                  <RelationshipGraphEditor
-                    ref={graphEditorRef}
-                    graph={{ nodes: [], edges: [] }}
-                    activeCharacterId={activeCharacterId || ''}
-                    characters={characters}
-                    selectedNodeId={selectedNodeId}
-                    onGraphChange={() => {}}
-                    onNodeSelect={setSelectedNodeId}
-                    onEdgeClick={(edgeId) => {
-                      setEditingEdgeId(edgeId);
-                      setLabelDialogOpen(true);
-                    }}
-                    onNodeContextMenu={(nodeId, position) => {
-                      setContextMenuNodeId(nodeId);
-                      setContextMenuPosition(position);
-                    }}
-                    onCharacterSelect={handleCharacterSelect}
-                    onCreateCharacter={() => actions.openCreateCharacterModal()}
-                    onCharacterUpdate={handleCharacterUpdate}
-                    dataAdapter={dataAdapter}
-                  />
-                )
-              ) : (
+                ) 
+              : (
                 <div className="flex-1 border-2 border-gray-300 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
                   <div className="text-center">
                     <div className="text-lg mb-2">🎭</div>
@@ -318,8 +271,7 @@ export function CharacterWorkspace({
                   activeCharacterId={activeCharacterId}
                   onCharacterSelect={handleCharacterSelect}
                   onCreateCharacter={() => actions.openCreateCharacterModal()}
-                  graph={{ nodes: [], edges: [] }}
-                  onGraphChange={() => {}}
+                  graphEditorRef={graphEditorRef}
                   className="h-full"
                 />
               </div>
@@ -328,6 +280,7 @@ export function CharacterWorkspace({
                   <CharacterDetailsPanel
                     character={selectedCharacter}
                     isActiveCharacter={selectedNodeId === activeCharacterId}
+                    graphEditorRef={graphEditorRef}
                     className="h-auto"
                   />
                 </div>
@@ -336,46 +289,12 @@ export function CharacterWorkspace({
           </div>
         </div>
 
-        <RelationshipLabelDialog
-          open={labelDialogOpen}
-          onOpenChange={setLabelDialogOpen}
-          currentLabel=""
-          currentWhy=""
-          onConfirm={() => {
-            setEditingEdgeId(null);
-            setLabelDialogOpen(false);
-          }}
-        />
-
-        {contextMenuNodeId != null && contextMenuPosition != null && typeof window !== 'undefined' &&
-          createPortal(
-            <div
-              className="fixed z-50 bg-popover border border-border rounded-md shadow-md min-w-[180px] py-1"
-              style={{ left: contextMenuPosition.x, top: contextMenuPosition.y }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                className="flex w-full items-center px-2 py-1.5 text-sm cursor-pointer hover:bg-accent transition-colors text-left"
-                onClick={() => {
-                  handleCharacterSelect(contextMenuNodeId);
-                  setContextMenuNodeId(null);
-                  setContextMenuPosition(null);
-                }}
-              >
-                <Users className="mr-2 h-4 w-4" />
-                Load as Active Character
-              </button>
-            </div>,
-            document.body
-          )}
+    
 
         <CharacterWorkspaceModals dataAdapter={dataAdapter} />
         <GraphDebugDrawer
-          open={isDebugDrawerOpen}
-          onOpenChange={(open) => { if (!open) actions.closeDebugDrawer(); }}
           graphEditorRef={graphEditorRef}
-          relationshipFlow={null}
+          graphJson={currentGraphJson}
         />
       </div>
     </>

@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
-import type { RelationshipFlow, CharacterDoc } from '@/characters/types';
+import type { CharacterDoc, JointGraphJson } from '@/characters/types';
 import type { CharacterWorkspaceAdapter } from '@/characters/types';
 import type { CharacterGraphEditorConfig } from '../config/editor-config';
 
 /**
  * Hook for debounced autosave of graph changes
  */
-export function useDebouncedAutosave(
-  graph: RelationshipFlow | null,
+  export function useDebouncedAutosave(
+    graph: JointGraphJson | null,
   characterId: string | null,
   dataAdapter: CharacterWorkspaceAdapter | undefined,
   config: CharacterGraphEditorConfig,
@@ -69,7 +69,7 @@ export function useDebouncedAutosave(
       
       try {
         const saved = await currentAdapter.updateCharacter(currentCharacterId, {
-          relationshipFlow: graphToSave,
+          relationshipGraphJson: graphToSave,
         });
         
         // Update last saved reference

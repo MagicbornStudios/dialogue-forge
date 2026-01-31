@@ -5,16 +5,20 @@ import { Badge } from '@/shared/ui/badge';
 import type { CharacterDoc } from '@/characters/types';
 import { Users } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
+import type { RelationshipGraphEditorBlankRef } from './RelationshipGraphEditorBlank';
 
 interface CharacterDetailsPanelProps {
   character: CharacterDoc | null;
   isActiveCharacter?: boolean;
+  /** Ref to the graph editor: getGraph() for JointJS API, getJointGraphJson() for save/load. */
+  graphEditorRef?: React.RefObject<RelationshipGraphEditorBlankRef | null>;
   className?: string;
 }
 
 export function CharacterDetailsPanel({
   character,
   isActiveCharacter = false,
+  graphEditorRef,
   className,
 }: CharacterDetailsPanelProps) {
   if (!character) {

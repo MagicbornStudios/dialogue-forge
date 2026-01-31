@@ -1,42 +1,58 @@
 'use client';
 
 import React from 'react';
+import { dia } from '@joint/core';
 import { EdgeRow } from './EdgeRow';
-import type { RelationshipFlowEdge } from '@/characters/types';
+import type { CharacterDoc } from '@/characters/types';
+import type { RelationshipGraphEditorBlankRef } from '../RelationshipGraphEditorBlank';
+import { getCharacterName } from '@/characters/components/CharacterWorkspace/utils/jointCharacterUtils';
 
 interface RelationshipsListProps {
   activeCharacterId: string | null;
-  edges: RelationshipFlowEdge[];
-  filteredEdges: RelationshipFlowEdge[];
-  searchQuery: string;
-  editingEdgeId: string | null;
-  edgeLabel: string;
-  edgeWhy: string;
-  getCharacterName: (id: string) => string;
-  onEditEdge: (edge: RelationshipFlowEdge) => void;
-  onSaveEdge: () => void;
-  onCancelEdge: () => void;
-  onDeleteEdge: (edgeId: string) => void;
-  onEdgeLabelChange: (value: string) => void;
-  onEdgeWhyChange: (value: string) => void;
+  graphEditorRef?: React.RefObject<RelationshipGraphEditorBlankRef | null>;
+  characters: CharacterDoc[];
+}
+
+/** Shape for EdgeRow: id, source, target, data from link (mbData). */
+interface EdgeLike {
+  id: string;
+  source: string;
+  target: string;
+  data?: { label?: string; why?: string };
+}
+
+function linkToEdge(link: dia.Link): EdgeLike {
+  const src = link.getSourceCell();
+  const tgt = link.getTargetCell();
+  const sourceId = src?.id?.toString() ?? '';
+  const targetId = tgt?.id?.toString() ?? '';
+  const mbData = (link.get('mbData') as { label?: string; why?: string } | undefined) ?? {};
+  return {
+    id: link.id?.toString() ?? '',
+    source: sourceId,
+    target: targetId,
+    data: mbData,
+  };
 }
 
 export function RelationshipsList({
   activeCharacterId,
-  edges,
-  filteredEdges,
-  searchQuery,
-  editingEdgeId,
-  edgeLabel,
-  edgeWhy,
-  getCharacterName,
-  onEditEdge,
-  onSaveEdge,
-  onCancelEdge,
-  onDeleteEdge,
-  onEdgeLabelChange,
-  onEdgeWhyChange,
+  graphEditorRef,
+  characters,
 }: RelationshipsListProps) {
+  const graph = graphEditorRef?.current?.getGraph() ?? null;
+  const links = graph?.getLinks() ?? [];
+  const linksForActive = React.useMemo(() => {
+    if (!activeCharacterId) return [];
+    return links.filter((link: dia.Link) => {
+      const src = link.getSourceCell();
+      const tgt = link.getTargetCell();
+      const sid = src?.id?.toString();
+      const tid = tgt?.id?.toString();
+      return sid === activeCharacterId || tid === activeCharacterId;
+    });
+  }, [links, activeCharacterId]);
+
   if (!activeCharacterId) {
     return (
       <div className="px-3 py-6 text-center text-xs text-muted-foreground">
@@ -44,33 +60,38 @@ export function RelationshipsList({
       </div>
     );
   }
-  if (edges.length === 0) {
+  if (linksForActive.length === 0) {
     return (
       <div className="px-3 py-6 text-center text-xs text-muted-foreground">
-        {searchQuery ? 'No relationships found' : 'No relationships yet'}
+        No relationships yet
       </div>
     );
   }
 
   return (
     <div className="py-1">
-      {filteredEdges.map((edge) => (
-        <EdgeRow
-          key={edge.id}
-          edge={edge}
-          sourceName={getCharacterName(edge.source)}
-          targetName={getCharacterName(edge.target)}
-          isEditing={editingEdgeId === edge.id}
-          editLabel={edgeLabel}
-          editWhy={edgeWhy}
-          onEditLabel={onEdgeLabelChange}
-          onEditWhy={onEdgeWhyChange}
-          onEdit={() => onEditEdge(edge)}
-          onSave={onSaveEdge}
-          onCancel={onCancelEdge}
-          onDelete={() => onDeleteEdge(edge.id)}
-        />
-      ))}
+      {linksForActive.map((link: dia.Link) => {
+        const sourceEl = link.getSourceElement();
+        const targetEl = link.getTargetElement();
+        const edge = linkToEdge(link);
+        return (
+          <EdgeRow
+            key={edge.id}
+            edge={edge as any}
+            sourceName={getCharacterName(characters, sourceEl as dia.Cell)}
+            targetName={getCharacterName(characters, targetEl as dia.Cell)}
+            isEditing={false}
+            editLabel={''}
+            editWhy={''}
+            onEditLabel={() => {}}
+            onEditWhy={() => {}}
+            onEdit={() => {}}
+            onSave={() => {}}
+            onCancel={() => {}}
+            onDelete={() => {}}
+          />
+        );
+      })}
     </div>
   );
 }

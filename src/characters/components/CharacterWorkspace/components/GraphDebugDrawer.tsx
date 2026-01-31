@@ -12,25 +12,29 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { Button } from '@/shared/ui/button';
 import JsonView from '@uiw/react-json-view';
-import type { RelationshipFlow } from '@/characters/types';
-import type { RelationshipGraphEditorRef } from './RelationshipGraphEditor';
+import type { JointGraphJson } from '@/characters/types';
+import type { RelationshipGraphEditorBlankRef } from './RelationshipGraphEditorBlank';
+import { useCharacterWorkspaceStore } from '../store/character-workspace-store';
 import { cn } from '@/shared/lib/utils';
 
 type TabId = 'joint' | 'flow';
 
 interface GraphDebugDrawerProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  graphEditorRef: React.RefObject<RelationshipGraphEditorRef | null>;
-  relationshipFlow: RelationshipFlow | null;
+  graphEditorRef: React.RefObject<RelationshipGraphEditorBlankRef | null>;
+  graphJson?: JointGraphJson | null;
 }
 
+/**
+ * Debug drawer for the relationship graph. Open/close state comes from the workspace store
+ * (like CharacterWorkspaceModals).
+ */
 export function GraphDebugDrawer({
-  open,
-  onOpenChange,
   graphEditorRef,
-  relationshipFlow,
+  graphJson = null,
 }: GraphDebugDrawerProps) {
+  const open = useCharacterWorkspaceStore((s) => s.isDebugDrawerOpen);
+  const closeDrawer = useCharacterWorkspaceStore((s) => s.actions.closeDebugDrawer);
+
   const [jointJson, setJointJson] = useState<object | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('joint');
 
@@ -43,25 +47,25 @@ export function GraphDebugDrawer({
     (next: boolean) => {
       if (next) {
         refresh();
-        // Ref may not be ready yet; try again so JointJS (toJSON) tab populates
         setTimeout(refresh, 200);
+      } else {
+        closeDrawer();
       }
-      onOpenChange(next);
     },
-    [onOpenChange, refresh]
+    [closeDrawer, refresh]
   );
 
   const handleCopy = useCallback(() => {
     const data =
       activeTab === 'joint'
         ? jointJson
-        : relationshipFlow;
+        : graphJson;
     if (data == null) return;
     const text = JSON.stringify(data, null, 2);
     void navigator.clipboard.writeText(text);
-  }, [activeTab, jointJson, relationshipFlow]);
+  }, [activeTab, jointJson, graphJson]);
 
-  const flowData = relationshipFlow ?? { nodes: [], edges: [] };
+  const flowData = graphJson ?? { nodes: [], edges: [] };
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange} direction="right" shouldScaleBackground={false}>
@@ -114,7 +118,7 @@ export function GraphDebugDrawer({
               JointJS (toJSON)
             </TabsTrigger>
             <TabsTrigger value="flow" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              RelationshipFlow (saved)
+              Graph JSON (saved)
             </TabsTrigger>
           </TabsList>
 

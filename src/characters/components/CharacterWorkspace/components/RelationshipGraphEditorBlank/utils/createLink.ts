@@ -1,0 +1,1 @@
+export { createRelationshipLink } from '../links';

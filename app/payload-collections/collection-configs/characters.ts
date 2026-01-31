@@ -65,14 +65,13 @@ export const Characters: CollectionConfig = {
       type: 'json',
     },
 
-    // --- NEW: POV relationship graph stored on the character ---
+    // --- JointJS graph snapshot (graph.toJSON()) ---
     {
-      name: 'relationshipFlow',
+      name: 'relationshipGraphJson',
       type: 'json',
       required: false,
       admin: {
-        description:
-          'POV graph: { nodes: [{ id, type, position: {x,y} }], edges: [{ id, source, target }] }. Must include a node with id = this character; all edges must have source = this character.',
+        description: 'JointJS graph snapshot (graph.toJSON()). Saved from the relationship graph editor.',
       },
     },
 
@@ -92,17 +91,5 @@ export const Characters: CollectionConfig = {
   ],
   versions: {
     drafts: true,
-  },
-  hooks: {
-    // Optional safety: keep relationshipFlow shaped, even if empty.
-    // Also a good place to ensure nodes/edges arrays exist for the UI.
-    beforeValidate: [
-      async ({ data }) => {
-        if (!data) return data
-        const rf = normalizeRelationshipFlow((data as any).relationshipFlow)
-        ;(data as any).relationshipFlow = rf
-        return data
-      },
-    ],
   },
 }

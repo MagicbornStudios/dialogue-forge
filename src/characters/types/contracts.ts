@@ -21,7 +21,8 @@ export interface CharacterPatch {
   description?: string
   imageUrl?: string
   avatarId?: string | null
-  relationshipFlow?: CharacterDoc['relationshipFlow']
+  /** JointJS graph snapshot (graph.toJSON()) */
+  relationshipGraphJson?: CharacterDoc['relationshipGraphJson']
 }
 
 /**
@@ -41,6 +42,11 @@ export interface CharacterWorkspaceAdapter {
    * List all projects available to the user
    */
   listProjects(): Promise<ProjectInfo[]>
+
+  /**
+   * Create a new project (optional – e.g. open Admin if not implemented).
+   */
+  createProject?(data: { name: string }): Promise<ProjectInfo>
 
   /**
    * List all characters for a project

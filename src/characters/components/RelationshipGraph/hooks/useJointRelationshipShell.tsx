@@ -256,11 +256,6 @@ export function useJointRelationshipShell({
           return false;
         }
 
-        // No self-edges
-        if (sourceId === targetId) {
-          return false;
-        }
-
         // Check if link already exists
         const edgeId = `${sourceId}->${targetId}`;
         if (graph.edges.some((e) => e.id === edgeId)) {

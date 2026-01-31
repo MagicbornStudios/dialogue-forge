@@ -7,7 +7,6 @@ export interface CharacterSidebarProps {
   activeCharacterId: string | null;
   onCharacterSelect?: (characterId: string) => void;
   onCreateCharacter?: () => void;
-  charactersInGraph?: string[];
   graph?: RelationshipFlow | null;
   onGraphChange?: (graph: RelationshipFlow) => void;
   className?: string;

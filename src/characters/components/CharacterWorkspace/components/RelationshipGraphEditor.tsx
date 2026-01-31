@@ -1,16 +1,9 @@
 'use client';
 
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Users } from 'lucide-react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import type { RelationshipFlow, RelationshipFlowNode, RelationshipFlowEdge } from '@/characters/types';
 import type { CharacterDoc, CharacterWorkspaceAdapter } from '@/characters/types';
-
-import { CharacterSidebar } from './CharacterSidebar';
-import { RelationshipLabelDialog } from './RelationshipLabelDialog';
-import { CharacterDetailsPanel } from './CharacterDetailsPanel';
-import { ActiveCharacterPanel } from './ActiveCharacterPanel';
 
 type JointModule = typeof import('jointjs');
 
@@ -21,9 +14,13 @@ export interface RelationshipGraphEditorRef {
 
 interface RelationshipGraphEditorProps {
   graph: RelationshipFlow;
-  activeCharacterId: string; // Can be empty string when no character selected
+  activeCharacterId: string;
   characters: CharacterDoc[];
+  selectedNodeId: string | null;
   onGraphChange: (graph: RelationshipFlow) => void;
+  onNodeSelect?: (nodeId: string | null) => void;
+  onEdgeClick?: (edgeId: string) => void;
+  onNodeContextMenu?: (nodeId: string, position: { x: number; y: number }) => void;
   onCharacterSelect?: (characterId: string) => void;
   onCreateCharacter?: () => void;
   onCharacterUpdate?: (
@@ -67,7 +64,11 @@ const RelationshipGraphEditor = forwardRef<RelationshipGraphEditorRef, Relations
       graph,
       activeCharacterId,
       characters,
+      selectedNodeId,
       onGraphChange,
+      onNodeSelect,
+      onEdgeClick,
+      onNodeContextMenu,
       onCharacterSelect,
       onCreateCharacter,
       onCharacterUpdate,
@@ -78,48 +79,10 @@ const RelationshipGraphEditor = forwardRef<RelationshipGraphEditorRef, Relations
   const containerRef = useRef<HTMLDivElement>(null);
   const paperElRef = useRef<HTMLDivElement>(null);
 
-  // JointJS instances live in refs to avoid re-creating.
   const jointRef = useRef<JointModule | null>(null);
   const diaGraphRef = useRef<any | null>(null);
   const paperRef = useRef<any | null>(null);
-
-  // Guards to prevent infinite loops during sync.
   const applyingExternalFlowRef = useRef(false);
-
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-
-  const [labelDialogOpen, setLabelDialogOpen] = useState(false);
-  const [editingEdgeId, setEditingEdgeId] = useState<string | null>(null);
-
-  const [contextMenuNodeId, setContextMenuNodeId] = useState<string | null>(null);
-  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
-
-  // Derived for right/left panels
-  const selectedCharacter = useMemo(() => {
-    if (!selectedNodeId) return null;
-    return characters.find(c => c.id === selectedNodeId) ?? null;
-  }, [selectedNodeId, characters]);
-
-  const activeCharacter = useMemo(() => {
-    if (!activeCharacterId) return null;
-    return characters.find(c => c.id === activeCharacterId) ?? null;
-  }, [activeCharacterId, characters]);
-
-  // Close context menu when clicking outside
-  useEffect(() => {
-    if (!contextMenuNodeId) return;
-
-    const handleClick = () => {
-      setContextMenuNodeId(null);
-      setContextMenuPosition(null);
-    };
-
-    const t = setTimeout(() => document.addEventListener('click', handleClick), 0);
-    return () => {
-      clearTimeout(t);
-      document.removeEventListener('click', handleClick);
-    };
-  }, [contextMenuNodeId]);
 
   const ensureJoint = async (): Promise<JointModule> => {
     if (jointRef.current) return jointRef.current;
@@ -500,56 +463,43 @@ const RelationshipGraphEditor = forwardRef<RelationshipGraphEditorRef, Relations
 
       paperRef.current = paper;
 
-      // Blank click clears selection
       paper.on('blank:pointerdown', () => {
-        setSelectedNodeId(null);
+        onNodeSelect?.(null);
       });
 
-      // Element click selects
       paper.on('element:pointerdown', (elementView: any) => {
         const id = elementView.model.id.toString();
-        setSelectedNodeId(id);
+        onNodeSelect?.(id);
       });
 
-      // Element right click context menu
       paper.on('element:contextmenu', (elementView: any, evt: MouseEvent) => {
         evt.preventDefault();
         evt.stopPropagation();
         const id = elementView.model.id.toString();
-        setContextMenuNodeId(id);
-        setContextMenuPosition({ x: evt.clientX, y: evt.clientY });
+        onNodeContextMenu?.(id, { x: evt.clientX, y: evt.clientY });
       });
 
-      // Link click opens label dialog
       paper.on('link:pointerdown', (linkView: any, evt: MouseEvent) => {
         evt.preventDefault();
         evt.stopPropagation();
-
         const link = linkView.model;
         const id = link.id.toString();
-        setEditingEdgeId(id);
-        setLabelDialogOpen(true);
-
-        // Install remove tool (midpoint remove) on click.
+        onEdgeClick?.(id);
         installLinkTools(joint, paper, link);
       });
 
-      // Sync back when element moves (Graph extends Backbone.Events; cast for TS)
       const g = diaGraph as unknown as { on: (events: string, callback: () => void) => unknown };
       g.on('change:position', () => {
         if (applyingExternalFlowRef.current) return;
         const next = jointToFlow();
         onGraphChange(next);
       });
-
-      // Sync back when links added/removed/changed (see JointJS Graph cell events)
       g.on('add remove change:source change:target', () => {
         if (applyingExternalFlowRef.current) return;
         const next = jointToFlow();
         onGraphChange(next);
       });
 
-      // Initial render from props
       flowToJoint(joint, graph);
     };
 
@@ -566,11 +516,9 @@ const RelationshipGraphEditor = forwardRef<RelationshipGraphEditorRef, Relations
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // --- Apply external graph updates into JointJS ---
   useEffect(() => {
     const joint = jointRef.current;
-    if (!joint) return;
-    if (!diaGraphRef.current) return;
+    if (!joint || !diaGraphRef.current) return;
     flowToJoint(joint, graph);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graph, characters, activeCharacterId, selectedNodeId]);
@@ -589,179 +537,32 @@ const RelationshipGraphEditor = forwardRef<RelationshipGraphEditorRef, Relations
     addCharacterToFlow(characterId, { x: p.x, y: p.y });
   };
 
-  // Available relationship targets (same rule as before)
-  const availableRelationshipTargets = useMemo(() => {
-    return graph.nodes.filter(
-      n =>
-        n.id !== activeCharacterId &&
-        !graph.edges.some(e => e.source === activeCharacterId && e.target === n.id)
-    );
-  }, [graph.nodes, graph.edges, activeCharacterId]);
-
-  // Keep “active-only add relationship” behavior:
-  // In the SVG version you had a + bubble; in JointJS version you can either:
-  // A) keep it in sidebar/toolbar (recommended) or
-  // B) add a JointJS element tool on the active node
-  //
-  // For now we keep behavior via existing sidebar interactions + drag/drop + auto-edge.
-  // If you want the "+ button on green node" exactly, we’ll add an element tool next.
-
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-1 min-h-0">
-        {/* Active Character Panel - Left side (editable) */}
-        <ActiveCharacterPanel
-          character={activeCharacter}
-          onUpdate={
-            onCharacterUpdate && activeCharacterId
-              ? updates => onCharacterUpdate(activeCharacterId, updates)
-              : undefined
-          }
-          dataAdapter={dataAdapter}
-        />
-
-        {/* Graph Visualization */}
-        <div
-          ref={containerRef}
-          className="flex-1 border-2 rounded-lg relative overflow-auto"
-          style={{
-            minHeight: '400px',
-            borderColor: 'var(--color-df-control-border)',
-            backgroundColor: 'var(--color-df-canvas-bg)',
-          }}
-          onDragOver={e => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-          }}
-          onDrop={handleDrop}
-        >
-          {/* Grid Background Pattern (keep your existing CSS grid) */}
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundColor: 'var(--color-df-canvas-bg)',
-              backgroundImage: `
-                linear-gradient(to right, var(--color-df-canvas-grid) 1px, transparent 1px),
-                linear-gradient(to bottom, var(--color-df-canvas-grid) 1px, transparent 1px)
-              `,
-              backgroundSize: '20px 20px',
-            }}
-          />
-
-          {/* JointJS paper mounts here */}
-          <div ref={paperElRef} className="absolute inset-0 z-10" />
-
-          {/* Instructions overlay */}
-          {!activeCharacterId ? (
-            <div className="absolute top-4 left-4 bg-white/90 p-3 rounded-md shadow-sm text-sm max-w-xs z-20">
-              <div className="font-semibold mb-2">Getting Started</div>
-              <ul className="space-y-1 text-xs text-gray-600">
-                <li>• Right-click a character in the sidebar and select &quot;Edit&quot; to load their graph</li>
-                <li>• Or drag characters from the sidebar onto the graph</li>
-              </ul>
-            </div>
-          ) : graph.nodes.length === 1 && graph.edges.length === 0 ? (
-            <div className="absolute top-4 left-4 bg-white/90 p-3 rounded-md shadow-sm text-sm max-w-xs z-20">
-              <div className="font-semibold mb-2">Getting Started</div>
-              <ul className="space-y-1 text-xs text-gray-600">
-                <li>• Drag characters from the sidebar to add them to the graph</li>
-                <li>• Click relationships to edit labels</li>
-                <li>• Drag nodes to reposition them</li>
-              </ul>
-            </div>
-          ) : null}
-
-          {/* Right Side Panel Container */}
-          <div className="absolute top-0 right-0 h-full w-64 z-20 shadow-lg flex flex-col bg-background">
-            <div className="flex-1 min-h-0">
-              <CharacterSidebar
-                characters={characters}
-                activeCharacterId={activeCharacterId}
-                onCharacterSelect={onCharacterSelect}
-                onCreateCharacter={onCreateCharacter}
-                charactersInGraph={graph.nodes.map(n => n.id)}
-                graph={graph}
-                onGraphChange={onGraphChange}
-                className="h-full"
-              />
-            </div>
-
-            {selectedCharacter && (
-              <div className="border-t border-border flex-shrink-0" style={{ maxHeight: '300px' }}>
-                <CharacterDetailsPanel
-                  character={selectedCharacter}
-                  isActiveCharacter={selectedNodeId === activeCharacterId}
-                  className="h-auto"
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Relationship Label Dialog */}
-      <RelationshipLabelDialog
-        open={labelDialogOpen}
-        onOpenChange={setLabelDialogOpen}
-        currentLabel={
-          editingEdgeId
-            ? graph.edges.find(e => e.id === editingEdgeId)?.data?.label || ''
-            : ''
-        }
-        currentWhy={
-          editingEdgeId
-            ? graph.edges.find(e => e.id === editingEdgeId)?.data?.why || ''
-            : ''
-        }
-        onConfirm={(label, why) => {
-          if (!editingEdgeId) return;
-
-          // Update in canonical flow
-          const nextFlow: RelationshipFlow = {
-            ...graph,
-            edges: graph.edges.map(e =>
-              e.id === editingEdgeId ? { ...e, data: { ...(e.data ?? {}), label, why } } : e
-            ),
-          };
-          onGraphChange(normalizeFlow(nextFlow));
-
-          // Update in JointJS model immediately (so UI updates without waiting)
-          const diaGraph = diaGraphRef.current;
-          const link = diaGraph?.getCell?.(editingEdgeId);
-          if (link) {
-            link.set('mbData', { label, why });
-            setLinkLabel(link, label);
-          }
-
-          setEditingEdgeId(null);
+    <div
+      ref={containerRef}
+      className="h-full w-full border-2 rounded-lg relative overflow-auto min-h-[400px]"
+      style={{
+        borderColor: 'var(--color-df-control-border)',
+        backgroundColor: 'var(--color-df-canvas-bg)',
+      }}
+      onDragOver={e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      }}
+      onDrop={handleDrop}
+    >
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundColor: 'var(--color-df-canvas-bg)',
+          backgroundImage: `
+            linear-gradient(to right, var(--color-df-canvas-grid) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--color-df-canvas-grid) 1px, transparent 1px)
+          `,
+          backgroundSize: '20px 20px',
         }}
       />
-
-      {/* Context Menu Portal */}
-      {contextMenuNodeId && contextMenuPosition && typeof window !== 'undefined' &&
-        createPortal(
-          <div
-            className="fixed z-50 bg-popover border border-border rounded-md shadow-md min-w-[180px] py-1"
-            style={{ left: contextMenuPosition.x, top: contextMenuPosition.y }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div
-              className="flex items-center px-2 py-1.5 text-sm cursor-pointer hover:bg-accent transition-colors"
-              onClick={() => {
-                if (contextMenuNodeId && onCharacterSelect) {
-                  onCharacterSelect(contextMenuNodeId);
-                }
-                setContextMenuNodeId(null);
-                setContextMenuPosition(null);
-              }}
-            >
-              <Users className="mr-2 h-4 w-4" />
-              Load as Active Character
-            </div>
-          </div>,
-          document.body
-        )
-      }
+      <div ref={paperElRef} className="absolute inset-0 z-10" />
     </div>
   );
 });

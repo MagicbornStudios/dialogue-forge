@@ -279,9 +279,9 @@ export interface Character {
     | boolean
     | null;
   /**
-   * POV graph: { nodes: [{ id, type, position: {x,y} }], edges: [{ id, source, target }] }. Must include a node with id = this character; all edges must have source = this character.
+   * JointJS graph snapshot (graph.toJSON()). Saved from the relationship graph editor.
    */
-  relationshipFlow?:
+  relationshipGraphJson?:
     | {
         [k: string]: unknown;
       }
@@ -622,7 +622,7 @@ export interface CharactersSelect<T extends boolean = true> {
   imageUrl?: T;
   avatar?: T;
   meta?: T;
-  relationshipFlow?: T;
+  relationshipGraphJson?: T;
   archivedAt?: T;
   updatedAt?: T;
   createdAt?: T;

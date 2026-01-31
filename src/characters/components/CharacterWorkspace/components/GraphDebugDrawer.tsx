@@ -41,7 +41,11 @@ export function GraphDebugDrawer({
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
-      if (next) refresh();
+      if (next) {
+        refresh();
+        // Ref may not be ready yet; try again so JointJS (toJSON) tab populates
+        setTimeout(refresh, 200);
+      }
       onOpenChange(next);
     },
     [onOpenChange, refresh]
@@ -99,7 +103,10 @@ export function GraphDebugDrawer({
 
         <Tabs
           value={activeTab}
-          onValueChange={(v) => setActiveTab(v as TabId)}
+          onValueChange={(v) => {
+            setActiveTab(v as TabId);
+            if (v === 'joint') refresh();
+          }}
           className="flex-1 flex flex-col min-h-0"
         >
           <TabsList className="shrink-0 w-full justify-start rounded-none border-b border-border bg-transparent px-4 h-9">

@@ -38,13 +38,17 @@ export interface RelationshipFlowEdge {
 }
 
 /**
- * Relationship flow structure (stored on Character.relationshipFlow)
- * This is the canonical graph format for POV relationships
+ * Relationship flow structure (legacy / derived from JointJS when needed)
  */
 export interface RelationshipFlow {
   nodes: RelationshipFlowNode[]
   edges: RelationshipFlowEdge[]
 }
+
+/**
+ * JointJS graph snapshot (graph.toJSON()). Stored on Character.relationshipGraphJson.
+ */
+export type JointGraphJson = Record<string, unknown>
 
 /**
  * Character document (domain representation)
@@ -57,7 +61,8 @@ export interface CharacterDoc {
   imageUrl?: string
   avatarUrl?: string
   project: string
-  relationshipFlow?: RelationshipFlow
+  /** JointJS graph snapshot (graph.toJSON()). Saved from the relationship graph editor. */
+  relationshipGraphJson?: JointGraphJson
   archivedAt?: Date | null
   _status?: 'draft' | 'published'
   createdAt?: Date

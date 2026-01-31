@@ -34,8 +34,7 @@ function mapCharacter(char: Character, baseUrl: string): CharacterDoc {
     ? String(char.project) 
     : String(char.project.id);
 
-  // Extract relationshipFlow from JSON field (may not be in type definition yet)
-  const relationshipFlow = (char as any).relationshipFlow;
+  const relationshipGraphJson = (char as any).relationshipGraphJson;
 
   // Extract description and imageUrl (may not be in type definition yet)
   const description = (char as any).description;
@@ -87,7 +86,7 @@ function mapCharacter(char: Character, baseUrl: string): CharacterDoc {
     imageUrl: imageUrl ?? undefined,
     avatarUrl: avatarUrl,
     project: projectId,
-    relationshipFlow: relationshipFlow ?? undefined,
+    relationshipGraphJson: relationshipGraphJson ?? undefined,
     archivedAt: char.archivedAt ? new Date(char.archivedAt) : null,
     _status: char._status ?? undefined,
     createdAt: char.createdAt ? new Date(char.createdAt) : undefined,
@@ -112,6 +111,14 @@ export class PayloadCharacterAdapter implements CharacterWorkspaceAdapter {
       limit: 1000,
     });
     return result.docs.map((doc) => mapProject(doc as Project));
+  }
+
+  async createProject(data: { name: string }): Promise<ProjectInfo> {
+    const doc = await this.payload.create({
+      collection: PAYLOAD_COLLECTIONS.PROJECTS,
+      data: { name: data.name.trim() },
+    }) as Project;
+    return mapProject(doc);
   }
 
   async uploadMedia(file: File): Promise<MediaUploadResult> {
@@ -189,7 +196,7 @@ export class PayloadCharacterAdapter implements CharacterWorkspaceAdapter {
       name: data.name,
       description: data.description ?? null,
       imageUrl: data.imageUrl ?? null,
-      relationshipFlow: data.relationshipFlow ?? null,
+      relationshipGraphJson: data.relationshipGraphJson ?? null,
       _status: 'draft',
     };
 
@@ -222,7 +229,7 @@ export class PayloadCharacterAdapter implements CharacterWorkspaceAdapter {
     if (patch.name !== undefined) updateData.name = patch.name;
     if (patch.description !== undefined) updateData.description = patch.description ?? null;
     if (patch.imageUrl !== undefined) updateData.imageUrl = patch.imageUrl ?? null;
-    if (patch.relationshipFlow !== undefined) updateData.relationshipFlow = patch.relationshipFlow ?? null;
+    if (patch.relationshipGraphJson !== undefined) updateData.relationshipGraphJson = patch.relationshipGraphJson ?? null;
     if (patch.avatarId !== undefined) {
       updateData.avatar = patch.avatarId ? parseInt(patch.avatarId, 10) : null;
     }

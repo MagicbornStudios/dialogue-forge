@@ -16,7 +16,6 @@ export function CharacterSidebar({
   activeCharacterId,
   onCharacterSelect,
   onCreateCharacter,
-  charactersInGraph = [],
   graph,
   onGraphChange,
   className,
@@ -33,9 +32,7 @@ export function CharacterSidebar({
   }, [characters, activeCharacterId]);
 
   const otherCharacters = useMemo(() => {
-    const filtered = characters.filter(
-      (char) => char.id !== activeCharacterId && !charactersInGraph.includes(char.id)
-    );
+    const filtered = characters.filter((char) => char.id !== activeCharacterId);
     if (!searchQuery.trim()) return filtered;
     const query = searchQuery.toLowerCase();
     return filtered.filter(
@@ -43,7 +40,7 @@ export function CharacterSidebar({
         char.name.toLowerCase().includes(query) ||
         (char.description?.toLowerCase().includes(query) ?? false)
     );
-  }, [characters, activeCharacterId, charactersInGraph, searchQuery]);
+  }, [characters, activeCharacterId, searchQuery]);
 
   const edges = useMemo(() => graph?.edges ?? [], [graph]);
 

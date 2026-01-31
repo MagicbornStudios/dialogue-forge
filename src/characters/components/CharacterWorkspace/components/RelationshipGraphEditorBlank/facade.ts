@@ -1,17 +1,15 @@
 import { dia, shapes } from '@joint/core';
 import type { RefObject } from 'react';
 import type { JointGraphJson } from '@/characters/types';
-import { BlankNode } from './elements';
 import { RelationshipLink } from './links';
 
 /**
- * Cell namespace for graph/paper (shapes + mb.BlankNode, mb.RelationshipLink).
+ * Cell namespace for graph/paper (standard shapes + mb.RelationshipLink).
  */
 export function getCellNamespace(): Record<string, unknown> {
   return {
     ...shapes,
     mb: {
-      BlankNode,
       RelationshipLink,
     },
   };

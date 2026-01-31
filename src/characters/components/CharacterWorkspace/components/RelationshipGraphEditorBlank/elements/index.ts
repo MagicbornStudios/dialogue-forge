@@ -1,1 +1,1 @@
-export { BlankNode, createDefaultPlaceholderElement } from './characterElement';
+export { createDefaultPlaceholderElement } from './characterElement';

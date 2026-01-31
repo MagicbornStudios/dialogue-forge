@@ -5,7 +5,7 @@ export type {
 } from './types';
 export { getCellNamespace, createFacadeFromRefs } from './facade';
 export type { RelationshipGraphEditorFacade } from './facade';
-export { BlankNode, createDefaultPlaceholderElement } from './elements';
+export { createDefaultPlaceholderElement } from './elements';
 export { RelationshipLink, createRelationshipLink } from './links';
 export { createBlankPlaceholderElement, createCharacterElement } from './utils/createElement';
 export { createRelationshipLink as createLink } from './utils/createLink';

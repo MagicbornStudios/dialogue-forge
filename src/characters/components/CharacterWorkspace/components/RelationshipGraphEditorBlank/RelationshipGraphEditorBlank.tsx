@@ -3,6 +3,7 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { dia } from '@joint/core';
 
+
 import { getCellNamespace } from './facade';
 import { createBlankPlaceholderElement } from './utils/createElement';
 import type { RelationshipGraphEditorBlankRef, RelationshipGraphEditorBlankProps } from './types';
@@ -36,39 +37,42 @@ const RelationshipGraphEditorBlank = forwardRef<
   );
 
   useEffect(() => {
-    const el = paperElRef.current;
-    if (!el) return;
+    const wrapper = paperElRef.current;
+    if (!wrapper) return;
 
-    const cellNamespace = getCellNamespace() as { [key: string]: unknown };
+    // Create a dedicated container for JointJS so we never pass the React-rendered div to Paper.
+    // JointJS appends/manages SVG inside this container; the wrapper stays visible and stable.
+    const paperContainer = document.createElement('div');
+    paperContainer.style.width = '800px';
+    paperContainer.style.height = '600px';
+    paperContainer.style.minWidth = '800px';
+    paperContainer.style.minHeight = '600px';
+    wrapper.appendChild(paperContainer);
 
-    const graph = new dia.Graph({}, { cellNamespace });
+    const cellNamespace = getCellNamespace();
+
+    const graph = new dia.Graph({}, {
+      cellNamespace,
+    } as dia.Graph.Options);
     diaGraphRef.current = graph;
 
     const paper = new dia.Paper({
-      el,
+      el: paperContainer,
       model: graph,
       width: 800,
       height: 600,
       background: { color: '#f5f5f5' },
       interactive: false,
       cellViewNamespace: cellNamespace,
-    });
+    } as dia.Paper.Options);
     paperRef.current = paper;
 
     const json = initialJsonRef.current as JointGraphJson;
-    console.log('json', json);
-
-    // No typeof checks: json is already the correct structural type (or null/undefined).
     if (json && 'cells' in json && json.cells) {
       graph.fromJSON(json);
     } else {
       graph.addCell(createBlankPlaceholderElement());
     }
-    console.log('activeCharacterId', activeCharacterId);
-    console.log('graph', graph.toJSON());
-    console.log('paper', paper);
-    console.log('json', json);
-    console.log('cells', json?.cells);
 
     return () => {
       try {
@@ -78,13 +82,16 @@ const RelationshipGraphEditorBlank = forwardRef<
       }
       paperRef.current = null;
       diaGraphRef.current = null;
+      paperContainer.remove();
     };
-  }, [activeCharacterId]);
+  }, []);
 
   return (
-    <div className="h-full w-full min-h-[400px] overflow-auto bg-black rounded-lg border border-gray-300">
-      <div>yolo</div>
-      <div ref={paperElRef} className="min-w-full min-h-full" />
+    <div className="h-full w-full min-h-[400px] overflow-auto rounded-lg border border-gray-300 bg-[#f5f5f5]">
+      <div
+        ref={paperElRef}
+        className="min-w-[800px] min-h-[600px] "
+      />
     </div>
   );
 });

@@ -63,7 +63,7 @@ export function GraphDebugDrawer({
     <Drawer open={open} onOpenChange={handleOpenChange} direction="right" shouldScaleBackground={false}>
       <DrawerContent
         className={cn(
-          'flex flex-col gap-0 p-0 h-full max-w-2xl w-full'
+          'flex flex-col gap-0 p-0 h-full w-full min-w-[min(90vw,64rem)]'
         )}
       >
         <DrawerHeader className="shrink-0 border-b border-border px-4 py-3 text-left">

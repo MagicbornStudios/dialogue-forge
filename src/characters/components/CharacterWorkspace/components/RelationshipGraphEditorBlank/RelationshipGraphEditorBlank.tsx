@@ -5,19 +5,21 @@ import { dia } from '@joint/core';
 
 
 import { getCellNamespace } from './facade';
-import { createBlankPlaceholderElement } from './utils/createElement';
+import { createBlankPlaceholderElement, createCharacterElement } from './utils/createElement';
+import { createRelationshipLink } from './links';
 import type { RelationshipGraphEditorBlankRef, RelationshipGraphEditorBlankProps } from './types';
-import { JointGraphJson } from '@/characters/types';
+import type { JointGraphJson, CharacterDoc } from '@/characters/types';
 
 const RelationshipGraphEditorBlank = forwardRef<
   RelationshipGraphEditorBlankRef,
   RelationshipGraphEditorBlankProps
->(function RelationshipGraphEditorBlank({ initialGraphJson, ..._rest }, ref) {
+>(function RelationshipGraphEditorBlank({ initialGraphJson, activeCharacterId, characters, onGraphChange, ..._rest }, ref) {
+  const activeCharacter = characters.find(character => character.id === activeCharacterId);
   const paperElRef = useRef<HTMLDivElement>(null);
   const diaGraphRef = useRef<dia.Graph | null>(null);
   const paperRef = useRef<dia.Paper | null>(null);
-
-  const activeCharacterId = _rest.activeCharacterId;
+  const onGraphChangeRef = useRef(onGraphChange);
+  onGraphChangeRef.current = onGraphChange;
 
   const initialJsonRef = useRef(initialGraphJson);
   initialJsonRef.current = initialGraphJson;
@@ -32,8 +34,30 @@ const RelationshipGraphEditorBlank = forwardRef<
         const g = diaGraphRef.current;
         return g ? (g.toJSON() as Parameters<dia.Graph['fromJSON']>[0]) : null;
       },
+      addRelationshipFromActiveToCharacter(character: CharacterDoc) {
+        const graph = diaGraphRef.current;
+        if (!graph || !activeCharacterId) return;
+        const sourceId = `character-${activeCharacterId}`;
+        const targetId = `character-${character.id}`;
+        if (sourceId === targetId) return;
+
+        const existingTarget = graph.getCell(targetId);
+        if (!existingTarget) {
+          const sourceEl = graph.getCell(sourceId) as dia.Element | null;
+          const pos = sourceEl?.get('position')
+            ? { x: (sourceEl.get('position') as { x: number }).x + 260, y: (sourceEl.get('position') as { y: number }).y }
+            : { x: 260, y: 0 };
+          const targetElement = createCharacterElement(character, pos);
+          graph.addCell(targetElement);
+        }
+
+        const link = createRelationshipLink(sourceId, targetId);
+        graph.addCell(link);
+        const json = graph.toJSON() as JointGraphJson;
+        onGraphChangeRef.current?.(json);
+      },
     }),
-    []
+    [activeCharacterId]
   );
 
   useEffect(() => {
@@ -68,10 +92,15 @@ const RelationshipGraphEditorBlank = forwardRef<
     paperRef.current = paper;
 
     const json = initialJsonRef.current as JointGraphJson;
-    if (json && 'cells' in json && json.cells) {
+    const hasCells = json && 'cells' in json && json.cells && (json.cells as unknown[]).length > 0;
+    if (hasCells) {
       graph.fromJSON(json);
     } else {
-      graph.addCell(createBlankPlaceholderElement());
+      if (activeCharacter) {
+        graph.addCell(createCharacterElement(activeCharacter));
+      } else {
+        graph.addCell(createBlankPlaceholderElement());
+      }
     }
 
     return () => {
@@ -84,7 +113,7 @@ const RelationshipGraphEditorBlank = forwardRef<
       diaGraphRef.current = null;
       paperContainer.remove();
     };
-  }, []);
+  }, [activeCharacterId]);
 
   return (
     <div className="h-full w-full min-h-[400px] overflow-auto rounded-lg border border-gray-300 bg-[#f5f5f5]">

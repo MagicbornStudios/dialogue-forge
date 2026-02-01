@@ -1,2 +1,2 @@
-export { getDefaultElementTools } from './elementTools';
-export { getDefaultLinkTools } from './linkTools';
+export * from './elementTools';
+export * from './linkTools';

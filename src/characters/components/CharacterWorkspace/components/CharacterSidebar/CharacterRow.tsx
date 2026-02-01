@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Users, Edit } from 'lucide-react';
+import { Users, Edit, Link2 } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -14,33 +14,24 @@ import type { CharacterDoc } from '@/characters/types';
 interface CharacterRowProps {
   character: CharacterDoc;
   isActive?: boolean;
-  draggable?: boolean;
   onSelect?: (characterId: string) => void;
-  onDragStart?: (e: React.DragEvent, characterId: string) => void;
-  onDragEnd?: (e: React.DragEvent) => void;
+  onAddRelationship?: (character: CharacterDoc) => void;
 }
 
 export function CharacterRow({
   character,
   isActive,
-  draggable = false,
   onSelect,
-  onDragStart,
-  onDragEnd,
+  onAddRelationship,
 }: CharacterRowProps) {
   const content = (
     <div
-      {...(draggable && {
-        draggable: true,
-        onDragStart: (e: React.DragEvent) => onDragStart?.(e, character.id),
-        onDragEnd,
-      })}
       onDoubleClick={() => onSelect?.(character.id)}
       className={cn(
         'w-full px-2 py-1.5 text-left text-xs transition-colors duration-200',
         isActive
           ? 'bg-muted text-foreground border-l-2 border-[var(--editor-border-active)] cursor-pointer'
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:border-l-2 hover:border-[var(--editor-border-hover)] cursor-grab active:cursor-grabbing'
+          : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:border-l-2 hover:border-[var(--editor-border-hover)] cursor-pointer'
       )}
     >
       <div className="flex items-center gap-1.5 truncate">
@@ -66,6 +57,12 @@ export function CharacterRow({
           <Edit size={14} className="mr-2" />
           Edit
         </ContextMenuItem>
+        {onAddRelationship && !isActive && (
+          <ContextMenuItem onSelect={() => onAddRelationship(character)}>
+            <Link2 size={14} className="mr-2" />
+            Add relationship
+          </ContextMenuItem>
+        )}
       </ContextMenuContent>
     </ContextMenu>
   );

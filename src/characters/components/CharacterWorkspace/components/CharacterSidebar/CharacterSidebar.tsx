@@ -15,6 +15,7 @@ export function CharacterSidebar({
   activeCharacterId,
   onCharacterSelect,
   onCreateCharacter,
+  onAddRelationship,
   graphEditorRef,
   className,
 }: CharacterSidebarProps) {
@@ -36,16 +37,6 @@ export function CharacterSidebar({
         (char.description?.toLowerCase().includes(query) ?? false)
     );
   }, [characters, activeCharacterId, searchQuery]);
-
-
-  const handleDragStart = (e: React.DragEvent, characterId: string) => {
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('application/character', characterId);
-    if (e.currentTarget instanceof HTMLElement) e.currentTarget.style.opacity = '0.5';
-  };
-  const handleDragEnd = (e: React.DragEvent) => {
-    if (e.currentTarget instanceof HTMLElement) e.currentTarget.style.opacity = '1';
-  };
 
 
   return (
@@ -84,8 +75,7 @@ export function CharacterSidebar({
               otherCharacters={otherCharacters}
               searchQuery={searchQuery}
               onCharacterSelect={onCharacterSelect}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
+              onAddRelationship={onAddRelationship}
             />
           </div>
         </div>

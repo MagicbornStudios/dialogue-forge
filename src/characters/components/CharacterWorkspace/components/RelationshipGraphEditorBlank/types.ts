@@ -7,6 +7,8 @@ export interface RelationshipGraphEditorBlankRef {
   getGraph(): dia.Graph | null;
   /** JSON only for save/load (graph.toJSON() / graph.fromJSON()). */
   getJointGraphJson(): JointGraphJson | null;
+  /** Add target character element if missing, then add link from active character element to it. */
+  addRelationshipFromActiveToCharacter(character: CharacterDoc): void;
 }
 
 /** Same props as RelationshipGraphEditor so you can swap. initialGraphJson loads saved JointJS snapshot. */

@@ -1,1 +1,1 @@
-export { createDefaultPlaceholderElement } from './characterElement';
+export { createCharacterCardElement } from './characterElement';

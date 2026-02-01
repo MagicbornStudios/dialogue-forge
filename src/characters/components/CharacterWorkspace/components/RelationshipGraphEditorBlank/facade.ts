@@ -1,22 +1,12 @@
-import { dia, shapes } from '@joint/core';
+import { dia } from '@joint/core';
 import type { RefObject } from 'react';
-import type { JointGraphJson } from '@/characters/types';
-import { RelationshipLink } from './links';
+import type { JointGraphJson, CharacterDoc } from '@/characters/types';
 
-/**
- * Cell namespace for graph/paper (standard shapes + mb.RelationshipLink).
- */
-export function getCellNamespace(): Record<string, unknown> {
-  return {
-    ...shapes,
-    mb: {
-      RelationshipLink,
-    },
-  };
-}
+export { getCellNamespace } from './cellNamespace';
 
 export interface RelationshipGraphEditorFacade {
   getJointGraphJson(): JointGraphJson | null;
+  addRelationshipFromActiveToCharacter?(character: CharacterDoc): void;
 }
 
 export function createFacadeFromRefs(

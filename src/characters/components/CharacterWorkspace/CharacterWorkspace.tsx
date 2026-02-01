@@ -129,25 +129,16 @@ export function CharacterWorkspace({
     };
   }, [dataAdapter, activeProjectId, activeCharacterId]);
 
-  // Current JointJS graph snapshot (loaded from character.relationshipGraphJson; save via Save button)
+  // Current JointJS graph snapshot (dirty edits or null when switched; when null, editor gets graphJsonForActive)
   const [currentGraphJson, setCurrentGraphJson] = useState<JointGraphJson | null>(null);
-  const lastLoadedCharacterIdRef = useRef<string | null>(null);
 
-  // When active character changes: load that character's saved JointJS graph (relationshipGraphJson).
-  useEffect(() => {
-    if (!activeCharacterId) {
-      lastLoadedCharacterIdRef.current = null;
-      setCurrentGraphJson(null);
-      return;
-    }
-    if (lastLoadedCharacterIdRef.current === activeCharacterId) {
-      return;
-    }
-    lastLoadedCharacterIdRef.current = activeCharacterId;
-    const character = charactersById[activeCharacterId];
-    const saved = character?.relationshipGraphJson;
-    setCurrentGraphJson(saved && typeof saved === 'object' ? { ...saved } : null);
-  }, [activeCharacterId, charactersById]);
+  const graphJsonForActive = useMemo(
+    () =>
+      activeCharacterId
+        ? (charactersById[activeCharacterId]?.relationshipGraphJson ?? null)
+        : null,
+    [activeCharacterId, charactersById]
+  );
 
   const characters = useMemo(() => Object.values(charactersById), [charactersById]);
 
@@ -189,6 +180,7 @@ export function CharacterWorkspace({
 
   const handleCharacterSelect = (characterId: string) => {
     actions.setActiveCharacterId(characterId);
+    setCurrentGraphJson(null);
   };
 
   const handleCharacterUpdate = async (characterId: string, updates: { name?: string; description?: string; imageUrl?: string; avatarId?: string | null }) => {
@@ -200,6 +192,10 @@ export function CharacterWorkspace({
       console.error('Failed to update character:', error);
       throw error;
     }
+  };
+
+  const handleAddRelationship = (character: CharacterDoc) => {
+    graphEditorRef.current?.addRelationshipFromActiveToCharacter?.(character);
   };
 
   return (
@@ -239,7 +235,7 @@ export function CharacterWorkspace({
                     activeCharacterId={activeCharacterId || ''}
                     characters={characters}
                     selectedNodeId={selectedNodeId}
-                    initialGraphJson={currentGraphJson}
+                    initialGraphJson={currentGraphJson ?? graphJsonForActive}
                     onGraphChange={(graphJson) => {
                       setCurrentGraphJson(graphJson);
                     }}
@@ -271,6 +267,7 @@ export function CharacterWorkspace({
                   activeCharacterId={activeCharacterId}
                   onCharacterSelect={handleCharacterSelect}
                   onCreateCharacter={() => actions.openCreateCharacterModal()}
+                  onAddRelationship={activeCharacterId ? handleAddRelationship : undefined}
                   graphEditorRef={graphEditorRef}
                   className="h-full"
                 />

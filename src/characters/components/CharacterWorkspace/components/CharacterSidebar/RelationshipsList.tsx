@@ -42,16 +42,17 @@ export function RelationshipsList({
 }: RelationshipsListProps) {
   const graph = graphEditorRef?.current?.getGraph() ?? null;
   const links = graph?.getLinks() ?? [];
+  const activeElementId = activeCharacterId ? `character-${activeCharacterId}` : '';
   const linksForActive = React.useMemo(() => {
-    if (!activeCharacterId) return [];
+    if (!activeElementId) return [];
     return links.filter((link: dia.Link) => {
       const src = link.getSourceCell();
       const tgt = link.getTargetCell();
       const sid = src?.id?.toString();
       const tid = tgt?.id?.toString();
-      return sid === activeCharacterId || tid === activeCharacterId;
+      return sid === activeElementId || tid === activeElementId;
     });
-  }, [links, activeCharacterId]);
+  }, [links, activeElementId]);
 
   if (!activeCharacterId) {
     return (

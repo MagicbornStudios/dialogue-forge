@@ -10,8 +10,7 @@ interface CharacterListProps {
   otherCharacters: CharacterDoc[];
   searchQuery: string;
   onCharacterSelect?: (characterId: string) => void;
-  onDragStart: (e: React.DragEvent, characterId: string) => void;
-  onDragEnd: (e: React.DragEvent) => void;
+  onAddRelationship?: (character: CharacterDoc) => void;
 }
 
 export function CharacterList({
@@ -20,8 +19,7 @@ export function CharacterList({
   otherCharacters,
   searchQuery,
   onCharacterSelect,
-  onDragStart,
-  onDragEnd,
+  onAddRelationship,
 }: CharacterListProps) {
   if (characters.length === 0) {
     return (
@@ -38,6 +36,7 @@ export function CharacterList({
           character={activeCharacter}
           isActive
           onSelect={onCharacterSelect}
+          onAddRelationship={onAddRelationship}
         />
       )}
       {otherCharacters.length > 0 && (
@@ -47,10 +46,8 @@ export function CharacterList({
             <CharacterRow
               key={character.id}
               character={character}
-              draggable
               onSelect={onCharacterSelect}
-              onDragStart={onDragStart}
-              onDragEnd={onDragEnd}
+              onAddRelationship={onAddRelationship}
             />
           ))}
         </>

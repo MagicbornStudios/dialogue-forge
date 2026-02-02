@@ -80,3 +80,11 @@
 [data-domain="ai"][data-context-node-type="response"] {
   --context-accent: var(--color-df-success);
 }
+
+[data-domain="video"] {
+  --context-accent: oklch(0.65 0.20 30);        /* Professional orange-red */
+}
+
+[data-domain="video"] {
+  --context-accent: oklch(0.65 0.20 30);        /* Professional orange-red */
+}

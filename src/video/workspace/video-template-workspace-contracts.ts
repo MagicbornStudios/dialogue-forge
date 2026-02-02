@@ -29,5 +29,6 @@ export interface VideoTemplateWorkspaceAdapter {
   listTemplates(): Promise<VideoTemplateWorkspaceTemplateSummary[]>;
   loadTemplate(templateId: string): Promise<VideoTemplate | null>;
   saveTemplate(template: VideoTemplate): Promise<VideoTemplate>;
+  deleteTemplate?(templateId: string): Promise<void>;
   resolveMedia(request: VideoTemplateMediaRequest): Promise<VideoTemplateMediaResolution | null>;
 }

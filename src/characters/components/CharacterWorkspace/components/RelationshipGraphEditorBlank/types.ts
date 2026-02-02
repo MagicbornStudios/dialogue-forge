@@ -1,6 +1,7 @@
 import type { JointGraphJson } from '@/characters/types';
 import type { CharacterDoc, CharacterWorkspaceAdapter } from '@/characters/types';
 import type { dia } from '@joint/core';
+import type { Selection } from './tools/graphInteractions';
 
 export interface RelationshipGraphEditorBlankRef {
   /** Live graph for JointJS API (getLinks, getElements, addCell, etc.). */
@@ -9,6 +10,12 @@ export interface RelationshipGraphEditorBlankRef {
   getJointGraphJson(): JointGraphJson | null;
   /** Add target character element if missing, then add link from active character element to it. */
   addRelationshipFromActiveToCharacter(character: CharacterDoc): void;
+  /** Current selection (element or link id, or null). */
+  getSelection(): Selection;
+  /** Clear current selection. */
+  clearSelection(): void;
+  /** Update a link's label and notify via onGraphChange. */
+  updateLinkLabel?(linkId: string, label: string): void;
 }
 
 /** Same props as RelationshipGraphEditor so you can swap. initialGraphJson loads saved JointJS snapshot. */

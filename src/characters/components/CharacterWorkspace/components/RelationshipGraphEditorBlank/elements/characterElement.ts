@@ -17,7 +17,7 @@ type CharacterCardModel = dia.Element & {
 
 let characterCardConstructor: ReturnType<typeof dia.Element.define> | null = null;
 
-function computeInitials(name?: string) {
+export function computeInitials(name?: string): string {
   const n = (name ?? '').trim();
   if (!n) return 'NC';
   const parts = n.split(/\s+/).filter(Boolean);

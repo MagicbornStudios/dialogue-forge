@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import type { CharacterWorkspaceAdapter, ProjectInfo, CharacterDoc, JointGraphJson } from '@/characters/types';
+import type { CharacterWorkspaceAdapter, ProjectInfo, CharacterDoc, JointGraphJson, RelationshipDoc } from '@/characters/types';
 import { CharacterWorkspaceHeader } from './components/CharacterWorkspaceHeader';
 import { CharacterWorkspaceModals } from './components/CharacterWorkspaceModals';
 import { GraphDebugDrawer } from './components/GraphDebugDrawer';
@@ -44,6 +44,7 @@ export function CharacterWorkspace({
   // Graph UI: selection, edge edit dialog, context menu (owned here for 3-column layout)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [editingEdgeId, setEditingEdgeId] = useState<string | null>(null);
+  const [relationships, setRelationships] = useState<RelationshipDoc[]>([]);
 
   const activeCharacter = useMemo(() => {
     if (!activeCharacterId) return null;
@@ -129,6 +130,24 @@ export function CharacterWorkspace({
     };
   }, [dataAdapter, activeProjectId, activeCharacterId]);
 
+  // Load relationships when project changes
+  useEffect(() => {
+    if (!dataAdapter || !activeProjectId) {
+      setRelationships([]);
+      return;
+    }
+    let cancelled = false;
+    dataAdapter
+      .listRelationshipsForProject(activeProjectId)
+      .then((list) => {
+        if (!cancelled) setRelationships(list);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) console.error('Failed to load relationships:', err);
+      });
+    return () => { cancelled = true; };
+  }, [dataAdapter, activeProjectId]);
+
   // Current JointJS graph snapshot (dirty edits or null when switched; when null, editor gets graphJsonForActive)
   const [currentGraphJson, setCurrentGraphJson] = useState<JointGraphJson | null>(null);
 
@@ -194,8 +213,26 @@ export function CharacterWorkspace({
     }
   };
 
-  const handleAddRelationship = (character: CharacterDoc) => {
+  const handleAddRelationship = async (character: CharacterDoc) => {
     graphEditorRef.current?.addRelationshipFromActiveToCharacter?.(character);
+    if (!dataAdapter || !activeProjectId || !activeCharacterId) return;
+    try {
+      const existing = await dataAdapter.listRelationshipsForProject(activeProjectId);
+      const found = existing.find(
+        (r) => r.sourceCharacter === activeCharacterId && r.targetCharacter === character.id
+      );
+      if (!found) {
+        await dataAdapter.createRelationship({
+          projectId: activeProjectId,
+          sourceCharacterId: activeCharacterId,
+          targetCharacterId: character.id,
+          label: '',
+          description: '',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to create relationship record:', err);
+    }
   };
 
   return (
@@ -269,6 +306,16 @@ export function CharacterWorkspace({
                   onCreateCharacter={() => actions.openCreateCharacterModal()}
                   onAddRelationship={activeCharacterId ? handleAddRelationship : undefined}
                   graphEditorRef={graphEditorRef}
+                  relationships={relationships}
+                  onRelationshipsRefresh={dataAdapter && activeProjectId
+                    ? async () => {
+                        const list = await dataAdapter.listRelationshipsForProject(activeProjectId);
+                        setRelationships(list);
+                      }
+                    : undefined}
+                  dataAdapter={dataAdapter}
+                  activeProjectId={activeProjectId}
+                  onGraphChange={(json) => setCurrentGraphJson(json)}
                   className="h-full"
                 />
               </div>

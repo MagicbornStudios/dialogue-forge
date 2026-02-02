@@ -8,6 +8,7 @@ import type {
   CharacterWorkspaceAdapter,
   CharacterPatch,
   CharacterDoc,
+  RelationshipDoc,
   ProjectInfo,
   MediaUploadResult,
 } from '@/characters/types';
@@ -274,6 +275,90 @@ export class PayloadCharacterAdapter implements CharacterWorkspaceAdapter {
     await this.payload.delete({
       collection: PAYLOAD_COLLECTIONS.CHARACTERS,
       id: characterIdNum,
+    });
+  }
+
+  async listRelationshipsForProject(projectId: string): Promise<RelationshipDoc[]> {
+    const projectIdNum = parseInt(projectId, 10);
+    if (isNaN(projectIdNum)) {
+      throw new Error(`Invalid project ID: ${projectId}`);
+    }
+    const result = await this.payload.find({
+      collection: PAYLOAD_COLLECTIONS.RELATIONSHIPS,
+      where: { project: { equals: projectIdNum } },
+      limit: 1000,
+    });
+    return result.docs.map((doc: any) => ({
+      id: String(doc.id),
+      project: String(doc.project?.id ?? doc.project),
+      sourceCharacter: String(doc.sourceCharacter?.id ?? doc.sourceCharacter),
+      targetCharacter: String(doc.targetCharacter?.id ?? doc.targetCharacter),
+      label: doc.label ?? undefined,
+      description: doc.description ?? undefined,
+    }));
+  }
+
+  async createRelationship(data: {
+    projectId: string
+    sourceCharacterId: string
+    targetCharacterId: string
+    label?: string
+    description?: string
+  }): Promise<RelationshipDoc> {
+    const doc = await this.payload.create({
+      collection: PAYLOAD_COLLECTIONS.RELATIONSHIPS,
+      data: {
+        project: parseInt(data.projectId, 10),
+        sourceCharacter: parseInt(data.sourceCharacterId, 10),
+        targetCharacter: parseInt(data.targetCharacterId, 10),
+        label: data.label ?? null,
+        description: data.description ?? null,
+      },
+    }) as any;
+    return {
+      id: String(doc.id),
+      project: String(doc.project?.id ?? doc.project),
+      sourceCharacter: String(doc.sourceCharacter?.id ?? doc.sourceCharacter),
+      targetCharacter: String(doc.targetCharacter?.id ?? doc.targetCharacter),
+      label: doc.label ?? undefined,
+      description: doc.description ?? undefined,
+    };
+  }
+
+  async updateRelationship(
+    relationshipId: string,
+    patch: { label?: string; description?: string }
+  ): Promise<RelationshipDoc> {
+    const idNum = parseInt(relationshipId, 10);
+    if (isNaN(idNum)) {
+      throw new Error(`Invalid relationship ID: ${relationshipId}`);
+    }
+    const updateData: any = {};
+    if (patch.label !== undefined) updateData.label = patch.label ?? null;
+    if (patch.description !== undefined) updateData.description = patch.description ?? null;
+    const doc = await this.payload.update({
+      collection: PAYLOAD_COLLECTIONS.RELATIONSHIPS,
+      id: idNum,
+      data: updateData,
+    }) as any;
+    return {
+      id: String(doc.id),
+      project: String(doc.project?.id ?? doc.project),
+      sourceCharacter: String(doc.sourceCharacter?.id ?? doc.sourceCharacter),
+      targetCharacter: String(doc.targetCharacter?.id ?? doc.targetCharacter),
+      label: doc.label ?? undefined,
+      description: doc.description ?? undefined,
+    };
+  }
+
+  async deleteRelationship(relationshipId: string): Promise<void> {
+    const idNum = parseInt(relationshipId, 10);
+    if (isNaN(idNum)) {
+      throw new Error(`Invalid relationship ID: ${relationshipId}`);
+    }
+    await this.payload.delete({
+      collection: PAYLOAD_COLLECTIONS.RELATIONSHIPS,
+      id: idNum,
     });
   }
 }

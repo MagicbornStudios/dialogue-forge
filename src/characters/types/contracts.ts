@@ -3,7 +3,7 @@
  * These define the host ↔ workspace boundary
  */
 
-import type { CharacterDoc } from './character'
+import type { CharacterDoc, RelationshipDoc } from './character'
 
 /**
  * Project info (minimal)
@@ -72,4 +72,33 @@ export interface CharacterWorkspaceAdapter {
    * Upload a media file to the media collection
    */
   uploadMedia(file: File): Promise<MediaUploadResult>
+
+  /**
+   * List relationships for a project (for matching links to label/description)
+   */
+  listRelationshipsForProject(projectId: string): Promise<RelationshipDoc[]>
+
+  /**
+   * Create a relationship (call when adding a link on the graph)
+   */
+  createRelationship(data: {
+    projectId: string
+    sourceCharacterId: string
+    targetCharacterId: string
+    label?: string
+    description?: string
+  }): Promise<RelationshipDoc>
+
+  /**
+   * Update a relationship's label and/or description
+   */
+  updateRelationship(
+    relationshipId: string,
+    patch: { label?: string; description?: string }
+  ): Promise<RelationshipDoc>
+
+  /**
+   * Delete a relationship (optional; call when removing link from list)
+   */
+  deleteRelationship?(relationshipId: string): Promise<void>
 }

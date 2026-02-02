@@ -13,6 +13,6 @@ export function createCharacterElement(
   const pos = position ?? { x: 0, y: 0 };
   return createCharacterCardElement(`character-${character.id}`, pos, {
     name: character.name,
-    avatarUrl: character.imageUrl,
+    avatarUrl: character.avatarUrl ?? character.imageUrl ?? undefined,
   });
 }

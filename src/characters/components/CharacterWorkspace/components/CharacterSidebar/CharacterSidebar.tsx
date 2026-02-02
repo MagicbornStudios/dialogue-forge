@@ -17,6 +17,11 @@ export function CharacterSidebar({
   onCreateCharacter,
   onAddRelationship,
   graphEditorRef,
+  relationships = [],
+  onRelationshipsRefresh,
+  dataAdapter,
+  activeProjectId,
+  onGraphChange,
   className,
 }: CharacterSidebarProps) {
   const [activeTab, setActiveTab] = useState<SidebarTab>('characters');
@@ -87,6 +92,11 @@ export function CharacterSidebar({
               activeCharacterId={activeCharacterId}
               graphEditorRef={graphEditorRef}
               characters={characters}
+              relationships={relationships}
+              onRelationshipsRefresh={onRelationshipsRefresh}
+              dataAdapter={dataAdapter}
+              activeProjectId={activeProjectId}
+              onGraphChange={onGraphChange}
             />
           </div>
         </div>

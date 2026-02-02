@@ -58,3 +58,27 @@ export const TOOL_MODE = {
 } as const
 
 export type ToolMode = typeof TOOL_MODE[keyof typeof TOOL_MODE]
+
+/**
+ * Relationship document (domain representation).
+ * Stored in Payload relationships collection; links to characters and project.
+ */
+export interface RelationshipDoc {
+  id: string
+  project: string
+  sourceCharacter: string
+  targetCharacter: string
+  label?: string
+  description?: string
+}
+
+/**
+ * Edge shape for relationship list (id, source, target, optional label/description, optional relationship id).
+ */
+export interface RelationshipFlowEdge {
+  id: string
+  source: string
+  target: string
+  data?: { label?: string; why?: string }
+  relationshipId?: string
+}

@@ -1,6 +1,7 @@
 export { Projects } from './collection-configs/projects'
 export { Media } from './collection-configs/media'
 export { Characters } from './collection-configs/characters'
+export { Relationships } from './collection-configs/relationships'
 export { Pages } from './collection-configs/pages'
 export { ForgeGraphs } from './collection-configs/forge-graphs'
 export { FlagSchemas } from './collection-configs/flag-schemas'

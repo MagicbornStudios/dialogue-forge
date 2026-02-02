@@ -1,7 +1,7 @@
 // src/forge/adapter/forge-data-adapter.ts
 import type { ForgeGraphDoc, ForgeReactFlowJson, ForgeGraphKind } from '@/forge/types/forge-graph';
 import { ForgeGameState, ForgeGameStateRecord } from '@/forge/types/forge-game-state';
-import type { ForgePage } from '@/forge/types/narrative';
+import type { ForgePage, PageType } from '@/forge/types/narrative';
 import type { ForgeCharacter } from '@/forge/types/characters';
 
 export type ForgeProjectSummary = {
@@ -30,6 +30,7 @@ export interface ForgeDataAdapter {
   // Graphs
   listGraphs(projectId: number, kind?: ForgeGraphKind): Promise<ForgeGraphDoc[]>;
   getGraph(graphId: number): Promise<ForgeGraphDoc>;
+  listPages(projectId: number, narrativeGraphId?: number | null): Promise<ForgePage[]>;
   createGraph(input: {
     projectId: number;
     kind: ForgeGraphKind;
@@ -39,6 +40,7 @@ export interface ForgeDataAdapter {
     endNodeIds: { nodeId: string; exitKey?: string }[];
   }): Promise<ForgeGraphDoc>;
   updateGraph(graphId: number, patch: Partial<Pick<ForgeGraphDoc, 'title' | 'flow' | 'startNodeId' | 'endNodeIds' | 'compiledYarn'>>): Promise<ForgeGraphDoc>;
+  deleteGraph(graphId: number): Promise<void>;
 
   // Supporting authored data
   listCharacters(projectId: number): Promise<ForgeCharacter[]>;
@@ -63,10 +65,11 @@ export interface ForgeDataAdapter {
   getPage(pageId: number): Promise<ForgePage>;
   createPage(input: {
     projectId: number;
-    pageType: 'ACT' | 'CHAPTER' | 'PAGE';
+    pageType: PageType;
     title: string;
     order: number;
     parent?: number | null;
+    narrativeGraph?: number | null;
   }): Promise<ForgePage>;
   updatePage(pageId: number, patch: Partial<ForgePage>): Promise<ForgePage>;
   deletePage(pageId: number): Promise<void>;

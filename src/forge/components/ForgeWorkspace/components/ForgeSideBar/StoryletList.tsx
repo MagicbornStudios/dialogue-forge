@@ -37,6 +37,8 @@ export function StoryletList({ className }: StoryletsListProps) {
   const selectedProjectId = useForgeWorkspaceStore(s => s.selectedProjectId)
   const dataAdapter = useForgeWorkspaceStore(s => s.dataAdapter)
   const setGraph = useForgeWorkspaceStore(s => s.actions.setGraph)
+  const removeGraph = useForgeWorkspaceStore(s => s.actions.removeGraph)
+  const openGraphInScope = useForgeWorkspaceStore(s => s.actions.openGraphInScope)
   const workspaceActions = useForgeWorkspaceActions()
   
   // F2 hotkey for rename (only when a storylet is selected)
@@ -65,6 +67,31 @@ export function StoryletList({ className }: StoryletsListProps) {
     } catch (error) {
       console.error('Failed to rename graph:', error);
       setRenamingGraphId(null);
+    }
+  };
+
+  const handleDeleteGraph = async (graphId: string, title: string) => {
+    if (!dataAdapter) {
+      console.warn('Cannot delete graph: dataAdapter unavailable');
+      return;
+    }
+
+    const confirmed = confirm(`Delete storylet "${title}"?`);
+    if (!confirmed) return;
+
+    const remainingGraphs = storyletGraphs.filter((g) => String(g.id) !== graphId);
+    const nextGraphId = remainingGraphs[0]?.id ? String(remainingGraphs[0].id) : null;
+    const wasActive = activeStoryletGraphId === graphId;
+
+    try {
+      await dataAdapter.deleteGraph(Number(graphId));
+      removeGraph(graphId);
+
+      if (wasActive && nextGraphId) {
+        await openGraphInScope('storylet', nextGraphId, { pushBreadcrumb: false });
+      }
+    } catch (error) {
+      console.error('Failed to delete graph:', error);
     }
   };
   
@@ -189,11 +216,7 @@ export function StoryletList({ className }: StoryletsListProps) {
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem
-                      onSelect={async () => {
-                        if (confirm(`Delete storylet "${graph.title}"?`)) {
-                          console.log('Delete graph:', graph.id)
-                        }
-                      }}
+                      onSelect={() => handleDeleteGraph(String(graph.id), graph.title ?? String(graph.id))}
                       className="text-destructive focus:text-destructive"
                     >
                       <Trash2 size={14} className="mr-2" />

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Code2, BookOpen, Film, Settings, Terminal } from 'lucide-react';
+import { Code2, BookOpen, Film, Settings, Terminal, Users } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -40,6 +40,15 @@ export default function HomePage() {
             <BookOpen className="w-12 h-12 text-green-400 group-hover:text-green-300" />
             <span className="text-lg font-semibold text-white">Writer</span>
             <span className="text-sm text-slate-400">Narrative Editor</span>
+          </Link>
+
+          <Link
+            href="/characters"
+            className="group flex flex-col items-center gap-3 p-6 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 hover:border-slate-600 transition-all"
+          >
+            <Users className="w-12 h-12 text-amber-400 group-hover:text-amber-300" />
+            <span className="text-lg font-semibold text-white">Characters</span>
+            <span className="text-sm text-slate-400">Character Workspace</span>
           </Link>
           
           <Link

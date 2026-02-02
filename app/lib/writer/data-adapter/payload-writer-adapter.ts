@@ -15,22 +15,30 @@ const normalizeBookBody = (value: unknown): string | null => {
   return JSON.stringify(value);
 };
 
-function mapPage(doc: Page): WriterPageDoc {
+function mapPage(doc: Page & { narrativeGraph?: number | { id: number } | null }): WriterPageDoc {
   const dialogueGraphValue = doc.dialogueGraph;
-  const dialogueGraphId = 
+  const dialogueGraphId =
     dialogueGraphValue === null || dialogueGraphValue === undefined
       ? null
       : typeof dialogueGraphValue === 'number'
-      ? dialogueGraphValue
-      : dialogueGraphValue.id;
+        ? dialogueGraphValue
+        : dialogueGraphValue.id;
+
+  const narrativeGraphValue = doc.narrativeGraph;
+  const narrativeGraphId =
+    narrativeGraphValue === null || narrativeGraphValue === undefined
+      ? null
+      : typeof narrativeGraphValue === 'number'
+        ? narrativeGraphValue
+        : narrativeGraphValue.id;
 
   const parentValue = doc.parent;
   const parentId =
     parentValue === null || parentValue === undefined
       ? null
       : typeof parentValue === 'number'
-      ? parentValue
-      : parentValue.id;
+        ? parentValue
+        : parentValue.id;
 
   return {
     id: doc.id,
@@ -40,12 +48,12 @@ function mapPage(doc: Page): WriterPageDoc {
     order: doc.order,
     project: typeof doc.project === 'number' ? doc.project : doc.project.id,
     parent: parentId,
+    narrativeGraph: narrativeGraphId,
     dialogueGraph: dialogueGraphId,
     bookHeading: doc.bookHeading ?? null,
     bookBody: normalizeBookBody(doc.bookBody),
     content: doc.content ?? null,
     archivedAt: doc.archivedAt ?? null,
-    _status: doc._status as 'draft' | 'published' | null,
   };
 }
 
@@ -62,14 +70,16 @@ export function makePayloadWriterAdapter(opts?: {
   });
 
   return {
-    async listPages(projectId: number): Promise<WriterPageDoc[]> {
+    async listPages(projectId: number, narrativeGraphId?: number | null): Promise<WriterPageDoc[]> {
+      const where: Record<string, unknown> = {
+        project: { equals: projectId },
+      };
+      if (narrativeGraphId != null) {
+        where.narrativeGraph = { equals: narrativeGraphId };
+      }
       const result = await payload.find({
         collection: PAYLOAD_COLLECTIONS.PAGES,
-        where: {
-          project: {
-            equals: projectId,
-          },
-        },
+        where,
         limit: 1000,
       });
       const pages = result.docs.map((doc) => mapPage(doc as Page));
@@ -90,6 +100,7 @@ export function makePayloadWriterAdapter(opts?: {
       title: string;
       order: number;
       parent?: number | null;
+      narrativeGraph?: number | null;
       bookBody?: string | null;
     }): Promise<WriterPageDoc> {
       const doc = await payload.create({
@@ -100,8 +111,8 @@ export function makePayloadWriterAdapter(opts?: {
           title: input.title,
           order: input.order,
           parent: input.parent ?? null,
+          narrativeGraph: input.narrativeGraph ?? null,
           bookBody: input.bookBody ?? null,
-          _status: 'draft',
         },
       }) as Page;
       return mapPage(doc);

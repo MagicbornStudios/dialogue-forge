@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from '@/shared/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { cn } from '@/shared/lib/utils';
 
@@ -73,27 +73,26 @@ export function EditorExpandControls({ editorType, className }: EditorExpandCont
   };
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleToggle}
-            className={cn('h-7 w-7 transition-all duration-200', className)}
-            title={isDocked ? 'Minimize editor' : 'Expand editor to fullscreen'}
-          >
-            {isDocked ? (
-              <MinimizeIcon className={cn('transition-all duration-200', iconColorClass)} />
-            ) : (
-              <ExpandIcon className={cn('transition-all duration-200', iconColorClass)} />
-            )}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{isDocked ? 'Minimize editor' : 'Expand editor to fullscreen'}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={handleToggle}
+          className={cn('h-7 w-7 transition-all duration-200', className)}
+          title={isDocked ? 'Minimize editor' : 'Expand editor to fullscreen'}
+        >
+          {isDocked ? (
+            <MinimizeIcon className={cn('transition-all duration-200', iconColorClass)} />
+          ) : (
+            <ExpandIcon className={cn('transition-all duration-200', iconColorClass)} />
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>{isDocked ? 'Minimize editor' : 'Expand editor to fullscreen'}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }

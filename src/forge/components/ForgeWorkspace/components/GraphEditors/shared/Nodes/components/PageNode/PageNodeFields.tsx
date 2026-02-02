@@ -1,41 +1,55 @@
 import React from 'react';
-import { ForgePage } from '@/forge/types/narrative';
+import type { ForgeNode } from '@/forge/types/forge-graph';
+import type { ForgePage } from '@/forge/types/narrative';
 
 interface PageNodeFieldsProps {
-  page: ForgePage;
-  onUpdate: (updates: Partial<ForgePage>) => void;
+  node: ForgeNode;
+  pages: ForgePage[];
+  isLoading?: boolean;
+  onUpdate: (updates: Partial<ForgeNode>) => void;
 }
 
-export function PageNodeFields({ page, onUpdate }: PageNodeFieldsProps) {
+export function PageNodeFields({ node, pages, isLoading = false, onUpdate }: PageNodeFieldsProps) {
+  const selectedPageId = node.pageId ?? '';
+
   return (
     <>
       <div>
-        <label className="text-[10px] text-gray-500 uppercase">Title</label>
+        <label className="text-[10px] text-gray-500 uppercase">Page</label>
+        <select
+          value={selectedPageId}
+          onChange={(event) => {
+            const nextId = event.target.value ? Number(event.target.value) : undefined;
+            onUpdate({ pageId: nextId });
+          }}
+          disabled={isLoading}
+          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-page-accent)] outline-none"
+        >
+          <option value="">{isLoading ? 'Loading pages...' : 'Select a page...'}</option>
+          {pages.map((page) => (
+            <option key={page.id} value={page.id}>
+              {page.title || `Page ${page.id}`}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="text-[10px] text-gray-500 uppercase">Node Title</label>
         <input
           type="text"
-          value={page.title || ''}
-          onChange={(event) => onUpdate({ title: event.target.value || undefined })}
+          value={node.label || ''}
+          onChange={(event) => onUpdate({ label: event.target.value || undefined })}
           className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-page-accent)] outline-none"
-          placeholder="Page title"
+          placeholder="Page node title"
         />
       </div>
       <div>
-        <label className="text-[10px] text-gray-500 uppercase">Summary</label>
+        <label className="text-[10px] text-gray-500 uppercase">Node Summary</label>
         <textarea
-          value={page.summary || ''}
-          onChange={(event) => onUpdate({ summary: event.target.value || undefined })}
+          value={node.content || ''}
+          onChange={(event) => onUpdate({ content: event.target.value || undefined })}
           className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-page-accent)] outline-none min-h-[100px] resize-y"
-          placeholder="Page summary"
-        />
-      </div>
-      <div>
-        <label className="text-[10px] text-gray-500 uppercase">Dialogue Graph ID</label>
-        <input
-          type="number"
-          value={page.dialogueGraph || ''}
-          onChange={(event) => onUpdate({ dialogueGraph: event.target.value ? Number(event.target.value) : null })}
-          className="w-full bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:border-[var(--node-page-accent)] outline-none font-mono"
-          placeholder="dialogue_graph_id"
+          placeholder="Page node summary"
         />
       </div>
     </>

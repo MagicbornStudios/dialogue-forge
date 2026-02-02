@@ -229,6 +229,9 @@ Overall:            ████████████░░░░░  60%
 - [ ] Template sharing
 - [ ] User permissions
 
+### AI System Architecture & Chat (Planned — separate agent)
+- [ ] **Execute AI system plan**: Per-domain agents (Forge: create graphs; Writer: write stories; Video: create templates), barebones AI layer with no domain coupling, chat system that routes to the active agent, keep existing CopilotKit frontend actions in domains. See **[docs/plans/ai-system-architecture.md](docs/plans/ai-system-architecture.md)** for full plan and acceptance criteria. A dedicated agent will implement this.
+
 ### AI Features
 - [ ] AI-generated backgrounds (OpenRouter + Flux.2)
 - [ ] Text-to-video generation
@@ -376,3 +379,8 @@ MVP TARGET: February 9, 2026
 - Timelines are estimates and may adjust based on complexity
 - See [CHANGELOG.md](./CHANGELOG.md) for detailed version history
 - See [VIDEO_ISSUES.md](./src/video/VIDEO_ISSUES.md) for current bugs and technical debt
+- 2026-02-02: Forge graph editors now share a unified auto-save indicator and immediate-save path for structural changes
+- 2026-02-02: Forge narrative/storylet sidebar supports graph deletion with cache cleanup
+- 2026-02-02: Forge narrative editor content now guards missing character data
+- 2026-02-02: Storylet node editor now renders optimistic input while waiting for debounced save
+- 2026-02-02: Narrative node editor supports page selection for Act/Chapter/Page nodes

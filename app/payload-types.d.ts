@@ -198,8 +198,19 @@ export interface Character {
     id: number;
     project: number | Project;
     name: string;
+    description?: string | null;
+    /**
+     * URL to a character portrait. UI should fall back to a placeholder when empty.
+     */
+    imageUrl?: string | null;
     avatar?: (number | null) | Media;
     meta?: {
+        [k: string]: unknown;
+    } | unknown[] | string | number | boolean | null;
+    /**
+     * JointJS graph snapshot (graph.toJSON()). Saved from the relationship graph editor.
+     */
+    relationshipGraphJson?: {
         [k: string]: unknown;
     } | unknown[] | string | number | boolean | null;
     archivedAt?: string | null;
@@ -471,8 +482,11 @@ export interface MediaSelect<T extends boolean = true> {
 export interface CharactersSelect<T extends boolean = true> {
     project?: T;
     name?: T;
+    description?: T;
+    imageUrl?: T;
     avatar?: T;
     meta?: T;
+    relationshipGraphJson?: T;
     archivedAt?: T;
     updatedAt?: T;
     createdAt?: T;

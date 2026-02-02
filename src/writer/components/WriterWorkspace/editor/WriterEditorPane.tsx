@@ -3,7 +3,6 @@ import { FileText } from 'lucide-react';
 import {
   useWriterWorkspaceStore,
   WRITER_AI_PROPOSAL_STATUS,
-  WRITER_SAVE_STATUS,
   WriterWorkspaceState,
 } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 import { getPlainTextFromSerializedContent } from '@/writer/components/WriterWorkspace/store/writer-workspace-types';
@@ -86,57 +85,26 @@ function EditorToolbarWrapper() {
 
 export function WriterEditorPane({ className }: WriterEditorPaneProps) {
   const pageMap = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.pageMap);
+  const pages = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.pages);
   const activePageId = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.activePageId);
-  
-  const draft = useWriterWorkspaceStore((state: WriterWorkspaceState) =>
-    activePageId ? state.drafts[activePageId] ?? null : null
-  );
   const aiPreview = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.aiPreview);
   const aiPreviewMeta = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.aiPreviewMeta);
   const aiProposalStatus = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.aiProposalStatus);
   const aiError = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.aiError);
   const aiSnapshot = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.aiSnapshot);
   const aiUndoSnapshot = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.aiUndoSnapshot);
-  const setDraftTitle = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.setDraftTitle);
-  const setDraftContent = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.setDraftContent);
   const saveNow = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.saveNow);
+  const updatePage = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.updatePage);
   const applyAiEdits = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.applyAiEdits);
   const revertAiDraft = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.revertAiDraft);
   const dataAdapter = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.dataAdapter);
 
   const activePage = activePageId ? pageMap.get(activePageId) ?? null : null;
 
+  const [titleValue, setTitleValue] = useState('');
   useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
-      if (!activePageId) {
-        return;
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
-        event.preventDefault();
-        void saveNow(activePageId);
-      }
-    };
-
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [activePageId, saveNow]);
-
-  const saveStatus = useMemo(() => {
-    if (!draft) {
-      return { label: 'Saved', tone: 'text-df-text-tertiary' };
-    }
-    switch (draft.status) {
-      case WRITER_SAVE_STATUS.DIRTY:
-        return { label: 'Unsaved', tone: 'text-amber-400' };
-      case WRITER_SAVE_STATUS.SAVING:
-        return { label: 'Saving', tone: 'text-df-text-secondary' };
-      case WRITER_SAVE_STATUS.ERROR:
-        return { label: 'Error', tone: 'text-red-400' };
-      case WRITER_SAVE_STATUS.SAVED:
-      default:
-        return { label: 'Saved', tone: 'text-emerald-400' };
-    }
-  }, [draft]);
+    setTitleValue(activePage?.title ?? '');
+  }, [activePage?.title, activePageId]);
 
   const aiPreviewSnapshot = useMemo(() => {
     if (!aiPreview || !aiSnapshot) {
@@ -155,7 +123,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
         ? null
         : emptyEditor
           ? undefined
-          : draft?.content.serialized ?? activePage?.bookBody ?? '',
+          : (activePage?.bookBody !== undefined && activePage?.bookBody !== null ? activePage.bookBody : '') ?? '',
       html: buildHTMLConfig(),
       namespace: 'Playground',
       nodes: PlaygroundNodes,
@@ -164,13 +132,10 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
         throw error;
       },
     }),
-    [emptyEditor, isCollab, draft?.content.serialized, activePage?.bookBody, activePageId],
+    [emptyEditor, isCollab, activePage?.bookBody, activePageId],
   );
 
-
-  const beforeContent = aiSnapshot?.content
-    ?? draft?.content.plainText
-    ?? getPlainTextFromSerializedContent(activePage?.bookBody);
+  const beforeContent = aiSnapshot?.content ?? getPlainTextFromSerializedContent(activePage?.bookBody);
   const afterContent = aiPreviewSnapshot?.content ?? '';
   const hasPreview = Boolean(aiPreview && aiPreview.length > 0);
   const isLoading = aiProposalStatus === WRITER_AI_PROPOSAL_STATUS.LOADING;
@@ -191,20 +156,22 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
               type="text"
               className="w-full bg-transparent text-sm font-medium text-df-text-primary outline-none placeholder:text-df-text-tertiary"
               placeholder="Untitled"
-              value={draft?.title ?? activePage?.title ?? ''}
-              onChange={(event) => {
-                if (!activePageId) {
-                  return;
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+              onBlur={async () => {
+                if (!activePageId || !dataAdapter || titleValue === (activePage?.title ?? '')) return;
+                try {
+                  await dataAdapter.updatePage(activePageId, { title: titleValue.trim() || 'Untitled' });
+                  updatePage(activePageId, { title: titleValue.trim() || 'Untitled' });
+                } catch (err) {
+                  console.error('Failed to save title', err);
                 }
-                setDraftTitle(activePageId, event.target.value);
               }}
               disabled={!activePageId}
             />
           </div>
-          <span
-            className={`rounded-full px-3 py-1 text-[11px] uppercase tracking-wide ${saveStatus.tone}`}
-          >
-            {saveStatus.label}
+          <span className="rounded-full px-3 py-1 text-[11px] uppercase tracking-wide text-df-text-tertiary">
+            Saved
           </span>
         </div>
       )}
@@ -222,12 +189,9 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
                           <EditorToolbarWrapper />
                           <EditorSyncContextProvider
                             pageId={activePageId}
-                            onContentChange={(pageId, content) => {
-                              setDraftContent(pageId, content);
-                            }}
+                            onContentChange={() => {}}
                             pageContent={
-                              draft?.content.serialized ?? 
-                              (activePage?.bookBody !== undefined && activePage?.bookBody !== null ? activePage.bookBody : null)
+                              activePage?.bookBody !== undefined && activePage?.bookBody !== null ? activePage.bookBody : null
                             }
                           >
                             <CommentContextProvider

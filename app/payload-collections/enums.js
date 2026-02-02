@@ -11,6 +11,7 @@ exports.PAYLOAD_COLLECTIONS = {
     PROJECTS: 'projects',
     MEDIA: 'media',
     CHARACTERS: 'characters',
+    RELATIONSHIPS: 'relationships',
     DIALOGUES: 'dialogues',
     PAGES: 'pages',
     STORYLET_TEMPLATES: 'storylet-templates',

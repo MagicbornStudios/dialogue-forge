@@ -74,7 +74,9 @@ export interface ForgeWorkspaceState {
   actions: {
     // Graph actions
     setGraph: ReturnType<typeof createGraphSlice>["setGraph"]
+    setGraphs: ReturnType<typeof createGraphSlice>["setGraphs"]
     setGraphStatus: ReturnType<typeof createGraphSlice>["setGraphStatus"]
+    removeGraph: ReturnType<typeof createGraphSlice>["removeGraph"]
     setActiveNarrativeGraphId: ReturnType<typeof createGraphSlice>["setActiveNarrativeGraphId"]
     setActiveStoryletGraphId: ReturnType<typeof createGraphSlice>["setActiveStoryletGraphId"]
     ensureGraph: (
@@ -284,7 +286,9 @@ export function createForgeWorkspaceStore(
           actions: {
             // Graph actions
             setGraph: setGraphWithEvents,
+            setGraphs: graphSlice.setGraphs,
             setGraphStatus: graphSlice.setGraphStatus,
+            removeGraph: graphSlice.removeGraph,
             setActiveNarrativeGraphId: graphSlice.setActiveNarrativeGraphId,
             setActiveStoryletGraphId: graphSlice.setActiveStoryletGraphId,
             ensureGraph: ensureGraphWithEvents,

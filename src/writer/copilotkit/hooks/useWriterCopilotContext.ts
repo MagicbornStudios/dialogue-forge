@@ -1,6 +1,6 @@
 /**
  * Hook to provide Writer workspace context to CopilotKit
- * Makes pages, drafts, and narrative structure available to the AI
+ * Makes pages and narrative structure available to the AI (no draft state).
  */
 
 import { useStore } from 'zustand';
@@ -19,24 +19,19 @@ export function useWriterCopilotContext(
     description: 'Writer workspace state',
     value: useMemo(() => {
       const activePage = state.activePageId ? state.pages.find(p => p.id === state.activePageId) : null;
-      const activeDraft = state.activePageId ? state.drafts[state.activePageId] : null;
       
       let context = `Writer Workspace Context:
 - Active Page: ${activePage ? `${activePage.title} (ID: ${activePage.id})` : 'None'}
 - Total Pages: ${state.pages.length}
 - Selected Text: ${state.aiSelection ? 'Yes' : 'No'}
 ${state.aiSelection ? `- Selection Range: ${state.aiSelection.start}-${state.aiSelection.end}` : ''}
-- Draft Status: ${activeDraft ? activeDraft.status : 'N/A'}
 - Narrative Graph: ${state.narrativeGraph ? `${state.narrativeGraph.title} (ID: ${state.narrativeGraph.id})` : 'None'}
 - Available Narrative Graphs: ${state.narrativeGraphs.length}
 `;
 
       if (state.pages.length > 0) {
         context += `\nPages:
-${state.pages.map(p => {
-          const draft = state.drafts[p.id];
-          return `  - ${p.title} (ID: ${p.id})${draft ? ` [Draft: ${draft.status}]` : ''}`;
-        }).join('\n')}
+${state.pages.map(p => `  - ${p.title} (ID: ${p.id})`).join('\n')}
 `;
       }
 

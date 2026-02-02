@@ -24,6 +24,7 @@ export interface WriterForgeDataAdapter {
     graphId: number,
     patch: Partial<Pick<ForgeGraphDoc, 'title' | 'flow' | 'startNodeId' | 'endNodeIds' | 'compiledYarn'>>
   ): Promise<ForgeGraphDoc>;
+  deleteGraph(graphId: number): Promise<void>;
   getProject(projectId: number): Promise<ForgeProjectSummary>;
   createAct?(input: {
     projectId: number;

@@ -8,22 +8,13 @@ import type {
   WriterWorkspaceState,
   WriterAiPreviewMeta,
   WriterAiProposalStatus,
-  WriterDraftContent,
 } from '../writer-workspace-types';
-import {
-  createWriterDraftContent,
-  getPlainTextFromSerializedContent,
-  WRITER_AI_PROPOSAL_STATUS,
-  WRITER_SAVE_STATUS,
-} from '../writer-workspace-types';
+import { getPlainTextFromSerializedContent, WRITER_AI_PROPOSAL_STATUS } from '../writer-workspace-types';
 import { applyWriterPatchOps } from '@/writer/lib/editor/patches';
 
-const createSnapshotFromPage = (
-  page: { title: string; bookBody?: string | null },
-  draft?: { title: string; content: WriterDraftContent }
-): WriterDocSnapshot => ({
-  title: draft?.title ?? page.title,
-  content: draft?.content.plainText ?? getPlainTextFromSerializedContent(page.bookBody),
+const createSnapshotFromPage = (page: { title: string; bookBody?: string | null }): WriterDocSnapshot => ({
+  title: page.title,
+  content: getPlainTextFromSerializedContent(page.bookBody),
 });
 
 export interface AiSlice {
@@ -45,8 +36,7 @@ export interface AiActions {
 
 export function createAiSlice(
   set: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[0],
-  get: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[1],
-  editorActions?: { setDraftContent: (pageId: number, content: WriterDraftContent) => void; setDraftTitle: (pageId: number, title: string) => void }
+  get: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[1]
 ): AiSlice & AiActions {
   return {
     aiPreview: null,
@@ -67,14 +57,7 @@ export function createAiSlice(
       if (!page) {
         return;
       }
-      const draft = state.drafts[targetId] ?? {
-        title: page.title,
-        content: createWriterDraftContent(page.bookBody),
-        status: WRITER_SAVE_STATUS.SAVED,
-        error: null,
-        revision: 0,
-      };
-      const snapshot = state.aiSnapshot ?? createSnapshotFromPage(page, draft);
+      const snapshot = state.aiSnapshot ?? createSnapshotFromPage(page);
 
       set({
         aiPreview: null,
@@ -168,14 +151,7 @@ export function createAiSlice(
       if (!page) {
         return;
       }
-      const draft = state.drafts[targetId] ?? {
-        title: page.title,
-        content: createWriterDraftContent(page.bookBody),
-        status: WRITER_SAVE_STATUS.SAVED,
-        error: null,
-        revision: 0,
-      };
-      const snapshot = (state.aiSnapshot as WriterDocSnapshot | null | undefined) ?? createSnapshotFromPage(page, draft);
+      const snapshot = (state.aiSnapshot as WriterDocSnapshot | null | undefined) ?? createSnapshotFromPage(page);
       const aiPreview = (state.aiPreview as WriterPatchOp[] | null | undefined) ?? [];
       const nextSnapshot = applyWriterPatchOps(snapshot, aiPreview) as WriterDocSnapshot;
 
@@ -189,15 +165,15 @@ export function createAiSlice(
       });
 
       const nextSnapshotTyped: WriterDocSnapshot = nextSnapshot as WriterDocSnapshot;
-      if (editorActions) {
-        editorActions.setDraftContent(
-          targetId,
-          createWriterDraftContent(nextSnapshotTyped.content ?? '')
-        );
-        if (typeof nextSnapshotTyped.title === 'string') {
-          editorActions.setDraftTitle(targetId, nextSnapshotTyped.title);
-        }
-      }
+      const nextPages = state.pages.map((p) =>
+        p.id === targetId
+          ? { ...p, title: nextSnapshotTyped.title ?? p.title, bookBody: nextSnapshotTyped.content ?? p.bookBody }
+          : p
+      );
+      const nextPageMap = new Map(state.pageMap);
+      nextPageMap.set(targetId, { ...page, title: nextSnapshotTyped.title ?? page.title, bookBody: nextSnapshotTyped.content ?? page.bookBody });
+      set({ pages: nextPages, pageMap: nextPageMap });
+      state.dataAdapter?.updatePage(targetId, { title: nextSnapshotTyped.title, bookBody: nextSnapshotTyped.content }).catch(console.error);
     },
     revertAiDraft: () => {
       const state = get();
@@ -206,7 +182,7 @@ export function createAiSlice(
       if (!targetId || !undoSnapshot) {
         return;
       }
-
+      const page = state.pageMap.get(targetId);
       set({
         aiUndoSnapshot: null,
         aiSnapshot: undoSnapshot,
@@ -215,25 +191,15 @@ export function createAiSlice(
         aiProposalStatus: WRITER_AI_PROPOSAL_STATUS.IDLE,
         aiError: null,
       });
-
-      const undoSnapshotTyped: WriterDocSnapshot = undoSnapshot as WriterDocSnapshot;
-      if (editorActions) {
-        editorActions.setDraftContent(
-          targetId,
-          createWriterDraftContent(undoSnapshotTyped.content ?? '')
+      if (page) {
+        const undoSnapshotTyped: WriterDocSnapshot = undoSnapshot as WriterDocSnapshot;
+        const nextPages = state.pages.map((p) =>
+          p.id === targetId ? { ...p, title: undoSnapshotTyped.title ?? p.title, bookBody: undoSnapshotTyped.content ?? p.bookBody } : p
         );
-        if (typeof undoSnapshotTyped.title === 'string') {
-          editorActions.setDraftTitle(targetId, undoSnapshotTyped.title);
-        }
-      } else {
-        const stateAfterSet = get() as WriterWorkspaceState;
-        (stateAfterSet.actions as { setDraftContent: (pageId: number, content: WriterDraftContent) => void; setDraftTitle: (pageId: number, title: string) => void }).setDraftContent(
-          targetId,
-          createWriterDraftContent(undoSnapshotTyped.content ?? '')
-        );
-        if (typeof undoSnapshotTyped.title === 'string') {
-          (stateAfterSet.actions as { setDraftContent: (pageId: number, content: WriterDraftContent) => void; setDraftTitle: (pageId: number, title: string) => void }).setDraftTitle(targetId, undoSnapshotTyped.title);
-        }
+        const nextPageMap = new Map(state.pageMap);
+        nextPageMap.set(targetId, { ...page, title: undoSnapshotTyped.title ?? page.title, bookBody: undoSnapshotTyped.content ?? page.bookBody });
+        set({ pages: nextPages, pageMap: nextPageMap });
+        state.dataAdapter?.updatePage(targetId, { title: undoSnapshotTyped.title, bookBody: undoSnapshotTyped.content }).catch(console.error);
       }
     },
   };

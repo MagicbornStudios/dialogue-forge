@@ -28,6 +28,7 @@ import { useForgeCopilotContext } from '@/forge/copilotkit/hooks/useForgeCopilot
 import { CopilotKitProvider } from '@/ai/copilotkit/providers/CopilotKitProvider';
 import { CopilotChatModal } from './components/CopilotChatModal';
 import { CommandBar, useCommandBar } from './components/CommandBar/CommandBar';
+import { TooltipProvider } from '@/shared/ui/tooltip';
 
 export interface HeaderLink {
   label: string;
@@ -124,16 +125,18 @@ export function ForgeWorkspace({
       defaultOpen={false}
     >
       <ForgeWorkspaceStoreProvider store={storeRef.current}>
-        <ForgeWorkspaceActionsWrapper store={storeRef.current}>
-          <NodeDragProvider>
-            <ProjectSync selectedProjectId={selectedProjectId} />
-            <ForgeWorkspaceContent
-              characters={initialCharacters}
-              className={className}
-              headerLinks={headerLinks}
-            />
-          </NodeDragProvider>
-        </ForgeWorkspaceActionsWrapper>
+        <TooltipProvider>
+          <ForgeWorkspaceActionsWrapper store={storeRef.current}>
+            <NodeDragProvider>
+              <ProjectSync selectedProjectId={selectedProjectId} />
+              <ForgeWorkspaceContent
+                characters={initialCharacters}
+                className={className}
+                headerLinks={headerLinks}
+              />
+            </NodeDragProvider>
+          </ForgeWorkspaceActionsWrapper>
+        </TooltipProvider>
       </ForgeWorkspaceStoreProvider>
     </CopilotKitProvider>
   );
@@ -175,7 +178,7 @@ function ForgeWorkspaceContent({
   const setGraph = useForgeWorkspaceStore((s) => s.actions.setGraph);
   const setActiveFlagSchema = useForgeWorkspaceStore((s) => s.actions.setActiveFlagSchema);
   const setActiveGameState = useForgeWorkspaceStore((s) => s.actions.setActiveGameState);
-  
+
   // Panel layout state removed - using fixed layout
 
   // Panel visibility state - fix SSR
@@ -220,6 +223,9 @@ function ForgeWorkspaceContent({
 
   const onNarrativeGraphChange = useCallback(
     async (next: ForgeGraphDoc) => {
+      // Immediately update local store for instant UI feedback
+      setGraph(String(next.id), next);
+
       // If graph has no ID (id === 0), it's a new graph that needs to be created in the database
       // This happens when the first node is added to a blank graph
       if (next.id === 0 && dataAdapter && selectedProjectId && next.flow.nodes.length > 0) {
@@ -258,9 +264,24 @@ function ForgeWorkspaceContent({
           }, 0);
         } catch (error) {
           console.error('Failed to create graph:', error);
+          alert('Failed to create graph. Please try again.');
         }
-      } else {
-        setGraph(String(next.id), next);
+        return;
+      }
+
+      // For existing graphs, save immediately (editor debounces continuous changes)
+      if (!dataAdapter || next.id === 0) return;
+
+      try {
+        await dataAdapter.updateGraph(next.id, {
+          flow: next.flow,
+          startNodeId: next.startNodeId,
+          endNodeIds: next.endNodeIds,
+          title: next.title,
+        });
+      } catch (error) {
+        console.error('Failed to save graph:', error);
+        // Keep editing - changes are in memory
       }
     },
     [dataAdapter, selectedProjectId, openGraphInScope, setGraph, setActiveNarrativeGraphId]
@@ -268,6 +289,9 @@ function ForgeWorkspaceContent({
 
   const onStoryletGraphChange = useCallback(
     async (next: ForgeGraphDoc) => {
+      // Immediately update local store for instant UI feedback
+      setGraph(String(next.id), next);
+
       // If graph has no ID (id === 0), it's a new graph that needs to be created in the database
       // This happens when the first node is added to a blank graph
       if (next.id === 0 && dataAdapter && selectedProjectId && next.flow.nodes.length > 0) {
@@ -306,9 +330,24 @@ function ForgeWorkspaceContent({
           }, 0);
         } catch (error) {
           console.error('Failed to create graph:', error);
+          alert('Failed to create graph. Please try again.');
         }
-      } else {
-        setGraph(String(next.id), next);
+        return;
+      }
+
+      // For existing graphs, save immediately (editor debounces continuous changes)
+      if (!dataAdapter || next.id === 0) return;
+
+      try {
+        await dataAdapter.updateGraph(next.id, {
+          flow: next.flow,
+          startNodeId: next.startNodeId,
+          endNodeIds: next.endNodeIds,
+          title: next.title,
+        });
+      } catch (error) {
+        console.error('Failed to save graph:', error);
+        // Keep editing - changes are in memory
       }
     },
     [dataAdapter, selectedProjectId, openGraphInScope, setGraph, setActiveStoryletGraphId]

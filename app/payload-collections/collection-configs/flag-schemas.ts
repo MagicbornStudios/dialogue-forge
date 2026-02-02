@@ -27,15 +27,6 @@ export const FlagSchemas: CollectionConfig = {
       required: true,
       // Stores FlagSchema structure
     },
-    {
-      name: '_status',
-      type: 'select',
-      options: [
-        { label: 'Draft', value: 'draft' },
-        { label: 'Published', value: 'published' },
-      ],
-      required: false,
-    },
   ],
   versions: {
     drafts: true,

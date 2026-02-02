@@ -89,7 +89,6 @@ function mapCharacter(char: Character, baseUrl: string): CharacterDoc {
     project: projectId,
     relationshipGraphJson: relationshipGraphJson ?? undefined,
     archivedAt: char.archivedAt ? new Date(char.archivedAt) : null,
-    _status: char._status ?? undefined,
     createdAt: char.createdAt ? new Date(char.createdAt) : undefined,
     updatedAt: char.updatedAt ? new Date(char.updatedAt) : undefined,
   };
@@ -198,7 +197,6 @@ export class PayloadCharacterAdapter implements CharacterWorkspaceAdapter {
       description: data.description ?? null,
       imageUrl: data.imageUrl ?? null,
       relationshipGraphJson: data.relationshipGraphJson ?? null,
-      _status: 'draft',
     };
 
     if (data.avatarId !== undefined) {

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from '@/shared/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip';
 import { cn } from '@/shared/lib/utils';
 
 export interface SectionToolbarAction {
@@ -46,14 +46,12 @@ export function SectionToolbar({ actions, className }: SectionToolbarProps) {
 
         if (action.tooltip) {
           return (
-            <TooltipProvider key={action.id}>
-              <Tooltip>
-                <TooltipTrigger asChild>{button}</TooltipTrigger>
-                <TooltipContent>
-                  <p>{action.tooltip}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip key={action.id}>
+              <TooltipTrigger asChild>{button}</TooltipTrigger>
+              <TooltipContent>
+                <p>{action.tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
           );
         }
 

@@ -22,6 +22,16 @@ export const Pages: CollectionConfig = {
       index: true,
     },
     {
+      name: 'narrativeGraph',
+      type: 'relationship',
+      relationTo: PAYLOAD_COLLECTIONS.FORGE_GRAPHS,
+      required: false,
+      index: true,
+      admin: {
+        description: 'Narrative forge graph this page belongs to (act/chapter/page in Writer)',
+      },
+    },
+    {
       name: 'pageType',
       type: 'select',
       options: [
@@ -106,15 +116,6 @@ export const Pages: CollectionConfig = {
       admin: {
         description: 'Timestamp when page was archived',
       },
-    },
-    {
-      name: '_status',
-      type: 'select',
-      options: [
-        { label: 'Draft', value: 'draft' },
-        { label: 'Published', value: 'published' },
-      ],
-      required: false,
     },
   ],
   versions: {

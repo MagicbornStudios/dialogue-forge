@@ -110,9 +110,9 @@ export function WriterWorkspace({
               : graphs[0]?.id ?? null;
           
           store.getState().actions.setSelectedNarrativeGraphId(defaultGraphId);
+          const selectedGraph = graphs.find(g => g.id === defaultGraphId) ?? null;
+          store.getState().actions.setNarrativeGraph(selectedGraph);
           
-          // Validate the selected graph
-          const selectedGraph = graphs.find(g => g.id === defaultGraphId);
           if (selectedGraph) {
             const validation = validateNarrativeGraph(selectedGraph);
             
@@ -144,43 +144,6 @@ export function WriterWorkspace({
       cancelled = true;
     };
   }, [projectId, forgeDataAdapter]);
-
-  // Load data when project changes
-  useEffect(() => {
-    if (!projectId || !dataAdapter) {
-      const store = storeRef.current;
-      store.getState().actions.setPages([]);
-      store.getState().actions.setActivePageId(null);
-      return;
-    }
-
-    let cancelled = false;
-    const store = storeRef.current;
-
-    async function loadData() {
-      if (!dataAdapter || !projectId) {
-        return;
-      }
-      try {
-        const pagesData = await dataAdapter.listPages(projectId);
-
-        if (!cancelled) {
-          store.getState().actions.setPages(pagesData);
-        }
-      } catch (error) {
-        console.error('Failed to load writer data:', error);
-        if (!cancelled) {
-          store.getState().actions.setContentError('Failed to load data');
-        }
-      }
-    }
-
-    void loadData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [projectId, dataAdapter]);
 
   return (
     <>
@@ -226,6 +189,36 @@ function WriterWorkspaceContent({
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const pages = useWriterWorkspaceStore((state) => state.pages);
   const activePage = activePageId ? pages.find(p => p.id === activePageId) ?? null : null;
+  const selectedNarrativeGraphId = useWriterWorkspaceStore((state) => state.selectedNarrativeGraphId);
+  const dataAdapter = useWriterWorkspaceStore((state) => state.dataAdapter);
+  const setPages = useWriterWorkspaceStore((state) => state.actions.setPages);
+  const setActivePageId = useWriterWorkspaceStore((state) => state.actions.setActivePageId);
+  const setContentError = useWriterWorkspaceStore((state) => state.actions.setContentError);
+
+  // Load pages when project or selected narrative graph changes
+  useEffect(() => {
+    if (!projectId || !dataAdapter) {
+      setPages([]);
+      setActivePageId(null);
+      return;
+    }
+    if (selectedNarrativeGraphId == null) {
+      setPages([]);
+      return;
+    }
+    let cancelled = false;
+    dataAdapter.listPages(projectId, selectedNarrativeGraphId).then((pagesData) => {
+      if (!cancelled) {
+        setPages(pagesData);
+      }
+    }).catch((error) => {
+      console.error('Failed to load writer data:', error);
+      if (!cancelled) {
+        setContentError('Failed to load data');
+      }
+    });
+    return () => { cancelled = true; };
+  }, [projectId, selectedNarrativeGraphId, dataAdapter, setPages, setActivePageId, setContentError]);
 
   useEffect(() => {
     if (onActivePageChange) {

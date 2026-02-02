@@ -79,15 +79,6 @@ export const Characters: CollectionConfig = {
       name: 'archivedAt',
       type: 'date',
     },
-    {
-      name: '_status',
-      type: 'select',
-      options: [
-        { label: 'Draft', value: 'draft' },
-        { label: 'Published', value: 'published' },
-      ],
-      required: false,
-    },
   ],
   versions: {
     drafts: true,

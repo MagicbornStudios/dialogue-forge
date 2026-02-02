@@ -22,9 +22,6 @@ import type { EventSink } from '@/writer/events/writer-events';
 import { createEvent } from '@/writer/events/events';
 import { WRITER_EVENT_TYPE } from '@/writer/events/writer-events';
 import type {
-  WriterDraftState,
-  WriterDraftContent,
-  WriterSaveStatus,
   WriterAiProposalStatus,
   WriterAiPreviewMeta,
 } from './writer-workspace-types';
@@ -39,8 +36,6 @@ import { FORGE_GRAPH_KIND } from '@/shared/types/forge-graph';
 // Re-export types for convenience
 export type { WriterDocSnapshot, WriterPatchOp, WriterSelectionSnapshot } from '@/writer/types/writer-ai-types';
 export type {
-  WriterDraftState,
-  WriterDraftContent,
   WriterSaveStatus,
   WriterAiProposalStatus,
   WriterAiPreviewMeta,
@@ -53,8 +48,7 @@ export interface WriterWorkspaceState {
   pageMap: Map<number, ForgePage>;
   contentError: string | null;
 
-  // Editor slice
-  drafts: Record<number, WriterDraftState>;
+  // Editor slice (no drafts - editor is ephemeral, autosave to page)
   editorError: string | null;
 
   // AI slice
@@ -102,10 +96,7 @@ export interface WriterWorkspaceState {
     setContentError: (error: string | null) => void;
 
     // Editor actions
-    setDraftTitle: (pageId: number, title: string) => void;
-    setDraftContent: (pageId: number, content: WriterDraftContent) => void;
-    saveNow: (pageId?: number) => Promise<void>;
-    createDraftForPage: (page: ForgePage) => void;
+    saveNow: (pageId?: number, content?: { serialized: string; plainText?: string }) => Promise<void>;
     setEditorError: (error: string | null) => void;
 
     // AI actions
@@ -176,8 +167,8 @@ export function createWriterWorkspaceStore(
         const getTyped = get as Parameters<typeof createContentSlice>[1];
         
         const contentSlice = createContentSlice(setTyped, getTyped, initialPages);
-        const editorSlice = createEditorSlice(setTyped, getTyped, initialPages);
-        const aiSlice = createAiSlice(setTyped, getTyped, { setDraftContent: editorSlice.setDraftContent, setDraftTitle: editorSlice.setDraftTitle });
+        const editorSlice = createEditorSlice(setTyped, getTyped);
+        const aiSlice = createAiSlice(setTyped, getTyped);
         const navigationSlice = createNavigationSlice(setTyped, getTyped, initialActivePageId);
         const viewStateSlice = createViewStateSlice(setTyped, getTyped);
         const draftSlice = createWriterDraftSlice(setTyped, getTyped);
@@ -185,12 +176,6 @@ export function createWriterWorkspaceStore(
         // Wrap actions to emit events
         const setPagesWithEvents = (pages: ForgePage[]) => {
           contentSlice.setPages(pages);
-          // Create drafts for new pages
-          pages.forEach((page) => {
-            if (!get().drafts[page.id]) {
-              editorSlice.createDraftForPage(page);
-            }
-          });
           eventSink.emit(
             createEvent(WRITER_EVENT_TYPE.CONTENT_CHANGE, { pages }, 'USER_ACTION')
           );
@@ -203,8 +188,8 @@ export function createWriterWorkspaceStore(
           );
         };
 
-        const saveNowWithEvents = async (pageId?: number) => {
-          await editorSlice.saveNow(pageId);
+        const saveNowWithEvents = async (pageId?: number, content?: { serialized: string; plainText?: string }) => {
+          await editorSlice.saveNow(pageId, content);
           const targetId = pageId ?? get().activePageId;
           if (targetId) {
             eventSink.emit(
@@ -286,10 +271,7 @@ export function createWriterWorkspaceStore(
             },
 
             // Editor actions
-            setDraftTitle: editorSlice.setDraftTitle,
-            setDraftContent: editorSlice.setDraftContent,
             saveNow: saveNowWithEvents,
-            createDraftForPage: editorSlice.createDraftForPage,
             setEditorError: editorSlice.setEditorError,
 
             // Draft actions

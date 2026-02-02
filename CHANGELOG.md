@@ -44,6 +44,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Critical**: Pointer events bug preventing layer interaction after drop
 - **Critical**: Z-index management for proper layer stacking
 - **Critical**: "projectId is required" error when saving templates (now validates project selection)
+- Forge graph editors auto-save indicator crash (missing `isSaving`) and save-path consistency for immediate vs debounced changes
+- Forge sidebar context menu delete now removes narrative/storylet graphs from persistence and local cache
+- Forge narrative editor now defaults `characters`/`flagSchema` in content to avoid undefined runtime errors
+- Storylet node editor now updates text immediately while saves remain debounced
+- Narrative node editor now lets Act/Chapter/Page nodes select pages from the active narrative graph
 - Template loading from draft system
 - Inspector blocking canvas interaction (now proper side panel)
 - Canvas coordinate transformation for anchor-based positioning

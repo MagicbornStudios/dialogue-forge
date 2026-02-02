@@ -11,11 +11,6 @@ export const WRITER_SAVE_STATUS = {
 export type WriterSaveStatus =
   (typeof WRITER_SAVE_STATUS)[keyof typeof WRITER_SAVE_STATUS];
 
-export type WriterDraftContent = {
-  serialized: string;
-  plainText: string;
-};
-
 type SerializedLexicalNode = {
   text?: string;
   children?: SerializedLexicalNode[];
@@ -53,19 +48,6 @@ export const getPlainTextFromSerializedContent = (value?: string | null): string
   return extractPlainTextFromSerialized(value) ?? value;
 };
 
-export const createWriterDraftContent = (value?: string | null): WriterDraftContent => ({
-  serialized: value ?? '',
-  plainText: getPlainTextFromSerializedContent(value),
-});
-
-export type WriterDraftState = {
-  title: string;
-  content: WriterDraftContent;
-  status: WriterSaveStatus;
-  error: string | null;
-  revision: number;
-};
-
 export const WRITER_AI_PROPOSAL_STATUS = {
   IDLE: 'idle',
   LOADING: 'loading',
@@ -90,7 +72,6 @@ export interface WriterWorkspaceState {
   pageMap: Map<number, ForgePage>;
   
   contentError: string | null;
-  drafts: Record<number, WriterDraftState>;
   editorError: string | null;
   aiPreview: unknown[] | null;
   aiPreviewMeta: WriterAiPreviewMeta | null;

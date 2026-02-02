@@ -2,7 +2,6 @@
 
 import { ProjectSwitcher } from '@/components/ProjectSwitcher';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
-import { getPlainTextFromSerializedContent } from '@/writer/components/WriterWorkspace/store/writer-workspace-types';
 import { convertSerializedContentToMarkdown } from '@/writer/lib/editor/export-utils';
 import { useMemo } from 'react';
 
@@ -18,15 +17,11 @@ interface WriterProjectSwitcherProps {
 export function WriterProjectSwitcher({ selectedProjectId, onProjectChange }: WriterProjectSwitcherProps) {
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const pageMap = useWriterWorkspaceStore((state) => state.pageMap);
-  const drafts = useWriterWorkspaceStore((state) => state.drafts);
   const pageLayout = useWriterWorkspaceStore((state) => state.pageLayout);
   const togglePageFullWidth = useWriterWorkspaceStore((state) => state.actions.togglePageFullWidth);
 
   const activePage = activePageId ? pageMap.get(activePageId) ?? null : null;
-  const draft = activePageId ? drafts[activePageId] ?? null : null;
-  const draftTitle = activePageId ? drafts[activePageId]?.title ?? '' : '';
-  const pageContent = draft?.content.plainText ?? getPlainTextFromSerializedContent(activePage?.bookBody) ?? '';
-  const serializedContent = draft?.content.serialized ?? activePage?.bookBody ?? '';
+  const serializedContent = activePage?.bookBody ?? '';
   const hasContent = !!(serializedContent && serializedContent.trim() && serializedContent !== '{"root":{"children":[],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
   const isFullWidth = activePageId
     ? pageLayout.fullWidthByPageId[activePageId] ?? false
@@ -34,7 +29,7 @@ export function WriterProjectSwitcher({ selectedProjectId, onProjectChange }: Wr
 
   const writerMenus = useMemo(() => {
     const downloadAsMarkdown = async () => {
-      const title = draftTitle.trim() || activePage?.title || 'Untitled';
+      const title = (activePage?.title ?? '').trim() || 'Untitled';
       const markdown = await convertSerializedContentToMarkdown(serializedContent);
       const blob = new Blob([markdown], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
@@ -46,8 +41,7 @@ export function WriterProjectSwitcher({ selectedProjectId, onProjectChange }: Wr
     };
 
     const downloadAsPDF = async () => {
-      const title = draftTitle.trim() || activePage?.title || 'Untitled';
-      const serializedContent = draft?.content.serialized ?? activePage?.bookBody ?? '';
+      const title = (activePage?.title ?? '').trim() || 'Untitled';
       const markdown = await convertSerializedContentToMarkdown(serializedContent);
       
       const printWindow = window.open('', '_blank');
@@ -106,7 +100,7 @@ export function WriterProjectSwitcher({ selectedProjectId, onProjectChange }: Wr
       isFullWidth,
       canDownload: !!(activePageId && hasContent),
     };
-  }, [activePageId, activePage, draftTitle, pageContent, isFullWidth, togglePageFullWidth]);
+  }, [activePageId, activePage, serializedContent, isFullWidth, togglePageFullWidth]);
 
   return (
     <ProjectSwitcher

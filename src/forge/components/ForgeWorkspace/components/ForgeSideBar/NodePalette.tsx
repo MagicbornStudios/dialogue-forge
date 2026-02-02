@@ -16,7 +16,7 @@ import {
 import { FORGE_NODE_TYPE, NARRATIVE_FORGE_NODE_TYPE, type ForgeNodeType } from '@/forge/types/forge-graph';
 import { useForgeWorkspaceStore } from '@/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { useNodeDrag } from '@/forge/components/ForgeWorkspace/hooks/useNodeDrag';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip';
 import { cn } from '@/shared/lib/utils';
 import { FORGE_NODE_TYPE_LABELS } from '@/forge/types/ui-constants';
 import { SectionHeader } from './SectionHeader';
@@ -225,30 +225,28 @@ export function NodePalette({ className }: NodePaletteProps) {
         </div>
         <div className="space-y-0.5">
           {nodes.map((nodeInfo) => (
-            <TooltipProvider key={nodeInfo.type}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, nodeInfo.type)}
-                    onDragEnd={handleDragEnd}
-                    className={cn(
-                      'flex items-center gap-2 px-2 py-1.5 text-xs cursor-grab active:cursor-grabbing',
-                      'text-muted-foreground hover:bg-muted hover:text-foreground',
-                      'transition-colors rounded',
-                      focusedEditor === 'narrative' && 'border-l-1 border-l-[var(--editor-info)]',
-                      focusedEditor === 'storylet' && 'border-l-1 border-l-[var(--editor-edge-choice)]'
-                    )}
-                  >
-                    <ColoredNodeIcon nodeType={nodeInfo.type} icon={nodeInfo.icon} />
-                    <span className="font-medium">{nodeInfo.label}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{FORGE_NODE_TYPE_LABELS[nodeInfo.type]}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip key={nodeInfo.type}>
+              <TooltipTrigger asChild>
+                <div
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, nodeInfo.type)}
+                  onDragEnd={handleDragEnd}
+                  className={cn(
+                    'flex items-center gap-2 px-2 py-1.5 text-xs cursor-grab active:cursor-grabbing',
+                    'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    'transition-colors rounded',
+                    focusedEditor === 'narrative' && 'border-l-1 border-l-[var(--editor-info)]',
+                    focusedEditor === 'storylet' && 'border-l-1 border-l-[var(--editor-edge-choice)]'
+                  )}
+                >
+                  <ColoredNodeIcon nodeType={nodeInfo.type} icon={nodeInfo.icon} />
+                  <span className="font-medium">{nodeInfo.label}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{FORGE_NODE_TYPE_LABELS[nodeInfo.type]}</p>
+              </TooltipContent>
+            </Tooltip>
           ))}
         </div>
       </div>

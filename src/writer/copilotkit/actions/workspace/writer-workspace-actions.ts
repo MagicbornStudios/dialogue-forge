@@ -2,12 +2,11 @@
  * Writer Workspace Actions
  * 
  * Workspace-level CopilotKit actions that operate on the Writer workspace store.
- * These actions manage domain state (pages, drafts, navigation).
+ * These actions manage domain state (pages, navigation). Editor is ephemeral; content lives on the page.
  */
 
 import type { StoreApi } from 'zustand/vanilla';
 import type { WriterWorkspaceState } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
-import { WRITER_SAVE_STATUS } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 import { getPlainTextFromSerializedContent } from '@/writer/components/WriterWorkspace/store/writer-workspace-types';
 import type { Parameter } from '@copilotkit/shared';
 import type { FrontendAction } from '@copilotkit/react-core';
@@ -63,12 +62,10 @@ export function createGetCurrentPageAction(
       if (!page) {
         return { error: 'No page selected' };
       }
-      const draft = state.drafts[page.id];
-      const plainText = draft?.content.plainText ?? getPlainTextFromSerializedContent(page.bookBody);
+      const plainText = getPlainTextFromSerializedContent(page.bookBody);
       return {
         title: page.title,
         content: plainText,
-        hasUnsavedChanges: draft?.status === WRITER_SAVE_STATUS.DIRTY,
       };
     },
   };

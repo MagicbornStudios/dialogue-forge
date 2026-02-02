@@ -43,15 +43,6 @@ export const GameStates: CollectionConfig = {
       required: true,
       // Stores authored schema (players/characters/flags) or runtime values
     },
-    {
-      name: '_status',
-      type: 'select',
-      options: [
-        { label: 'Draft', value: 'draft' },
-        { label: 'Published', value: 'published' },
-      ],
-      required: false,
-    },
   ],
   versions: {
     drafts: true,

@@ -44,10 +44,9 @@ import { ForgeEdge } from '@/forge/components/ForgeWorkspace/components/GraphEdi
 import { DetourNode } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode';
 import { ForgeGraphBreadcrumbs } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/ForgeGraphBreadcrumbs';
 import { GraphEditorToolbar } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorToolbar';
-import { Network, Focus, FileText, Play } from 'lucide-react';
-import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
+import { Focus, FileText, Play } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
-import { useDraftVisualIndicators } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/hooks/useDraftVisualIndicators';
+import { Loader2 } from 'lucide-react';
 
 // EdgeDropMenu components
 import { CharacterEdgeDropMenu } from '@/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/CharacterNode/CharacterEdgeDropMenu';
@@ -67,9 +66,10 @@ import type {
 } from '@/forge/types/forge-graph';
 
 import {
-  useForgeFlowEditorShell,
+  useSimpleForgeFlowEditor,
   type ShellNodeData,
-} from '@/forge/lib/graph-editor/hooks/useForgeFlowEditorShell';
+} from '@/forge/lib/graph-editor/hooks/useSimpleForgeFlowEditor';
+import { useGraphAutoSave } from '@/forge/lib/graph-editor/hooks/useGraphAutoSave';
 
 import {
   createForgeEditorSessionStore,
@@ -145,10 +145,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
   // Use gameState.flags if available, fallback to gameStateFlags for backward compatibility
   const resolvedGameStateFlags = gameState?.flags || gameStateFlags;
   
-  const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
-  const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
-  const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
-  
   const {
     openYarnModal,
     openPlayModal,
@@ -158,6 +154,9 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     clearFocus,
     setContextNodeType,
     openCopilotChat,
+    dataAdapter,
+    selectedProjectId,
+    openGraphInScope,
   } = useForgeWorkspaceStore(
     useShallow((s) => ({
       openYarnModal: s.actions.openYarnModal,
@@ -168,15 +167,9 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
       clearFocus: s.actions.clearFocus,
       setContextNodeType: s.actions.setContextNodeType,
       openCopilotChat: s.actions.openCopilotChat,
-    }))
-  );
-
-  const { committedGraph, draftGraph, applyDelta, resetDraft } = useForgeWorkspaceStore(
-    useShallow((s) => ({
-      committedGraph: s.committedGraph,
-      draftGraph: s.draftGraph,
-      applyDelta: s.actions.applyDelta,
-      resetDraft: s.actions.resetDraft,
+      dataAdapter: s.dataAdapter,
+      selectedProjectId: s.selectedProjectId,
+      openGraphInScope: s.actions.openGraphInScope,
     }))
   );
 
@@ -224,6 +217,12 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     [sessionStore]
   );
 
+  const { isSaving, onSaveDebounced, onSaveImmediate } = useGraphAutoSave<ForgeGraphDoc>({
+    onSave: onChange,
+    debounceMs: 2000,
+    immediateIndicatorMs: 500,
+  });
+
   // Create handler for creating new graph
   const handleCreateNewGraph = React.useCallback(async () => {
     if (!dataAdapter || !selectedProjectId) return;
@@ -248,29 +247,10 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     openGraphInScope('storylet', String(createdGraph.id));
   }, [dataAdapter, selectedProjectId, openGraphInScope]);
 
-  // Create a default empty graph if none exists, with correct kind for storylet
-  const effectiveGraph = React.useMemo(() => {
-    if (graph) return graph;
-    const { createEmptyForgeGraphDoc } = require('@/forge/lib/utils/forge-flow-helpers');
-    const { FORGE_GRAPH_KIND } = require('@/forge/types/forge-graph');
-    return createEmptyForgeGraphDoc({
-      projectId: selectedProjectId || 0,
-      kind: FORGE_GRAPH_KIND.STORYLET,
-      title: 'Untitled Storylet',
-    });
-  }, [graph, selectedProjectId]);
-
-  React.useEffect(() => {
-    if (!committedGraph || committedGraph.id !== effectiveGraph.id) {
-      resetDraft(effectiveGraph);
-    }
-  }, [committedGraph, effectiveGraph, resetDraft]);
-
-  // Shell is still the only "graph mutation" boundary.
-  const shell = useForgeFlowEditorShell({
-    committedGraph: committedGraph ?? effectiveGraph,
-    draftGraph: draftGraph ?? effectiveGraph,
-    applyDelta,
+  const shell = useSimpleForgeFlowEditor({
+    graph,
+    onChange: onSaveDebounced,
+    onChangeImmediate: onSaveImmediate,
     reactFlow,
     sessionStore,
   });
@@ -293,8 +273,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     showPathHighlight ? shell.selectedNodeId : null,
     shell.effectiveGraph
   );
-
-  const { addedNodeIds, modifiedNodeIds, addedEdgeIds, modifiedEdgeIds } = useDraftVisualIndicators();
 
   // Consume focus requests from workspace
   React.useEffect(() => {
@@ -334,8 +312,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
       const isStartNode = n.id === startId;
       const isEndNode = shell.endNodeIds.has(n.id);
-      const isDraftAdded = addedNodeIds.has(n.id);
-      const isDraftUpdated = modifiedNodeIds.has(n.id);
 
       const baseNodeData = (flowNode?.data ?? {}) as ForgeNode;
 
@@ -350,8 +326,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
             isInPath: inPath,
             isStartNode,
             isEndNode,
-            isDraftAdded,
-            isDraftUpdated,
           },
 
           // Read-only context
@@ -370,8 +344,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     flagSchema,
     resolvedGameStateFlags,
     layoutDirection,
-    addedNodeIds,
-    modifiedNodeIds,
     nodeDepths,
     showPathHighlight,
     shell.effectiveGraph.startNodeId,
@@ -408,8 +380,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
       const isInPath = edgesToSelectedNode.has(e.id);
       const isDimmed = hasSelection && !isInPath;
-      const isDraftAdded = addedEdgeIds.has(e.id);
-      const isDraftUpdated = modifiedEdgeIds.has(e.id);
 
       const stroke = edgeStrokeColor(e as any, sourceType);
 
@@ -442,16 +412,12 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
           isInPathToSelected: isInPath,
           isBackEdge,
           isDimmed,
-          isDraftAdded,
-          isDraftUpdated,
           insertElementTypes,
           sourceNode: sourceFlowNode,
         },
       } as any;
     });
   }, [
-    addedEdgeIds,
-    modifiedEdgeIds,
     edgesToSelectedNode,
     layoutDirection,
     showBackEdges,
@@ -475,6 +441,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
         showMiniMap={showMiniMap}
         autoOrganize={autoOrganize}
         isFocused={isFocused}
+        isSaving={isSaving}
         openYarnModal={openYarnModal}
         openPlayModal={openPlayModal}
         openCopilotChat={openCopilotChat}
@@ -506,6 +473,7 @@ function ForgeStoryletGraphEditorContent({
   showMiniMap,
   autoOrganize,
   isFocused,
+  isSaving,
   openYarnModal,
   openPlayModal,
   openCopilotChat,
@@ -521,7 +489,7 @@ function ForgeStoryletGraphEditorContent({
   className,
 }: {
   graph: ForgeGraphDoc | null;
-  shell: ReturnType<typeof useForgeFlowEditorShell>;
+  shell: ReturnType<typeof useSimpleForgeFlowEditor>;
   reactFlow: ReturnType<typeof useReactFlow>;
   nodesWithMeta: any[];
   edgesWithMeta: any[];
@@ -531,6 +499,7 @@ function ForgeStoryletGraphEditorContent({
   showMiniMap: boolean;
   autoOrganize: boolean;
   isFocused: boolean;
+  isSaving: boolean;
   openYarnModal: () => void;
   openPlayModal: () => void;
   openCopilotChat: () => void;
@@ -560,7 +529,7 @@ function ForgeStoryletGraphEditorContent({
     >
         {/* Toolbar with breadcrumbs and view toggles */}
         <div className={cn(
-          "flex items-center justify-between gap-2 px-3 py-2 border-t-1 bg-df-editor-bg flex-shrink-0 transition-colors",
+          "flex items-center gap-3 px-3 py-2 border-t-1 bg-df-editor-bg flex-shrink-0 transition-colors",
           isFocused ? "border-t-[var(--color-df-edge-choice-1)]" : "border-t-df-control-border"
         )}>
           <div className="flex items-center gap-2">
@@ -569,7 +538,18 @@ function ForgeStoryletGraphEditorContent({
               <Focus size={14} style={{ color: 'var(--color-df-edge-choice-1)' }} />
             )}
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Auto-save indicator */}
+          <div className="flex-1 flex items-center justify-center">
+            {isSaving && (
+              <div className="flex items-center gap-2 text-xs text-df-text-tertiary">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Saving...</span>
+              </div>
+            )}
+          </div>
+
+          <div className="ml-auto flex items-center gap-2">
             <GraphEditorToolbar 
               scope="storylet" 
               onCreateNew={handleCreateNewGraph}
@@ -744,15 +724,6 @@ function ForgeStoryletGraphEditorContent({
                                     ((sourceNode.data as any)?.type as ForgeNodeType) ?? 
                                     FORGE_NODE_TYPE.CHARACTER;
                   }
-
-                  // Debug logging (temporary)
-                  console.log('[EdgeDrop] Rendering menu', {
-                    fromNodeId: shell.edgeDropMenu.fromNodeId,
-                    sourceNode: sourceNode ? { id: sourceNode.id, type: sourceNode.type } : null,
-                    sourceNodeType,
-                    hasMenuComponent: !!storyletEdgeDropMenuByNodeType[sourceNodeType],
-                    availableTypes: Object.keys(storyletEdgeDropMenuByNodeType),
-                  });
 
                   const MenuComponent = storyletEdgeDropMenuByNodeType[sourceNodeType];
 

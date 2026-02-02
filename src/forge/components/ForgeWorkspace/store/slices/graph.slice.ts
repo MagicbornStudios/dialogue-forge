@@ -26,7 +26,10 @@ export interface GraphSlice {
 
 export interface GraphActions {
   setGraph: (id: string, graph: ForgeGraphDoc) => void
+  /** Set multiple graphs in one update to avoid excessive re-renders when loading a project. */
+  setGraphs: (graphs: ForgeGraphDoc[]) => void
   setGraphStatus: (id: string, status: "loading" | "ready" | "error") => void
+  removeGraph: (id: string) => void
   setActiveNarrativeGraphId: (id: string | null) => void
   setActiveStoryletGraphId: (id: string | null) => void
   ensureGraph: (
@@ -73,7 +76,23 @@ export function createGraphSlice(
         },
       }))
     },
-    
+
+    setGraphs: (graphs: ForgeGraphDoc[]) => {
+      if (graphs.length === 0) return
+      set((state) => {
+        const byId = { ...state.graphs.byId }
+        const statusById = { ...state.graphs.statusById }
+        for (const graph of graphs) {
+          const id = String(graph.id)
+          byId[id] = graph
+          statusById[id] = "ready"
+        }
+        return {
+          graphs: { ...state.graphs, byId, statusById },
+        }
+      })
+    },
+
     setGraphStatus: (id: string, status: "loading" | "ready" | "error") => {
       set((state) => ({
         graphs: {
@@ -81,6 +100,31 @@ export function createGraphSlice(
           statusById: { ...state.graphs.statusById, [id]: status },
         },
       }))
+    },
+
+    removeGraph: (id: string) => {
+      set((state) => {
+        if (!state.graphs.byId[id]) {
+          return state
+        }
+        const { [id]: _removedGraph, ...byId } = state.graphs.byId
+        const { [id]: _removedStatus, ...statusById } = state.graphs.statusById
+        const nextNarrativeId = state.activeNarrativeGraphId === id ? null : state.activeNarrativeGraphId
+        const nextStoryletId = state.activeStoryletGraphId === id ? null : state.activeStoryletGraphId
+        return {
+          graphs: {
+            ...state.graphs,
+            byId,
+            statusById,
+          },
+          activeNarrativeGraphId: nextNarrativeId,
+          activeStoryletGraphId: nextStoryletId,
+          breadcrumbHistoryByScope: {
+            narrative: state.breadcrumbHistoryByScope.narrative.filter((b) => b.graphId !== id),
+            storylet: state.breadcrumbHistoryByScope.storylet.filter((b) => b.graphId !== id),
+          },
+        }
+      })
     },
     
     setActiveNarrativeGraphId: (id: string | null) => {

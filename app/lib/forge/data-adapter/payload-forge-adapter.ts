@@ -6,7 +6,7 @@ import type { Project, Character, FlagSchema, ForgeGraph, GameState, Page } from
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
 import { ForgeFlagState, ForgeGameState, ForgeGameStateRecord } from '@/forge/types/forge-game-state';
 import type { ForgeCharacter } from '@/forge/types/characters';
-import { ForgePage } from '@/forge/types/narrative';
+import { ForgePage, type PageType } from '@/forge/types/narrative';
 
 /**
  * Helper to extract narrativeGraph ID from Project
@@ -113,6 +113,49 @@ function mapProject(project: Project): ForgeProjectSummary {
     narrativeGraph: extractNarrativeGraphId(project),
   };
 }
+
+function mapPage(doc: Page & { narrativeGraph?: number | { id: number } | null }): ForgePage {
+  const parentValue = doc.parent;
+  const parentId =
+    parentValue === null || parentValue === undefined
+      ? null
+      : typeof parentValue === 'number'
+        ? parentValue
+        : parentValue.id;
+
+  const dialogueGraphValue = doc.dialogueGraph;
+  const dialogueGraphId =
+    dialogueGraphValue === null || dialogueGraphValue === undefined
+      ? null
+      : typeof dialogueGraphValue === 'number'
+        ? dialogueGraphValue
+        : dialogueGraphValue.id;
+
+  const narrativeGraphValue = doc.narrativeGraph;
+  const narrativeGraphId =
+    narrativeGraphValue === null || narrativeGraphValue === undefined
+      ? null
+      : typeof narrativeGraphValue === 'number'
+        ? narrativeGraphValue
+        : narrativeGraphValue.id;
+
+  return {
+    id: doc.id,
+    pageType: doc.pageType as PageType,
+    title: doc.title,
+    summary: doc.summary ?? null,
+    order: doc.order,
+    project: typeof doc.project === 'number' ? doc.project : doc.project.id,
+    parent: parentId,
+    narrativeGraph: narrativeGraphId,
+    dialogueGraph: dialogueGraphId,
+    bookHeading: doc.bookHeading ?? null,
+    bookBody: doc.bookBody ?? null,
+    content: doc.content ?? null,
+    archivedAt: doc.archivedAt ?? null,
+    _status: doc._status as 'draft' | 'published' | null,
+  };
+}
 export function makePayloadForgeAdapter(opts?: {
   baseUrl?: string; // default: window.location.origin or 'http://localhost:3000'
 }): ForgeDataAdapter {
@@ -196,6 +239,25 @@ export function makePayloadForgeAdapter(opts?: {
       return mapForgeGraph(doc);
     },
 
+    async listPages(projectId: number, narrativeGraphId?: number | null): Promise<ForgePage[]> {
+      const where: Record<string, unknown> = {
+        project: {
+          equals: projectId,
+        },
+      };
+      if (typeof narrativeGraphId === 'number') {
+        where.narrativeGraph = {
+          equals: narrativeGraphId,
+        };
+      }
+      const result = await payload.find({
+        collection: PAYLOAD_COLLECTIONS.PAGES,
+        where,
+        limit: 1000,
+      });
+      return result.docs.map((doc) => mapPage(doc as Page));
+    },
+
     async createGraph(input: {
       projectId: number;
       kind: ForgeGraphKind;
@@ -234,6 +296,12 @@ export function makePayloadForgeAdapter(opts?: {
         data: patch,
       }) as ForgeGraph;
       return mapForgeGraph(doc);
+    },
+    async deleteGraph(graphId: number): Promise<void> {
+      await payload.delete({
+        collection: PAYLOAD_COLLECTIONS.FORGE_GRAPHS,
+        id: graphId,
+      });
     },
 
     async listCharacters(projectId: number): Promise<ForgeCharacter[]> {
@@ -344,44 +412,16 @@ export function makePayloadForgeAdapter(opts?: {
             collection: PAYLOAD_COLLECTIONS.PAGES,
             id: pageId,
         }) as Page;
-        
-        const parentValue = result.parent;
-        const parentId = parentValue === null || parentValue === undefined
-          ? null
-          : typeof parentValue === 'number'
-          ? parentValue
-          : parentValue.id;
-
-        const dialogueGraphValue = result.dialogueGraph;
-        const dialogueGraphId = dialogueGraphValue === null || dialogueGraphValue === undefined
-          ? null
-          : typeof dialogueGraphValue === 'number'
-          ? dialogueGraphValue
-          : dialogueGraphValue.id;
-
-        return {
-            id: result.id,
-            pageType: result.pageType as 'ACT' | 'CHAPTER' | 'PAGE',
-            title: result.title,
-            summary: result.summary ?? null,
-            order: result.order,
-            project: typeof result.project === 'number' ? result.project : result.project.id,
-            parent: parentId,
-            dialogueGraph: dialogueGraphId,
-            bookHeading: result.bookHeading ?? null,
-            bookBody: result.bookBody ?? null,
-            content: result.content ?? null,
-            archivedAt: result.archivedAt ?? null,
-            _status: result._status as 'draft' | 'published' | null,
-        };
+        return mapPage(result);
     },
     
     async createPage(input: {
         projectId: number;
-        pageType: 'ACT' | 'CHAPTER' | 'PAGE';
+        pageType: PageType;
         title: string;
         order: number;
         parent?: number | null;
+        narrativeGraph?: number | null;
     }): Promise<ForgePage> {
         const result = await payload.create({
             collection: PAYLOAD_COLLECTIONS.PAGES,
@@ -391,39 +431,11 @@ export function makePayloadForgeAdapter(opts?: {
                 title: input.title,
                 order: input.order,
                 parent: input.parent ?? null,
+                narrativeGraph: input.narrativeGraph ?? null,
                 _status: 'draft',
             },
         }) as Page;
-        
-        const parentValue = result.parent;
-        const parentId = parentValue === null || parentValue === undefined
-          ? null
-          : typeof parentValue === 'number'
-          ? parentValue
-          : parentValue.id;
-
-        const dialogueGraphValue = result.dialogueGraph;
-        const dialogueGraphId = dialogueGraphValue === null || dialogueGraphValue === undefined
-          ? null
-          : typeof dialogueGraphValue === 'number'
-          ? dialogueGraphValue
-          : dialogueGraphValue.id;
-
-        return {
-            id: result.id,
-            pageType: result.pageType as 'ACT' | 'CHAPTER' | 'PAGE',
-            title: result.title,
-            summary: result.summary ?? null,
-            order: result.order,
-            project: typeof result.project === 'number' ? result.project : result.project.id,
-            parent: parentId,
-            dialogueGraph: dialogueGraphId,
-            bookHeading: result.bookHeading ?? null,
-            bookBody: result.bookBody ?? null,
-            content: result.content ?? null,
-            archivedAt: result.archivedAt ?? null,
-            _status: result._status as 'draft' | 'published' | null,
-        };
+        return mapPage(result);
     },
     
     async updatePage(pageId: number, patch: Partial<ForgePage>): Promise<ForgePage> {
@@ -432,36 +444,7 @@ export function makePayloadForgeAdapter(opts?: {
             id: pageId,
             data: patch,
         }) as Page;
-        
-        const parentValue = result.parent;
-        const parentId = parentValue === null || parentValue === undefined
-          ? null
-          : typeof parentValue === 'number'
-          ? parentValue
-          : parentValue.id;
-
-        const dialogueGraphValue = result.dialogueGraph;
-        const dialogueGraphId = dialogueGraphValue === null || dialogueGraphValue === undefined
-          ? null
-          : typeof dialogueGraphValue === 'number'
-          ? dialogueGraphValue
-          : dialogueGraphValue.id;
-
-        return {
-            id: result.id,
-            pageType: result.pageType as 'ACT' | 'CHAPTER' | 'PAGE',
-            title: result.title,
-            summary: result.summary ?? null,
-            order: result.order,
-            project: typeof result.project === 'number' ? result.project : result.project.id,
-            parent: parentId,
-            dialogueGraph: dialogueGraphId,
-            bookHeading: result.bookHeading ?? null,
-            bookBody: result.bookBody ?? null,
-            content: result.content ?? null,
-            archivedAt: result.archivedAt ?? null,
-            _status: result._status as 'draft' | 'published' | null,
-        };
+        return mapPage(result);
     },
     
     async deletePage(pageId: number): Promise<void> {

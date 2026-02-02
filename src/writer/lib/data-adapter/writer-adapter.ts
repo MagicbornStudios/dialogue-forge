@@ -24,7 +24,7 @@ export type WriterThread = Thread & {
  */
 export interface WriterDataAdapter {
   // Unified page operations (works for all pageTypes: ACT, CHAPTER, PAGE)
-  listPages(projectId: number): Promise<WriterPageDoc[]>;
+  listPages(projectId: number, narrativeGraphId?: number | null): Promise<WriterPageDoc[]>;
   getPage(pageId: number): Promise<WriterPageDoc>;
   createPage(input: {
     projectId: number;
@@ -32,6 +32,7 @@ export interface WriterDataAdapter {
     title: string;
     order: number;
     parent?: number | null;
+    narrativeGraph?: number | null;
     bookBody?: string | null;
   }): Promise<WriterPageDoc>;
   updatePage(pageId: number, patch: Partial<WriterPageDoc>): Promise<WriterPageDoc>;

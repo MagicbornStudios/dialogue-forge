@@ -12,13 +12,9 @@ export const dynamic = 'force-static';
 export default function WriterApp() {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
-  const writerAdapter = makePayloadWriterAdapter({
-    baseUrl: 'http://localhost:3000',
-  });
-
-  const forgeDataAdapter = makePayloadForgeAdapter({
-    baseUrl: 'http://localhost:3000',
-  });
+  // Omit baseUrl so adapters use window.location.origin (correct when dev runs on 3001, etc.)
+  const writerAdapter = makePayloadWriterAdapter({});
+  const forgeDataAdapter = makePayloadForgeAdapter({});
 
   return (
     <div className="w-full h-screen flex flex-col">

@@ -8,6 +8,7 @@ export declare const PAYLOAD_COLLECTIONS: {
     readonly PROJECTS: "projects";
     readonly MEDIA: "media";
     readonly CHARACTERS: "characters";
+    readonly RELATIONSHIPS: "relationships";
     readonly DIALOGUES: "dialogues";
     readonly PAGES: "pages";
     readonly STORYLET_TEMPLATES: "storylet-templates";

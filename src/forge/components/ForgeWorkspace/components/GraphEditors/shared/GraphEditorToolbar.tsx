@@ -3,7 +3,7 @@
 import React from 'react';
 import { Plus, BookOpen, Layers } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip';
 import { cn } from '@/shared/lib/utils';
 
 interface GraphEditorToolbarProps {
@@ -23,24 +23,24 @@ export function GraphEditorToolbar({ scope, onCreateNew, className }: GraphEdito
   return (
     <div className={cn('flex items-center gap-2', className)}>
       {onCreateNew && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onCreateNew}
-                className="h-7 px-2 text-xs"
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                New {label}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Create a new {label.toLowerCase()}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onCreateNew}
+              className="h-7 px-2 text-xs"
+              title={`Create a new ${label.toLowerCase()}`}
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              New {label}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Create a new {label.toLowerCase()}</p>
+          </TooltipContent>
+        </Tooltip>
       )}
     </div>
   );

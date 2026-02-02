@@ -32,9 +32,9 @@ export type ForgePage = {
   bookBody?: string | null;
   content?: any; // JSON field for rich metadata
   archivedAt?: string | null;
-  _status?: 'draft' | 'published' | null;
   project: number;
   parent?: number | null; // References another Page (null for ACT)
+  narrativeGraph?: number | null; // Forge graph ID this page belongs to
   dialogueGraph?: number | null; // Only for PAGE type
 };
 

@@ -340,6 +340,11 @@ The Next.js app runs from the root directory. Configure Vercel as follows:
 3. **Type Safety**: Leverage TypeScript types and constants
 4. **Constants First**: Check `src/shared/types/constants.ts` before adding new string values
 5. **Component Naming**: V2 components use `V2` suffix (e.g., `NPCNodeV2`)
+6. **Forge Auto-Save**: Use `useGraphAutoSave` with `useSimpleForgeFlowEditor` (`onChangeImmediate`) for consistent save behavior
+7. **Forge Graph Deletion**: Delete graphs through `dataAdapter.deleteGraph` + `actions.removeGraph` to keep cache and breadcrumbs in sync
+8. **Forge Editor Context**: Ensure editor content components default `characters`/`flagSchema` when used downstream (e.g., NodeEditor)
+9. **Forge Node Drafts**: Use local node draft overrides for immediate editor feedback while saving remains debounced
+10. **Narrative Page Linking**: Use `dataAdapter.listPages` scoped by narrative graph and `PAGE_TYPE` constants for Act/Chapter/Page selection
 
 ## Quick Reference
 

@@ -85,9 +85,8 @@ const COLLAB_DOC_ID = 'main';
 
 const skipCollaborationInit =
   typeof window !== 'undefined' &&
-  // @ts-expect-error
   window.parent != null &&
-  window.parent.frames.right === window;
+  (window.parent.frames as unknown as Record<string, Window | undefined>).right === window;
 
 export default function Editor(): JSX.Element {
   const {historyState} = useSharedHistoryContext();
@@ -175,7 +174,11 @@ export default function Editor(): JSX.Element {
         <CommentPlugin
           providerFactory={isCollab ? createWebsocketProvider : undefined}
           commentsContainer={typeof document !== 'undefined' ? document.getElementById('comments-container') : null}
-          showCommentsButtonContainer={typeof document !== 'undefined' ? document.querySelector('.editor-shell') : null}
+          showCommentsButtonContainer={
+            typeof document !== 'undefined'
+              ? document.querySelector<HTMLElement>('.editor-shell')
+              : null
+          }
         />
         {isRichText ? (
           <>
@@ -211,7 +214,6 @@ export default function Editor(): JSX.Element {
               hasCellMerge={tableCellMerge}
               hasCellBackgroundColor={tableCellBackgroundColor}
               hasHorizontalScroll={tableHorizontalScroll}
-              hasNestedTables={hasNestedTables}
             />
             <TableCellResizer />
             <TableScrollShadowPlugin />

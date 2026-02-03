@@ -10,14 +10,14 @@ interface CodeBlockProps {
 
 export function CodeBlock({ code, language = 'typescript', className = '' }: CodeBlockProps) {
   return (
-    <div className={`bg-[#12121a] rounded border border-[#2a2a3e] overflow-hidden ${className}`}>
+    <div className={`bg-df-surface rounded border border-df-control-border overflow-hidden ${className}`}>
       <SyntaxHighlighter
         language={language}
         style={vscDarkPlus}
         customStyle={{
           margin: 0,
           padding: '1rem',
-          background: '#12121a',
+          background: 'var(--color-df-surface)',
           fontSize: '0.75rem',
           lineHeight: '1.5',
           borderRadius: 0,

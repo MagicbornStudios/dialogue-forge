@@ -201,7 +201,7 @@ const RelationshipGraphEditorBlank = forwardRef<
   }, [activeCharacterId, characters]);
 
   return (
-    <div className="h-full w-full min-h-[400px] overflow-auto rounded-lg border border-gray-300 bg-[#f5f5f5]">
+    <div className="h-full w-full min-h-[400px] overflow-auto rounded-lg border border-df-control-border bg-[#f5f5f5]">
       <div
         ref={paperElRef}
         className="min-w-[800px] min-h-[600px] w-full h-full"

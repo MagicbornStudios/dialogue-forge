@@ -9,6 +9,17 @@ export const VIDEO_MEDIA_KIND = {
 
 export type VideoMediaKind = (typeof VIDEO_MEDIA_KIND)[keyof typeof VIDEO_MEDIA_KIND];
 
+export interface ProjectSummary {
+  id: number;
+  name: string;
+  slug?: string | null;
+}
+
+export interface ProjectAdapter {
+  listProjects(): Promise<ProjectSummary[]>;
+  createProject(input: { name: string; description?: string | null }): Promise<ProjectSummary>;
+}
+
 export interface VideoTemplateWorkspaceTemplateSummary {
   id: string;
   name: string;

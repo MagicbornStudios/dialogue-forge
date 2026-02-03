@@ -192,7 +192,7 @@ export default function DropDown({
   useEffect(() => {
     const button = buttonRef.current;
     const dropDown = dropDownRef.current;
-    const zoom = calculateZoomLevel(dropDown, true);
+    const zoom = dropDown ? calculateZoomLevel(dropDown) : 1;
     if (showDropDown && button !== null && dropDown !== null) {
       const {top, left} = button.getBoundingClientRect();
       dropDown.style.top = `${top / zoom + button.offsetHeight + dropDownPadding}px`;

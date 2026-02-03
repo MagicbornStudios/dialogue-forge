@@ -21,7 +21,7 @@ export function NextNodeSelector({
 }: NextNodeSelectorProps) {
   return (
     <div>
-      <label className="text-[10px] text-gray-500 uppercase">{label}</label>
+      <label className="text-[10px] text-df-text-tertiary uppercase">{label}</label>
       <div className="flex items-center gap-2">
         {nextNodeId && onFocusNode && (
           <button
@@ -34,13 +34,13 @@ export function NextNodeSelector({
             className="transition-colors cursor-pointer flex-shrink-0 group"
             title={`Focus on node: ${nextNodeId}`}
           >
-            <EdgeIcon size={16} color="#2a2a3e" className="group-hover:[&_circle]:fill-[#2a2a3e] group-hover:[&_line]:stroke-[#2a2a3e] transition-colors" />
+            <EdgeIcon size={16} className="text-df-control-border group-hover:[&_circle]:fill-df-control-border group-hover:[&_line]:stroke-df-control-border transition-colors" />
           </button>
         )}
         <select
           value={nextNodeId || ''}
           onChange={(event) => onUpdate({ nextNodeId: event.target.value || undefined })}
-          className="flex-1 bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1 text-sm text-gray-200 outline-none"
+          className="flex-1 bg-df-surface border border-df-control-border rounded px-2 py-1 text-sm text-df-text-primary outline-none"
         >
           <option value="">— End —</option>
           {Object.keys(graph.flow?.nodes ?? {}).filter(id => id !== nodeId).map(id => (

@@ -6,7 +6,9 @@ import { calculateDelta } from '@/shared/lib/draft/draft-helpers';
 import type { DraftPendingPageCreation } from '@/shared/types/draft';
 import { PAGE_TYPE, type ForgePage } from '@/shared/types/narrative';
 import { createDraftSlice, type DraftSlice } from '@/shared/store/draft-slice';
-import type { WriterWorkspaceState } from '../writer-workspace-store';
+import type { WriterWorkspaceState } from '../writer-workspace-types';
+import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
+import type { WriterForgeDataAdapter } from '@/writer/types/forge-data-adapter';
 
 export type WriterDraftDelta = ReturnType<typeof calculateDelta>;
 
@@ -52,12 +54,29 @@ export function createWriterDraftSlice(
     };
   };
 
-  return createDraftSlice<WriterDraftSlice, ForgeGraphDoc, WriterDraftDelta, GraphValidationResult>(set, get, {
+  const setDraft = set as unknown as Parameters<
+    typeof createDraftSlice<
+      WriterDraftSlice,
+      ForgeGraphDoc,
+      WriterDraftDelta,
+      GraphValidationResult
+    >
+  >[0];
+  const getDraft = get as unknown as Parameters<
+    typeof createDraftSlice<
+      WriterDraftSlice,
+      ForgeGraphDoc,
+      WriterDraftDelta,
+      GraphValidationResult
+    >
+  >[1];
+
+  return createDraftSlice<WriterDraftSlice, ForgeGraphDoc, WriterDraftDelta, GraphValidationResult>(setDraft, getDraft, {
     initialGraph: initialGraph ?? null,
     validateDraft: (draft) => validateNarrativeGraph(draft),
     onCommitDraft: async (draft, deltas) => {
-      const dataAdapter = get().dataAdapter;
-      const forgeDataAdapter = get().forgeDataAdapter;
+      const dataAdapter = get().dataAdapter as WriterDataAdapter | undefined;
+      const forgeDataAdapter = get().forgeDataAdapter as WriterForgeDataAdapter | undefined;
       if (!forgeDataAdapter) {
         return draft;
       }

@@ -33,6 +33,10 @@ dialogue-forge/
 └── package.json            # Main package config
 ```
 
+### Target Monorepo Layout (Planned)
+
+See docs/conventions/repo-structure.md and docs/architecture/monorepo.md for the target packages + apps layout. The host app will live under apps/host and domains will move under packages/*.
+
 ## Critical Coding Preferences
 
 ### ⚠️ NEVER Use String Literals for Types
@@ -548,6 +552,14 @@ When working on any domain, **ALWAYS** review these documents first:
 3. **Domain-specific issues**:
    - `src/video/VIDEO_ISSUES.md` - Video bugs and TODOs
    - (Future: `src/forge/FORGE_ISSUES.md`, `src/writer/WRITER_ISSUES.md`)
+4. **Monorepo conventions (when doing structural work)**:
+   - `docs/conventions/repo-structure.md`
+   - `docs/architecture/monorepo.md`
+   - `docs/plans/monorepo-migration.md`
+5. **Styling and consistency (when touching UI/CSS/theming)**:
+   - `docs/agents/styling.md` — agent loop (read before/after styling changes)
+   - `docs/conventions/styling.md` — where themes and context live
+   - `docs/plans/styling-cleanup-audit.md` — non-Tailwind and stale files to fix or remove
 
 ### Updating Documentation
 
@@ -588,6 +600,39 @@ After coding:
 - Link related sections
 - Keep changelog chronological
 - Keep roadmap priorities current
+
+## Agent Prompting Protocol
+
+When writing or updating agent prompts (including per-domain AGENTS.md), follow this structure:
+
+1. **Clear completion criteria** (explicit checklist).
+2. **Incremental goals** (phases or steps, each independently verifiable).
+3. **Self-correction loop** (TDD when possible).
+4. **Output token**: include `<promise>COMPLETE</promise>` only when all criteria are met.
+
+### TDD Default
+
+When feasible:
+1. Write failing tests.
+2. Implement the change.
+3. Run tests.
+4. Fix failures.
+5. Refactor if needed.
+6. Repeat until green.
+
+### Codex Navigation Protocol
+
+1. Start at `src/index.ts` (or later `packages/*/src/index.ts`) to find entrypoints.
+2. Use ripgrep to locate routes and mounts:
+   - `rg "video" app src`
+   - `rg "VideoWorkspace" -S`
+   - `rg "export \\* from" src packages`
+3. Before editing a domain:
+   - open that domain's `AGENTS.md`
+   - follow "Critical invariants" and "Known footguns"
+4. After refactors:
+   - run typecheck/build
+   - update AGENTS.md with any new footguns
 
 ## Questions?
 

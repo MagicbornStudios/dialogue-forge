@@ -1,0 +1,84 @@
+# Monorepo Architecture (Target)
+
+This document defines the target monorepo architecture and package boundaries. It is the reference for the migration plan in docs/plans/monorepo-migration.md.
+
+## Goals
+
+- Domain packages can build and publish independently.
+- Host app consumes packages directly from the workspace.
+- Boundaries are enforced via tooling and TypeScript project references.
+- Adapters are contracts defined in packages and implemented by the host.
+
+## Package Dependency Rules
+
+- shared: no internal dependencies.
+- runtime: shared only.
+- ai: shared only.
+- forge/writer/video/characters: shared + runtime only.
+- dialogue-forge: re-exports from other packages.
+- host app: may import from any package.
+
+## Target Package Graph
+
+```
+apps/host
+  -> packages/dialogue-forge
+  -> packages/forge
+  -> packages/writer
+  -> packages/video
+  -> packages/characters
+  -> packages/runtime
+  -> packages/shared
+  -> packages/ai
+
+packages/dialogue-forge
+  -> packages/forge
+  -> packages/writer
+  -> packages/video
+  -> packages/characters
+  -> packages/runtime
+  -> packages/shared
+  -> packages/ai
+
+packages/forge|writer|video|characters
+  -> packages/shared
+  -> packages/runtime
+
+packages/runtime
+  -> packages/shared
+
+packages/ai
+  -> packages/shared
+
+packages/shared
+  -> (no internal deps)
+```
+
+## Package Contents
+
+Each package should include:
+
+- package.json with explicit exports
+- src/ (source)
+- dist/ (build output)
+- tsconfig.json (local build)
+- tsconfig.build.json (emit)
+
+## Umbrella Package
+
+The @magicborn/dialogue-forge package should re-export public APIs from domain packages to preserve existing consumer imports.
+
+## Boundary Enforcement
+
+- Dependency-cruiser or similar tooling should enforce import rules.
+- TypeScript project references should prevent invalid cross-package imports.
+
+## Host App
+
+The host app owns:
+
+- Next.js routes and UI
+- PayloadCMS and other external integrations
+- Adapter implementations
+
+Domain packages must not import from the host app.

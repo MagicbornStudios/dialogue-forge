@@ -643,7 +643,7 @@ function ForgeStoryletGraphEditorContent({
               deleteKeyCode={['Delete', 'Backspace']}
               tabIndex={0}
             >
-              <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#1a1a2e" />
+              <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--color-df-canvas-grid)" />
 
               <GraphMiniMap showMiniMap={showMiniMap} />
 

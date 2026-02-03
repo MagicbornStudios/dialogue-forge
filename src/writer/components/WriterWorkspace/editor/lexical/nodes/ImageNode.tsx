@@ -226,9 +226,19 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
                   imgNode.__caption.update(
                     () => {
                       const editor = $getEditor();
+                      const figcaptionDocument =
+                        typeof document !== 'undefined'
+                          ? document.implementation.createHTMLDocument('')
+                          : figcaption.ownerDocument;
+                      if (figcaptionDocument) {
+                        figcaptionDocument.body.innerHTML = figcaption.innerHTML;
+                      }
                       $insertGeneratedNodes(
                         editor,
-                        $generateNodesFromDOM(editor, figcaption),
+                        $generateNodesFromDOM(
+                          editor,
+                          figcaptionDocument ?? figcaption.ownerDocument,
+                        ),
                         $selectAll(),
                       );
                       $setSelection(null);

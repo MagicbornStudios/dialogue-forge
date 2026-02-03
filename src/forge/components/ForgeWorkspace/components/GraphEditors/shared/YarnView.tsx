@@ -67,9 +67,9 @@ export function YarnView({ graph, onExport, onImport, onChange }: YarnViewProps)
   };
   
   return (
-    <main className="flex-1 flex flex-col bg-[#0d0d14] overflow-hidden">
-      <div className="border-b border-[#1a1a2e] px-4 py-2 flex items-center justify-between flex-shrink-0">
-        <span className="text-sm text-gray-400">Yarn Spinner {isEditing ? 'Editor' : 'View'}</span>
+    <main className="flex-1 flex flex-col bg-df-canvas-bg overflow-hidden">
+      <div className="border-b border-df-editor-border px-4 py-2 flex items-center justify-between flex-shrink-0">
+        <span className="text-sm text-df-text-secondary">Yarn Spinner {isEditing ? 'Editor' : 'View'}</span>
         <div className="flex items-center gap-2">
           {!isEditing ? (
             <>
@@ -77,7 +77,7 @@ export function YarnView({ graph, onExport, onImport, onChange }: YarnViewProps)
                 <>
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-3 py-1.5 bg-[#2a2a3e] hover:bg-[#3a3a4e] text-gray-300 text-sm rounded flex items-center gap-2"
+                    className="px-3 py-1.5 bg-df-control-bg hover:bg-df-control-hover text-df-text-secondary text-sm rounded flex items-center gap-2"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -91,7 +91,7 @@ export function YarnView({ graph, onExport, onImport, onChange }: YarnViewProps)
               )}
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-3 py-1.5 bg-[#2a2a3e] hover:bg-[#3a3a4e] text-gray-300 text-sm rounded flex items-center gap-2"
+                className="px-3 py-1.5 bg-df-control-bg hover:bg-df-control-hover text-df-text-secondary text-sm rounded flex items-center gap-2"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -115,7 +115,7 @@ export function YarnView({ graph, onExport, onImport, onChange }: YarnViewProps)
             <>
               <button
                 onClick={handleSave}
-                className="px-3 py-1.5 bg-[#22c55e] hover:bg-[#16a34a] text-white text-sm rounded flex items-center gap-2"
+                className="px-3 py-1.5 bg-df-success hover:bg-df-success text-df-text-primary text-sm rounded flex items-center gap-2"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
@@ -126,7 +126,7 @@ export function YarnView({ graph, onExport, onImport, onChange }: YarnViewProps)
               </button>
               <button
                 onClick={handleCancel}
-                className="px-3 py-1.5 bg-[#2a2a3e] hover:bg-[#3a3a4e] text-gray-300 text-sm rounded flex items-center gap-2"
+                className="px-3 py-1.5 bg-df-control-bg hover:bg-df-control-hover text-df-text-secondary text-sm rounded flex items-center gap-2"
               >
                 Cancel
               </button>
@@ -142,11 +142,11 @@ export function YarnView({ graph, onExport, onImport, onChange }: YarnViewProps)
           <textarea
             value={yarnText}
             onChange={(e) => setYarnText(e.target.value)}
-            className="w-full h-full font-mono text-sm text-gray-300 bg-[#08080c] rounded-lg p-4 border border-[#1a1a2e] resize-none focus:outline-none focus:border-[#e94560]"
+            className="w-full h-full font-mono text-sm text-df-text-secondary bg-df-canvas-bg rounded-lg p-4 border border-df-editor-border resize-none focus:outline-none focus:border-df-error"
             spellCheck={false}
           />
         ) : (
-          <pre className="font-mono text-sm text-gray-300 whitespace-pre-wrap bg-[#08080c] rounded-lg p-4 border border-[#1a1a2e]">
+          <pre className="font-mono text-sm text-df-text-secondary whitespace-pre-wrap bg-df-canvas-bg rounded-lg p-4 border border-df-editor-border">
             {yarnText}
           </pre>
         )}

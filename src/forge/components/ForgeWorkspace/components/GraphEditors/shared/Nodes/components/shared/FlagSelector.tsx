@@ -29,7 +29,7 @@ function getFlagColorClasses(flagType: string) {
       return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
     case 'dialogue':
     default:
-      return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+      return 'bg-df-control-bg text-df-text-secondary border-df-control-border';
   }
 }
 
@@ -173,7 +173,7 @@ export function FlagSelector({
     <div className="relative" ref={containerRef}>
       {/* Tags container */}
       <div 
-        className="w-full min-h-[30px] bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1.5 flex flex-wrap gap-1.5 items-center cursor-text"
+        className="w-full min-h-[30px] bg-df-surface border border-df-control-border rounded px-2 py-1.5 flex flex-wrap gap-1.5 items-center cursor-text"
         onClick={() => inputRef.current?.focus()}
       >
         {/* Selected flag tags */}
@@ -198,8 +198,8 @@ export function FlagSelector({
                   place="top"
                   border="2px solid rgba(255, 255, 255, 0.2)"
                   style={{
-                    backgroundColor: '#000000',
-                    color: '#ffffff',
+                    backgroundColor: 'var(--color-df-elevated)',
+                    color: 'var(--color-df-text-primary)',
                     fontFamily: 'monospace',
                     fontSize: '11px',
                     padding: '10px',
@@ -209,10 +209,10 @@ export function FlagSelector({
                     zIndex: 10000,
                   }}
                 >
-                  <div style={{ fontFamily: 'monospace', fontWeight: 600, color: '#ffffff', marginBottom: '6px', fontSize: '12px', textTransform: 'uppercase' }}>
+                  <div style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--color-df-text-primary)', marginBottom: '6px', fontSize: '12px', textTransform: 'uppercase' }}>
                     {flag.type} Flag
                   </div>
-                  <div style={{ fontFamily: 'monospace', fontSize: '11px', color: '#ffffff', lineHeight: '1.5' }}>
+                  <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--color-df-text-primary)', lineHeight: '1.5' }}>
                     {description}
                   </div>
                 </Tooltip>
@@ -238,7 +238,7 @@ export function FlagSelector({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onFocus={() => setShowDropdown(true)}
-          className="flex-1 min-w-[120px] bg-transparent text-sm text-gray-200 outline-none font-mono placeholder:text-gray-500"
+          className="flex-1 min-w-[120px] bg-transparent text-sm text-df-text-primary outline-none font-mono placeholder:text-gray-500"
           placeholder={value.length === 0 ? placeholder : ''}
         />
         
@@ -258,8 +258,8 @@ export function FlagSelector({
         place="left"
         border="2px solid rgba(255, 255, 255, 0.2)"
         style={{
-          backgroundColor: '#000000',
-          color: '#ffffff',
+          backgroundColor: 'var(--color-df-elevated)',
+          color: 'var(--color-df-text-primary)',
           fontFamily: 'monospace',
           fontSize: '12px',
           padding: '12px',
@@ -270,10 +270,10 @@ export function FlagSelector({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-          <Info size={16} style={{ color: '#ffffff', flexShrink: 0, marginTop: '2px' }} />
+          <Info size={16} style={{ color: 'var(--color-df-text-primary)', flexShrink: 0, marginTop: '2px' }} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'monospace', fontWeight: 600, color: '#ffffff', marginBottom: '8px', fontSize: '14px' }}>FLAGS</div>
-            <div style={{ fontFamily: 'monospace', fontSize: '12px', color: '#ffffff', lineHeight: '1.6' }}>
+            <div style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--color-df-text-primary)', marginBottom: '8px', fontSize: '14px' }}>FLAGS</div>
+            <div style={{ fontFamily: 'monospace', fontSize: '12px', color: 'var(--color-df-text-primary)', lineHeight: '1.6' }}>
               <div>Game state variables that persist across dialogue sessions.</div>
               <div style={{ marginTop: '4px' }}>Use to track quest progress, achievements, items, stats, and more.</div>
               <div style={{ marginTop: '4px' }}>Flags can be checked in conditions to control dialogue flow.</div>
@@ -284,7 +284,7 @@ export function FlagSelector({
       
       {/* Dropdown */}
       {showDropdown && flagSchema && filteredFlags.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg shadow-xl max-h-64 overflow-y-auto">
+        <div className="absolute z-50 mt-1 w-full bg-df-elevated border border-df-control-border rounded-lg shadow-xl max-h-64 overflow-y-auto">
           {Object.entries(flagsByCategory).map(([category, flags]) => (
             <div key={category}>
               <div className="px-3 py-1.5 text-[10px] text-gray-500 uppercase border-b border-[#2a2a3e] bg-[#12121a]">
@@ -296,8 +296,8 @@ export function FlagSelector({
                   type="button"
                   onClick={() => handleAddFlag(flag.id)}
                   onMouseEnter={() => setFocusedIndex(flags.indexOf(flag))}
-                  className={`w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-[#2a2a3e] flex items-center justify-between ${
-                    focusedIndex === flags.indexOf(flag) ? 'bg-[#2a2a3e]' : ''
+                  className={`w-full text-left px-3 py-2 text-sm text-df-text-secondary hover:bg-df-control-hover flex items-center justify-between ${
+                    focusedIndex === flags.indexOf(flag) ? 'bg-df-control-hover' : ''
                   }`}
                 >
                   <div>

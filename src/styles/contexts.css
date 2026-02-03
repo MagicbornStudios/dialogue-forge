@@ -1,0 +1,233 @@
+/* ==========================================================================
+   Domain context theming (data-domain)
+   Shared tokens: --context-accent, --context-glow, --context-ring
+   Set per-domain from theme vars (--color-df-domain-*) in themes.css
+   ========================================================================== */
+
+/* ---- Shared ---- */
+:root {
+  --context-accent: var(--color-df-border-hover);
+  --context-glow: color-mix(in oklab, var(--context-accent) 35%, transparent);
+  --context-ring: color-mix(in oklab, var(--context-accent) 60%, transparent);
+}
+
+[data-domain] {
+  --context-glow: color-mix(in oklab, var(--context-accent) 35%, transparent);
+  --context-ring: color-mix(in oklab, var(--context-accent) 60%, transparent);
+}
+
+[data-domain][data-focused="false"] {
+  --context-accent: var(--color-df-border-hover);
+}
+
+/* ---- Forge ---- */
+[data-domain="forge"] {
+  --context-accent: var(--color-df-domain-forge);
+}
+
+[data-domain="forge"][data-editor-scope="storylet"] {
+  --context-accent: var(--color-df-edge-choice-1);
+}
+
+[data-domain="forge"][data-context-node-type="ACT"] {
+  --context-accent: var(--node-act-accent);
+}
+
+[data-domain="forge"][data-context-node-type="CHAPTER"] {
+  --context-accent: var(--node-chapter-accent);
+}
+
+[data-domain="forge"][data-context-node-type="PAGE"] {
+  --context-accent: var(--node-page-accent);
+}
+
+[data-domain="forge"][data-context-node-type="CHARACTER"] {
+  --context-accent: var(--node-npc-accent);
+}
+
+[data-domain="forge"][data-context-node-type="PLAYER"] {
+  --context-accent: var(--node-player-accent);
+}
+
+[data-domain="forge"][data-context-node-type="CONDITIONAL"] {
+  --context-accent: var(--node-conditional-accent);
+}
+
+[data-domain="forge"][data-context-node-type="STORYLET"] {
+  --context-accent: var(--node-storylet-accent);
+}
+
+[data-domain="forge"][data-context-node-type="DETOUR"] {
+  --context-accent: var(--node-detour-accent);
+}
+
+[data-domain="forge"][data-context-node-type="JUMP"] {
+  --context-accent: var(--color-df-warning);
+}
+
+[data-domain="forge"][data-context-node-type="END"] {
+  --context-accent: var(--color-df-text-tertiary);
+}
+
+/* ---- Writer ---- */
+[data-domain="writer"] {
+  --context-accent: var(--color-df-domain-writer);
+}
+
+[data-domain="writer"][data-context-node-type="PAGE"] {
+  --context-accent: var(--node-page-accent);
+}
+
+/* ---- AI ---- */
+[data-domain="ai"] {
+  --context-accent: var(--color-df-domain-ai);
+}
+
+[data-domain="ai"][data-context-node-type="request"] {
+  --context-accent: var(--color-df-info);
+}
+
+[data-domain="ai"][data-context-node-type="response"] {
+  --context-accent: var(--color-df-success);
+}
+
+/* ---- Video ---- */
+[data-domain="video"] {
+  --context-accent: var(--color-df-domain-video);
+  --color-df-video: var(--color-df-domain-video);
+  --color-df-video-bg: color-mix(in oklab, var(--color-df-domain-video) 25%, var(--color-df-surface));
+  --color-df-video-border: color-mix(in oklab, var(--color-df-domain-video) 70%, var(--color-df-control-border));
+  --color-df-video-hover: color-mix(in oklab, var(--color-df-domain-video) 90%, white);
+  --color-df-video-active: color-mix(in oklab, var(--color-df-domain-video) 95%, white);
+  --video-canvas-bg: var(--color-df-canvas-bg);
+  --video-canvas-grid: var(--color-df-canvas-grid);
+  --video-canvas-border: var(--color-df-control-border);
+  --video-layer-bg: var(--color-df-surface);
+  --video-layer-border: var(--color-df-control-border);
+  --video-layer-selected: var(--color-df-video);
+  --video-layer-hover: color-mix(in oklab, var(--color-df-video) 40%, var(--color-df-control-bg));
+  --video-layer-handle: var(--color-df-video);
+  --video-timeline-bg: var(--color-df-canvas-bg);
+  --video-timeline-ruler: var(--color-df-control-border);
+  --video-timeline-playhead: var(--color-df-video);
+  --video-timeline-track: var(--color-df-surface);
+  --video-inspector-bg: var(--color-df-surface);
+  --video-inspector-border: var(--color-df-control-border);
+  --video-inspector-label: var(--color-df-text-secondary);
+}
+
+/* Video: panel border hovers */
+[data-domain="video"] .border-r { position: relative; }
+[data-domain="video"] .border-r::after {
+  content: ''; position: absolute; inset-block: 0; right: -1px; width: 1px;
+  background: var(--context-accent); opacity: 0; transition: opacity 200ms; pointer-events: none;
+}
+[data-domain="video"] .border-r:hover::after { opacity: 0.4; }
+
+[data-domain="video"] .border-l::before {
+  content: ''; position: absolute; inset-block: 0; left: -1px; width: 1px;
+  background: var(--context-accent); opacity: 0; transition: opacity 200ms; pointer-events: none;
+}
+[data-domain="video"] .border-l:hover::before { opacity: 0.4; }
+
+[data-domain="video"] .border-t::before {
+  content: ''; position: absolute; inset-inline: 0; top: -1px; height: 1px;
+  background: var(--context-accent); opacity: 0; transition: opacity 200ms; pointer-events: none;
+}
+[data-domain="video"] .border-t:hover::before { opacity: 0.4; }
+
+[data-domain="video"] .border-b::after {
+  content: ''; position: absolute; inset-inline: 0; bottom: -1px; height: 1px;
+  background: var(--context-accent); opacity: 0; transition: opacity 200ms; pointer-events: none;
+}
+[data-domain="video"] .border-b:hover::after { opacity: 0.4; }
+
+[data-domain="video"] [data-state="on"] {
+  border-left-color: var(--context-accent) !important;
+}
+
+[data-domain="video"] .toolbar-button-active {
+  background: var(--color-df-video-bg);
+  color: var(--color-df-video);
+  border-color: var(--color-df-video-border);
+}
+
+[data-domain="video"] .toolbar-button-active:hover {
+  background: color-mix(in oklab, var(--color-df-video-bg) 80%, var(--color-df-video));
+  border-color: var(--color-df-video-hover);
+}
+
+/* Video: utility classes */
+.video-canvas { background: var(--video-canvas-bg); position: relative; }
+
+.video-canvas-grid {
+  background-image:
+    linear-gradient(var(--video-canvas-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--video-canvas-grid) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.video-layer-selected {
+  outline: 2px solid var(--video-layer-selected);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 4px var(--context-glow);
+}
+
+.video-layer-hover {
+  outline: 1px solid var(--video-layer-hover);
+  outline-offset: -1px;
+}
+
+.video-resize-handle {
+  position: absolute; width: 8px; height: 8px;
+  background: var(--video-layer-handle);
+  border: 1px solid var(--video-canvas-bg);
+  border-radius: 2px; cursor: pointer; z-index: 10;
+}
+
+.video-resize-handle:hover {
+  background: var(--color-df-video-hover);
+  transform: scale(1.2);
+}
+
+.video-timeline {
+  background: var(--video-timeline-bg);
+  border-top: 1px solid var(--color-df-control-border);
+}
+
+.video-timeline-ruler {
+  background: var(--video-timeline-bg);
+  border-bottom: 1px solid var(--video-timeline-ruler);
+}
+
+.video-timeline-playhead {
+  background: var(--video-timeline-playhead);
+  box-shadow: 0 0 8px var(--context-glow);
+}
+
+.video-timeline-track {
+  background: var(--video-timeline-track);
+  border: 1px solid var(--video-layer-border);
+  border-radius: 2px;
+}
+
+.video-timeline-track:hover {
+  border-color: var(--video-layer-hover);
+}
+
+.video-timeline-track-selected {
+  border-color: var(--video-layer-selected);
+  box-shadow: 0 0 0 2px var(--context-glow);
+}
+
+.video-property-inspector { background: var(--video-inspector-bg); }
+
+.video-property-label {
+  color: var(--video-inspector-label);
+  font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+/* ---- Character ---- */
+[data-domain="character"] {
+  --context-accent: var(--color-df-domain-character);
+}

@@ -320,7 +320,7 @@ export function getBaseOptions(editor: LexicalEditor, showModal: ShowModal) {
       onSelect: () =>
         editor.dispatchCommand(INSERT_IMAGE_COMMAND, {
           altText: 'Cat typing on a laptop',
-          src: catTypingGif,
+          src: typeof catTypingGif === 'string' ? catTypingGif : catTypingGif.src,
         }),
     }),
     new ComponentPickerOption('Image', {

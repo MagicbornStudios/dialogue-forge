@@ -14,6 +14,8 @@ export * from './templates/compile/frames-to-inputs';
 export * from './templates/compile/frames-to-template-inputs';
 export * from './templates/compile/compile-composition';
 export * from './templates/compile/compile-template-overrides';
+export * from './workspace/VideoWorkspace';
+export * from './workspace/VideoWorkspaceTwick';
 export * from './workspace/VideoTemplateWorkspace';
 export * from './workspace/video-template-workspace-actions';
 export * from './workspace/video-template-workspace-contracts';

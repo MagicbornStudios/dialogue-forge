@@ -44,7 +44,7 @@ export function ConditionalNodeFields({
     <>
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-[10px] text-gray-500 uppercase">Conditional Blocks</label>
+          <label className="text-[10px] text-df-text-tertiary uppercase">Conditional Blocks</label>
         </div>
         
         {node.conditionalBlocks ? (
@@ -62,25 +62,25 @@ export function ConditionalNodeFields({
               
               const blockTypeStyles = {
                 if: {
-                  bg: 'bg-[#0a0a0a]',
-                  border: 'border-[#1a1a1a]',
-                  tagBg: 'bg-black',
-                  tagText: 'text-white',
-                  text: 'text-gray-100'
+                  bg: 'bg-df-canvas-bg',
+                  border: 'border-df-control-border',
+                  tagBg: 'bg-df-surface',
+                  tagText: 'text-df-text-primary',
+                  text: 'text-df-text-secondary'
                 },
                 elseif: {
-                  bg: 'bg-[#0f0f0f]',
-                  border: 'border-[#1f1f1f]',
-                  tagBg: 'bg-black',
-                  tagText: 'text-white',
-                  text: 'text-gray-200'
+                  bg: 'bg-df-control-bg',
+                  border: 'border-df-control-border',
+                  tagBg: 'bg-df-surface',
+                  tagText: 'text-df-text-primary',
+                  text: 'text-df-text-secondary'
                 },
                 else: {
-                  bg: 'bg-[#141414]',
-                  border: 'border-[#242424]',
-                  tagBg: 'bg-black',
-                  tagText: 'text-white',
-                  text: 'text-gray-200'
+                  bg: 'bg-df-surface',
+                  border: 'border-df-control-border',
+                  tagBg: 'bg-df-surface',
+                  tagText: 'text-df-text-primary',
+                  text: 'text-df-text-secondary'
                 }
               };
               const styles = blockTypeStyles[block.type];
@@ -121,7 +121,7 @@ export function ConditionalNodeFields({
                           }
                           setExpandedConditions(newExpanded);
                         }}
-                        className="text-gray-500 hover:text-gray-300 transition-colors"
+                        className="text-df-text-tertiary hover:text-df-text-secondary transition-colors"
                       >
                         <Maximize2 size={12} className={`transition-transform ${shouldExpand ? 'rotate-180' : ''}`} />
                       </button>
@@ -134,7 +134,7 @@ export function ConditionalNodeFields({
                           onUpdate({ conditionalBlocks: newBlocks.length > 0 ? newBlocks : undefined });
                         }
                       }}
-                      className="text-gray-500 hover:text-red-400"
+                      className="text-df-text-tertiary hover:text-red-400"
                       title="Remove block"
                     >
                       <X size={14} />
@@ -153,7 +153,7 @@ export function ConditionalNodeFields({
                         newBlocks[idx] = { ...block, speaker: e.target.value };
                         onUpdate({ conditionalBlocks: newBlocks });
                       }}
-                      className="flex-1 bg-[#0d0d14] border border-[#2a2a3e] rounded px-2 py-1 text-xs text-gray-300 outline-none"
+                      className="flex-1 bg-df-canvas-bg border border-df-control-border rounded px-2 py-1 text-xs text-df-text-secondary outline-none"
                       placeholder="Custom speaker name (optional)"
                     />
                   </div>
@@ -165,7 +165,7 @@ export function ConditionalNodeFields({
                       newBlocks[idx] = { ...block, content: e.target.value };
                       onUpdate({ conditionalBlocks: newBlocks });
                     }}
-                    className={`w-full bg-[#0d0d14] border rounded px-2 py-1 text-xs ${styles.text} outline-none min-h-[50px] resize-y`}
+                    className={`w-full bg-df-canvas-bg border rounded px-2 py-1 text-xs ${styles.text} outline-none min-h-[50px] resize-y`}
                     style={{ borderColor: styles.border.replace('border-', '#') }}
                     placeholder="Dialogue content..."
                   />
@@ -173,7 +173,7 @@ export function ConditionalNodeFields({
                   {block.type !== 'else' && (
                     <>
                       <div className="flex items-center justify-between">
-                        <label className="text-[9px] text-gray-500 uppercase">Condition</label>
+                        <label className="text-[9px] text-df-text-tertiary uppercase">Condition</label>
                         {showValidation && (
                           <button
                             onClick={() => {
@@ -185,7 +185,7 @@ export function ConditionalNodeFields({
                               }
                               setDismissedConditions(newDismissed);
                             }}
-                            className="text-[9px] text-gray-500 hover:text-gray-400"
+                            className="text-[9px] text-df-text-tertiary hover:text-df-text-secondary"
                           >
                             {dismissedConditions.has(block.id) ? 'Show' : 'Hide'} validation
                           </button>
@@ -214,7 +214,7 @@ export function ConditionalNodeFields({
                           }}
                           placeholder="e.g., $reputation > 10"
                           className={`w-full bg-[#0d0d14] border rounded px-2 py-1 text-xs text-gray-300 font-mono outline-none transition-colors ${
-                            hasError ? 'border-red-500' : hasWarning ? 'border-yellow-500' : 'border-[#2a2a3e]'
+                            hasError ? 'border-df-error' : hasWarning ? 'border-df-warning' : 'border-df-control-border'
                           }`}
                           flagSchema={flagSchema}
                         />
@@ -242,7 +242,7 @@ export function ConditionalNodeFields({
                   });
                   onUpdate({ conditionalBlocks: newBlocks });
                 }}
-                className="text-xs px-2 py-1 bg-[#12121a] border border-[#2a2a3e] rounded text-gray-400 hover:text-gray-200"
+                className="text-xs px-2 py-1 bg-df-surface border border-df-control-border rounded text-df-text-secondary hover:text-df-text-primary"
               >
                 + Add If
               </button>
@@ -258,7 +258,7 @@ export function ConditionalNodeFields({
                   });
                   onUpdate({ conditionalBlocks: newBlocks });
                 }}
-                className="text-xs px-2 py-1 bg-[#12121a] border border-[#2a2a3e] rounded text-gray-400 hover:text-gray-200"
+                className="text-xs px-2 py-1 bg-df-surface border border-df-control-border rounded text-df-text-secondary hover:text-df-text-primary"
               >
                 + Add Else If
               </button>
@@ -275,7 +275,7 @@ export function ConditionalNodeFields({
                     });
                     onUpdate({ conditionalBlocks: newBlocks });
                   }}
-                  className="text-xs px-2 py-1 bg-[#12121a] border border-[#2a2a3e] rounded text-gray-400 hover:text-gray-200"
+                  className="text-xs px-2 py-1 bg-df-surface border border-df-control-border rounded text-df-text-secondary hover:text-df-text-primary"
                 >
                   + Add Else
                 </button>
@@ -283,7 +283,7 @@ export function ConditionalNodeFields({
             </div>
           </div>
         ) : (
-          <div className="text-xs text-gray-500 p-4 text-center border border-[#2a2a3e] rounded">
+          <div className="text-xs text-df-text-tertiary p-4 text-center border border-df-control-border rounded">
             No conditional blocks. Add an "If" block to start.
           </div>
         )}

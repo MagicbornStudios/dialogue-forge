@@ -21,7 +21,7 @@ import {
   ElementNode,
   LexicalNode,
 } from 'lexical';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState, type RefObject} from 'react';
 import * as ReactDOM from 'react-dom';
 import {useDraggable} from '@neodrag/react';
 
@@ -524,7 +524,7 @@ function BlockHandleComponent({
     return () => setMenuElement(null);
   }, [setMenuElement]);
 
-  useDraggable(menuRef, {
+  useDraggable(menuRef as RefObject<HTMLElement>, {
     onDragStart: () => {
       onDragStart(handle.nodeKey);
     },

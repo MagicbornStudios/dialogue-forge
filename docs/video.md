@@ -1,7 +1,7 @@
 # Video
 
 ## Overview
-Dialogue Forge includes a video template workspace for assembling scene/layer timelines, previewing playback, and wiring media inputs. The entry point is `VideoTemplateWorkspace`, exported from `src/video/index.ts`.
+Dialogue Forge includes a video workspace surface powered by Twick Studio for timeline editing and playback. The entry point is `VideoWorkspace` (and `VideoWorkspaceTwick`), exported from `src/video/index.ts`.
 
 ## Tech Stack
 Video tooling uses:
@@ -10,13 +10,11 @@ Video tooling uses:
 - **Template compilation utilities** for turning scenes/layers into runtime-ready compositions.
 
 ## Video Workspace Structure
-`VideoTemplateWorkspace` composes the main UI panels:
-- **Scene and layer lists** for navigation and selection.
-- **Preview panel** for playback and media resolution status.
-- **Layer inspector** for editing layer settings.
-- **Timeline** for sequencing scene playback.
+`VideoWorkspaceTwick` renders Twick Studio inside the host app:
+- **Twick Studio UI** for timeline editing and playback.
+- **Thin wrapper** to provide contextId, dimensions, and providers.
 
-These components are orchestrated in `VideoTemplateWorkspace.tsx` with adapters for media resolution and selection callbacks.
+The wrapper lives in `src/video/workspace/VideoWorkspaceTwick.tsx` and is kept intentionally thin.
 
 ## Templates & Compilation Pipeline
 The video domain defines template types and a compilation pipeline:
@@ -24,10 +22,10 @@ The video domain defines template types and a compilation pipeline:
 - **Compilation utilities**: `compile-template`, `normalize-timeline`, `resolve-bindings`, and related helpers live under `src/video/templates/compile/` and are exported from the same index for host use.
 
 ## How It Looks
-The workspace is a three-column layout with navigation on the left, a preview canvas in the center, and a layer inspector on the right, followed by a timeline row beneath the preview.
+The workspace UI is provided by Twick Studio. The host app wraps it at full height and width.
 
 ## How It Integrates
-- **Adapters**: `VideoTemplateWorkspace` accepts a `VideoTemplateWorkspaceAdapter` to resolve media resources and integrate host-side persistence.
+- **Adapters**: Contracts remain in `src/video/workspace/video-template-workspace-contracts.ts` and are implemented in the host app.
 - **Shared UI**: The workspace uses shared UI primitives (Button, Card, Badge) and shared `cn` utilities for consistent styling across domains.
 
 ## Architecture Graphs

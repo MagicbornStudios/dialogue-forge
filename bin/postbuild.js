@@ -28,23 +28,13 @@ function updateEsmEntryPoints() {
 }
 
 function verifyCssPaths() {
+  const cjsImports = ['./styles/scrollbar.css', './styles/graph.css', './styles/contexts.css', './styles/themes.css'];
+  const esmImports = ['../styles/scrollbar.css', '../styles/graph.css', '../styles/contexts.css', '../styles/themes.css'];
   const checks = [
-    {
-      filePath: path.join(__dirname, '..', 'dist', 'index.js'),
-      cssImports: ['./styles/scrollbar.css', './styles/themes.css']
-    },
-    {
-      filePath: path.join(__dirname, '..', 'dist', 'index.d.ts'),
-      cssImports: ['./styles/scrollbar.css', './styles/themes.css']
-    },
-    {
-      filePath: path.join(__dirname, '..', 'dist', 'esm', 'index.js'),
-      cssImports: ['../styles/scrollbar.css', '../styles/themes.css']
-    },
-    {
-      filePath: path.join(__dirname, '..', 'dist', 'esm', 'index.d.ts'),
-      cssImports: ['../styles/scrollbar.css', '../styles/themes.css']
-    }
+    { filePath: path.join(__dirname, '..', 'dist', 'index.js'), cssImports: cjsImports },
+    { filePath: path.join(__dirname, '..', 'dist', 'index.d.ts'), cssImports: cjsImports },
+    { filePath: path.join(__dirname, '..', 'dist', 'esm', 'index.js'), cssImports: esmImports },
+    { filePath: path.join(__dirname, '..', 'dist', 'esm', 'index.d.ts'), cssImports: esmImports }
   ];
 
   checks.forEach(({ filePath, cssImports }) => {

@@ -5,7 +5,6 @@ import { ForgeCharacter } from '@/forge/types/characters';
 import { useConditionInputs } from '@/forge/lib/node-editor/hooks/useConditionInputs';
 import { useChoices } from '@/forge/lib/node-editor/hooks/useChoices';
 import { getNodeTypeBorderColor } from '@/forge/lib/node-editor/utils/nodeTypeHelpers';
-import { NodeEditorStyles } from './NodeEditorStyles';
 import { NodeEditorHeader } from './NodeEditorHeader';
 import { NodeEditorIdField } from './NodeEditorIdField';
 import { NodeEditorFields } from './NodeEditorFields';
@@ -118,7 +117,6 @@ export function NodeEditor({
   if (isDocked || isExiting) {
     return (
       <>
-        <NodeEditorStyles />
         <style dangerouslySetInnerHTML={{ __html: `
           @keyframes fadeInScale {
             from {
@@ -159,7 +157,6 @@ export function NodeEditor({
 
   return (
     <>
-      <NodeEditorStyles />
       <aside className={cn(`w-80 border-l ${getNodeTypeBorderColor(node.type)} bg-df-sidebar-bg overflow-y-auto`)}>
         {content}
       </aside>

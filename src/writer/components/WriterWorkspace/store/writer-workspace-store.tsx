@@ -122,6 +122,7 @@ export interface WriterWorkspaceState {
     undockPanel: (panel: 'sidebar' | 'editor') => void;
     setPageFullWidth: (pageId: number, value: boolean) => void;
     togglePageFullWidth: (pageId: number) => void;
+    setAutosaveEnabled: (enabled: boolean) => void;
     
     // Narrative graph actions
     setNarrativeGraphs: (graphs: ForgeGraphDoc[]) => void;

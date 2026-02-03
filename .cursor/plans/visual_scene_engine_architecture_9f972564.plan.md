@@ -69,6 +69,7 @@ todos:
     status: pending
     dependencies:
       - build-scene-renderer
+isProject: false
 ---
 
 # Visual Scene Engine Architecture
@@ -184,18 +185,15 @@ export default buildConfig({
 The system supports two patterns for maximum flexibility:
 
 1. **Normalized Media** (via `media` collection):
-
-   - Shared media collection that any collection can reference
-   - Use `relationTo: 'media'` for reusable assets
-   - Example: Character avatars, shared backgrounds
-   - Updated to use ImageKit for file storage
-
+  - Shared media collection that any collection can reference
+  - Use `relationTo: 'media'` for reusable assets
+  - Example: Character avatars, shared backgrounds
+  - Updated to use ImageKit for file storage
 2. **Collection-Specific Uploads**:
-
-   - Direct upload fields within collections
-   - Use `type: 'upload'` for collection-specific assets
-   - Example: Character variant images, scene-specific assets
-   - Also use ImageKit for file storage
+  - Direct upload fields within collections
+  - Use `type: 'upload'` for collection-specific assets
+  - Example: Character variant images, scene-specific assets
+  - Also use ImageKit for file storage
 
 **Benefits:**
 
@@ -574,3 +572,4 @@ app/
 - Real-time collaboration
 - Export scene data for external tools
 - Theatre.js integration (optional, if needed)
+

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, File, Maximize2, Minimize2, Download, Folder, Eye } from 'lucide-react';
+import { FileText, File, Maximize2, Minimize2, Download, Folder, Eye, Settings, Save } from 'lucide-react';
 import { useWriterWorkspaceStore } from '@/writer/components/WriterWorkspace/store/writer-workspace-store';
 import {
   Menubar,

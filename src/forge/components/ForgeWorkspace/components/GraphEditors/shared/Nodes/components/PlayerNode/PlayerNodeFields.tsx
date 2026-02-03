@@ -139,7 +139,7 @@ export function PlayerNodeFields({
       </div>
       <div className="flex items-center justify-between mb-2 mt-4">
         <label className="text-[10px] text-gray-500 uppercase">Choices</label>
-        <button onClick={handleAddChoice} className="text-[10px] text-[#e94560] hover:text-[#ff6b6b]">
+        <button onClick={handleAddChoice} className="text-[10px] text-df-error hover:text-[#ff6b6b]">
           + Add
         </button>
       </div>
@@ -166,13 +166,13 @@ export function PlayerNodeFields({
               data-choice-index={choiceIndex}
               className={`rounded p-2 space-y-2 ${
                 hasCondition 
-                  ? 'bg-blue-500/10 border-2 border-blue-500/50' 
-                  : 'bg-[#12121a] border border-[#2a2a3e] forge-choice-border-top'
+                  ? 'bg-df-info/10 border-2 border-df-info/50' 
+                  : 'bg-df-surface border border-df-control-border forge-choice-border-top'
               }`}
             >
               <div 
                 className={`flex items-center gap-2 pb-2 border-b ${
-                  hasCondition ? 'border-[#2a2a3e]' : 'forge-choice-border-bottom'
+                  hasCondition ? 'border-df-control-border' : 'forge-choice-border-bottom'
                 }`}
               >
                 <label className="flex items-center cursor-pointer">
@@ -190,7 +190,7 @@ export function PlayerNodeFields({
                       className="sr-only"
                     />
                     <div className={`w-7 h-3.5 rounded-full transition-all duration-200 ease-in-out ${
-                      hasCondition ? 'bg-blue-500' : 'bg-[#2a2a3e]'
+                      hasCondition ? 'bg-df-info' : 'bg-[#2a2a3e]'
                     }`}>
                       <div className={`w-2.5 h-2.5 rounded-full bg-white transition-all duration-200 ease-in-out mt-0.5 ${
                         hasCondition ? 'translate-x-4' : 'translate-x-0.5'
@@ -199,11 +199,11 @@ export function PlayerNodeFields({
                   </div>
                 </label>
                 {hasCondition ? (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/30 text-blue-400 border border-blue-500/50 font-medium">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-df-info/30 text-df-info border border-df-info/50 font-medium">
                     CONDITIONAL
                   </span>
                 ) : (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#2a2a3e] text-gray-400 border border-[#2a2a3e] font-medium">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-df-surface text-df-text-secondary border border-df-control-border font-medium">
                     CHOICE
                   </span>
                 )}
@@ -236,7 +236,7 @@ export function PlayerNodeFields({
                     }}
                     data-choice-index={choiceIndex}
                     data-has-next={displayNextNodeId ? 'true' : 'false'}
-                    className="forge-choice-input w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 outline-none"
+                    className="forge-choice-input w-full bg-df-canvas-bg border rounded px-2 py-1 pr-8 text-xs text-df-text-secondary outline-none"
                   >
                     <option value="">— Select target —</option>
                     {graph.flow?.nodes?.map((n) => (
@@ -279,7 +279,7 @@ export function PlayerNodeFields({
                   }}
                   data-choice-index={choiceIndex}
                   data-has-text={displayText ? 'true' : 'false'}
-                  className={`forge-choice-input w-full bg-[#0d0d14] border rounded px-3 py-2 text-sm outline-none transition-colors ${
+                  className={`forge-choice-input w-full bg-df-canvas-bg border rounded px-3 py-2 text-sm outline-none transition-colors ${
                     hasCondition ? 'text-gray-100' : 'text-gray-200'
                   }`}
                   placeholder="Dialogue text..."
@@ -287,7 +287,7 @@ export function PlayerNodeFields({
               </div>
               
               {hasCondition && (
-                <div className="bg-blue-500/5 border border-blue-500/30 rounded p-2 space-y-1">
+                <div className="bg-df-info/5 border border-blue-500/30 rounded p-2 space-y-1">
                   <div className="flex items-center gap-2">
                     <label className="text-[10px] text-blue-400 uppercase font-medium">Condition</label>
                     <button
@@ -309,12 +309,12 @@ export function PlayerNodeFields({
                         });
                       }}
                       placeholder='e.g., $reputation > 10 or $flag == "value"'
-                      className="w-full bg-[#0d0d14] border rounded px-2 py-1 pr-8 text-xs text-gray-300 font-mono outline-none hover:border-blue-500/50 transition-all"
+                      className="w-full bg-df-canvas-bg border rounded px-2 py-1 pr-8 text-xs text-df-text-secondary font-mono outline-none hover:border-df-info/50 transition-all"
                       style={{
                         borderColor: conditionValue.trim().length > 0 && debouncedValue.trim().length > 0
-                          ? (validationResult.isValid ? 'rgba(59, 130, 246, 0.5)' : 
-                             validationResult.errors.length > 0 ? '#ef4444' : '#eab308')
-                          : '#2a2a3e'
+                          ? (validationResult.isValid ? 'var(--color-df-info)' : 
+                             validationResult.errors.length > 0 ? 'var(--color-df-error)' : 'var(--color-df-warning)')
+                          : 'var(--color-df-control-border)'
                       } as React.CSSProperties}
                       flagSchema={flagSchema}
                     />

@@ -22,6 +22,17 @@
 - Can depend on shared types/utilities.
 - Domain layers can depend on AI, never the reverse.
 
+## Target Monorepo Mapping (Packages + Apps)
+
+When the monorepo migration is complete, the same layers map to packages:
+
+- **Host** → `apps/host/`
+- **Shared** → `packages/shared/`
+- **Runtime** → `packages/runtime/`
+- **Domains** → `packages/forge/`, `packages/writer/`, `packages/video/`, `packages/characters/`
+- **AI** → `packages/ai/`
+- **Umbrella** → `packages/dialogue-forge/` (re-exports domain APIs)
+
 ## North Star Placement Rule
 
 > **Place code in the lowest layer that can own it without depending on higher layers.**
@@ -39,6 +50,14 @@ Practical guidance:
 3. **Domains may import from shared and ai only.**
 4. **Domains may not import each other** (Forge ↔ Writer).
 5. **AI may not import from domains or host.**
+
+### Monorepo Equivalent Rules
+
+1. **apps/host may import from packages/**.
+2. **packages/** may not import from **apps/host/**.
+3. **Domain packages may import from shared and runtime only.**
+4. **Domain packages may not import each other.**
+5. **AI may import from shared only.**
 
 ## Placement Checklist (for new files)
 

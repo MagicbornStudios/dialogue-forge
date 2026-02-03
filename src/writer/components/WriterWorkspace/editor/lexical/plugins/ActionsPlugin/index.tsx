@@ -110,13 +110,20 @@ export default function ActionsPlugin({
   const [modal, showModal] = useModal();
   const showFlashMessage = useFlashMessage();
   const {isCollabActive} = useCollaborationContext();
+  const fileEditor =
+    editor as unknown as Parameters<typeof importFile>[0];
   useEffect(() => {
     if (INITIAL_SETTINGS.isCollab) {
       return;
     }
     docFromHash(window.location.hash).then((doc) => {
       if (doc && doc.source === 'Playground') {
-        editor.setEditorState(editorStateFromSerializedDocument(editor, doc));
+        const nextState =
+          editorStateFromSerializedDocument(
+            editor as unknown as Parameters<typeof editorStateFromSerializedDocument>[0],
+            doc,
+          ) as unknown as ReturnType<LexicalEditor['getEditorState']>;
+        editor.setEditorState(nextState);
         editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined);
       }
     });
@@ -218,7 +225,7 @@ export default function ActionsPlugin({
       )}
       <button
         className="action-button import"
-        onClick={() => importFile(editor)}
+        onClick={() => importFile(fileEditor)}
         title="Import"
         aria-label="Import editor state from JSON">
         <i className="import" />
@@ -227,7 +234,7 @@ export default function ActionsPlugin({
       <button
         className="action-button export"
         onClick={() =>
-          exportFile(editor, {
+          exportFile(fileEditor, {
             fileName: `Playground ${new Date().toISOString()}`,
             source: 'Playground',
           })
@@ -241,7 +248,11 @@ export default function ActionsPlugin({
         disabled={isCollabActive || INITIAL_SETTINGS.isCollab}
         onClick={() =>
           shareDoc(
-            serializedDocumentFromEditorState(editor.getEditorState(), {
+            serializedDocumentFromEditorState(
+              editor.getEditorState() as unknown as Parameters<
+                typeof serializedDocumentFromEditorState
+              >[0],
+              {
               source: 'Playground',
             }),
           ).then(

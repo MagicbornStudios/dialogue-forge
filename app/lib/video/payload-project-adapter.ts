@@ -1,5 +1,5 @@
 import { PayloadSDK } from '@payloadcms/sdk';
-import type { ProjectSummary, ProjectAdapter } from '@/video/workspace/components/VideoProjectSwitcher';
+import type { ProjectSummary, ProjectAdapter } from '@/video/workspace/video-template-workspace-contracts';
 import { PAYLOAD_COLLECTIONS } from '@/app/payload-collections/enums';
 
 interface PayloadProject {

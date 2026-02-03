@@ -197,7 +197,7 @@ export function PlayView({
 
   return (
     <main className="flex-1 flex flex-col relative">
-      <div className="flex items-center justify-between border-b border-[#1a1a2e] bg-[#0b0b16] px-4 py-3 text-xs text-gray-400">
+      <div className="flex items-center justify-between border-b border-df-editor-border bg-df-editor-bg px-4 py-3 text-xs text-df-text-secondary">
         <div className="uppercase tracking-[0.25em]">Video Template</div>
         <div className="flex items-center gap-3">
           {templateListError && (
@@ -211,7 +211,7 @@ export function PlayView({
             onValueChange={setSelectedTemplateId}
             disabled={!videoTemplateAdapter || isTemplateListLoading}
           >
-            <SelectTrigger className="h-8 w-56 border-[#2a2a3e] bg-[#12121a] text-xs text-white">
+            <SelectTrigger className="h-8 w-56 border-df-control-border bg-df-surface text-xs text-white">
               <SelectValue
                 placeholder={
                   videoTemplateAdapter
@@ -222,7 +222,7 @@ export function PlayView({
                 }
               />
             </SelectTrigger>
-            <SelectContent className="bg-[#12121a] text-white border-[#2a2a3e]">
+            <SelectContent className="bg-df-surface text-white border-df-control-border">
               <SelectItem value="">No template</SelectItem>
               {templateSummaries.map((template) => (
                 <SelectItem key={template.id} value={template.id}>
@@ -238,7 +238,7 @@ export function PlayView({
       {flagSchema && (
         <button
           onClick={() => setShowDebugPanel(!showDebugPanel)}
-          className="absolute top-4 right-4 z-10 px-3 py-1.5 bg-[#1a1a2e] hover:bg-[#2a2a3e] border border-[#2a2a3e] hover:border-[#e94560] text-gray-400 hover:text-white text-xs rounded-lg transition-colors flex items-center gap-2"
+          className="absolute top-4 right-4 z-10 px-3 py-1.5 bg-df-surface hover:bg-df-control-hover border border-df-control-border hover:border-df-error text-df-text-secondary hover:text-df-text-primary text-xs rounded-lg transition-colors flex items-center gap-2"
           title="Toggle Flag Debug Panel"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -251,12 +251,12 @@ export function PlayView({
       
       {/* Debug Panel */}
       {showDebugPanel && flagSchema && (
-        <div className="absolute top-12 right-4 w-80 bg-[#0d0d14] border border-[#1a1a2e] rounded-lg shadow-xl z-20 max-h-[calc(100vh-8rem)] overflow-hidden flex flex-col">
-          <div className="p-3 border-b border-[#1a1a2e] flex items-center justify-between">
+        <div className="absolute top-12 right-4 w-80 bg-df-canvas-bg border border-df-editor-border rounded-lg shadow-xl z-20 max-h-[calc(100vh-8rem)] overflow-hidden flex flex-col">
+          <div className="p-3 border-b border-df-editor-border flex items-center justify-between">
             <h3 className="text-sm font-semibold text-white">Flag Debug Panel</h3>
             <button
               onClick={() => setShowDebugPanel(false)}
-              className="p-1 text-gray-400 hover:text-white"
+              className="p-1 text-df-text-secondary hover:text-df-text-primary"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -276,14 +276,14 @@ export function PlayView({
                     if (!flag) return null;
                     const value = currentFlags[flagId];
                     return (
-                      <div key={flagId} className="bg-[#12121a] border border-[#2a2a3e] rounded px-2 py-1.5 text-xs">
+                      <div key={flagId} className="bg-df-surface border border-df-control-border rounded px-2 py-1.5 text-xs">
                         <div className="flex items-center gap-2">
                           <span className={`px-1.5 py-0.5 rounded text-[10px] border ${flagTypeColors[flag.type]}`}>
                             {flag.type}
                           </span>
                           <span className="font-mono text-white flex-1 truncate">{flagId}</span>
                           {value !== undefined && (
-                            <span className="text-gray-400">
+                            <span className="text-df-text-secondary">
                               = {typeof value === 'boolean' ? (value ? 'true' : 'false') : String(value)}
                             </span>
                           )}
@@ -307,8 +307,8 @@ export function PlayView({
                   return (
                     <div 
                       key={flag.id} 
-                      className={`bg-[#12121a] border rounded px-2 py-1.5 text-xs transition-colors ${
-                        wasSet ? 'border-[#e94560]/50 bg-[#e94560]/5' : 'border-[#2a2a3e]'
+                      className={`bg-df-surface border rounded px-2 py-1.5 text-xs transition-colors ${
+                        wasSet ? 'border-df-error/50 bg-df-error/5' : 'border-df-control-border'
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
@@ -317,12 +317,12 @@ export function PlayView({
                         </span>
                         <span className="font-mono text-white flex-1 truncate text-[10px]">{flag.id}</span>
                         {wasSet && (
-                          <span className="text-[10px] px-1 py-0.5 bg-[#e94560]/20 text-[#e94560] rounded">NEW</span>
+                          <span className="text-[10px] px-1 py-0.5 bg-df-error/20 text-[#e94560] rounded">NEW</span>
                         )}
                       </div>
-                      <div className="text-gray-400 text-[10px] truncate">{flag.name}</div>
+                      <div className="text-df-text-secondary text-[10px] truncate">{flag.name}</div>
                       {hasValue ? (
-                        <div className="mt-1 text-[10px] text-gray-300">
+                        <div className="mt-1 text-[10px] text-df-text-secondary">
                           <span className="text-gray-500">Value: </span>
                           <span className="font-mono">
                             {typeof value === 'boolean' ? (value ? 'true' : 'false') : 

@@ -16,7 +16,9 @@ export default function CodeHighlightShikiPlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
-    return registerCodeHighlighting(editor);
+    return registerCodeHighlighting(
+      editor as unknown as Parameters<typeof registerCodeHighlighting>[0],
+    );
   }, [editor]);
 
   return null;

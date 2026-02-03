@@ -1,5 +1,10 @@
 import type { ForgeGraphDoc } from '@/shared/types/forge-graph';
 import type { ForgePage, NarrativeHierarchy } from '@/shared/types/narrative';
+import type {
+  WriterDocSnapshot,
+  WriterPatchOp,
+  WriterSelectionSnapshot,
+} from '@/writer/types/writer-ai-types';
 
 export const WRITER_SAVE_STATUS = {
   DIRTY: 'dirty',
@@ -73,13 +78,13 @@ export interface WriterWorkspaceState {
   
   contentError: string | null;
   editorError: string | null;
-  aiPreview: unknown[] | null;
+  aiPreview: WriterPatchOp[] | null;
   aiPreviewMeta: WriterAiPreviewMeta | null;
   aiProposalStatus: WriterAiProposalStatus;
   aiError: string | null;
-  aiSelection: unknown | null;
-  aiSnapshot: unknown | null;
-  aiUndoSnapshot: unknown | null;
+  aiSelection: WriterSelectionSnapshot | null;
+  aiSnapshot: WriterDocSnapshot | null;
+  aiUndoSnapshot: WriterDocSnapshot | null;
   
   // Single active page ID
   activePageId: number | null;
@@ -91,6 +96,7 @@ export interface WriterWorkspaceState {
   modalState: unknown;
   panelLayout: unknown;
   pageLayout: unknown;
+  autosaveEnabled: boolean;
   dataAdapter?: unknown;
   forgeDataAdapter?: unknown;
   narrativeGraphs: ForgeGraphDoc[];

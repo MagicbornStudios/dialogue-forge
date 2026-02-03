@@ -46,6 +46,11 @@ This document captures common patterns for placement, file structure, and action
 - Domains may import from shared and AI only.
 - Forge and Writer must not import each other.
 
+### Adapters as Contracts
+- Adapters are interfaces defined in domain packages.
+- Host apps implement adapters and pass them into workspace components.
+- Domain code must never import host types or host wiring.
+
 ## Action & Event Naming
 
 ### Naming Format

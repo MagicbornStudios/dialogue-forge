@@ -11,6 +11,7 @@ import type {
 } from '../writer-workspace-types';
 import { getPlainTextFromSerializedContent, WRITER_AI_PROPOSAL_STATUS } from '../writer-workspace-types';
 import { applyWriterPatchOps } from '@/writer/lib/editor/patches';
+import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
 
 const createSnapshotFromPage = (page: { title: string; bookBody?: string | null }): WriterDocSnapshot => ({
   title: page.title,
@@ -173,7 +174,13 @@ export function createAiSlice(
       const nextPageMap = new Map(state.pageMap);
       nextPageMap.set(targetId, { ...page, title: nextSnapshotTyped.title ?? page.title, bookBody: nextSnapshotTyped.content ?? page.bookBody });
       set({ pages: nextPages, pageMap: nextPageMap });
-      state.dataAdapter?.updatePage(targetId, { title: nextSnapshotTyped.title, bookBody: nextSnapshotTyped.content }).catch(console.error);
+      const dataAdapter = state.dataAdapter as WriterDataAdapter | undefined;
+      dataAdapter
+        ?.updatePage(targetId, {
+          title: nextSnapshotTyped.title ?? undefined,
+          bookBody: nextSnapshotTyped.content ?? undefined,
+        })
+        .catch(console.error);
     },
     revertAiDraft: () => {
       const state = get();
@@ -199,7 +206,13 @@ export function createAiSlice(
         const nextPageMap = new Map(state.pageMap);
         nextPageMap.set(targetId, { ...page, title: undoSnapshotTyped.title ?? page.title, bookBody: undoSnapshotTyped.content ?? page.bookBody });
         set({ pages: nextPages, pageMap: nextPageMap });
-        state.dataAdapter?.updatePage(targetId, { title: undoSnapshotTyped.title, bookBody: undoSnapshotTyped.content }).catch(console.error);
+        const dataAdapter = state.dataAdapter as WriterDataAdapter | undefined;
+        dataAdapter
+          ?.updatePage(targetId, {
+            title: undoSnapshotTyped.title ?? undefined,
+            bookBody: undoSnapshotTyped.content ?? undefined,
+          })
+          .catch(console.error);
       }
     },
   };

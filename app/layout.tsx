@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import 'reactflow/dist/style.css';
 import 'react-tooltip/dist/react-tooltip.css';
+import '@twick/studio/dist/studio.css';
 import '@/styles/globals.css';
 import { QueryClientProvider } from './lib/providers/query-provider';
 

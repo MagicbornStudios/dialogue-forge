@@ -1,8 +1,27 @@
 # Video Domain - Known Issues & TODOs
 
-**Last Updated**: January 27, 2026
+**Last Updated**: February 3, 2026
 
 ---
+
+## February 3, 2026 Update
+
+The legacy custom video workspace was removed. The host app uses Twick Studio (VideoWorkspaceTwick). Issues below that refer to the legacy workspace are archived for historical context only.
+
+---
+
+## Current Focus (Twick)
+
+### 🟡 P1: Timeline Persistence Adapter
+**Status**: ❌ Not Started  
+**Description**: Wire Twick timeline load/save to the video adapter contract for persistence.  
+**Notes**:
+- Decide on JSON shape for saving/loading timeline data.
+- Store by contextId (project + template).  
+
+---
+
+## Archived: Legacy Workspace Issues (removed Feb 3, 2026)
 
 ## 🔴 Critical Bugs (P0) - FIX IMMEDIATELY
 

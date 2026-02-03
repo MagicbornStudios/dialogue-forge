@@ -20,6 +20,16 @@ Use this decision tree to place new files consistently with the reorg plan and t
    - **Forge** → Place in **Domain (src/forge/)**.
    - **Writer** → Place in **Domain (src/writer/)**.
 
+## Monorepo Note
+
+After the monorepo migration, replace the paths above with:
+
+- Host → `apps/host/`
+- Shared → `packages/shared/`
+- Runtime → `packages/runtime/`
+- Domains → `packages/forge/`, `packages/writer/`, `packages/video/`, `packages/characters/`
+- AI → `packages/ai/`
+
 ## Quick Examples
 
 - PayloadCMS collections, API routes, or server wiring → **Host**.

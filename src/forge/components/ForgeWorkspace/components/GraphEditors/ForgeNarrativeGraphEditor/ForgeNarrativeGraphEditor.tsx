@@ -428,7 +428,7 @@ function ForgeNarrativeGraphEditorContent({
   return (
     <div 
       className={cn(
-        "dialogue-graph-editor h-full w-full flex flex-col bg-[#0b0b14]",
+        "dialogue-graph-editor h-full w-full flex flex-col bg-df-canvas-bg",
         className
       )}
       onClick={handleClick}

@@ -1,12 +1,11 @@
 @import "tailwindcss";
 
-/* Import dialogue-forge theme */
-@import './themes.css';
-@import './graph.css';
+/* Import dialogue-forge theme (single source: src/styles) */
+@import '../src/styles/themes.css';
+@import '../src/styles/graph.css';
 @import '../src/forge/styles/nodes.css';
-@import '../src/forge/styles/forge-context.css';
-@import '../src/video/styles/video-context.css';
-@import './scrollbar.css';
+@import '../src/styles/contexts.css';
+@import '../src/styles/scrollbar.css';
 
 /* Hide CopilotKit clutter - debug menu, help button */
 .copilotKitDebugMenuTriggerButton,
@@ -111,6 +110,11 @@ div[class*="poweredBy"] {
   --color-df-editor-bg: var(--color-df-editor-bg);
   --color-df-editor-border: var(--color-df-editor-border);
   --color-df-border-selected: var(--color-df-border-selected);
+  --color-df-domain-forge: var(--color-df-domain-forge);
+  --color-df-domain-writer: var(--color-df-domain-writer);
+  --color-df-domain-ai: var(--color-df-domain-ai);
+  --color-df-domain-video: var(--color-df-domain-video);
+  --color-df-domain-character: var(--color-df-domain-character);
 
   /* shadcn/ui color tokens (Tailwind v4) */
   --color-background: var(--background);

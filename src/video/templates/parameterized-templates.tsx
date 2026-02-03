@@ -301,6 +301,8 @@ export const BlankScene: React.FC<BlankSceneProps> = ({
 // Template Registry
 export const VIDEO_TEMPLATES = {
   heroBanner: {
+    name: 'Hero Banner',
+    description: 'Full-screen banner with title and subtitle.',
     component: HeroBanner,
     schema: heroBannerSchema,
     defaultProps: {
@@ -312,6 +314,8 @@ export const VIDEO_TEMPLATES = {
     },
   },
   lowerThird: {
+    name: 'Lower Third',
+    description: 'Lower third title block with optional logo.',
     component: LowerThird,
     schema: lowerThirdSchema,
     defaultProps: {
@@ -321,6 +325,8 @@ export const VIDEO_TEMPLATES = {
     },
   },
   socialMedia: {
+    name: 'Social Media',
+    description: 'Compact social post layout with background and avatar.',
     component: SocialMedia,
     schema: socialMediaSchema,
     defaultProps: {
@@ -330,6 +336,8 @@ export const VIDEO_TEMPLATES = {
     },
   },
   blankScene: {
+    name: 'Blank Scene',
+    description: 'Empty scene with a drag hint.',
     component: BlankScene,
     schema: blankSceneSchema,
     defaultProps: {

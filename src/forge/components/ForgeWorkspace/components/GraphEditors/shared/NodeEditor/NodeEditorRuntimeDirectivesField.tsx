@@ -26,7 +26,7 @@ export function NodeEditorRuntimeDirectivesField({ node }: NodeEditorRuntimeDire
         {directivePlaceholders.map(item => (
           <div
             key={item.label}
-            className="rounded border border-df-node-border bg-[#12121a] px-2 py-1 text-[11px] text-muted-foreground"
+            className="rounded border border-df-node-border bg-df-surface px-2 py-1 text-[11px] text-muted-foreground"
           >
             <span className="font-medium text-foreground">{item.label}</span>
             <span className="ml-2 text-[10px] text-muted-foreground">{item.description}</span>

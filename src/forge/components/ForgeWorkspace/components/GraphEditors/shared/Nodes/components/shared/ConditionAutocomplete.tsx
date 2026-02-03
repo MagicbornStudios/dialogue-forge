@@ -314,7 +314,7 @@ export function ConditionAutocomplete({
         onDragStart={handleDrag}
         className={cn(
           "w-full justify-start text-left px-3 py-2 text-sm h-auto",
-          isSelected && "bg-[#2a2a3e] text-white"
+          isSelected && "bg-df-control-hover text-df-text-primary"
         )}
       >
         {/* Flag: Show as tag with icon */}
@@ -330,7 +330,7 @@ export function ConditionAutocomplete({
               {suggestion.label}
             </span>
             {suggestion.description && (
-              <span className="text-[10px] text-gray-500 truncate flex-1 min-w-0 ml-1">
+              <span className="text-[10px] text-df-text-tertiary truncate flex-1 min-w-0 ml-1">
                 {suggestion.description}
               </span>
             )}
@@ -349,7 +349,7 @@ export function ConditionAutocomplete({
               {suggestion.label}
             </span>
             {suggestion.description && (
-              <span className="text-[10px] text-gray-500 truncate flex-1 min-w-0 ml-1">
+              <span className="text-[10px] text-df-text-tertiary truncate flex-1 min-w-0 ml-1">
                 {suggestion.description}
               </span>
             )}
@@ -363,7 +363,7 @@ export function ConditionAutocomplete({
               {suggestion.label}
             </span>
             {suggestion.description && (
-              <span className="text-[10px] text-gray-500 truncate flex-1 min-w-0 ml-1">
+              <span className="text-[10px] text-df-text-tertiary truncate flex-1 min-w-0 ml-1">
                 {suggestion.description}
               </span>
             )}
@@ -403,7 +403,7 @@ export function ConditionAutocomplete({
       
       {/* Suggestions dropdown */}
       {open && suggestions.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg shadow-xl max-h-64 overflow-y-auto p-1">
+        <div className="absolute z-50 mt-1 w-full bg-df-elevated border border-df-control-border rounded-lg shadow-xl max-h-64 overflow-y-auto p-1">
           <div className="space-y-1">
             {suggestions.map((suggestion, idx) => (
               <SuggestionItem

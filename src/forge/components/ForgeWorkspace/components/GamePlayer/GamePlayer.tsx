@@ -249,13 +249,13 @@ export function GamePlayer({
   const hasVideoComposition = Boolean(composition && composition.durationMs > 0);
 
   return (
-    <div className="relative border border-[#1a1a2e] rounded-3xl overflow-hidden bg-[#0f0f1a] h-full min-h-[480px] flex flex-col">
+    <div className="relative border border-df-editor-border rounded-3xl overflow-hidden bg-df-editor-bg h-full min-h-[480px] flex flex-col">
       <div className="relative flex-1 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="relative flex-1">
           <VNStage backgroundLabel={backgroundLabel} />
           <div className="absolute inset-x-6 bottom-6">
-            <div className="backdrop-blur bg-black/60 border border-[#2a2a3e] rounded-2xl p-4 text-sm text-gray-200 shadow-lg">
-              <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-gray-400">
+            <div className="backdrop-blur bg-black/60 border border-df-control-border rounded-2xl p-4 text-sm text-gray-200 shadow-lg">
+              <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-df-text-secondary">
                 <span>{frameSpeaker ?? 'Narrator'}</span>
                 <span>{activeFrame?.kind ?? FRAME_KIND.DIALOGUE}</span>
               </div>
@@ -272,7 +272,7 @@ export function GamePlayer({
                     return (
                       <span
                         key={`${directive.type}-${directive.refId ?? index}`}
-                        className="text-[10px] uppercase tracking-[0.2em] text-gray-300 bg-[#1a1a2e] border border-[#2a2a3e] px-2 py-1 rounded-full"
+                        className="text-[10px] uppercase tracking-[0.2em] text-df-text-secondary bg-df-surface border border-df-control-border px-2 py-1 rounded-full"
                       >
                         {label}
                       </span>
@@ -283,8 +283,8 @@ export function GamePlayer({
             </div>
           </div>
         </div>
-        <div className="flex flex-col border-t border-[#1a1a2e] bg-[#0b0b16] px-4 py-4 xl:border-t-0 xl:border-l">
-          <div className="text-xs uppercase tracking-[0.3em] text-gray-500 mb-3">Remotion Player</div>
+        <div className="flex flex-col border-t border-df-editor-border bg-df-editor-bg px-4 py-4 xl:border-t-0 xl:border-l">
+          <div className="text-xs uppercase tracking-[0.3em] text-df-text-tertiary mb-3">Remotion Player</div>
           <div className="flex-1 flex items-center justify-center">
             {hasVideoTemplate && composition && hasVideoComposition ? (
               <Player
@@ -298,7 +298,7 @@ export function GamePlayer({
                 controls
               />
             ) : (
-              <div className="text-sm text-gray-500 text-center px-4">
+              <div className="text-sm text-df-text-tertiary text-center px-4">
                 {hasVideoTemplate
                   ? 'Waiting for compiled composition frames...'
                   : 'Select a video template to preview the Remotion output.'}
@@ -308,8 +308,8 @@ export function GamePlayer({
         </div>
       </div>
 
-      <div className="border-t border-[#1a1a2e] bg-[#0b0b16] px-6 py-4">
-        <div className="text-xs uppercase tracking-[0.3em] text-gray-500 mb-3">Choices</div>
+      <div className="border-t border-df-editor-border bg-df-editor-bg px-6 py-4">
+        <div className="text-xs uppercase tracking-[0.3em] text-df-text-tertiary mb-3">Choices</div>
         {hasChoices ? (
           <ul className="space-y-2">
             {pendingChoice?.choices.map((choice) => (
@@ -317,7 +317,7 @@ export function GamePlayer({
                 <button
                   type="button"
                   onClick={() => handleChoiceSelect(choice)}
-                  className="w-full text-left text-sm text-gray-200 border border-[#2a2a3e] rounded-xl px-4 py-2 hover:border-[#4f4f7a] hover:bg-[#141428] transition"
+                  className="w-full text-left text-sm text-gray-200 border border-df-control-border rounded-xl px-4 py-2 hover:border-df-border-hover hover:bg-df-control-hover transition"
                 >
                   {choice.text}
                 </button>
@@ -325,7 +325,7 @@ export function GamePlayer({
             ))}
           </ul>
         ) : (
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-df-text-tertiary">
             {status === EXECUTION_STATUS.COMPLETED ? 'Dialogue complete.' : 'No choices available.'}
           </div>
         )}

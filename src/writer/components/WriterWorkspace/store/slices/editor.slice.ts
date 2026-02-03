@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { ForgePage } from '@/shared/types/narrative';
 import type { WriterWorkspaceState } from '../writer-workspace-types';
+import type { WriterDataAdapter } from '@/writer/lib/data-adapter/writer-adapter';
 
 export interface EditorSlice {
   editorError: string | null;
@@ -27,7 +28,7 @@ export function createEditorSlice(
       if (!targetId || !content?.serialized) {
         return;
       }
-      const dataAdapter = get().dataAdapter;
+      const dataAdapter = get().dataAdapter as WriterDataAdapter | undefined;
       if (!dataAdapter) {
         return;
       }

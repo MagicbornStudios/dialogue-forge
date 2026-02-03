@@ -150,7 +150,9 @@ export function VersionsPlugin({id}: {id: string}) {
               continue;
             }
             const node = $getNodeByKeyOrThrow<TextNode>(nodeKey);
-            const ychange = $getYChangeState<User>(node);
+            const ychange = $getYChangeState(
+              node as unknown as Parameters<typeof $getYChangeState>[0],
+            ) as ReturnType<typeof $getYChangeState<User>>;
             const element = editor.getElementByKey(nodeKey);
             if (!ychange || !element) {
               continue;

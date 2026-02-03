@@ -1,6 +1,6 @@
 # Dialogue Forge - Roadmap
 
-**Last Updated**: January 27, 2026
+**Last Updated**: February 3, 2026
 
 ## Vision
 
@@ -77,6 +77,9 @@ Overall:            ████████████░░░░░  60%
 
 **Goal**: Fix critical bugs, ship working editor with export
 
+### Platform Stabilization (Feb 3, 2026)
+- [x] Swap host video route to Twick Studio wrapper (legacy workspace removed)
+
 ### Day 1-2: Critical Bug Fixes (30 min)
 - [ ] **P0**: Fix pointer events bug (VideoCanvas.tsx:201) - Add `pointer-events-none` to inner div
 - [ ] **P0**: Add z-index to layers (VideoLayerRenderer.tsx) - Pass layerIndex, apply zIndex
@@ -120,6 +123,13 @@ Overall:            ████████████░░░░░  60%
 - [ ] Test image/video export
 
 **Deliverable**: Can use images and videos in templates
+
+### Engineering Platform: Monorepo Foundations
+- [ ] Define target monorepo structure (apps + packages) and boundaries
+- [ ] Draft migration plan with phases and acceptance criteria
+- [ ] Establish coding conventions and adapter contract rules in docs
+
+**Deliverable**: Clear monorepo plan and conventions before restructuring
 
 ### Week 2: Advanced Timeline
 - [ ] Drag layer bars to adjust startMs/durationMs

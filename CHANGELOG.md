@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Remotion layer rendering components** (Text, Rectangle, Circle, Image, Video, Background)
   - **CopilotKit integration** with video workspace actions
   - **AI actions** for layer manipulation and template queries
+- Monorepo conventions and migration plan docs (repo structure, adapters, package graph)
 
 ### Changed
 - Simplified template palette to show only "Blank Canvas" template
@@ -38,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All layer operations now update draftGraph instead of template cache
 - Toolbar enhanced with Save button (highlights when unsaved changes)
 - Menu bar shows template name and project switcher
+- Video route now renders Twick Studio via `VideoWorkspaceTwick` with legacy workspace quarantined
+- Legacy video workspace code removed; VideoTemplateWorkspace now forwards to Twick for compatibility
 
 ### Fixed
 - **Critical**: Call stack size error in template subscriptions (infinite loop)

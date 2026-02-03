@@ -153,7 +153,6 @@ function mapPage(doc: Page & { narrativeGraph?: number | { id: number } | null }
     bookBody: doc.bookBody ?? null,
     content: doc.content ?? null,
     archivedAt: doc.archivedAt ?? null,
-    _status: doc._status as 'draft' | 'published' | null,
   };
 }
 export function makePayloadForgeAdapter(opts?: {
@@ -252,7 +251,7 @@ export function makePayloadForgeAdapter(opts?: {
       }
       const result = await payload.find({
         collection: PAYLOAD_COLLECTIONS.PAGES,
-        where,
+        where: where as any,
         limit: 1000,
       });
       return result.docs.map((doc) => mapPage(doc as Page));
@@ -345,8 +344,8 @@ export function makePayloadForgeAdapter(opts?: {
         const result = await payload.update({
             collection: PAYLOAD_COLLECTIONS.CHARACTERS,
             id: characterId,
-            data: patch,
-        }) as Character;
+            data: patch as any,
+        }) as unknown as Character;
         return mapCharacter(result);
     },
     async deleteCharacter(characterId: number): Promise<void> {
@@ -368,7 +367,7 @@ export function makePayloadForgeAdapter(opts?: {
                 name: input.name,
                 avatar: input.avatar ?? null,
                 meta: input.meta ?? undefined,
-            },
+            } as any,
         }) as Character;
         return mapCharacter(result);
     },
@@ -376,8 +375,8 @@ export function makePayloadForgeAdapter(opts?: {
         const result = await payload.update({
             collection: PAYLOAD_COLLECTIONS.FLAG_SCHEMAS,
             id: flagSchemaId,
-            data: patch,
-        }) as FlagSchema;
+            data: patch as any,
+        }) as unknown as FlagSchema;
         return {
             id: result.id,
             schema: result.schema,
@@ -391,9 +390,9 @@ export function makePayloadForgeAdapter(opts?: {
             collection: PAYLOAD_COLLECTIONS.FLAG_SCHEMAS,
             data: {
                 project: input.projectId,
-                schema: input.schema,   
-            },
-        }) as FlagSchema;
+                schema: input.schema,
+            } as any,
+        }) as unknown as FlagSchema;
         return {
             id: result.id,
             schema: result.schema,
@@ -433,8 +432,8 @@ export function makePayloadForgeAdapter(opts?: {
                 parent: input.parent ?? null,
                 narrativeGraph: input.narrativeGraph ?? null,
                 _status: 'draft',
-            },
-        }) as Page;
+            } as any,
+        }) as unknown as Page;
         return mapPage(result);
     },
     
@@ -442,8 +441,8 @@ export function makePayloadForgeAdapter(opts?: {
         const result = await payload.update({
             collection: PAYLOAD_COLLECTIONS.PAGES,
             id: pageId,
-            data: patch,
-        }) as Page;
+            data: patch as any,
+        }) as unknown as Page;
         return mapPage(result);
     },
     
@@ -522,8 +521,8 @@ export function makePayloadForgeAdapter(opts?: {
                 type: 'AUTHORED',
                 playerKey: input.name,
                 state: input.state,
-            },
-        }) as GameState;
+            } as any,
+        }) as unknown as GameState;
         return mapGameStateRecord(result);
     },
     async deleteGameState(gameStateId: number): Promise<void> {

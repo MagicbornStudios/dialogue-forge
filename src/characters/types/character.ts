@@ -34,7 +34,9 @@ export interface CharacterDoc {
   project: string
   /** JointJS graph snapshot (graph.toJSON()). Saved from the relationship graph editor. */
   relationshipGraphJson?: JointGraphJson
-pdatedAt?: Date
+  archivedAt?: Date | null
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 /**

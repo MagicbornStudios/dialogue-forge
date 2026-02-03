@@ -53,7 +53,7 @@ export function createForgeDraftSlice(
     }
   }
 
-  return createDraftSlice<ForgeDraftSlice, ForgeGraphDoc, ForgeDraftDelta, GraphValidationResult>(set, get, {
+  return createDraftSlice<ForgeDraftSlice, ForgeGraphDoc, ForgeDraftDelta, GraphValidationResult>(set as any, get as any, {
     initialGraph: initialGraph ?? null,
     validateDraft: (draft) => validateNarrativeGraph(draft),
     onCommitDraft: async (draft, deltas) => {

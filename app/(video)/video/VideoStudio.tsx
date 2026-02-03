@@ -66,7 +66,7 @@ export function VideoStudio() {
             <VideoTemplateWorkspace
               adapter={videoTemplateAdapter}
               selectedTemplateId={selectedTemplateId}
-              onTemplateChange={(templateId) => setSelectedTemplateId(templateId)}
+              onTemplateChange={(template) => setSelectedTemplateId(template?.id ?? null)}
             />
           </div>
 

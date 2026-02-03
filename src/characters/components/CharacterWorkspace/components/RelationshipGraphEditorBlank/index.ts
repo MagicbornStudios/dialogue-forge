@@ -5,9 +5,7 @@ export type {
 } from './types';
 export { getCellNamespace, createFacadeFromRefs } from './facade';
 export type { RelationshipGraphEditorFacade } from './facade';
-export { createDefaultPlaceholderElement } from './elements';
+export { createCharacterCardElement } from './elements';
 export { RelationshipLink, createRelationshipLink } from './links';
 export { createBlankPlaceholderElement, createCharacterElement } from './utils/createElement';
 export { createRelationshipLink as createLink } from './utils/createLink';
-export { getDefaultElementTools } from './tools/elementTools';
-export { getDefaultLinkTools } from './tools/linkTools';

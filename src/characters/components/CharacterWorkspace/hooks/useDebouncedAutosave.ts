@@ -1,12 +1,16 @@
 import { useEffect, useRef } from 'react';
 import type { CharacterDoc, JointGraphJson } from '@/characters/types';
 import type { CharacterWorkspaceAdapter } from '@/characters/types';
-import type { CharacterGraphEditorConfig } from '../config/editor-config';
+
+export interface CharacterGraphEditorConfig {
+  autosaveEnabled: boolean;
+  autosaveDebounceMs: number;
+}
 
 /**
  * Hook for debounced autosave of graph changes
  */
-  export function useDebouncedAutosave(
+export function useDebouncedAutosave(
     graph: JointGraphJson | null,
   characterId: string | null,
   dataAdapter: CharacterWorkspaceAdapter | undefined,

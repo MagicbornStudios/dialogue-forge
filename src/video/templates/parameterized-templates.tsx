@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { RemotionVideoCompositionProps } from '@remotion/zod-types';
 
 // Hero Banner Template
 export const heroBannerSchema = z.object({
@@ -12,7 +11,7 @@ export const heroBannerSchema = z.object({
 
 export type HeroBannerProps = z.infer<typeof heroBannerSchema>;
 
-export const HeroBanner: React.FC<RemotionVideoCompositionProps<HeroBannerProps>> = ({
+export const HeroBanner: React.FC<HeroBannerProps> = ({
   mainTitle,
   subtitle,
   backgroundImage,
@@ -93,7 +92,7 @@ export const lowerThirdSchema = z.object({
 
 export type LowerThirdProps = z.infer<typeof lowerThirdSchema>;
 
-export const LowerThird: React.FC<RemotionVideoCompositionProps<LowerThirdProps>> = ({
+export const LowerThird: React.FC<LowerThirdProps> = ({
   title,
   subtitle,
   logoImage,
@@ -169,7 +168,7 @@ export const socialMediaSchema = z.object({
 
 export type SocialMediaProps = z.infer<typeof socialMediaSchema>;
 
-export const SocialMedia: React.FC<RemotionVideoCompositionProps<SocialMediaProps>> = ({
+export const SocialMedia: React.FC<SocialMediaProps> = ({
   title,
   description,
   backgroundImage,
@@ -269,7 +268,7 @@ export const blankSceneSchema = z.object({
 
 export type BlankSceneProps = z.infer<typeof blankSceneSchema>;
 
-export const BlankScene: React.FC<RemotionVideoCompositionProps<BlankSceneProps>> = ({
+export const BlankScene: React.FC<BlankSceneProps> = ({
   backgroundColor,
 }) => {
   return (

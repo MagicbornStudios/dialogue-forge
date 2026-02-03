@@ -31,16 +31,8 @@ export interface CharacterWorkspaceState
     upsertCharacter: CharactersActions['upsertCharacter']
     removeCharacter: CharactersActions['removeCharacter']
     updateCharacterField: CharactersActions['updateCharacterField']
-    
-    // Graph mutation actions
-    addNodeToActiveGraph: CharactersActions['addNodeToActiveGraph']
-    moveNodeInActiveGraph: CharactersActions['moveNodeInActiveGraph']
-    removeNodeFromActiveGraph: CharactersActions['removeNodeFromActiveGraph']
-    addEdgeToActiveGraph: CharactersActions['addEdgeToActiveGraph']
-    updateEdgeLabelInActiveGraph: CharactersActions['updateEdgeLabelInActiveGraph']
-    removeEdgeFromActiveGraph: CharactersActions['removeEdgeFromActiveGraph']
-    setActiveGraphFlow: CharactersActions['setActiveGraphFlow']
-    
+    setActiveGraphJson: CharactersActions['setActiveGraphJson']
+
     // View state actions
     setToolMode: ViewStateActions['setToolMode']
     setSidebarSearchQuery: ViewStateActions['setSidebarSearchQuery']
@@ -85,16 +77,8 @@ export function createCharacterWorkspaceStore(
             upsertCharacter: charactersSlice.upsertCharacter,
             removeCharacter: charactersSlice.removeCharacter,
             updateCharacterField: charactersSlice.updateCharacterField,
-            
-            // Graph mutation actions
-            addNodeToActiveGraph: charactersSlice.addNodeToActiveGraph,
-            moveNodeInActiveGraph: charactersSlice.moveNodeInActiveGraph,
-            removeNodeFromActiveGraph: charactersSlice.removeNodeFromActiveGraph,
-            addEdgeToActiveGraph: charactersSlice.addEdgeToActiveGraph,
-            updateEdgeLabelInActiveGraph: charactersSlice.updateEdgeLabelInActiveGraph,
-            removeEdgeFromActiveGraph: charactersSlice.removeEdgeFromActiveGraph,
-            setActiveGraphFlow: charactersSlice.setActiveGraphFlow,
-            
+            setActiveGraphJson: charactersSlice.setActiveGraphJson,
+
             // View state actions
             setToolMode: viewStateSlice.setToolMode,
             setSidebarSearchQuery: viewStateSlice.setSidebarSearchQuery,
@@ -137,21 +121,7 @@ export function useCharacterWorkspaceStore<T>(
     )
   }
   
-  // Cache the server snapshot value to avoid infinite loops in React 19
-  // This is only used during SSR, but React 19 requires it to be stable
-  // We cache it once and never update it, ensuring getServerSnapshot always returns the same value
-  const serverSnapshotRef = React.useRef<{ value: T } | null>(null)
-  if (serverSnapshotRef.current === null) {
-    const initialValue = selector(store.getState())
-    serverSnapshotRef.current = { value: initialValue }
-  }
-  
-  const getServerSnapshot = React.useCallback(() => {
-    // Always return the cached initial value - this is stable and prevents infinite loops
-    return serverSnapshotRef.current!.value
-  }, [])
-  
-  return useStore(store, selector, getServerSnapshot)
+  return useStore(store, selector)
 }
 
 export function useCharacterWorkspaceStoreInstance(): CharacterWorkspaceStore {

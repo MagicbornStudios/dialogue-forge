@@ -99,7 +99,11 @@ export class VideoTemplatePayloadAdapter implements VideoTemplateWorkspaceAdapte
     return response.json();
   }
 
-  async deleteTemplate(id: number): Promise<void> {
+  async deleteTemplate(templateId: string): Promise<void> {
+    const id = parseInt(templateId, 10);
+    if (Number.isNaN(id)) {
+      throw new Error(`Invalid template ID: ${templateId}`);
+    }
     const response = await fetch(`${this.baseUrl}/video-templates/${id}`, {
       method: 'DELETE',
     });

@@ -6,7 +6,7 @@ export const generateImage = async (prompt: string): Promise<string> => {
 
 export const analyzeLayout = (template: any, focus: string): string[] => {
   // TODO: Implement layout analysis
-  return [`Optimize ${focus} emphasis`, 'Improve text contrast`];
+  return [`Optimize ${focus} emphasis`, 'Improve text contrast'];
 };
 
 export const optimizeTextElements = (template: any, elements: any[]): string[] => {

@@ -3,7 +3,6 @@
  */
 
 export { CharacterWorkspace } from './CharacterWorkspace'
-export { CharacterWorkspaceToolbar } from './components/CharacterWorkspaceToolbar'
 export {
   createCharacterWorkspaceStore,
   CharacterWorkspaceStoreProvider,

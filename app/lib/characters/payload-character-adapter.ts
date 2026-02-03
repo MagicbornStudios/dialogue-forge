@@ -281,11 +281,12 @@ export class PayloadCharacterAdapter implements CharacterWorkspaceAdapter {
     if (isNaN(projectIdNum)) {
       throw new Error(`Invalid project ID: ${projectId}`);
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- relationships collection exists but may not be in generated payload types
     const result = await this.payload.find({
       collection: PAYLOAD_COLLECTIONS.RELATIONSHIPS,
       where: { project: { equals: projectIdNum } },
       limit: 1000,
-    });
+    } as any);
     return result.docs.map((doc: any) => ({
       id: String(doc.id),
       project: String(doc.project?.id ?? doc.project),
@@ -312,7 +313,7 @@ export class PayloadCharacterAdapter implements CharacterWorkspaceAdapter {
         label: data.label ?? null,
         description: data.description ?? null,
       },
-    }) as any;
+    } as any) as any;
     return {
       id: String(doc.id),
       project: String(doc.project?.id ?? doc.project),
@@ -338,7 +339,7 @@ export class PayloadCharacterAdapter implements CharacterWorkspaceAdapter {
       collection: PAYLOAD_COLLECTIONS.RELATIONSHIPS,
       id: idNum,
       data: updateData,
-    }) as any;
+    } as any) as any;
     return {
       id: String(doc.id),
       project: String(doc.project?.id ?? doc.project),
@@ -357,7 +358,7 @@ export class PayloadCharacterAdapter implements CharacterWorkspaceAdapter {
     await this.payload.delete({
       collection: PAYLOAD_COLLECTIONS.RELATIONSHIPS,
       id: idNum,
-    });
+    } as any);
   }
 }
 

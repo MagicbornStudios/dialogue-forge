@@ -82,7 +82,7 @@ export function VisualCanvas({
     setDragOffset({ x: 0, y: 0 });
   }, []);
 
-  const renderLayer = useCallback((layer: VideoLayer) => {
+  const renderLayer = useCallback((layer: VideoLayer): React.CSSProperties => {
     const isSelected = selectedLayerId === layer.id;
     const x = layer.visual?.x || 0;
     const y = layer.visual?.y || 0;
@@ -90,7 +90,7 @@ export function VisualCanvas({
     const height = layer.visual?.height || 100;
     const rotation = layer.visual?.rotation || 0;
 
-    const baseStyle: React.CSSProperties = {
+    return {
       position: 'absolute',
       left: x,
       top: y,
@@ -113,69 +113,69 @@ export function VisualCanvas({
       padding: '8px',
       transform: `rotate(${rotation}deg)`,
     };
+  }, [isDragging, selectedLayerId]);
 
-    const renderContent = useCallback(() => {
-      switch (layer.kind) {
-        case 'text':
-          return layer.inputs?.content || 'Text Layer';
-        case 'background':
-          return 'Background';
-        case 'image':
-          return 'Image';
-        case 'rectangle':
-          return 'Rectangle';
-        case 'circle':
-          return 'Circle';
-        case 'video':
-          return 'Video';
-        default:
-          return layer.kind;
-      }
-    }, [layer]);
+  function getLayerContent(layer: VideoLayer): string {
+    switch (layer.kind) {
+      case 'text':
+        return layer.inputs?.content || 'Text Layer';
+      case 'background':
+        return 'Background';
+      case 'image':
+        return 'Image';
+      case 'rectangle':
+        return 'Rectangle';
+      case 'circle':
+        return 'Circle';
+      case 'video':
+        return 'Video';
+      default:
+        return String(layer.kind);
+    }
+  }
 
-    return (
-      <Card className={cn('flex-1', className)}>
-        <CardHeader className="flex-row items-center justify-between space-y-0 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-[var(--video-workspace-text)]">Visual Canvas</span>
-            <div className="text-xs text-[var(--video-workspace-text-muted)]">Drag layers to reposition</div>
-          </div>
-        </CardHeader>
-        <CardContent className="relative">
-          <div
-            className="relative w-full h-full min-h-[400px] bg-white border-2 border-gray-200 rounded"
-            style={{ aspectRatio: template ? `${template.width}/${template.height}` : '16/9' }}
-          >
-            {layers.map((layer) => (
-              <div
-                key={layer.id}
-                style={renderLayer(layer)}
-                onClick={(e) => handleLayerClick(layer, e)}
-                onMouseDown={(e) => handleMouseDown(layer, e)}
-              >
-                <div className="text-xs text-gray-500 mb-1">
-                  {layer.name || layer.kind} ({layer.id})
-                </div>
-                <div className="text-sm text-gray-700 font-mono">
-                  {renderContent()}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {isDragging && draggedLayer && (
+  return (
+    <Card className={cn('flex-1', className)}>
+      <CardHeader className="flex-row items-center justify-between space-y-0 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-[var(--video-workspace-text)]">Visual Canvas</span>
+          <div className="text-xs text-[var(--video-workspace-text-muted)]">Drag layers to reposition</div>
+        </div>
+      </CardHeader>
+      <CardContent className="relative">
+        <div
+          className="relative w-full h-full min-h-[400px] bg-white border-2 border-gray-200 rounded"
+          style={{ aspectRatio: template ? `${template.width}/${template.height}` : '16/9' }}
+        >
+          {layers.map((layer) => (
             <div
-              className="absolute top-0 left-0 w-20 h-20 bg-blue-500 text-white text-xs rounded pointer-events-none flex items-center justify-center z-50"
-              style={{
-                left: Math.max(0, Math.min(100, dragOffset.x + (layers.find(l => l.id === draggedLayer)?.visual?.x || 0))),
-                top: Math.max(0, Math.min(100, dragOffset.y + (layers.find(l => l.id === draggedLayer)?.visual?.y || 0))),
-              }}
+              key={layer.id}
+              style={renderLayer(layer)}
+              onClick={(e) => handleLayerClick(layer, e)}
+              onMouseDown={(e) => handleMouseDown(layer, e)}
             >
-              {layers.find(l => l.id === draggedLayer)?.name || 'Layer'}
+              <div className="text-xs text-gray-500 mb-1">
+                {layer.name || layer.kind} ({layer.id})
+              </div>
+              <div className="text-sm text-gray-700 font-mono">
+                {getLayerContent(layer)}
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          ))}
+        </div>
+
+        {isDragging && draggedLayer && (
+          <div
+            className="absolute top-0 left-0 w-20 h-20 bg-blue-500 text-white text-xs rounded pointer-events-none flex items-center justify-center z-50"
+            style={{
+              left: Math.max(0, Math.min(100, dragOffset.x + (layers.find(l => l.id === draggedLayer)?.visual?.x || 0))),
+              top: Math.max(0, Math.min(100, dragOffset.y + (layers.find(l => l.id === draggedLayer)?.visual?.y || 0))),
+            }}
+          >
+            {layers.find(l => l.id === draggedLayer)?.name || 'Layer'}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

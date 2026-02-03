@@ -13,6 +13,7 @@ import { cn } from '@/shared/lib/utils';
 export interface VideoTemplateWorkspaceProps {
   className?: string;
   template?: VideoTemplate | null;
+  selectedTemplateId?: string | null;
   adapter?: any;
   onTemplateChange?: (template: VideoTemplate | null) => void;
   onSaveTemplate?: () => void;
@@ -21,6 +22,7 @@ export interface VideoTemplateWorkspaceProps {
 export function VideoTemplateWorkspace({
   className,
   template,
+  selectedTemplateId,
   adapter,
   onTemplateChange,
   onSaveTemplate,

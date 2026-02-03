@@ -106,8 +106,8 @@ export function makePayloadVideoTemplateAdapter(opts?: {
         const doc = (await payload.update({
           collection: PAYLOAD_COLLECTIONS.VIDEO_TEMPLATES,
           id: existingId,
-          data,
-        })) as PayloadVideoTemplateDoc;
+          data: data as any,
+        })) as unknown as PayloadVideoTemplateDoc;
         return mapVideoTemplate(doc);
       }
 
@@ -120,8 +120,8 @@ export function makePayloadVideoTemplateAdapter(opts?: {
         data: {
           ...data,
           project: projectId,
-        },
-      })) as PayloadVideoTemplateDoc;
+        } as any,
+      })) as unknown as PayloadVideoTemplateDoc;
       return mapVideoTemplate(doc);
     },
 

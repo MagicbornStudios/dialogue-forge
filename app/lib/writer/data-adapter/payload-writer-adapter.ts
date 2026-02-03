@@ -79,7 +79,7 @@ export function makePayloadWriterAdapter(opts?: {
       }
       const result = await payload.find({
         collection: PAYLOAD_COLLECTIONS.PAGES,
-        where,
+        where: where as any,
         limit: 1000,
       });
       const pages = result.docs.map((doc) => mapPage(doc as Page));
@@ -113,7 +113,7 @@ export function makePayloadWriterAdapter(opts?: {
           parent: input.parent ?? null,
           narrativeGraph: input.narrativeGraph ?? null,
           bookBody: input.bookBody ?? null,
-        },
+        } as any,
       }) as Page;
       return mapPage(doc);
     },
@@ -122,8 +122,8 @@ export function makePayloadWriterAdapter(opts?: {
       const doc = await payload.update({
         collection: PAYLOAD_COLLECTIONS.PAGES,
         id: pageId,
-        data: patch,
-      }) as Page;
+        data: patch as any,
+      }) as unknown as Page;
       return mapPage(doc);
     },
 
@@ -173,7 +173,7 @@ export function makePayloadWriterAdapter(opts?: {
       if (input.threadId) {
         // Adding to existing thread
         const threadIndex = existingComments.findIndex(
-          (c) => c.type === 'thread' && c.id === input.threadId
+          (c: WriterComment | WriterThread) => c.type === 'thread' && c.id === input.threadId
         );
 
         if (threadIndex >= 0) {
@@ -265,11 +265,11 @@ export function makePayloadWriterAdapter(opts?: {
         throw new Error(`Page ${pageId} not found`);
       }
 
-      const comments = page.comments || [];
+      const comments: (WriterComment | WriterThread)[] = page.comments || [];
 
       // Find and update the comment
       let updated = false;
-      const updatedComments = comments.map((comment) => {
+      const updatedComments = comments.map((comment: WriterComment | WriterThread) => {
         if (comment.type === 'comment' && comment.id === commentId) {
           updated = true;
           return { ...comment, ...patch } as WriterComment;
@@ -325,11 +325,11 @@ export function makePayloadWriterAdapter(opts?: {
         throw new Error(`Page ${pageId} not found`);
       }
 
-      const comments = page.comments || [];
+      const comments: (WriterComment | WriterThread)[] = page.comments || [];
 
       // Mark comment as deleted or remove thread
       const updatedComments = comments
-        .map((comment) => {
+        .map((comment: WriterComment | WriterThread) => {
           if (comment.type === 'comment' && comment.id === commentId) {
             // Mark as deleted
             return {

@@ -73,7 +73,7 @@ export const createDraftSlice = <
           deltas: [...state.deltas, nextDelta],
           validation: nextValidation,
           hasUncommittedChanges: true,
-        };
+        } as unknown as Partial<TState>;
       });
     },
 
@@ -94,7 +94,7 @@ export const createDraftSlice = <
         validation: nextValidation,
         hasUncommittedChanges: false,
         lastCommittedAt: new Date(),
-      });
+      } as unknown as Partial<TState>);
     },
 
     discardDraft: async () => {
@@ -113,7 +113,7 @@ export const createDraftSlice = <
         deltas: [],
         validation: nextValidation,
         hasUncommittedChanges: false,
-      });
+      } as unknown as Partial<TState>);
     },
 
     resetDraft: (nextCommitted?: TGraph | null) => {
@@ -127,7 +127,7 @@ export const createDraftSlice = <
           deltas: [],
           validation: nextValidation,
           hasUncommittedChanges: false,
-        };
+        } as unknown as Partial<TState>;
       });
     },
 

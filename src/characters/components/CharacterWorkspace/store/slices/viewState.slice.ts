@@ -41,49 +41,49 @@ export function createViewStateSlice(
 
   // Actions
   setToolMode: (mode) => {
-    set((state) => {
+    set((state: ViewStateSlice) => {
       state.toolMode = mode
     })
   },
 
   setSidebarSearchQuery: (query) => {
-    set((state) => {
+    set((state: ViewStateSlice) => {
       state.sidebarSearchQuery = query
     })
   },
 
   setShowLabels: (show) => {
-    set((state) => {
+    set((state: ViewStateSlice) => {
       state.showLabels = show
     })
   },
 
   setSelectedCharacterId: (id) => {
-    set((state) => {
+    set((state: ViewStateSlice) => {
       state.selectedCharacterId = id
     })
   },
 
   openCreateCharacterModal: () => {
-    set((state) => {
+    set((state: ViewStateSlice) => {
       state.isCreateCharacterModalOpen = true
     })
   },
 
   closeCreateCharacterModal: () => {
-    set((state) => {
+    set((state: ViewStateSlice) => {
       state.isCreateCharacterModalOpen = false
     })
   },
 
   openDebugDrawer: () => {
-    set((state) => {
+    set((state: ViewStateSlice) => {
       state.isDebugDrawerOpen = true
     })
   },
 
   closeDebugDrawer: () => {
-    set((state) => {
+    set((state: ViewStateSlice) => {
       state.isDebugDrawerOpen = false
     })
   },

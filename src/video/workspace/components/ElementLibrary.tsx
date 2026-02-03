@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import type { VideoTemplate, VideoLayer } from '@/video/templates/types/video-template';
 import type { VisualCanvasProps } from './VisualCanvas';
 import { Card, CardContent, CardHeader } from '@/shared/ui/card';
@@ -86,7 +86,7 @@ export function ElementLibrary({
               >
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-[var(--video-workspace-panel)] rounded flex items-center justify-center text-white">
-                    <template.component.component={templateData.component} {...templateData.defaultProps} style={{ width: 60, height: 40 }} />
+                    {React.createElement(templateData.component, { ...templateData.defaultProps, style: { width: 60, height: 40 } })}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-[var(--video-workspace-text)]">{templateData.name}</div>

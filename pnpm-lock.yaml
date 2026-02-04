@@ -111,6 +111,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.62.0
         version: 5.90.20(react@19.2.1)
+      lucide-react:
+        specifier: ^0.559.0
+        version: 0.559.0(react@19.2.1)
       next:
         specifier: 15.5.7
         version: 15.5.7(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.97.3)

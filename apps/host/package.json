@@ -13,6 +13,7 @@
     "payload:seed": "tsx app/payload-seed-standalone.ts"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.62.0",
     "@magicborn/ai": "workspace:*",
     "@magicborn/characters": "workspace:*",
     "@magicborn/forge": "workspace:*",

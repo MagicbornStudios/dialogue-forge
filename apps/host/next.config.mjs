@@ -1,7 +1,9 @@
 import path from 'path';
+import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 
 let withPayload = (config) => config;
 try {
@@ -58,9 +60,17 @@ const nextConfig = {
       // Payload config alias (server-side usage)
       '@payload-config': path.resolve(__dirname, './app/payload.config.ts'),
 
-      // Ensure nested @payloadcms packages resolve payload subpaths (e.g. payload/shared)
-      'payload/shared': path.resolve(__dirname, '../../node_modules/payload/dist/exports/shared.js'),
-      'payload/internal': path.resolve(__dirname, '../../node_modules/payload/dist/exports/internal.js'),
+      // Ensure nested @payloadcms packages resolve payload subpaths (Node resolution works with pnpm on Vercel)
+      ...(function () {
+        try {
+          return {
+            'payload/shared': require.resolve('payload/dist/exports/shared.js'),
+            'payload/internal': require.resolve('payload/dist/exports/internal.js'),
+          };
+        } catch {
+          return {};
+        }
+      })(),
     };
 
     // Silence webpack warnings from PayloadCMS node_modules

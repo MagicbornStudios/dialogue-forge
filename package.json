@@ -40,10 +40,12 @@
   },
   "pnpm": {
     "overrides": {
-      "undici": "^6.19.8"
+      "undici": "^6.19.8",
+      "openai": "^4.85.1"
     }
   },
   "devDependencies": {
+    "next": "15.5.7",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "20.19.30",

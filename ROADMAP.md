@@ -395,4 +395,3 @@ MVP TARGET: February 9, 2026
 - 2026-02-02: Forge narrative editor content now guards missing character data
 - 2026-02-02: Storylet node editor now renders optimistic input while waiting for debounced save
 - 2026-02-02: Narrative node editor supports page selection for Act/Chapter/Page nodes
-

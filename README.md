@@ -2,6 +2,8 @@
 
 A comprehensive narrative development platform combining visual dialogue editing, narrative structure management, AI-assisted writing, and runtime simulation. Built as both a **Next.js application** and a **library package** (`@magicborn/dialogue-forge`).
 
+> Monorepo note: The repo now uses pps/host + packages/* (domain packages like @magicborn/forge, @magicborn/writer, @magicborn/video, @magicborn/shared, @magicborn/runtime, @magicborn/ai). The umbrella @magicborn/dialogue-forge still re-exports for compatibility. See docs/conventions/repo-structure.md for the current layout.
+
 ## 🎯 Project Vision
 
 Dialogue Forge is a **toolkit for narrative teams** that provides:
@@ -542,7 +544,7 @@ cp .env.example .env.local
 
 ### Development
 
-- **[agents.md](./agents.md)** - AI agent guide (coding preferences, conventions)
+- **[AGENTS.md](./AGENTS.md)** - AI agent guide (coding preferences, conventions)
 - **[docs/nodes-and-editors.md](./docs/nodes-and-editors.md)** - Node types and editor architecture
 
 ### Domain Docs
@@ -593,7 +595,7 @@ MIT
 
 ## 🤝 Contributing
 
-Contributions welcome! Please read the architecture documentation and follow the conventions outlined in this README and `agents.md`.
+Contributions welcome! Please read the architecture documentation and follow the conventions outlined in this README and `AGENTS.md`.
 
 **Key Guidelines:**
 - Follow the layer boundaries (no `src/` imports from `app/`)
@@ -605,8 +607,11 @@ Contributions welcome! Please read the architecture documentation and follow the
 
 - **Issues**: [GitHub Issues](https://github.com/MagicbornStudios/dialogue-forge/issues)
 - **Documentation**: See `docs/` folder
-- **Agent Guide**: See `agents.md` for AI agent assistance
+- **Agent Guide**: See `AGENTS.md` for AI agent assistance
 
 ---
 
 **Dialogue Forge** - Built for narrative teams, powered by modern web technologies.
+
+
+

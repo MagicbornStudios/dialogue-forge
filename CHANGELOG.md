@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **CopilotKit integration** with video workspace actions
   - **AI actions** for layer manipulation and template queries
 - Monorepo conventions and migration plan docs (repo structure, adapters, package graph)
+- Monorepo scaffolding (apps/host, packages/*), turbo.json, pnpm-workspace.yaml
+- docs/STATUS.md living status and handoff log
 
 ### Changed
 - Simplified template palette to show only "Blank Canvas" template
@@ -39,8 +41,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All layer operations now update draftGraph instead of template cache
 - Toolbar enhanced with Save button (highlights when unsaved changes)
 - Menu bar shows template name and project switcher
-- Video route now renders Twick Studio via `VideoWorkspaceTwick` with legacy workspace quarantined
-- Legacy video workspace code removed; VideoTemplateWorkspace now forwards to Twick for compatibility
+- Video route now renders Twick Studio via `VideoWorkspaceTwick` with legacy workspace removed
+- Legacy video workspace code removed; VideoTemplateWorkspace alias removed
+- Workspace editor architecture doc is now canonical (no draft slices or event bus)
+- Root package marked private for workspace migration
+- Extracted domain packages into packages/{shared,runtime,forge,writer,video,characters,ai}; updated imports and aliases to @magicborn/<domain>
 
 ### Fixed
 - **Critical**: Call stack size error in template subscriptions (infinite loop)
@@ -174,3 +179,4 @@ For detailed commit history, see [GitHub Commits](https://github.com/MagicbornSt
 - Removal of VideoTemplateWorkspace (use VideoWorkspace instead)
 - Reorganization of src/ directory structure (see reorg-discovery)
 - Draft system will become required (currently optional)
+

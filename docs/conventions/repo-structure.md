@@ -71,3 +71,10 @@ This document defines the standard layout for the Dialogue Forge monorepo. It is
 ## Adapter Contracts
 
 Adapters are interfaces defined in packages/* and implemented in apps/host. See docs/conventions/adapters.md.
+
+## Status
+
+- Host app lives in `apps/host`.
+- Library source lives in `packages/dialogue-forge`.
+- Domain packages (shared/runtime/forge/etc.) are not yet extracted.
+

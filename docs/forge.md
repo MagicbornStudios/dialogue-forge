@@ -12,7 +12,7 @@ Forge is built on top of the core UI and graph tooling in the repo:
 - **React Resizable Panels** for workspace layout.
 
 ## What Lives in the Forge Domain
-- **Graph editing UI**: The Forge workspace lives in `src/forge/components/ForgeWorkspace/` with the main shell at `ForgeWorkspace.tsx`.
+- **Graph editing UI**: The Forge workspace lives in `packages/forge/src/components/ForgeWorkspace/` with the main shell at `ForgeWorkspace.tsx`.
 - **Graph editors**: Narrative and storylet editors live under `GraphEditors/` and are referenced by name as `ForgeNarrativeGraphEditor` and `ForgeStoryletGraphEditor` in the Forge workspace layout pattern.
 - **Node model + editors**: Node types (NPC, Player, Conditional, Storylet, Storylet Groups) and their editor fields are documented in `docs/nodes-and-editors.md`. That doc links to the node editor components that Forge uses for field-level editing.
 - **Runtime player surface**: The Forge workspace embeds a `GamePlayer` component for testing graph playback with flags and completion callbacks.
@@ -43,7 +43,7 @@ If you are extending the graph editor, start with:
 - `docs/nodes-and-editors.md` for node semantics and editor component entry points.
 
 ## Runtime Integration
-Forge’s runtime execution is implemented in `src/forge/runtime/engine/execute-graph-to-frames.ts`, which evaluates graph conditions, applies flag mutations, and emits runtime frames for playback.
+Forge’s runtime execution is implemented in `packages/runtime/src/engine/execute-graph-to-frames.ts`, which evaluates graph conditions, applies flag mutations, and emits runtime frames for playback.
 
 ## Architecture Graphs
 The latest generated dependency graphs and reports live in:
@@ -54,7 +54,7 @@ The latest generated dependency graphs and reports live in:
 - `docs/architecture/latest-analysis.md` (summary report)
 
 ## Host App Integration
-Host-side adapters live in `app/lib/forge/` and wire the workspace to PayloadCMS and runtime storage, as outlined in the repo structure section of the README.
+Host-side adapters live in `apps/host/app/lib/forge/` and wire the workspace to PayloadCMS and runtime storage, as outlined in the repo structure section of the README.
 
 ## Related Docs
 - [Dialogue Nodes & Editors](./nodes-and-editors.md)
@@ -63,3 +63,4 @@ Host-side adapters live in `app/lib/forge/` and wire the workspace to PayloadCMS
 - [Store Inventory & Graph/State Plans](./reorg-discovery/04-store-inventory.md)
 - [Forge ↔ Writer Parity Plan](./reorg-discovery/06-writer-vs-forge-parity.md)
 - [Architecture Graphs](./architecture/graphs/README.md)
+

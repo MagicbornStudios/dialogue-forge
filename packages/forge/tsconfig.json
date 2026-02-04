@@ -1,0 +1,35 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "dist",
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "paths": {
+      "@magicborn/forge": ["src"],
+      "@magicborn/forge/*": ["src/*"],
+      "@magicborn/shared": ["../shared/dist"],
+      "@magicborn/shared/*": ["../shared/dist/*"],
+      "@magicborn/runtime": ["../runtime/dist"],
+      "@magicborn/runtime/*": ["../runtime/dist/*"],
+      "@magicborn/ai": ["../ai/dist"],
+      "@magicborn/ai/*": ["../ai/dist/*"],
+      "@magicborn/video": ["../video/dist"],
+      "@magicborn/video/*": ["../video/dist/*"]
+    }
+  },
+  "references": [
+    { "path": "../shared/tsconfig.json" },
+    { "path": "../runtime/tsconfig.json" },
+    { "path": "../ai/tsconfig.json" },
+    { "path": "../video/tsconfig.json" }
+  ],
+  "include": ["src/**/*", "../../types/**/*.d.ts"],
+  "exclude": ["node_modules", "dist"]
+}
+
+
+

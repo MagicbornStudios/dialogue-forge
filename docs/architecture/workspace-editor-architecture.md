@@ -2,265 +2,248 @@
 
 ## Overview
 
-This document explains the layered architecture pattern used in Dialogue Forge workspaces, focusing on state management, editor shells, command patterns, and modal management. The architecture separates concerns into distinct layers that communicate through well-defined boundaries.
+This guide describes the workspace architecture used across Dialogue Forge. It focuses on clean boundaries, predictable state flow, and editor-library integration. It is the canonical reference for all workspace implementations.
+
+**Hard rules in this architecture:**
+- No draft slices.
+- No event bus / EventSink layer.
+
+**Path note:** examples reference `packages/<domain>/src` (domains are now extracted).
 
 ## Architecture Layers
 
-### Layer Diagram
+The workspace architecture has four layers:
 
-The workspace architecture consists of four main layers:
+1. **Host Application Layer**: Implements adapters and routes (Next.js / Payload).
+2. **Workspace Layer**: Owns domain state, UI state, and adapters.
+3. **Editor Session Layer**: Per-instance UI state for an editor instance.
+4. **Editor Library Layer**: Third-party editors (React Flow, Lexical, JointJS, Twick).
 
-1. **Host Application Layer**: Implements data adapters for the workspace
-2. **Workspace Layer**: Manages domain state, events, and modals
-3. **Editor Instance Layer**: Manages per-instance UI state and bridges to editor libraries
-4. **Editor Library Layer**: Third-party libraries (React Flow, Lexical)
+## Platform Host Mindset
+
+- The host app is the platform: it owns routing, auth, and external systems.
+- Workspaces should remain portable and only talk to the host via contracts/adapters.
+- If auth/entitlements are required, the host gates access before mounting workspaces.
 
 ### State Ownership
 
-- **Persistent State (Workspace Store)**: Domain data, modal state, panel layout
-- **Ephemeral State (Editor Session Store)**: Selection, UI preferences, temporary UI state
-- **Library State**: Internal state managed by editor libraries (React Flow nodes, Lexical editor state)
+- **Persistent Domain State (Workspace Store)**: graphs, documents, templates, modal state.
+- **Ephemeral UI State (Editor Session Store)**: selection, per-editor toggles, UI preferences.
+- **Library State**: internal state managed by the editor library itself.
 
 ## Core Concepts
 
 ### 1. Workspace Store (Domain State)
 
-**Purpose**: Manages persistent domain state that lives across the workspace lifecycle.
+**Purpose**: Owns persistent domain state and exposes actions to mutate it.
 
-**Location**: `src/{domain}/components/{Domain}Workspace/store/{domain}-workspace-store.tsx`
-
-**Characteristics**:
-- Uses Zustand with Immer middleware
-- Composed of slices (content, gameState, viewState, project)
-- Persists across editor instance changes
-- Emits events via EventSink
-- Contains data adapter reference
-
-**Example**: See `src/forge/components/ForgeWorkspace/store/forge-workspace-store.tsx`
-
-### 1.5 Workspace Contracts (Host ↔ Workspace Boundary)
-
-**Purpose**: Define the stable, typed interface between a workspace and the host app. Contracts describe what the workspace expects from its host (adapters, data loaders, callbacks) without importing host-specific types.
-
-**Location**: `src/{domain}/workspace/{domain}-workspace-contracts.ts` (or another domain-appropriate contracts file).
+**Location**: `packages/<domain>/src/components/{Domain}Workspace/store/{domain}-workspace-store.tsx`
 
 **Characteristics**:
-- Pure TypeScript interfaces/types (no runtime dependencies).
-- Imported by the workspace UI and adapters to keep the boundary explicit.
-- Must not import host app types (keep library independence intact).
+- Zustand + Immer (or equivalent).
+- Slice-based, with clear ownership per slice.
+- No draft/commit workflow.
+- No event bus.
+- All mutations go through explicit actions.
 
-**Example**: See `src/video/workspace/video-template-workspace-contracts.ts` for a concrete adapter contract used by the Video workspace.
+### 1.5 Workspace Contracts (Host <-> Workspace Boundary)
 
-**How to Use**:
-1. Define the contract in a `*-workspace-contracts.ts` file (interfaces, types, constants).
-2. Use the contract types in the workspace component props and adapter implementations.
-3. Keep the contract stable—breaking changes should be intentional and versioned.
+**Purpose**: Define stable, typed interfaces between a workspace and the host app.
+
+**Location**: `packages/<domain>/src/workspace/{domain}-workspace-contracts.ts`
+
+**Rules**:
+- Pure types/interfaces only.
+- Must not import host app types.
+- Host implements adapters; workspace consumes the contract.
 
 ### 2. Editor Session Store (Per-Instance UI State)
 
-**Purpose**: Manages ephemeral UI state specific to a single editor instance.
+**Purpose**: Holds ephemeral, editor-specific UI state.
 
-**Location**: `src/{domain}/components/{Domain}Workspace/components/{Editor}/hooks/use{Editor}Session.tsx`
+**Location**: `packages/<domain>/src/components/{Domain}Workspace/components/{Editor}/hooks/use{Editor}Session.tsx`
 
-**Characteristics**:
-- Separate Zustand store per editor instance
-- Lives only while editor is mounted
-- Contains UI preferences (layout direction, toggles, selection)
-- Does NOT contain domain data
+**Use it for**:
+- Selected node/layer.
+- Editor UI toggles (minimap, overlays).
+- Local session preferences.
 
-**Example**: See `src/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeEditorSession.tsx`
-
-**When to Use**:
-- Selection state (which node is selected)
-- UI toggles (show minimap, auto-organize)
-- Editor preferences (layout direction)
-- Temporary UI state (context menus, tooltips)
-
-**When NOT to Use**:
-- Domain data (graphs, flags, game state) → Use Workspace Store
-- Modal state → Use Workspace Store viewState slice
-- Persistent preferences → Use Workspace Store
+**Do not use it for**:
+- Domain data.
+- Modal state.
+- Data that must persist across editor mounts.
 
 ### 3. Editor Shell (Bridge Pattern)
 
-**Purpose**: Bridges editor library (React Flow, Lexical) with domain logic and workspace state.
+**Purpose**: Bridges editor library events to workspace actions.
 
-**Location**: `src/{domain}/components/{Domain}Workspace/components/{Editor}/hooks/use{Editor}Shell.ts`
+**Location**: `packages/<domain>/src/components/{Domain}Workspace/components/{Editor}/hooks/use{Editor}Shell.ts`
 
-**Characteristics**:
-- Custom hook that wraps editor library
-- Handles library events (onNodesChange, onChange, etc.)
-- Converts library events to domain mutations
-- Provides command dispatch function
-- Manages synchronization between library state and domain state
-
-**Example**: See `src/forge/components/ForgeWorkspace/components/GraphEditors/hooks/useForgeFlowEditorShell.ts`
-
-**When to Use Editor Shell**:
-- Editor library has complex event system (React Flow, Lexical)
-- Need to synchronize library state with domain state
-- Editor has multiple interaction modes (drag, select, connect)
-- Need command pattern for actions
-
-**When NOT to Use Editor Shell**:
-- Simple form inputs → Direct component with workspace store actions
-- Static displays → Direct component
-- Simple editors with built-in state management that already aligns with domain patterns
+**Responsibilities**:
+- Translate editor library events into domain actions.
+- Provide command dispatch and selection wiring.
+- Keep editor library state and domain state in sync.
 
 ### 4. Command Pattern
 
-**Purpose**: Provides typed, testable actions that abstract dispatch logic.
+**Purpose**: Keep editor actions typed, testable, and consistent.
 
-**Location**: 
-- Commands: `src/{domain}/components/{Domain}Workspace/components/{Editor}/hooks/{domain}-commands.ts`
-- Actions: `src/{domain}/components/{Domain}Workspace/components/{Editor}/hooks/use{Editor}Actions.tsx`
+**Location**:
+- Commands: `packages/<domain>/src/components/{Domain}Workspace/components/{Editor}/hooks/{domain}-commands.ts`
+- Actions: `packages/<domain>/src/components/{Domain}Workspace/components/{Editor}/hooks/use{Editor}Actions.tsx`
 
-**Example**: See `src/forge/components/ForgeWorkspace/components/GraphEditors/hooks/forge-commands.ts` and `useForgeEditorActions.tsx`
+### 5. Subscriptions (No Event Bus)
 
-### 5. Modal Management
+**Purpose**: React to workspace state changes without an event system.
 
-**Pattern**: Modals are managed in workspace store's viewState slice and rendered by a modal switcher component.
+**Pattern**:
+- Use `store.subscribe(selector, callback)` inside `useEffect`.
+- Always return the unsubscribe function on unmount.
+- Keep subscriptions narrowly scoped to avoid re-render churn.
 
-**Implementation**:
+**Rule**: Do not introduce an EventSink or event bus layer.
 
-1. **Add modal state to viewState slice**: See `src/forge/components/ForgeWorkspace/store/slices/viewState.slice.ts`
-2. **Create modal switcher component**: See `src/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeWorkspaceModals.tsx`
-3. **Components open modals via workspace actions**: Components call actions like `openYarnModal()` from the workspace store
+### 6. Modal Management
 
-**Benefits**:
-- Single source of truth for modal state
-- Easy to test (check store state)
-- Consistent pattern across all modals
-- Can persist modal state if needed
+**Pattern**: Modal state lives in the workspace store (viewState slice).
+
+**Example**:
+- `viewState.slice.ts` stores modal open/close state.
+- A single modal switcher component renders all modals.
+
+### 7. Auto-Save Coordination (No Drafts)
+
+**Purpose**: Provide consistent saving behavior without draft/commit layers.
+
+**Pattern**:
+- Debounced saves for incremental changes.
+- Immediate saves for structural changes.
+- Keep save indicators in workspace UI (isSaving, lastSavedAt).
 
 ## Slice Organization
 
-### Slice Principles
+**Slice principles**:
+- Each slice owns one concern.
+- Slices must not import each other.
+- Keep cross-slice coordination in the store file.
+- Avoid introducing draft slices.
 
-1. **Domain Separation**: Each slice owns a distinct domain concern
-2. **No Cross-Slice Dependencies**: Slices don't import each other
-3. **Shared Types File**: Use `{workspace}-types.ts` to break circular dependencies
-4. **Actions Wrapped with Events**: Actions emit events via EventSink
+**Recommended slices**:
 
-### Recommended Slices
+**Forge**:
+- `graph.slice.ts`
+- `gameState.slice.ts`
+- `viewState.slice.ts`
+- `project.slice.ts`
 
-**For Forge Workspace**:
-- `graph.slice.ts` - Graph documents and cache
-- `gameState.slice.ts` - Flag schema and game state
-- `viewState.slice.ts` - UI state (modals, panels, focus)
-- `project.slice.ts` - Project selection
+**Writer**:
+- `content.slice.ts`
+- `editor.slice.ts`
+- `ai.slice.ts`
+- `navigation.slice.ts`
+- `viewState.slice.ts`
 
-**For Writer Workspace**:
-- `content.slice.ts` - Acts, chapters, pages
-- `editor.slice.ts` - Drafts and save status
-- `ai.slice.ts` - AI preview and proposals
-- `navigation.slice.ts` - Active page, expanded items
-- `viewState.slice.ts` - Modals, panel layout
+**Video (Twick)**:
+- `template.slice.ts` (lightweight, optional)
+- `viewState.slice.ts`
+- `project.slice.ts`
 
-## Communication Flow
+**Characters**:
+- `graph.slice.ts`
+- `viewState.slice.ts`
+- `project.slice.ts`
 
-### Data Flow
+## Communication Flow (No Events)
 
-1. User action triggers component
-2. Component calls editor action (via command pattern)
-3. Editor shell handles command and updates domain state
-4. Workspace store emits event via EventSink
-5. Components re-render based on state changes
-
-### State Update Flow
-
-1. User Action → Editor Actions
-2. Editor Actions → Editor Shell (dispatch)
-3. Editor Shell → Workspace Store (domain update)
-4. Editor Shell → Session Store (UI state update)
-5. Workspace Store → Event Sink (event emission)
-6. State Changes → Components Re-render
+1. User interaction triggers a component.
+2. Component calls editor actions (command pattern).
+3. Editor shell translates library events to actions.
+4. Workspace store updates state.
+5. Components re-render based on state changes.
+6. Subscriptions (if any) run side-effects via `store.subscribe`.
 
 ## Anti-Patterns
 
-### ❌ Anti-Pattern 1: Domain Data in Session Store
+**Do not do these**:
+- Draft/commit slices.
+- Event bus/EventSink layers.
+- Domain data in session stores.
+- Modal state in local component state.
+- Cross-slice imports.
+- Editor shell for simple forms.
 
-**Wrong**: Putting domain data (like graphs) in the session store.
-
-**Correct**: Session store only contains UI state. Domain data comes from workspace store.
-
-### ❌ Anti-Pattern 2: Direct Callbacks Instead of Actions
-
-**Wrong**: Bypassing the command pattern with direct mutations.
-
-**Correct**: Use typed actions via the command pattern.
-
-### ❌ Anti-Pattern 3: Modal State in Component State
-
-**Wrong**: Managing modal state with `useState` in components.
-
-**Correct**: Modal state lives in workspace store's viewState slice.
-
-### ❌ Anti-Pattern 4: Cross-Slice Imports
-
-**Wrong**: Slices importing each other creates circular dependencies.
-
-**Correct**: Slices are independent. Main store file composes them.
-
-### ❌ Anti-Pattern 5: Editor Shell for Simple Forms
-
-**Wrong**: Over-engineering simple forms with editor shell pattern.
-
-**Correct**: Use direct components for simple forms.
-
-## Decision Tree: When to Use What
+## Decision Tree
 
 ```
 Is this domain data that persists?
-├─ YES → Workspace Store (appropriate slice)
-└─ NO → Is this UI state for a specific editor instance?
-    ├─ YES → Editor Session Store
-    └─ NO → Is this modal state?
-        ├─ YES → Workspace Store viewState slice
-        └─ NO → Is this a simple form/input?
-            ├─ YES → Direct component with workspace actions
-            └─ NO → Does editor library have complex events?
-                ├─ YES → Editor Shell + Command Pattern
-                └─ NO → Direct component
+  YES -> Workspace Store (appropriate slice)
+  NO -> Is this UI state for a specific editor instance?
+    YES -> Editor Session Store
+    NO -> Is this modal state?
+      YES -> Workspace Store viewState slice
+      NO -> Is this a simple form/input?
+        YES -> Direct component with workspace actions
+        NO -> Does the editor library emit complex events?
+          YES -> Editor Shell + Command Pattern
+          NO -> Direct component
 ```
 
 ## File Structure Reference
 
 ```
-src/{domain}/
-├── components/
-│   └── {Domain}Workspace/
-│       ├── {Domain}Workspace.tsx  (main component)
-│       ├── store/
-│       │   ├── {domain}-workspace-store.tsx  (main store)
-│       │   ├── {domain}-workspace-types.ts  (shared types)
-│       │   └── slices/
-│       │       ├── content.slice.ts
-│       │       ├── editor.slice.ts
-│       │       ├── viewState.slice.ts  (← modals here)
-│       │       └── subscriptions.ts
-│       ├── components/
-│       │   └── {Editor}/
-│       │       ├── {Editor}.tsx
-│       │       └── hooks/
-│       │           ├── use{Editor}Session.tsx  (← session store)
-│       │           ├── use{Editor}Shell.ts  (← shell hook)
-│       │           ├── {domain}-commands.ts  (← commands)
-│       │           └── use{Editor}Actions.tsx  (← actions)
-│       └── modals/
-│           ├── {Domain}WorkspaceModals.tsx  (← modal switcher)
-│           └── components/
-│               ├── {Modal}Modal.tsx
-│               └── ...
+packages/<domain>/src/
+  components/
+    {Domain}Workspace/
+      {Domain}Workspace.tsx
+      store/
+        {domain}-workspace-store.tsx
+        {domain}-workspace-types.ts
+        slices/
+          content.slice.ts
+          editor.slice.ts
+          viewState.slice.ts
+          project.slice.ts
+      components/
+        {Editor}/
+          {Editor}.tsx
+          hooks/
+            use{Editor}Session.tsx
+            use{Editor}Shell.ts
+            {domain}-commands.ts
+            use{Editor}Actions.tsx
+      modals/
+        {Domain}WorkspaceModals.tsx
+        components/
+          {Modal}Modal.tsx
+  workspace/
+    {domain}-workspace-contracts.ts
 ```
+
+## Domain Notes
+
+**Forge (React Flow)**:
+- Use the editor shell for React Flow events.
+- Keep auto-save logic in one place (no draft layers).
+
+**Writer (Lexical)**:
+- Favor direct saves and explicit actions.
+- Keep editor state in Lexical; store only what needs persistence.
+
+**Video (Twick Studio)**:
+- Twick Studio is the editor surface.
+- Workspace wrapper stays thin (providers + contextId).
+- Persistence should be adapter-driven; no custom timeline engine.
+
+**Characters (JointJS)**:
+- Use a dedicated facade to bridge JointJS to domain state.
+- Keep serialization logic in one place.
 
 ## Summary
 
-1. **Workspace Store**: Domain state, persistent, slice-based, emits events
-2. **Editor Session Store**: Per-instance UI state, ephemeral, editor-specific
-3. **Editor Shell**: Bridge between editor library and domain, handles events, provides dispatch
-4. **Command Pattern**: Typed actions via dispatch, testable, consistent
-5. **Modal Management**: Workspace store viewState slice + modal switcher component
-6. **Slices**: Domain-separated, no cross-dependencies, shared types file
+- Workspace store owns domain state; no draft slices.
+- Editor session store owns per-editor UI state.
+- Editor shell bridges editor libraries to domain actions.
+- Command pattern keeps actions typed and testable.
+- Subscriptions are direct store.subscribe, not events.
 
-Apply this pattern consistently across Forge, Writer, and AI workspaces for maintainability and clarity.
+

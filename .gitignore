@@ -8,11 +8,17 @@ node_modules
 
 # Next.js
 /.next/
+**/.next/
 /out/
+**/out/
 
 # Production
 /build
 /dist
+**/dist/
+
+# Turborepo
+.turbo/
 
 # Misc
 .DS_Store
@@ -37,11 +43,15 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+packages/**/src/**/*.d.ts
 
 # PayloadCMS
-/app/data/payload.db
-/app/data/migrations/*.js
-!/app/data/migrations/.gitkeep
+**/app/data/payload.db
+**/app/data/migrations/*.js
+!**/app/data/migrations/.gitkeep
+# Host app uploads / Payload media (do not commit)
+apps/host/app/media/
+app/media/
 
 # IDE
 .vscode/

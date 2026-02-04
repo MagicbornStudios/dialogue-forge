@@ -12,7 +12,7 @@ Subscriptions run **outside React** (Zustand `subscribe`). They are set up once 
 
 ## What they do today
 
-A single subscription is registered in [`src/forge/components/ForgeWorkspace/store/slices/subscriptions.ts`](../../src/forge/components/ForgeWorkspace/store/slices/subscriptions.ts) via `setupForgeWorkspaceSubscriptions(store, eventSink, dataAdapter)`.
+A single subscription is registered in [`packages/forge/src/components/ForgeWorkspace/store/slices/subscriptions.ts`](../../packages/forge/src/components/ForgeWorkspace/store/slices/subscriptions.ts) via `setupForgeWorkspaceSubscriptions(store, eventSink, dataAdapter)`.
 
 **When `selectedProjectId` changes:**
 
@@ -29,7 +29,7 @@ A single subscription is registered in [`src/forge/components/ForgeWorkspace/sto
 - Cache checks (e.g. `hasNarrativeGraphs`, `loadedFlagSchemaProjectId`) avoid refetching when data is already in the store.
 - Graph loading uses batched `setGraphs` so one project switch does not trigger a flood of store updates and re-renders.
 
-The store type and actions are defined in [`forge-workspace-store.tsx`](../../src/forge/components/ForgeWorkspace/store/forge-workspace-store.tsx).
+The store type and actions are defined in [`forge-workspace-store.tsx`](../../packages/forge/src/components/ForgeWorkspace/store/forge-workspace-store.tsx).
 
 ## How components and workspaces use them
 
@@ -58,3 +58,5 @@ So: **project switcher → subscription → adapter → store → components**. 
 - **No project auto-selection:** Subscriptions only run when `selectedProjectId` is set (e.g. by the host or `ProjectSync`). We do not auto-select a project on init; that is the host’s responsibility.
 - **Adapter required:** If `dataAdapter` is missing, `setupForgeWorkspaceSubscriptions` does nothing. The host must provide the adapter for persistence and loading.
 - **Optional future:** A workspace config flag (e.g. `subscriptionsEnabled`) could turn subscriptions on/off. When off, the host or a dedicated hook could load project data on demand (e.g. when the sidebar list is shown).
+
+

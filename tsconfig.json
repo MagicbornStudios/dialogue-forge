@@ -1,41 +1,36 @@
 {
   "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "plugins": [{ "name": "next" }]
-  },
   "files": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "./packages/shared/tsconfig.json"
     },
     {
-      "path": "./src/ai/tsconfig.json"
+      "path": "./packages/runtime/tsconfig.json"
     },
     {
-      "path": "./src/characters/tsconfig.json"
+      "path": "./packages/forge/tsconfig.json"
     },
     {
-      "path": "./src/forge/tsconfig.json"
+      "path": "./packages/writer/tsconfig.json"
     },
     {
-      "path": "./src/shared/tsconfig.json"
+      "path": "./packages/video/tsconfig.json"
     },
     {
-      "path": "./src/styles/tsconfig.json"
+      "path": "./packages/characters/tsconfig.json"
     },
     {
-      "path": "./src/video/tsconfig.json"
+      "path": "./packages/ai/tsconfig.json"
     },
     {
-      "path": "./src/writer/tsconfig.json"
+      "path": "./packages/dialogue-forge/tsconfig.json"
+    },
+    {
+      "path": "./apps/host/tsconfig.json"
     }
   ],
-  "include": [
-    "next-env.d.ts",
-    ".next/types/**/*.ts",
-    "**/*.ts",
-    "**/*.tsx"
-  ],
+  "include": [],
   "exclude": [
     "node_modules",
     "vendor"

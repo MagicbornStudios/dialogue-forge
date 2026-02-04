@@ -5,24 +5,24 @@ Use this decision tree to place new files consistently with the reorg plan and t
 ## Decision Tree
 
 1. **Does the file need Next.js, PayloadCMS, or runtime host wiring?**
-   - **Yes** → Place in **Host (app/)**.
+   - **Yes** → Place in **Host (apps/host/)**.
    - **No** → Continue.
 
 2. **Is it AI infrastructure, contracts, or domain AI adapters?**
-   - **Yes** → Place in **AI (src/ai/)**.
+   - **Yes** → Place in **AI (packages/ai/ or packages/ai/src/)**.
    - **No** → Continue.
 
 3. **Is it reusable across Forge and Writer?**
-   - **Yes** → Place in **Shared (src/shared/)**.
+   - **Yes** → Place in **Shared (packages/shared/ or packages/shared/src/)**.
    - **No** → Continue.
 
 4. **Is it Forge- or Writer-specific?**
-   - **Forge** → Place in **Domain (src/forge/)**.
-   - **Writer** → Place in **Domain (src/writer/)**.
+   - **Forge** → Place in **Domain (packages/forge/ or packages/forge/src/)**.
+   - **Writer** → Place in **Domain (packages/writer/ or packages/writer/src/)**.
 
 ## Monorepo Note
 
-After the monorepo migration, replace the paths above with:
+Current package paths:
 
 - Host → `apps/host/`
 - Shared → `packages/shared/`
@@ -39,15 +39,15 @@ After the monorepo migration, replace the paths above with:
 
 ## How to Place New Files (Checklist)
 
-- [ ] Needs Next.js, PayloadCMS, or host wiring? → **Host (app/)**.
-- [ ] Reused across Forge + Writer? → **Shared (src/shared/)**.
-- [ ] Forge- or Writer-specific? → **Domain (src/forge/, src/writer/)**.
-- [ ] AI infrastructure or AI contracts? → **AI (src/ai/)**.
-- [ ] Confirm import direction rules (`src/**` never imports `app/**` or `app/payload-types.ts`).
+- [ ] Needs Next.js, PayloadCMS, or host wiring? → **Host (apps/host/)**.
+- [ ] Reused across Forge + Writer? → **Shared (packages/shared/ or packages/shared/src/)**.
+- [ ] Forge- or Writer-specific? → **Domain (packages/forge/ or packages/forge/src/)**.
+- [ ] AI infrastructure or AI contracts? → **AI (packages/ai/ or packages/ai/src/)**.
+- [ ] Confirm import direction rules (`packages/**` never imports `apps/host/**` or `apps/host/app/payload-types.ts`).
 
 ## Non-Negotiable Boundary Rule
 
-- **`src/**` must not import `app/**` or `app/payload-types.ts`.**
+- **`packages/**` must not import `apps/host/**` or `apps/host/app/payload-types.ts`.**
 
 ## Tie-Breaker: North Star Placement Rule
 

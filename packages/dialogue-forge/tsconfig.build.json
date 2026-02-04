@@ -1,0 +1,51 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "module": "commonjs",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "jsx": "react",
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "moduleResolution": "node",
+    "types": ["node"],
+    "noEmit": false,
+    "baseUrl": ".",
+    "paths": {
+      "@magicborn/dialogue-forge": ["./src"],
+      "@magicborn/dialogue-forge/*": ["./src/*"],
+      "@magicborn/shared": ["../shared/dist"],
+      "@magicborn/shared/*": ["../shared/dist/*"],
+      "@magicborn/runtime": ["../runtime/dist"],
+      "@magicborn/runtime/*": ["../runtime/dist/*"],
+      "@magicborn/forge": ["../forge/dist"],
+      "@magicborn/forge/*": ["../forge/dist/*"],
+      "@magicborn/writer": ["../writer/dist"],
+      "@magicborn/writer/*": ["../writer/dist/*"],
+      "@magicborn/video": ["../video/dist"],
+      "@magicborn/video/*": ["../video/dist/*"],
+      "@magicborn/characters": ["../characters/dist"],
+      "@magicborn/characters/*": ["../characters/dist/*"],
+      "@magicborn/ai": ["../ai/dist"],
+      "@magicborn/ai/*": ["../ai/dist/*"]
+    }
+  },
+  "references": [
+    { "path": "../shared/tsconfig.json" },
+    { "path": "../runtime/tsconfig.json" },
+    { "path": "../forge/tsconfig.json" },
+    { "path": "../writer/tsconfig.json" },
+    { "path": "../video/tsconfig.json" },
+    { "path": "../characters/tsconfig.json" },
+    { "path": "../ai/tsconfig.json" }
+  ],
+  "include": ["src/**/*", "../../types/**/*.d.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
+}

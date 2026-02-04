@@ -5,13 +5,13 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    include: ['packages/dialogue-forge/src/**/*.test.ts', 'packages/dialogue-forge/src/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
-        'dist/',
+        'packages/dialogue-forge/dist/',
         '**/*.test.ts',
         '**/*.test.tsx',
         '**/__tests__/**',
@@ -20,7 +20,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, '.'),
+      '@': path.resolve(__dirname, 'packages/dialogue-forge/src'),
     },
   },
 });

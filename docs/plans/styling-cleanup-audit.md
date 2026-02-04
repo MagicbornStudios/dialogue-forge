@@ -2,7 +2,7 @@
 
 Use this list when refactoring for consistency and before the monorepo migration. **Review usage first; remove only when unused or replaced.**
 
-**Completed Feb 2026:** Phase 1 (single-source CSS), Phase 2 (Forge UI theme tokens), Phase 3 (legacy video workspace removed), Phase 4 (Characters RelationshipGraphEditorBlank). Duplicate themes/graph/scrollbar removed; app imports from `src/styles/`.
+**Completed Feb 2026:** Phase 1 (single-source CSS), Phase 2 (Forge UI theme tokens), Phase 3 (legacy video workspace removed), Phase 4 (Characters RelationshipGraphEditorBlank). Duplicate themes/graph/scrollbar removed; app imports from `packages/shared/src/styles/`.
 
 ## 1. Non-Tailwind / non-theme styling to fix
 
@@ -46,18 +46,18 @@ These use hardcoded hex/colors or bypass our theme. Prefer Tailwind + `--color-d
 
 ## 2. Stale / legacy files to review first
 
-- **`src/writer/.../lexical/ui/*.css`** — Many small CSS files (Button, Input, Modal, etc.). Third-party editor surface; consolidate or leave as-is per convention. Prefer not adding new ones.
+- **`packages/writer/src/.../lexical/ui/*.css`** — Many small CSS files (Button, Input, Modal, etc.). Third-party editor surface; consolidate or leave as-is per convention. Prefer not adding new ones.
 
-*Duplicate theme/graph/scrollbar — done (single source `src/styles/`). Legacy video workspace — removed.*
+*Duplicate theme/graph/scrollbar — done (single source `packages/shared/src/styles/`). Legacy video workspace — removed.*
 
 ## 3. CSS files inventory
 
 | Location | Role | Action |
 |----------|------|--------|
-| `styles/globals.css` | App entry; imports from `src/styles/` | Keep. |
-| `src/styles/themes.css`, `graph.css`, `scrollbar.css`, `contexts.css` | Single source for theme, graph, scrollbar, domain context | Keep. |
-| `src/forge/styles/nodes.css` | Forge node tokens | Keep. |
-| `src/writer/.../lexical/**/*.css` | Lexical editor | Keep; avoid adding. Prefer Tailwind for new UI around editor. |
+| `apps/host/styles/globals.css` | App entry; imports from `packages/shared/src/styles/` | Keep. |
+| `packages/shared/src/styles/themes.css`, `graph.css`, `scrollbar.css`, `contexts.css` | Single source for theme, graph, scrollbar, domain context | Keep. |
+| `packages/forge/src/styles/nodes.css` | Forge node tokens | Keep. |
+| `packages/writer/src/.../lexical/**/*.css` | Lexical editor | Keep; avoid adding. Prefer Tailwind for new UI around editor. |
 
 ## 4. Monorepo alignment
 
@@ -70,3 +70,4 @@ Per [docs/architecture/monorepo.md](../architecture/monorepo.md) and [docs/plans
 ---
 
 **Loop:** When touching any file in this audit, run [docs/agents/styling.md](../agents/styling.md) and update this list if you fix or remove an item.
+

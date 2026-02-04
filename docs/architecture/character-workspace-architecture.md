@@ -15,7 +15,7 @@ The Character workspace lets users manage **characters** and their **relationshi
 ## Directory Structure
 
 ```
-src/characters/
+packages/characters/src/
 ├── components/
 │   ├── CharacterWorkspace/           # Main workspace
 │   │   ├── CharacterWorkspace.tsx    # Container: uses store, project/character load, autosave
@@ -225,3 +225,4 @@ Used only by `useDebouncedAutosave` in CharacterWorkspace.
 - **Graph:** Implemented with React + SVG, not JointJS; relationship data is `RelationshipFlow` stored on the character document.
 - **State Management:** Zustand store with Immer middleware; three slices (project, characters, viewState); all UI uses store hooks.
 - **Autosave:** Debounced (2s default), saves to adapter, then updates store with server response.
+

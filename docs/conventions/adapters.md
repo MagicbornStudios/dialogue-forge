@@ -16,7 +16,7 @@ packages/<domain>/src/adapters/
   <domain>-adapter.ts
   index.ts
 
-apps/host/lib/<domain>/
+apps/host/app/lib/<domain>/
   <domain>-adapter.ts  // PayloadCMS or other system wiring
 ```
 
@@ -32,7 +32,7 @@ export interface ForgeAdapter {
 ```
 
 ```ts
-// apps/host/lib/forge/forge-adapter.ts
+// apps/host/app/lib/forge/forge-adapter.ts
 import type { ForgeAdapter } from '@magicborn/forge';
 
 export const forgeAdapter: ForgeAdapter = {

@@ -11,12 +11,12 @@ Writer builds on the core text-editing and AI tooling in the repo:
 
 ## What Lives in the Writer Domain
 - **Workspace shell**: `WriterWorkspace.tsx` is the entry point for the Writer UI and uses the Writer workspace store for state management.
-- **Narrative hierarchy**: Writer state includes `acts`, `chapters`, `pages`, and per-page drafts for editing workflow continuity.
+- **Narrative hierarchy**: Writer state includes `acts`, `chapters`, and `pages`. Per-page drafts exist today but are legacy; do not add new draft layers.
 - **Editor + navigation**: The writer editor pane, tree navigation, autosave, and toolbar are called out as primary store importers, anchoring the main editing surface and tooling.
 
 ## Writer State & AI Patch Workflow
 Writer’s state model is documented in the store inventory:
-- **Content state**: acts, chapters, pages, active page, and drafts live together in `WriterWorkspaceStore` today.
+- **Content state**: acts, chapters, pages, and active page live in `WriterWorkspaceStore`. Drafts are legacy and scheduled for removal.
 - **AI patch system**: AI edits are represented as patch operations (`WriterPatchOp`) for replace/splice/replace-block behaviors, which the editor can apply or preview.
 - **AI preview + selection**: The store tracks AI proposals, selection ranges, and error status for Copilot-assisted authoring.
 

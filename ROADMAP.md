@@ -1,6 +1,6 @@
 # Dialogue Forge - Roadmap
 
-**Last Updated**: February 3, 2026
+**Last Updated**: February 4, 2026
 
 ## Vision
 
@@ -78,7 +78,7 @@ Overall:            ████████████░░░░░  60%
 **Goal**: Fix critical bugs, ship working editor with export
 
 ### Platform Stabilization (Feb 3, 2026)
-- [x] Swap host video route to Twick Studio wrapper (legacy workspace removed)
+- [x] Swap host video route to Twick Studio wrapper (legacy workspace removed)\r\n- [x] Extract domain packages to packages/* and update imports
 
 ### Day 1-2: Critical Bug Fixes (30 min)
 - [ ] **P0**: Fix pointer events bug (VideoCanvas.tsx:201) - Add `pointer-events-none` to inner div
@@ -125,9 +125,10 @@ Overall:            ████████████░░░░░  60%
 **Deliverable**: Can use images and videos in templates
 
 ### Engineering Platform: Monorepo Foundations
-- [ ] Define target monorepo structure (apps + packages) and boundaries
-- [ ] Draft migration plan with phases and acceptance criteria
-- [ ] Establish coding conventions and adapter contract rules in docs
+- [x] Define target monorepo structure (apps + packages) and boundaries
+- [x] Draft migration plan with phases and acceptance criteria
+- [x] Establish coding conventions and adapter contract rules in docs
+- [x] Scaffold apps/ + packages/ directories (no code moved yet)
 
 **Deliverable**: Clear monorepo plan and conventions before restructuring
 
@@ -394,3 +395,4 @@ MVP TARGET: February 9, 2026
 - 2026-02-02: Forge narrative editor content now guards missing character data
 - 2026-02-02: Storylet node editor now renders optimistic input while waiting for debounced save
 - 2026-02-02: Narrative node editor supports page selection for Act/Chapter/Page nodes
+

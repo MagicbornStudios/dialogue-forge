@@ -1,0 +1,44 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "dist",
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "paths": {
+      "@magicborn/dialogue-forge": ["src"],
+      "@magicborn/dialogue-forge/*": ["src/*"],
+      "@magicborn/shared": ["../shared/dist"],
+      "@magicborn/shared/*": ["../shared/dist/*"],
+      "@magicborn/runtime": ["../runtime/dist"],
+      "@magicborn/runtime/*": ["../runtime/dist/*"],
+      "@magicborn/forge": ["../forge/dist"],
+      "@magicborn/forge/*": ["../forge/dist/*"],
+      "@magicborn/writer": ["../writer/dist"],
+      "@magicborn/writer/*": ["../writer/dist/*"],
+      "@magicborn/video": ["../video/dist"],
+      "@magicborn/video/*": ["../video/dist/*"],
+      "@magicborn/characters": ["../characters/dist"],
+      "@magicborn/characters/*": ["../characters/dist/*"],
+      "@magicborn/ai": ["../ai/dist"],
+      "@magicborn/ai/*": ["../ai/dist/*"]
+    }
+  },
+  "references": [
+    { "path": "../shared/tsconfig.json" },
+    { "path": "../runtime/tsconfig.json" },
+    { "path": "../forge/tsconfig.json" },
+    { "path": "../writer/tsconfig.json" },
+    { "path": "../video/tsconfig.json" },
+    { "path": "../characters/tsconfig.json" },
+    { "path": "../ai/tsconfig.json" }
+  ],
+  "include": ["src/**/*", "../../types/**/*.d.ts"],
+  "exclude": ["node_modules", "dist"]
+}
+
+
+

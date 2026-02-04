@@ -1,10 +1,9 @@
 const baseRestrictedPatterns = [
-  "app/**",
-  "app/payload-types",
+  "apps/host/**",
+  "apps/host/app/payload-types",
   "@/app/**",
   "@/app/payload-types",
-  "@magicborn/dialogue-forge/app/**",
-  "@magicborn/dialogue-forge/app/payload-types",
+  "@/host/**",
   "payload-types",
   "**/payload-types",
   "**/payload-types/**",
@@ -13,17 +12,17 @@ const baseRestrictedPatterns = [
 const forgeRestrictedPatterns = [
   ...baseRestrictedPatterns,
   "**/writer/**",
-  "@/src/writer/**",
+  "@/writer/**",
   "@magicborn/dialogue-forge/src/writer/**",
-  "src/writer/**",
+  "packages/dialogue-forge/src/writer/**",
 ];
 
 const writerRestrictedPatterns = [
   ...baseRestrictedPatterns,
   "**/forge/**",
-  "@/src/forge/**",
+  "@/forge/**",
   "@magicborn/dialogue-forge/src/forge/**",
-  "src/forge/**",
+  "packages/dialogue-forge/src/forge/**",
 ];
 
 const sharedRestrictedPatterns = [
@@ -31,27 +30,27 @@ const sharedRestrictedPatterns = [
   "**/ai/**",
   "**/forge/**",
   "**/writer/**",
-  "@/src/ai/**",
-  "@/src/forge/**",
-  "@/src/writer/**",
+  "@/ai/**",
+  "@/forge/**",
+  "@/writer/**",
   "@magicborn/dialogue-forge/src/ai/**",
   "@magicborn/dialogue-forge/src/forge/**",
   "@magicborn/dialogue-forge/src/writer/**",
-  "src/ai/**",
-  "src/forge/**",
-  "src/writer/**",
+  "packages/dialogue-forge/src/ai/**",
+  "packages/dialogue-forge/src/forge/**",
+  "packages/dialogue-forge/src/writer/**",
 ];
 
 const aiRestrictedPatterns = [
   ...baseRestrictedPatterns,
   "**/forge/**",
   "**/writer/**",
-  "@/src/forge/**",
-  "@/src/writer/**",
+  "@/forge/**",
+  "@/writer/**",
   "@magicborn/dialogue-forge/src/forge/**",
   "@magicborn/dialogue-forge/src/writer/**",
-  "src/forge/**",
-  "src/writer/**",
+  "packages/dialogue-forge/src/forge/**",
+  "packages/dialogue-forge/src/writer/**",
 ];
 
 module.exports = {
@@ -67,7 +66,7 @@ module.exports = {
   plugins: ["@typescript-eslint"],
   overrides: [
     {
-      files: ["app/**/*.{js,jsx,ts,tsx}"],
+      files: ["apps/host/app/**/*.{js,jsx,ts,tsx}"],
       extends: ["next/core-web-vitals"],
       rules: {
         // Next.js recommended rules are included via extends
@@ -76,7 +75,7 @@ module.exports = {
       },
     },
     {
-      files: ["src/**/*.{js,jsx,ts,tsx}", "src/**/*.d.ts"],
+      files: ["packages/dialogue-forge/src/**/*.{js,jsx,ts,tsx}", "packages/dialogue-forge/src/**/*.d.ts"],
       rules: {
         "no-restricted-imports": [
           "error",
@@ -87,7 +86,7 @@ module.exports = {
       },
     },
     {
-      files: ["src/forge/**/*.{js,jsx,ts,tsx}", "src/forge/**/*.d.ts"],
+      files: ["packages/dialogue-forge/src/forge/**/*.{js,jsx,ts,tsx}", "packages/dialogue-forge/src/forge/**/*.d.ts"],
       rules: {
         "no-restricted-imports": [
           "error",
@@ -98,7 +97,7 @@ module.exports = {
       },
     },
     {
-      files: ["src/writer/**/*.{js,jsx,ts,tsx}", "src/writer/**/*.d.ts"],
+      files: ["packages/dialogue-forge/src/writer/**/*.{js,jsx,ts,tsx}", "packages/dialogue-forge/src/writer/**/*.d.ts"],
       rules: {
         "no-restricted-imports": [
           "error",
@@ -109,7 +108,7 @@ module.exports = {
       },
     },
     {
-      files: ["src/shared/**/*.{js,jsx,ts,tsx}", "src/shared/**/*.d.ts"],
+      files: ["packages/dialogue-forge/src/shared/**/*.{js,jsx,ts,tsx}", "packages/dialogue-forge/src/shared/**/*.d.ts"],
       rules: {
         "no-restricted-imports": [
           "error",
@@ -120,7 +119,7 @@ module.exports = {
       },
     },
     {
-      files: ["src/ai/**/*.{js,jsx,ts,tsx}", "src/ai/**/*.d.ts"],
+      files: ["packages/dialogue-forge/src/ai/**/*.{js,jsx,ts,tsx}", "packages/dialogue-forge/src/ai/**/*.d.ts"],
       rules: {
         "no-restricted-imports": [
           "error",

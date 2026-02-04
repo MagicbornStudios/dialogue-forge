@@ -14,7 +14,7 @@ This document defines the target monorepo architecture and package boundaries. I
 - shared: no internal dependencies.
 - runtime: shared only.
 - ai: shared only.
-- forge/writer/video/characters: shared + runtime only.
+- forge/writer/video/characters: shared + runtime (and ai for CopilotKit wiring).
 - dialogue-forge: re-exports from other packages.
 - host app: may import from any package.
 
@@ -59,7 +59,7 @@ packages/shared
 Each package should include:
 
 - package.json with explicit exports
-- src/ (source)
+- packages/*/src/ (source)
 - dist/ (build output)
 - tsconfig.json (local build)
 - tsconfig.build.json (emit)
@@ -82,3 +82,17 @@ The host app owns:
 - Adapter implementations
 
 Domain packages must not import from the host app.
+
+## Tooling (Scaffold)
+
+- turbo.json added for task orchestration (not wired yet).
+- pnpm-workspace.yaml added for future pnpm migration.
+
+## Current State (Feb 4, 2026)
+
+- apps/host contains the Next.js app.
+- Domain source is extracted into packages/{shared,runtime,forge,writer,video,characters,ai}.
+- packages/dialogue-forge re-exports domain APIs for compatibility.
+- `@/` alias removed; use `@magicborn/<domain>/*` or relative host paths.
+
+

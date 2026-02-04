@@ -4,21 +4,21 @@
 
 - Next.js + PayloadCMS application code.
 - Owns runtime integration, API routes, and generated types.
-- Host may import from src/ (shared/domain/ai).
+- Host may import from packages/* (shared/domain/ai).
 
-## Shared (src/shared/)
+## Shared (packages/shared/src/)
 
 - Cross-domain types, utilities, and UI primitives.
 - Lowest common layer used by domain packages.
 - No dependencies on host or domain-specific packages.
 
-## Domains (src/forge/, src/writer/)
+## Domains (packages/forge/src/, packages/writer/src/, packages/video/src/, packages/characters/src/)
 
 - Domain-specific types, stores, components, and libraries.
-- May depend on shared and AI layers.
-- Forge ↔ Writer cross-imports are prohibited.
+- May depend on shared + runtime (and AI for CopilotKit wiring).
+- Forge ↔ Writer cross-imports are prohibited. Forge may import Video types/renderers for playback.
 
-## AI (src/ai/)
+## AI (packages/ai/src/)
 
 - Shared AI infrastructure and domain AI adapters.
 - Can depend on shared types/utilities.
@@ -43,3 +43,6 @@
 ## Modal Management
 
 - Workspace store viewState slice + modal switcher component.
+
+
+

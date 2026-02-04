@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "styles/globals.css",
+    "baseColor": "zinc",
+    "cssVariables": true
+  },
+  "aliases": {
+    "components": "@magicborn/shared/ui",
+    "utils": "@magicborn/shared/lib/utils",
+    "ui": "@magicborn/shared/ui",
+    "lib": "@magicborn/shared/lib",
+    "hooks": "@magicborn/shared/hooks"
+  }
+}
+

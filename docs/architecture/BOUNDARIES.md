@@ -2,22 +2,22 @@
 
 ## Layer Model (Host → Shared → Domain → AI)
 
-**Host (app/)**
+**Host (apps/host/)**
 - Next.js + PayloadCMS application code.
 - Owns runtime integration, API routes, and generated types.
-- **Host may import from src/** (shared/domain/ai).
+- **Host may import from packages/** (shared/domain/ai).
 
-**Shared (src/shared/)**
+**Shared (packages/shared/ or packages/shared/src/)**
 - Cross-domain types, utilities, and UI primitives.
 - Lowest common layer used by domain packages.
 - No dependencies on host or domain-specific packages.
 
-**Domains (src/forge/, src/writer/)**
+**Domains (packages/forge/, packages/writer/, packages/video/, packages/characters/)**
 - Domain-specific types, stores, components, and libraries.
-- May depend on shared and AI layers.
-- **Forge ↔ Writer cross-imports are prohibited.**
+- May depend on shared + runtime (and AI for CopilotKit wiring).
+- **Forge ↔ Writer cross-imports are prohibited. Forge may import Video types/renderers for playback; avoid new cross-domain links.**
 
-**AI (src/ai/)**
+**AI (packages/ai/ or packages/ai/src/)**
 - Shared AI infrastructure and domain AI adapters.
 - Can depend on shared types/utilities.
 - Domain layers can depend on AI, never the reverse.
@@ -45,18 +45,18 @@ Practical guidance:
 
 ## Import Direction Rules
 
-1. **Host may import from src/** (shared, domain, ai).
-2. **src/** may not import from **app/** or `app/payload-types.ts`.
-3. **Domains may import from shared and ai only.**
-4. **Domains may not import each other** (Forge ↔ Writer).
+1. **Host may import from packages/** (shared, domain, ai).
+2. **packages/** may not import from **apps/host/** or `apps/host/app/payload-types.ts`.
+3. **Domains may import from shared + runtime (and AI for CopilotKit wiring).**
+4. **Domains may not import each other** (Forge ↔ Writer). Forge -> Video is an approved exception for playback types/renderers.
 5. **AI may not import from domains or host.**
 
 ### Monorepo Equivalent Rules
 
 1. **apps/host may import from packages/**.
 2. **packages/** may not import from **apps/host/**.
-3. **Domain packages may import from shared and runtime only.**
-4. **Domain packages may not import each other.**
+3. **Domain packages may import from shared + runtime (and AI for CopilotKit wiring).**
+4. **Domain packages may not import each other.** Forge -> Video is an approved exception for playback types/renderers.
 5. **AI may import from shared only.**
 
 ## Placement Checklist (for new files)
@@ -66,4 +66,7 @@ Practical guidance:
 - [ ] Is it specific to Forge or Writer workflows? → **Domain**.
 - [ ] Is it AI infrastructure or AI contracts? → **AI**.
 - [ ] Does it violate import direction rules? → **Move it down** to the lowest valid layer.
-- [ ] **Verify `src/**` does not import `app/**` or `app/payload-types.ts`.**
+- [ ] **Verify `packages/**` does not import `apps/host/**` or `apps/host/app/payload-types.ts`.**
+
+
+

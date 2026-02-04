@@ -21,11 +21,11 @@ Outcome: one place to define “what the AI can do” per domain, one chat surfa
 ## 2. Current State (Pre–Cleanup)
 
 - **Runtime**: Single route `/api/copilotkit` — CopilotRuntime + OpenAIAdapter (OpenRouter). No custom agents, no LangGraph.
-- **Client**: `src/ai/copilotkit/providers/CopilotKitProvider.tsx` — wraps app with CopilotKit + CopilotSidebar. No domain-specific logic.
+- **Client**: `packages/ai/src/copilotkit/providers/CopilotKitProvider.tsx` — wraps app with CopilotKit + CopilotSidebar. No domain-specific logic.
 - **Per-domain**: Writer, Forge, Video each have their own CopilotKit integration:
-  - **Writer**: `src/writer/copilotkit/` — context (useWriterCopilotContext), workspace actions, editor actions.
-  - **Forge**: `src/forge/copilotkit/` — context, workspace actions, graph editor actions.
-  - **Video**: `src/video/workspace/copilot/` — context and actions.
+  - **Writer**: `packages/writer/src/copilotkit/` — context (useWriterCopilotContext), workspace actions, editor actions.
+  - **Forge**: `packages/forge/src/copilotkit/` — context, workspace actions, graph editor actions.
+  - **Video**: `packages/video/src/workspace/copilot/` — context and actions.
 - **Docs**: [docs/ai.md](../ai.md), [docs/copilotkit-setup.md](../copilotkit-setup.md) describe AI layer and CopilotKit setup.
 
 Custom draft (`_status`) has been removed from all collections; Payload versions are the single source of draft/publish behavior.
@@ -44,7 +44,7 @@ Custom draft (`_status`) has been removed from all collections; Payload versions
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  AI Layer (src/ai/) — barebones, no domain imports              │
+│  AI Layer (packages/ai/src/) — barebones, no domain imports              │
 │  - Agent registry: Forge | Writer | Video (by route/context)     │
 │  - Chat orchestrator: route messages to correct agent            │
 │  - Contract: domain provides “context” + “actions” (existing)     │
@@ -58,7 +58,7 @@ Custom draft (`_status`) has been removed from all collections; Payload versions
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-- **Domains** keep their current CopilotKit hooks and actions; no requirement to move those into `src/ai/`.
+- **Domains** keep their current CopilotKit hooks and actions; no requirement to move those into `packages/ai/src/`.
 - **AI layer** defines the *concept* of per-domain agents (Forge / Writer / Video) and a chat system that uses them, without implementing domain logic itself.
 - **Chat system** is the main new surface: user chats; the system decides which agent (Forge/Writer/Video) handles the conversation based on current route or context, and forwards to that agent’s instructions + context + actions.
 
@@ -80,7 +80,7 @@ Agents are **defined** in the AI layer (name, instructions, which context/action
 
 ### 5.1 AI domain cleanup (barebones, no domain coupling)
 
-- **Audit `src/ai/`**: Remove or simplify any code that directly imports from `src/forge/`, `src/writer/`, or `src/video/` (except via a narrow contract, e.g. “context string” + “action names”). Goal: AI layer does not depend on domain internals.
+- **Audit `packages/ai/src/`**: Remove or simplify any code that directly imports from `packages/forge/src/`, `packages/writer/src/`, or `packages/video/src/` (except via a narrow contract, e.g. “context string” + “action names”). Goal: AI layer does not depend on domain internals.
 - **Single entry point**: One clear place that defines “what the AI can do” per workspace (e.g. a registry or config: Forge → instructions + context provider + action names; Writer → …; Video → …). Existing CopilotKit providers in each domain can remain; the AI layer only needs to know how to *invoke* or *configure* them for chat.
 - **Document contract**: In [docs/ai.md](../ai.md), document: (1) Domains expose context (useCopilotReadable) and actions (useCopilotAction). (2) AI layer provides CopilotKitProvider and, in the future, chat routing to the correct agent. (3) No custom draft logic; Payload versions only.
 
@@ -92,7 +92,7 @@ Agents are **defined** in the AI layer (name, instructions, which context/action
 
 ### 5.3 Weaving in agents
 
-- **Agent registry**: Introduce a minimal “agent registry” (e.g. in `src/ai/`): map workspace id (Forge | Writer | Video) to display name, instructions prefix, and optionally which CopilotKit context/actions to use. Domains do not need to register themselves in the registry at first; the registry can be a static config that points at “the Forge context/actions,” “the Writer context/actions,” etc.
+- **Agent registry**: Introduce a minimal “agent registry” (e.g. in `packages/ai/src/`): map workspace id (Forge | Writer | Video) to display name, instructions prefix, and optionally which CopilotKit context/actions to use. Domains do not need to register themselves in the registry at first; the registry can be a static config that points at “the Forge context/actions,” “the Writer context/actions,” etc.
 - **Routing**: When the user is on `/forge`, chat uses the Forge agent; on `/writer`, Writer agent; on `/video`, Video agent. Implementation can be as simple as reading the current pathname and selecting from the registry.
 - **Keep existing actions**: All current frontend actions (Writer workspace/editor actions, Forge workspace/graph actions, Video actions) stay in their domains and keep working with the sidebar. The chat system simply uses the same CopilotKit backend and the same context/actions for the active workspace.
 
@@ -113,7 +113,7 @@ Agents are **defined** in the AI layer (name, instructions, which context/action
 
 ## 7. Acceptance Criteria (For Executing Agent)
 
-- [ ] `src/ai/` has no direct imports from `src/forge/`, `src/writer/`, or `src/video/` (except via a documented, narrow contract if any).
+- [ ] `packages/ai/src/` has no direct imports from `packages/forge/src/`, `packages/writer/src/`, or `packages/video/src/` (except via a documented, narrow contract if any).
 - [ ] A single “agent registry” or config exists that defines Forge, Writer, and Video agents (name, instructions, and how to resolve context/actions for the active workspace).
 - [ ] A chat UI exists and routes messages to the agent for the current workspace (route or context).
 - [ ] Existing CopilotKit sidebar and frontend actions in Writer, Forge, and Video still work.
@@ -126,13 +126,14 @@ Agents are **defined** in the AI layer (name, instructions, which context/action
 
 | Area | Location |
 |------|----------|
-| CopilotKit provider | `src/ai/copilotkit/providers/CopilotKitProvider.tsx` |
+| CopilotKit provider | `packages/ai/src/copilotkit/providers/CopilotKitProvider.tsx` |
 | CopilotKit runtime | `app/api/copilotkit/route.ts` |
-| Writer CopilotKit | `src/writer/copilotkit/` |
-| Forge CopilotKit | `src/forge/copilotkit/` |
-| Video CopilotKit | `src/video/workspace/copilot/` |
+| Writer CopilotKit | `packages/writer/src/copilotkit/` |
+| Forge CopilotKit | `packages/forge/src/copilotkit/` |
+| Video CopilotKit | `packages/video/src/workspace/copilot/` |
 | AI overview | `docs/ai.md` |
 | CopilotKit setup | `docs/copilotkit-setup.md` |
 | Roadmap | `ROADMAP.md` |
 
 This plan is intended to be executed by an agent; update this document as implementation progresses.
+

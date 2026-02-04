@@ -1,19 +1,13 @@
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const payloadPackagePath = path.resolve(
-  __dirname,
-  '../../node_modules/@payloadcms/next',
-);
 
 let withPayload = (config) => config;
-
-if (fs.existsSync(payloadPackagePath)) {
+try {
   const payloadModule = await import('@payloadcms/next/withPayload');
   withPayload = payloadModule.withPayload;
-} else {
+} catch {
   console.warn(
     '[next.config] Optional dependency @payloadcms/next is not installed; skipping withPayload.',
   );
@@ -28,8 +22,16 @@ if (fs.existsSync(payloadPackagePath)) {
 const nextConfig = {
   pageExtensions: ['ts', 'tsx', 'js', 'jsx'],
 
-  // Externalize sharp (native bindings) so Next resolves it from node_modules
-  serverExternalPackages: ['sharp'],
+  // Externalize server-only packages so webpack does not bundle them (avoids parsing README/LICENSE in libsql)
+  serverExternalPackages: [
+    'sharp',
+    '@payloadcms/db-sqlite',
+    'libsql',
+    '@libsql/client',
+    '@libsql/hrana-client',
+    '@libsql/isomorphic-fetch',
+    '@libsql/isomorphic-ws',
+  ],
 
   // Silence Sass deprecation warnings from PayloadCMS node_modules and sass-loader
   sassOptions: {

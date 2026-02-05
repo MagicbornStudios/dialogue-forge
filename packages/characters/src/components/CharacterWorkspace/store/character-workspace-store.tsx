@@ -11,15 +11,14 @@ import { immer } from "zustand/middleware/immer"
 import { createProjectSlice, type ProjectSlice, type ProjectActions } from "./slices/project.slice"
 import { createCharactersSlice, type CharactersSlice, type CharactersActions } from "./slices/characters.slice"
 import { createViewStateSlice, type ViewStateSlice, type ViewStateActions } from "./slices/viewState.slice"
-import type { CharacterWorkspaceAdapter } from "@magicborn/characters/types"
+import type { CharacterDoc } from "@magicborn/characters/types"
+
+export type LoadCharactersCallback = (projectId: string) => Promise<CharacterDoc[]>;
 
 export interface CharacterWorkspaceState
   extends ProjectSlice,
     CharactersSlice,
     ViewStateSlice {
-  // Data adapter
-  dataAdapter?: CharacterWorkspaceAdapter
-
   actions: {
     // Project actions
     setActiveProjectId: ProjectActions['setActiveProjectId']
@@ -46,14 +45,13 @@ export interface CharacterWorkspaceState
 }
 
 export interface CreateCharacterWorkspaceStoreOptions {
-  dataAdapter?: CharacterWorkspaceAdapter
+  /** Called when activeProjectId changes; host implements via RQ fetch. */
+  loadCharacters?: LoadCharactersCallback
 }
 
 export function createCharacterWorkspaceStore(
   options: CreateCharacterWorkspaceStoreOptions = {}
 ): StoreApi<CharacterWorkspaceState> {
-  const { dataAdapter } = options
-
   return createStore<CharacterWorkspaceState>()(
     devtools(
       immer((set, get) => {
@@ -65,7 +63,6 @@ export function createCharacterWorkspaceStore(
           ...projectSlice,
           ...charactersSlice,
           ...viewStateSlice,
-          dataAdapter,
           actions: {
             // Project actions
             setActiveProjectId: projectSlice.setActiveProjectId,

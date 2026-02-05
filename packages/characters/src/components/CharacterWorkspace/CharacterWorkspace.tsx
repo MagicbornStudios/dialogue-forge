@@ -1,32 +1,31 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import type { CharacterWorkspaceAdapter, ProjectInfo, CharacterDoc, JointGraphJson, RelationshipDoc } from '@magicborn/characters/types';
+import type { ProjectInfo, CharacterDoc, JointGraphJson, RelationshipDoc } from '@magicborn/characters/types';
+import { useCharacterDataContext } from './CharacterDataContext';
 import { CharacterWorkspaceHeader } from './components/CharacterWorkspaceHeader';
 import { CharacterWorkspaceModals } from './components/CharacterWorkspaceModals';
 import { GraphDebugDrawer } from './components/GraphDebugDrawer';
 import { RelationshipGraphEditorBlank } from './components/RelationshipGraphEditorBlank';
-
-/** Set to true to render paper + one circle only (no app data, no drag-and-drop). */
 import { ActiveCharacterPanel } from './components/ActiveCharacterPanel';
 import { CharacterSidebar } from './components/CharacterSidebar';
 import { CharacterDetailsPanel } from './components/CharacterDetailsPanel';
 import { useCharacterWorkspaceStore } from './store/character-workspace-store';
 import { ProjectSync } from './components/ProjectSync';
 import { RelationshipGraphEditorBlankRef } from './components/RelationshipGraphEditorBlank/types';
+
 /**
- * Character workspace container component
- * Uses Zustand store for state management
+ * Character workspace container component.
+ * Gets data/callbacks from CharacterDataContext (provided by host).
  */
 export function CharacterWorkspace({
-  dataAdapter,
   selectedProjectId,
   onProjectChange,
 }: {
-  dataAdapter?: CharacterWorkspaceAdapter;
   selectedProjectId?: string | null;
   onProjectChange?: (projectId: string | null) => void;
 }) {
+  const dataAdapter = useCharacterDataContext() ?? undefined;
   // Store selectors
   const projects = useCharacterWorkspaceStore((s) => s.projects);
   const activeProjectId = useCharacterWorkspaceStore((s) => s.activeProjectId);
@@ -38,7 +37,6 @@ export function CharacterWorkspace({
 
   // Local UI state
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
-  const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
   const graphEditorRef = useRef<RelationshipGraphEditorBlankRef | null>(null);
 
   // Graph UI: selection, edge edit dialog, context menu (owned here for 3-column layout)
@@ -55,14 +53,6 @@ export function CharacterWorkspace({
     if (!selectedNodeId) return null;
     return charactersById[selectedNodeId] ?? null;
   }, [selectedNodeId, charactersById]);
-
-  // Update store adapter when it changes
-  useEffect(() => {
-    if (dataAdapter) {
-      // Store doesn't have a direct setter for adapter, but we can update it via store instance
-      // For now, we'll handle adapter in effects below
-    }
-  }, [dataAdapter]);
 
   // Sync selectedProjectId to store
   useEffect(() => {
@@ -99,36 +89,7 @@ export function CharacterWorkspace({
     };
   }, [dataAdapter]);
 
-  // Load characters when project is selected
-  useEffect(() => {
-    if (!dataAdapter || !activeProjectId) {
-      actionsRef.current.setCharacters([]);
-      setCurrentGraphJson(null);
-      return;
-    }
-    if (!activeCharacterId) {
-      setCurrentGraphJson(null);
-    }
-    let cancelled = false;
-    setIsLoadingCharacters(true);
-    dataAdapter
-      .listCharacters(activeProjectId)
-      .then((list: CharacterDoc[]) => {
-        if (!cancelled) actionsRef.current.setCharacters(list);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          console.error('Failed to load characters:', err);
-          actionsRef.current.setCharacters([]);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingCharacters(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [dataAdapter, activeProjectId, activeCharacterId]);
+  // Characters are loaded by setupCharacterWorkspaceSubscriptions (host passes loadCharacters when creating store).
 
   // Load relationships when project changes
   useEffect(() => {

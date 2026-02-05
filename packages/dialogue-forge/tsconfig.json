@@ -9,29 +9,58 @@
     "emitDeclarationOnly": true,
     "noEmit": false,
     "paths": {
-      "@magicborn/dialogue-forge": ["src"],
-      "@magicborn/dialogue-forge/*": ["src/*"],
-      "@magicborn/shared": ["../shared/dist"],
-      "@magicborn/shared/*": ["../shared/dist/*"],
-      "@magicborn/forge": ["../forge/dist"],
-      "@magicborn/forge/*": ["../forge/dist/*"],
-      "@magicborn/writer": ["../writer/dist"],
-      "@magicborn/writer/*": ["../writer/dist/*"],
-      "@magicborn/video": ["../video/dist"],
-      "@magicborn/video/*": ["../video/dist/*"],
-      "@magicborn/characters": ["../characters/dist"],
-      "@magicborn/characters/*": ["../characters/dist/*"]
+      "@magicborn/dialogue-forge": [
+        "src"
+      ],
+      "@magicborn/dialogue-forge/*": [
+        "src/*"
+      ],
+      "@magicborn/shared": [
+        "../shared/dist"
+      ],
+      "@magicborn/shared/*": [
+        "../shared/dist/*"
+      ],
+      "@magicborn/forge": [
+        "../forge/dist"
+      ],
+      "@magicborn/forge/*": [
+        "../forge/dist/*"
+      ],
+      "@magicborn/writer": [
+        "../writer/dist"
+      ],
+      "@magicborn/writer/*": [
+        "../writer/dist/*"
+      ],
+      "@magicborn/characters": [
+        "../characters/dist"
+      ],
+      "@magicborn/characters/*": [
+        "../characters/dist/*"
+      ]
     }
   },
   "references": [
-    { "path": "../shared/tsconfig.json" },
-    { "path": "../forge/tsconfig.json" },
-    { "path": "../writer/tsconfig.json" },
-    { "path": "../characters/tsconfig.json" }
+    {
+      "path": "../shared/tsconfig.json"
+    },
+    {
+      "path": "../forge/tsconfig.json"
+    },
+    {
+      "path": "../writer/tsconfig.json"
+    },
+    {
+      "path": "../characters/tsconfig.json"
+    }
   ],
-  "include": ["src/**/*", "../../types/**/*.d.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*",
+    "../../types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
-
-
-

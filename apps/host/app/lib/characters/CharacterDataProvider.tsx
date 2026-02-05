@@ -16,7 +16,7 @@ import {
   useUpdateRelationship,
   useDeleteRelationship,
 } from './character-queries';
-import { CharacterDataContext } from './CharacterDataContext';
+import { CharacterDataContext } from '@magicborn/characters/components/CharacterWorkspace/CharacterDataContext';
 
 type Props = {
   children: React.ReactNode;

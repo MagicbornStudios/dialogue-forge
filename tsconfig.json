@@ -12,9 +12,6 @@
       "path": "./packages/writer/tsconfig.json"
     },
     {
-      "path": "./packages/video/tsconfig.json"
-    },
-    {
       "path": "./packages/characters/tsconfig.json"
     },
     {

@@ -1,27 +1,38 @@
 'use client';
 
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { CharacterWorkspace } from '@magicborn/characters/components/CharacterWorkspace/CharacterWorkspace';
-import { CharacterWorkspaceStoreProvider, createCharacterWorkspaceStore } from '@magicborn/characters/components/CharacterWorkspace/store/character-workspace-store';
+import {
+  CharacterWorkspaceStoreProvider,
+  createCharacterWorkspaceStore,
+} from '@magicborn/characters/components/CharacterWorkspace/store/character-workspace-store';
+import { setupCharacterWorkspaceSubscriptions } from '@magicborn/characters/components/CharacterWorkspace/store/slices/subscriptions';
+import { useCharacterDataContext } from '@magicborn/characters/components/CharacterWorkspace/CharacterDataContext';
 import { CharacterDataProvider } from '../../lib/characters/CharacterDataProvider';
-import { useCharacterDataFromContext } from '../../lib/characters/CharacterDataContext';
-import { useState, useMemo } from 'react';
 
 export const dynamic = 'force-static';
 
 function CharactersAppContent() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const adapter = useCharacterDataFromContext();
-  const store = useMemo(
-    () => (adapter ? createCharacterWorkspaceStore({ dataAdapter: adapter }) : null),
+  const adapter = useCharacterDataContext();
+  const loadCharacters = useCallback(
+    (projectId: string) => (adapter ? adapter.listCharacters(projectId) : Promise.resolve([])),
     [adapter]
   );
+  const store = useMemo(
+    () => createCharacterWorkspaceStore({ loadCharacters }),
+    [loadCharacters]
+  );
+
+  useEffect(() => {
+    if (store && loadCharacters) setupCharacterWorkspaceSubscriptions(store, loadCharacters);
+  }, [store, loadCharacters]);
 
   if (!store || !adapter) return null;
 
   return (
     <CharacterWorkspaceStoreProvider store={store}>
       <CharacterWorkspace
-        dataAdapter={adapter}
         selectedProjectId={selectedProjectId}
         onProjectChange={setSelectedProjectId}
       />

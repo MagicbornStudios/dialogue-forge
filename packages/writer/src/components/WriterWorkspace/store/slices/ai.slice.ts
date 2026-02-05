@@ -37,7 +37,8 @@ export interface AiActions {
 
 export function createAiSlice(
   set: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[0],
-  get: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[1]
+  get: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[1],
+  getDataAdapter?: () => WriterDataAdapter | null
 ): AiSlice & AiActions {
   return {
     aiPreview: null,
@@ -174,7 +175,7 @@ export function createAiSlice(
       const nextPageMap = new Map(state.pageMap);
       nextPageMap.set(targetId, { ...page, title: nextSnapshotTyped.title ?? page.title, bookBody: nextSnapshotTyped.content ?? page.bookBody });
       set({ pages: nextPages, pageMap: nextPageMap });
-      const dataAdapter = state.dataAdapter as WriterDataAdapter | undefined;
+      const dataAdapter = getDataAdapter?.() ?? null;
       dataAdapter
         ?.updatePage(targetId, {
           title: nextSnapshotTyped.title ?? undefined,
@@ -206,7 +207,7 @@ export function createAiSlice(
         const nextPageMap = new Map(state.pageMap);
         nextPageMap.set(targetId, { ...page, title: undoSnapshotTyped.title ?? page.title, bookBody: undoSnapshotTyped.content ?? page.bookBody });
         set({ pages: nextPages, pageMap: nextPageMap });
-        const dataAdapter = state.dataAdapter as WriterDataAdapter | undefined;
+        const dataAdapter = getDataAdapter?.() ?? null;
         dataAdapter
           ?.updatePage(targetId, {
             title: undoSnapshotTyped.title ?? undefined,

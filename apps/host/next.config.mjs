@@ -50,10 +50,8 @@ const nextConfig = {
       // Tight boundary: import roots point to package source (not repo root).
       '@magicborn/dialogue-forge': path.resolve(__dirname, '../../packages/dialogue-forge/src'),
       '@magicborn/shared': path.resolve(__dirname, '../../packages/shared/src'),
-      '@magicborn/runtime': path.resolve(__dirname, '../../packages/runtime/src'),
       '@magicborn/forge': path.resolve(__dirname, '../../packages/forge/src'),
       '@magicborn/writer': path.resolve(__dirname, '../../packages/writer/src'),
-      '@magicborn/video': path.resolve(__dirname, '../../packages/video/src'),
       '@magicborn/characters': path.resolve(__dirname, '../../packages/characters/src'),
       '@magicborn/ai': path.resolve(__dirname, '../../packages/ai/src'),
 
@@ -89,10 +87,8 @@ const nextConfig = {
     resolveAlias: {
       '@magicborn/dialogue-forge': '../../packages/dialogue-forge/src',
       '@magicborn/shared': '../../packages/shared/src',
-      '@magicborn/runtime': '../../packages/runtime/src',
       '@magicborn/forge': '../../packages/forge/src',
       '@magicborn/writer': '../../packages/writer/src',
-      '@magicborn/video': '../../packages/video/src',
       '@magicborn/characters': '../../packages/characters/src',
       '@magicborn/ai': '../../packages/ai/src',
       '@payload-config': './app/payload.config.ts',

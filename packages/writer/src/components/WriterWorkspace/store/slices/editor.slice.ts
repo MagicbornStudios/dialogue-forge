@@ -19,7 +19,8 @@ export interface EditorActions {
  */
 export function createEditorSlice(
   set: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[0],
-  get: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[1]
+  get: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[1],
+  getDataAdapter?: () => WriterDataAdapter | null
 ): EditorSlice & EditorActions {
   return {
     editorError: null,
@@ -28,7 +29,7 @@ export function createEditorSlice(
       if (!targetId || !content?.serialized) {
         return;
       }
-      const dataAdapter = get().dataAdapter as WriterDataAdapter | undefined;
+      const dataAdapter = getDataAdapter?.() ?? null;
       if (!dataAdapter) {
         return;
       }

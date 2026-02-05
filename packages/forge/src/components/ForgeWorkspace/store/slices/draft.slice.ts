@@ -7,6 +7,7 @@ import type { DraftPendingPageCreation } from "@magicborn/shared/types/draft"
 import type { ForgeNode } from "@magicborn/forge/types/forge-graph"
 import { PAGE_TYPE, type ForgePage } from "@magicborn/forge/types/narrative"
 import { createDraftSlice, type DraftSlice } from "@magicborn/shared/store/draft-slice"
+import type { ForgeDataAdapter } from "@magicborn/forge/adapters/forge-data-adapter"
 import type { ForgeWorkspaceState } from "../forge-workspace-store"
 
 export type ForgeDraftDelta = ReturnType<typeof calculateDelta>
@@ -16,7 +17,8 @@ export type ForgeDraftSlice = DraftSlice<ForgeGraphDoc, ForgeDraftDelta, GraphVa
 export function createForgeDraftSlice(
   set: Parameters<StateCreator<ForgeWorkspaceState, [], [], ForgeWorkspaceState>>[0],
   get: Parameters<StateCreator<ForgeWorkspaceState, [], [], ForgeWorkspaceState>>[1],
-  initialGraph?: ForgeGraphDoc | null
+  initialGraph?: ForgeGraphDoc | null,
+  getDataAdapter?: () => ForgeDataAdapter | null
 ): ForgeDraftSlice {
   const resolvePendingPageCreations = (deltas: ForgeDraftDelta[]): DraftPendingPageCreation[] => {
     const latestDelta = deltas[deltas.length - 1]
@@ -57,7 +59,7 @@ export function createForgeDraftSlice(
     initialGraph: initialGraph ?? null,
     validateDraft: (draft) => validateNarrativeGraph(draft),
     onCommitDraft: async (draft, deltas) => {
-      const dataAdapter = get().dataAdapter
+      const dataAdapter = getDataAdapter?.() ?? null
       if (!dataAdapter) {
         return draft
       }

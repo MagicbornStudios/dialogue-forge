@@ -75,7 +75,7 @@ export function GuidePanel({ isOpen, onClose }: GuidePanelProps) {
               <strong>Dialogue Forge automatically flattens your game state into Yarn Spinner-compatible variables.</strong>
             </p>
             <p className="text-df-text-secondary text-xs mb-2">
-              Pass any JSON game state structure to Gameplayer. Nested objects (player, characters, flags) are automatically flattened into flat variables that Yarn Spinner can use.
+              Game state with nested objects (player, characters, flags) can be flattened into Yarn Spinner–compatible variables via the flattenGameState utility.
             </p>
             <p className="text-df-text-secondary text-xs">
               In Yarn Spinner, these become <code className="bg-df-canvas-bg px-1 rounded">$variable</code> commands like <code className="bg-df-canvas-bg px-1 rounded">&lt;&lt;set $player_hp = 100&gt;&gt;</code>.
@@ -225,12 +225,8 @@ const flagSchema: FlagSchema = {
   onChange={...}
 />
 
-// Game state is used in player
-<GamePlayer
-  dialogue={dialogue}
-  gameState={gameState}  // Full game state (automatically flattened)
-  onComplete={...}
-/>`} language="typescript" />
+// Export to Yarn and use your own runtime (e.g. Yarn Spinner) for play.
+// Use flattenGameState() for game state → variable mapping.`} language="typescript" />
 
           <h3 className="text-lg font-semibold mt-6 mb-2 text-df-text-primary">Flag Types</h3>
           <div className="space-y-2 text-sm">
@@ -451,7 +447,6 @@ const gameState: GameState = {
           <h3 className="text-lg font-semibold mt-6 mb-2 text-df-text-primary">Complete Example</h3>
           <CodeBlock code={`import {
   DialogueGraphEditor,
-  GamePlayer,
   importFromYarn,
   exportToYarn,
   FlagSchema,
@@ -526,26 +521,8 @@ const dialogue = importFromYarn(yarnFile, 'Merchant');
   }}
 />
 
-// 5. Run dialogue with event hooks
-<GamePlayer
-  dialogue={dialogue}
-  gameState={gameState}
-  onComplete={(result) => {
-    // Update game state with new flags
-    setGameState(prev => ({
-      ...prev,
-      flags: { ...prev.flags, ...result.updatedFlags }
-    }));
-  }}
-  onNodeEnter={(nodeId, node) => {
-    // Example: handle node enter
-    // Play animations, sound effects
-  }}
-  onChoiceSelect={(nodeId, choice) => {
-    // Example: handle choice select
-    // Track player decisions
-  }}
-/>`} language="typescript" />
+// 5. Export to Yarn and run in your game runtime (e.g. Yarn Spinner)
+const yarnOutput = exportToYarn(dialogue);`} language="typescript" />
 
           <h3 className="text-lg font-semibold mt-6 mb-2 text-df-text-primary">How Flags Work with Unreal</h3>
           <div className="space-y-3 text-sm">
@@ -713,7 +690,7 @@ Speaker: Dialogue text here
               <ol className="list-decimal list-inside space-y-1 text-xs mt-2 ml-2 text-df-text-secondary">
                 <li><strong>Full Variable System</strong> - String, number, boolean variables with operations</li>
                 <li><strong>Advanced Set Operations</strong> - <code className="bg-df-canvas-bg px-1 rounded">+=</code>, <code className="bg-df-canvas-bg px-1 rounded">-=</code>, <code className="bg-df-canvas-bg px-1 rounded">*=</code>, <code className="bg-df-canvas-bg px-1 rounded">/=</code></li>
-                <li><strong>Rebuild PlayView</strong> - Proper Yarn Spinner execution engine</li>
+                <li><strong>Runtime execution</strong> - Integrate with Yarn Spinner or custom runner</li>
                 <li><strong>Commands & Shortcuts</strong> - wait, stop, detour, once, [[text|node]]</li>
                 <li><strong>Functions & Tags</strong> - visited(), random(), #tags, node headers</li>
               </ol>

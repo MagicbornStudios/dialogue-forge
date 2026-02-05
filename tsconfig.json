@@ -6,9 +6,6 @@
       "path": "./packages/shared/tsconfig.json"
     },
     {
-      "path": "./packages/runtime/tsconfig.json"
-    },
-    {
       "path": "./packages/forge/tsconfig.json"
     },
     {

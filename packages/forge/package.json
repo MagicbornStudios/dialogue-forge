@@ -15,9 +15,7 @@
   },
   "dependencies": {
     "@magicborn/shared": "workspace:*",
-    "@magicborn/runtime": "workspace:*",
-    "@magicborn/ai": "workspace:*",
-    "@magicborn/video": "workspace:*"
+    "@magicborn/ai": "workspace:*"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",

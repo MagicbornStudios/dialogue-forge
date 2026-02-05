@@ -12,9 +12,8 @@ This document defines the target monorepo architecture and package boundaries. I
 ## Package Dependency Rules
 
 - shared: no internal dependencies.
-- runtime: shared only.
 - ai: shared only.
-- forge/writer/video/characters: shared + runtime (and ai for CopilotKit wiring).
+- forge/writer/video/characters: shared (and ai for CopilotKit wiring).
 - dialogue-forge: re-exports from other packages.
 - host app: may import from any package.
 
@@ -27,7 +26,6 @@ apps/host
   -> packages/writer
   -> packages/video
   -> packages/characters
-  -> packages/runtime
   -> packages/shared
   -> packages/ai
 
@@ -36,15 +34,10 @@ packages/dialogue-forge
   -> packages/writer
   -> packages/video
   -> packages/characters
-  -> packages/runtime
   -> packages/shared
   -> packages/ai
 
 packages/forge|writer|video|characters
-  -> packages/shared
-  -> packages/runtime
-
-packages/runtime
   -> packages/shared
 
 packages/ai

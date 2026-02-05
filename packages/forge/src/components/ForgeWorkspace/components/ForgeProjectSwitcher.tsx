@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
+import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import type { ForgeProjectSummary } from '@magicborn/forge/adapters/forge-data-adapter';
 import { ProjectSwitcher } from '@magicborn/shared/ui/ProjectSwitcher';
 import type { ProjectSummary } from '@magicborn/shared/ui/ProjectSwitcher';
@@ -17,7 +18,7 @@ export function ForgeProjectSwitcher() {
 
   const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
   const setSelectedProjectId = useForgeWorkspaceStore((s) => s.actions.setSelectedProjectId);
-  const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
+  const dataAdapter = useForgeDataContext();
 
   useEffect(() => {
     if (!dataAdapter) return;

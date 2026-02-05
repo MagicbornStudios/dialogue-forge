@@ -4,9 +4,6 @@ import type { ForgeGraphDoc } from '@magicborn/forge/types/forge-graph';
 import type { ForgeGameState } from '@magicborn/shared/types/forge-game-state';
 import type { ForgeCharacter } from '@magicborn/forge/types/characters';
 import type { FlagSchema } from '@magicborn/forge/types/flags';
-import type { VideoTemplateWorkspaceAdapter } from '@magicborn/video/workspace/video-template-workspace-contracts';
-import type { VideoTemplateOverrides } from '@magicborn/video/templates/types/video-template-overrides';
-
 import { ForgeWorkspaceMenuBar } from '@magicborn/forge/components/ForgeWorkspace/components/ForgeWorkspaceMenuBar';
 import { ProjectSync } from '@magicborn/forge/components/ForgeWorkspace/components/ProjectSync';
 import { ForgeWorkspaceLayout } from '@magicborn/forge/components/ForgeWorkspace/components/ForgeWorkspaceLayout';
@@ -23,6 +20,7 @@ import {
 import { setupForgeWorkspaceSubscriptions } from '@magicborn/forge/components/ForgeWorkspace/store/slices/subscriptions';
 import type { ForgeEvent } from '@magicborn/forge/events/events';
 import { ForgeDataAdapter } from '@magicborn/forge/adapters/forge-data-adapter';
+import { useForgeDataContext } from './ForgeDataContext';
 import { useForgeWorkspaceActions } from '@magicborn/forge/copilotkit';
 import { useForgeCopilotContext } from '@magicborn/forge/copilotkit/hooks/useForgeCopilotContext';
 import { CopilotKitProvider } from '@magicborn/ai/copilotkit/providers/CopilotKitProvider';
@@ -56,8 +54,6 @@ interface ForgeWorkspaceProps {
 
   // Persistence surface (already implemented)
   dataAdapter?: ForgeDataAdapter;
-  videoTemplateAdapter?: VideoTemplateWorkspaceAdapter;
-  videoTemplateOverrides?: VideoTemplateOverrides;
 
   // Project selection sync
   selectedProjectId?: number | null;
@@ -77,12 +73,13 @@ export function ForgeWorkspace({
   onEvent,
   resolveGraph,
   dataAdapter,
-  videoTemplateAdapter,
-  videoTemplateOverrides,
   selectedProjectId,
   onProjectChange,
   headerLinks,
 }: ForgeWorkspaceProps) {
+  const adapterFromContext = useForgeDataContext();
+  const effectiveAdapter = dataAdapter ?? adapterFromContext;
+
   const eventSinkRef = useRef<EventSink>({
     emit: (event) => {
       if (onEvent) {
@@ -90,6 +87,9 @@ export function ForgeWorkspace({
       }
     },
   });
+
+  const adapterRef = useRef<ForgeDataAdapter | null>(effectiveAdapter);
+  adapterRef.current = effectiveAdapter;
 
   const storeRef = useRef(
     createForgeWorkspaceStore(
@@ -99,25 +99,15 @@ export function ForgeWorkspace({
         initialFlagSchema: initialFlagSchema,
         initialGameState: initialGameState,
         resolveGraph,
-        dataAdapter,
-        videoTemplateAdapter,
-        videoTemplateOverrides,
+        getDataAdapter: () => adapterRef.current ?? null,
       },
       eventSinkRef.current
     )
   );
 
   React.useEffect(() => {
-    setupForgeWorkspaceSubscriptions(storeRef.current, eventSinkRef.current, dataAdapter);
-  }, [dataAdapter]);
-
-  React.useEffect(() => {
-    storeRef.current.setState({ videoTemplateAdapter });
-  }, [videoTemplateAdapter]);
-
-  React.useEffect(() => {
-    storeRef.current.setState({ videoTemplateOverrides });
-  }, [videoTemplateOverrides]);
+    setupForgeWorkspaceSubscriptions(storeRef.current, eventSinkRef.current, effectiveAdapter ?? undefined);
+  }, [effectiveAdapter]);
 
   return (
     <CopilotKitProvider
@@ -214,8 +204,7 @@ function ForgeWorkspaceContent({
     setPanelVisibility(prev => ({ ...prev, [panelId]: !prev[panelId] }));
   }, []);
 
-  // Get store values at component level (not in callbacks to avoid hook violations)
-  const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
+  const dataAdapter = useForgeDataContext();
   const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
   const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
   const setActiveNarrativeGraphId = useForgeWorkspaceStore((s) => s.actions.setActiveNarrativeGraphId);
@@ -354,7 +343,6 @@ function ForgeWorkspaceContent({
   );
 
   // Modal actions from store
-  const openPlayModal = useForgeWorkspaceStore((s) => s.actions.openPlayModal);
   const openFlagModal = useForgeWorkspaceStore((s) => s.actions.openFlagModal);
   const openGuide = useForgeWorkspaceStore((s) => s.actions.openGuide);
   const isCopilotChatOpen = useForgeWorkspaceStore((s) => s.modalState.isCopilotChatOpen);
@@ -395,7 +383,6 @@ function ForgeWorkspaceContent({
       <ForgeWorkspaceMenuBar
         counts={{ actCount: 0, chapterCount: 0, pageCount: 0, characterCount: Object.keys(characters ?? {}).length }}
         onGuideClick={openGuide}
-        onPlayClick={openPlayModal}
         onFlagClick={openFlagModal}
         panelVisibility={panelVisibility}
         onTogglePanel={togglePanel}

@@ -84,15 +84,9 @@ importers:
       '@magicborn/forge':
         specifier: workspace:*
         version: link:../../packages/forge
-      '@magicborn/runtime':
-        specifier: workspace:*
-        version: link:../../packages/runtime
       '@magicborn/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@magicborn/video':
-        specifier: workspace:*
-        version: link:../../packages/video
       '@magicborn/writer':
         specifier: workspace:*
         version: link:../../packages/writer
@@ -234,15 +228,9 @@ importers:
       '@magicborn/forge':
         specifier: workspace:*
         version: link:../forge
-      '@magicborn/runtime':
-        specifier: workspace:*
-        version: link:../runtime
       '@magicborn/shared':
         specifier: workspace:*
         version: link:../shared
-      '@magicborn/video':
-        specifier: workspace:*
-        version: link:../video
       '@magicborn/writer':
         specifier: workspace:*
         version: link:../writer
@@ -375,9 +363,6 @@ importers:
       reactflow:
         specifier: ^11.11.4
         version: 11.11.4(@types/react@19.2.10)(immer@11.1.3)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      remotion:
-        specifier: ^4.0.409
-        version: 4.0.417(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       sass:
         specifier: ^1.97.3
         version: 1.97.3
@@ -427,45 +412,18 @@ importers:
       '@magicborn/ai':
         specifier: workspace:*
         version: link:../ai
-      '@magicborn/runtime':
-        specifier: workspace:*
-        version: link:../runtime
       '@magicborn/shared':
         specifier: workspace:*
         version: link:../shared
-      '@magicborn/video':
-        specifier: workspace:*
-        version: link:../video
       react:
         specifier: ^18.0.0 || ^19.0.0
         version: 19.2.1
       react-dom:
         specifier: ^18.0.0 || ^19.0.0
         version: 19.2.1(react@19.2.1)
-
-  packages/runtime:
-    dependencies:
-      '@magicborn/shared':
-        specifier: workspace:*
-        version: link:../shared
 
   packages/shared:
     dependencies:
-      react:
-        specifier: ^18.0.0 || ^19.0.0
-        version: 19.2.1
-      react-dom:
-        specifier: ^18.0.0 || ^19.0.0
-        version: 19.2.1(react@19.2.1)
-
-  packages/video:
-    dependencies:
-      '@magicborn/runtime':
-        specifier: workspace:*
-        version: link:../runtime
-      '@magicborn/shared':
-        specifier: workspace:*
-        version: link:../shared
       react:
         specifier: ^18.0.0 || ^19.0.0
         version: 19.2.1
@@ -478,6 +436,9 @@ importers:
       '@magicborn/ai':
         specifier: workspace:*
         version: link:../ai
+      '@magicborn/forge':
+        specifier: workspace:*
+        version: link:../forge
       '@magicborn/shared':
         specifier: workspace:*
         version: link:../shared

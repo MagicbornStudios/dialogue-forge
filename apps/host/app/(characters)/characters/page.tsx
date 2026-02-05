@@ -2,36 +2,26 @@
 
 import { CharacterWorkspace } from '@magicborn/characters/components/CharacterWorkspace/CharacterWorkspace';
 import { CharacterWorkspaceStoreProvider, createCharacterWorkspaceStore } from '@magicborn/characters/components/CharacterWorkspace/store/character-workspace-store';
-import { makePayloadCharacterAdapter } from '../../lib/characters/payload-character-adapter';
+import { useCharacterData } from '../../lib/characters/use-character-data';
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-// Tell Next.js this page is static (no dynamic params/searchParams)
 export const dynamic = 'force-static';
 
 export default function CharactersApp() {
-  // State for selected project (convert to string for adapter)
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const searchParams = useSearchParams();
-  
-  // Character workspace adapter
-  const characterAdapter = useMemo(
-    () => makePayloadCharacterAdapter({ 
-      baseUrl: 'http://localhost:3000',
-    }),
-    [],
-  );
+  const characterData = useCharacterData();
 
-  // Create store instance
   const store = useMemo(
-    () => createCharacterWorkspaceStore({ dataAdapter: characterAdapter }),
-    [characterAdapter]
+    () => createCharacterWorkspaceStore({ dataAdapter: characterData }),
+    [characterData]
   );
 
   return (
     <CharacterWorkspaceStoreProvider store={store}>
       <CharacterWorkspace
-        dataAdapter={characterAdapter}
+        dataAdapter={characterData}
         selectedProjectId={selectedProjectId}
         onProjectChange={setSelectedProjectId}
       />

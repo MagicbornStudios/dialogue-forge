@@ -5,6 +5,7 @@ import {
   WRITER_AI_PROPOSAL_STATUS,
   WriterWorkspaceState,
 } from '@magicborn/writer/components/WriterWorkspace/store/writer-workspace-store';
+import { useWriterDataContext } from '@magicborn/writer/components/WriterWorkspace/WriterDataContext';
 import { getPlainTextFromSerializedContent } from '@magicborn/writer/components/WriterWorkspace/store/writer-workspace-types';
 import { applyWriterPatchOps } from '@magicborn/writer/lib/editor/patches';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
@@ -97,7 +98,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
   const updatePage = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.updatePage);
   const applyAiEdits = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.applyAiEdits);
   const revertAiDraft = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.revertAiDraft);
-  const dataAdapter = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.dataAdapter);
+  const dataAdapter = useWriterDataContext();
 
   const activePage = activePageId ? pageMap.get(activePageId) ?? null : null;
 

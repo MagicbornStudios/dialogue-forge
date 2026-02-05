@@ -17,7 +17,9 @@ export type WriterDraftSlice = DraftSlice<ForgeGraphDoc, WriterDraftDelta, Graph
 export function createWriterDraftSlice(
   set: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[0],
   get: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[1],
-  initialGraph?: ForgeGraphDoc | null
+  initialGraph?: ForgeGraphDoc | null,
+  getDataAdapter?: () => WriterDataAdapter | null,
+  getForgeDataAdapter?: () => WriterForgeDataAdapter | null
 ): WriterDraftSlice {
   const resolvePendingPageCreations = (deltas: WriterDraftDelta[]): DraftPendingPageCreation[] => {
     const latestDelta = deltas[deltas.length - 1];
@@ -75,8 +77,8 @@ export function createWriterDraftSlice(
     initialGraph: initialGraph ?? null,
     validateDraft: (draft) => validateNarrativeGraph(draft),
     onCommitDraft: async (draft, deltas) => {
-      const dataAdapter = get().dataAdapter as WriterDataAdapter | undefined;
-      const forgeDataAdapter = get().forgeDataAdapter as WriterForgeDataAdapter | undefined;
+      const dataAdapter = getDataAdapter?.() ?? null;
+      const forgeDataAdapter = getForgeDataAdapter?.() ?? null;
       if (!forgeDataAdapter) {
         return draft;
       }

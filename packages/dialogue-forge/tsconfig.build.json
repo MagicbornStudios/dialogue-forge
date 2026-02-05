@@ -17,8 +17,6 @@
       "@magicborn/dialogue-forge/*": ["./src/*"],
       "@magicborn/shared": ["../shared/dist"],
       "@magicborn/shared/*": ["../shared/dist/*"],
-      "@magicborn/runtime": ["../runtime/dist"],
-      "@magicborn/runtime/*": ["../runtime/dist/*"],
       "@magicborn/forge": ["../forge/dist"],
       "@magicborn/forge/*": ["../forge/dist/*"],
       "@magicborn/writer": ["../writer/dist"],
@@ -33,7 +31,6 @@
   },
   "references": [
     { "path": "../shared/tsconfig.json" },
-    { "path": "../runtime/tsconfig.json" },
     { "path": "../forge/tsconfig.json" },
     { "path": "../writer/tsconfig.json" },
     { "path": "../video/tsconfig.json" },

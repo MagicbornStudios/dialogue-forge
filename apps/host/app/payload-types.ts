@@ -75,7 +75,6 @@ export interface Config {
     'forge-graphs': ForgeGraph;
     'flag-schemas': FlagSchema;
     'game-states': GameState;
-    'video-templates': VideoTemplate;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -405,26 +404,6 @@ export interface GameState {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "video-templates".
- */
-export interface VideoTemplate {
-  id: number;
-  project: number | Project;
-  title: string;
-  template:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -697,17 +676,6 @@ export interface GameStatesSelect<T extends boolean = true> {
   createdAt?: T;
   deletedAt?: T;
   _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "video-templates_select".
- */
-export interface VideoTemplatesSelect<T extends boolean = true> {
-  project?: T;
-  title?: T;
-  template?: T;
-  updatedAt?: T;
-  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -85,10 +85,6 @@ export interface WriterWorkspaceState {
   hasUncommittedChanges: ReturnType<typeof createWriterDraftSlice>['hasUncommittedChanges'];
   lastCommittedAt: ReturnType<typeof createWriterDraftSlice>['lastCommittedAt'];
 
-  // Data adapters
-  dataAdapter?: WriterDataAdapter;
-  forgeDataAdapter?: WriterForgeDataAdapter;
-
   actions: {
     // Content actions
     setPages: (pages: ForgePage[]) => void;
@@ -113,8 +109,6 @@ export interface WriterWorkspaceState {
     // View state actions
     openYarnModal: () => void;
     closeYarnModal: () => void;
-    openPlayModal: () => void;
-    closePlayModal: () => void;
     openSettingsModal: () => void;
     closeSettingsModal: () => void;
     togglePanel: (panel: 'sidebar' | 'editor') => void;
@@ -155,8 +149,8 @@ export function createWriterWorkspaceStore(
   const {
     initialPages = [],
     initialActivePageId = null,
-    dataAdapter,
-    forgeDataAdapter,
+    getDataAdapter,
+    getForgeDataAdapter,
   } = options;
 
   return createStore<WriterWorkspaceState>()(
@@ -172,7 +166,7 @@ export function createWriterWorkspaceStore(
         const aiSlice = createAiSlice(setTyped, getTyped);
         const navigationSlice = createNavigationSlice(setTyped, getTyped, initialActivePageId);
         const viewStateSlice = createViewStateSlice(setTyped, getTyped);
-        const draftSlice = createWriterDraftSlice(setTyped, getTyped);
+        const draftSlice = createWriterDraftSlice(setTyped, getTyped, undefined, getDataAdapter, getForgeDataAdapter);
 
         // Wrap actions to emit events
         const setPagesWithEvents = (pages: ForgePage[]) => {
@@ -238,7 +232,7 @@ export function createWriterWorkspaceStore(
             },
             setNarrativeHierarchy: (hierarchy: NarrativeHierarchy | null) => set({ narrativeHierarchy: hierarchy }),
             createNarrativeGraph: async (projectId: number) => {
-              const adapter = get().forgeDataAdapter;
+              const adapter = getForgeDataAdapter?.() ?? null;
               if (!adapter) {
                 throw new Error('ForgeDataAdapter not available');
               }
@@ -312,8 +306,6 @@ export function createWriterWorkspaceStore(
             // View state actions
             openYarnModal: viewStateSlice.openYarnModal,
             closeYarnModal: viewStateSlice.closeYarnModal,
-            openPlayModal: viewStateSlice.openPlayModal,
-            closePlayModal: viewStateSlice.closePlayModal,
             openSettingsModal: viewStateSlice.openSettingsModal,
             closeSettingsModal: viewStateSlice.closeSettingsModal,
             togglePanel: viewStateSlice.togglePanel,

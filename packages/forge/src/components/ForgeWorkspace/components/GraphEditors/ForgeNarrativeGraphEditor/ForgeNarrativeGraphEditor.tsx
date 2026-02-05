@@ -37,6 +37,7 @@ import { useSimpleForgeFlowEditor, type ShellNodeData } from '@magicborn/forge/l
 import { useGraphAutoSave } from '@magicborn/forge/lib/graph-editor/hooks/useGraphAutoSave';
 import { createForgeEditorSessionStore, ForgeEditorSessionProvider, useForgeEditorSession, useForgeEditorSessionStore } from '@magicborn/forge/lib/graph-editor/hooks/useForgeEditorSession';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
+import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import { ForgeEditorActionsProvider, makeForgeEditorActions, useForgeEditorActions } from '@magicborn/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { useForgeGraphEditorActions } from '@magicborn/forge/copilotkit';
 import { NarrativeGraphEditorPaneContextMenu } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/NarrativeGraphEditorPaneContextMenu';
@@ -99,7 +100,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
     pendingFocus,
     clearFocus,
     setContextNodeType,
-    dataAdapter,
     selectedProjectId,
     openGraphInScope,
   } = useForgeWorkspaceStore(
@@ -111,11 +111,11 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
       pendingFocus: s.pendingFocusByScope.narrative,
       clearFocus: s.actions.clearFocus,
       setContextNodeType: s.actions.setContextNodeType,
-      dataAdapter: s.dataAdapter,
       selectedProjectId: s.selectedProjectId,
       openGraphInScope: s.actions.openGraphInScope,
     }))
   );
+  const dataAdapter = useForgeDataContext();
 
   const reactFlow = useReactFlow();
 

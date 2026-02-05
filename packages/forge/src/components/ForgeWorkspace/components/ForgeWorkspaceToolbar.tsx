@@ -1,10 +1,9 @@
 import React from 'react';
-import { Flag, HelpCircle, Play, Eye, EyeOff } from 'lucide-react';
+import { Flag, HelpCircle, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@magicborn/shared/ui/button';
 import { useForgeWorkspaceStore } from '../store/forge-workspace-store';
 
 interface ForgeWorkspaceToolbarProps {
-  onPlayClick: () => void;
   onFlagClick: () => void;
   onGuideClick: () => void;
   counts: {
@@ -17,7 +16,6 @@ interface ForgeWorkspaceToolbarProps {
 }
 
 export function ForgeWorkspaceToolbar({
-  onPlayClick,
   onFlagClick,
   onGuideClick,
   counts,
@@ -29,9 +27,6 @@ export function ForgeWorkspaceToolbar({
   return (
     <div className="flex items-center justify-between border-b border-border bg-background/80 px-3 py-2">
       <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="icon" onClick={onPlayClick} title="Play selected page">
-          <Play size={16} />
-        </Button>
         <Button type="button" variant="outline" size="icon" onClick={onFlagClick} title="Game state">
           <Flag size={16} />
         </Button>

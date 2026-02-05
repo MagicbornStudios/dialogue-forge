@@ -42,8 +42,8 @@ If you are extending the graph editor, start with:
 - `docs/architecture/workspace-editor-architecture.md` for state + command patterns.
 - `docs/nodes-and-editors.md` for node semantics and editor component entry points.
 
-## Runtime Integration
-Forge’s runtime execution is implemented in `packages/runtime/src/engine/execute-graph-to-frames.ts`, which evaluates graph conditions, applies flag mutations, and emits runtime frames for playback.
+## Runtime types
+Forge’s constants and types (e.g. for directives) live in `packages/shared/src/types/runtime.ts`. The former runtime execution engine and GamePlayer have been removed; Yarn conversion remains in `packages/forge/src/lib/yarn-converter/`.
 
 ## Architecture Graphs
 The latest generated dependency graphs and reports live in:

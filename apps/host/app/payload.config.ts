@@ -17,7 +17,6 @@ import {
   ForgeGraphs,
   FlagSchemas,
   GameStates,
-  VideoTemplates,
 } from './payload-collections'
 import { seedProjectWithNarrativeGraph } from './seeds/graph-seeds'
 
@@ -109,7 +108,6 @@ export default buildConfig({
     ForgeGraphs,
     FlagSchemas,
     GameStates,
-    VideoTemplates,
   ],
 
   // ============================

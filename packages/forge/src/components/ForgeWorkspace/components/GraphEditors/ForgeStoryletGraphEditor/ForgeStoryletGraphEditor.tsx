@@ -44,7 +44,7 @@ import { ForgeEdge } from '@magicborn/forge/components/ForgeWorkspace/components
 import { DetourNode } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/DetourNode';
 import { ForgeGraphBreadcrumbs } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/shared/ForgeGraphBreadcrumbs';
 import { GraphEditorToolbar } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/shared/GraphEditorToolbar';
-import { Focus, FileText, Play } from 'lucide-react';
+import { Focus, FileText } from 'lucide-react';
 import { cn } from '@magicborn/shared/lib/utils';
 import { Loader2 } from 'lucide-react';
 
@@ -79,6 +79,7 @@ import {
 } from '@magicborn/forge/lib/graph-editor/hooks/useForgeEditorSession';
 
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
+import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import { FORGE_NODE_TYPE } from '@magicborn/forge/types/forge-graph';
 import { useShallow } from 'zustand/shallow';
 
@@ -147,31 +148,28 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
   
   const {
     openYarnModal,
-    openPlayModal,
     focusedEditor,
     setFocusedEditor,
     pendingFocus,
     clearFocus,
     setContextNodeType,
     openCopilotChat,
-    dataAdapter,
     selectedProjectId,
     openGraphInScope,
   } = useForgeWorkspaceStore(
     useShallow((s) => ({
       openYarnModal: s.actions.openYarnModal,
-      openPlayModal: s.actions.openPlayModal,
       focusedEditor: s.focusedEditor,
       setFocusedEditor: s.actions.setFocusedEditor,
       pendingFocus: s.pendingFocusByScope.storylet,
       clearFocus: s.actions.clearFocus,
       setContextNodeType: s.actions.setContextNodeType,
       openCopilotChat: s.actions.openCopilotChat,
-      dataAdapter: s.dataAdapter,
       selectedProjectId: s.selectedProjectId,
       openGraphInScope: s.actions.openGraphInScope,
     }))
   );
+  const dataAdapter = useForgeDataContext();
 
   const reactFlow = useReactFlow();
 
@@ -443,7 +441,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
         isFocused={isFocused}
         isSaving={isSaving}
         openYarnModal={openYarnModal}
-        openPlayModal={openPlayModal}
         openCopilotChat={openCopilotChat}
         handleClick={handleClick}
         handleCreateNewGraph={handleCreateNewGraph}
@@ -475,7 +472,6 @@ function ForgeStoryletGraphEditorContent({
   isFocused,
   isSaving,
   openYarnModal,
-  openPlayModal,
   openCopilotChat,
   handleClick,
   handleCreateNewGraph,
@@ -501,7 +497,6 @@ function ForgeStoryletGraphEditorContent({
   isFocused: boolean;
   isSaving: boolean;
   openYarnModal: () => void;
-  openPlayModal: () => void;
   openCopilotChat: () => void;
   handleClick: () => void;
   handleCreateNewGraph: () => Promise<void>;
@@ -560,13 +555,6 @@ function ForgeStoryletGraphEditorContent({
               title="View Yarn"
             >
               <FileText className="h-4 w-4" />
-            </button>
-            <button
-              onClick={openPlayModal}
-              className="rounded-md border border-df-control-border bg-df-control-bg px-3 py-1.5 text-xs text-df-text-secondary hover:text-df-text-primary transition"
-              title="Play"
-            >
-              <Play className="h-4 w-4" />
             </button>
           </div>
         </div>

@@ -8,6 +8,7 @@ import {
   ContextMenuTrigger,
 } from '@magicborn/shared/ui/context-menu';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
+import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import { useForgeWorkspaceActions } from '@magicborn/forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
 import { FORGE_GRAPH_KIND } from '@magicborn/forge/types/forge-graph';
 import { createEmptyForgeGraphDoc } from '@magicborn/forge/lib/utils/forge-flow-helpers';
@@ -35,7 +36,7 @@ export function StoryletList({ className }: StoryletsListProps) {
   )
   const activeStoryletGraphId = useForgeWorkspaceStore(s => s.activeStoryletGraphId)
   const selectedProjectId = useForgeWorkspaceStore(s => s.selectedProjectId)
-  const dataAdapter = useForgeWorkspaceStore(s => s.dataAdapter)
+  const dataAdapter = useForgeDataContext()
   const setGraph = useForgeWorkspaceStore(s => s.actions.setGraph)
   const removeGraph = useForgeWorkspaceStore(s => s.actions.removeGraph)
   const openGraphInScope = useForgeWorkspaceStore(s => s.actions.openGraphInScope)

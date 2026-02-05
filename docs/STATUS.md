@@ -22,7 +22,7 @@
   - pnpm reported ignored build scripts (run `pnpm approve-builds` only if native deps break).
 - Root package is `private` and uses Turborepo scripts
 - Host app lives in `apps/host`
-- Domain source lives in `packages/{shared,runtime,forge,writer,video,characters,ai}`
+- Domain source lives in `packages/{shared,forge,writer,video,characters,ai}`
 - Umbrella package lives in `packages/dialogue-forge`
 - `@/` path alias removed from code; use `@magicborn/<domain>/*` + relative host imports
 
@@ -49,8 +49,8 @@
 
 ## Recent Changes
 
-- Domain packages extracted to `packages/{shared,runtime,forge,writer,video,characters,ai}`.
-- Runtime engine moved to `packages/runtime`.
+- Domain packages extracted to `packages/{shared,forge,writer,video,characters,ai}`.
+- Runtime package removed; runtime types remain in shared.
 - Host app now depends on domain packages (`@magicborn/<domain>`).
 - `@/` imports removed from code; host uses `@magicborn/<domain>/*` + relative paths.
 - Writer project switcher now accepts a render prop; Forge menu bar no longer imports host ThemeSwitcher.

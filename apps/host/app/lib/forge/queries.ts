@@ -1,17 +1,11 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PayloadSDK } from '@payloadcms/sdk';
 import type { Project } from '../../payload-types';
 import { PAYLOAD_COLLECTIONS } from '../../payload-collections/enums';
+import { payload } from './payload';
 
-// Export ProjectDocument type alias for convenience
 export type ProjectDocument = Project;
-
-// Create singleton PayloadSDK instance for client-side REST calls
-const payload = new PayloadSDK({
-  baseURL: typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://localhost:3000/api',
-});
 
 /**
  * React Query hook to fetch all projects

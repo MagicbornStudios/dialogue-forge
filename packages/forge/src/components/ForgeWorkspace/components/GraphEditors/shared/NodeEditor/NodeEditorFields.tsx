@@ -12,6 +12,7 @@ import { ActNodeFields } from '@magicborn/forge/components/ForgeWorkspace/compon
 import { ChapterNodeFields } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ChapterNode/ChapterNodeFields';
 import { PageNodeFields } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PageNode/PageNodeFields';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
+import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 
 interface NodeEditorFieldsProps {
   node: ForgeNode;
@@ -63,7 +64,7 @@ export function NodeEditorFields({
   setChoiceInputs,
   onUpdateStoryletCall,
 }: NodeEditorFieldsProps) {
-  const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
+  const dataAdapter = useForgeDataContext();
   const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
   const [narrativePages, setNarrativePages] = React.useState<ForgePage[]>([]);
   const [isLoadingPages, setIsLoadingPages] = React.useState(false);

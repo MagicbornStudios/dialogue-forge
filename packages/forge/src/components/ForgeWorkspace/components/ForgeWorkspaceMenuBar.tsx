@@ -11,7 +11,6 @@ import {
   MenubarCheckboxItem,
 } from '@magicborn/shared/ui/menubar';
 import {
-  Play,
   Flag,
   HelpCircle,
   Layout,
@@ -21,6 +20,7 @@ import {
 } from 'lucide-react';
 import { CopilotButton, CopilotButtonContainer } from '@magicborn/forge/components/ForgeWorkspace/components/CopilotButton';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
+import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import { Button } from '@magicborn/shared/ui/button';
 import { ForgeProjectSwitcher } from './ForgeProjectSwitcher';
 import type { ForgeGameStateRecord } from '@magicborn/shared/types/forge-game-state';
@@ -35,7 +35,6 @@ export interface HeaderLink {
 }
 
 interface ForgeWorkspaceMenuBarProps {
-  onPlayClick: () => void;
   onFlagClick: () => void;
   onGuideClick: () => void;
   onCopilotClick?: () => void;
@@ -51,7 +50,6 @@ interface ForgeWorkspaceMenuBarProps {
 }
 
 export function ForgeWorkspaceMenuBar({
-  onPlayClick,
   onFlagClick,
   onGuideClick,
   onCopilotClick,
@@ -72,7 +70,7 @@ export function ForgeWorkspaceMenuBar({
   const gameStatesById = useForgeWorkspaceStore((s) => s.gameStatesById);
   const activeGameStateId = useForgeWorkspaceStore((s) => s.activeGameStateId);
   const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
-  const dataAdapter = useForgeWorkspaceStore((s) => s.dataAdapter);
+  const dataAdapter = useForgeDataContext();
   const setActiveGameStateId = useForgeWorkspaceStore((s) => s.actions.setActiveGameStateId);
   const upsertGameState = useForgeWorkspaceStore((s) => s.actions.upsertGameState);
   const removeGameState = useForgeWorkspaceStore((s) => s.actions.removeGameState);
@@ -167,11 +165,6 @@ export function ForgeWorkspaceMenuBar({
               File
             </MenubarTrigger>
             <MenubarContent>
-              <MenubarItem onClick={onPlayClick}>
-                <Play size={14} className="mr-2" />
-                Play Selected Page
-              </MenubarItem>
-              <MenubarSeparator />
               <MenubarItem onClick={onFlagClick}>
                 <Flag size={14} className="mr-2" />
                 Game State

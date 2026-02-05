@@ -5,7 +5,6 @@
 2. Read `docs/architecture/workspace-editor-architecture.md`.
 3. Read the domain AGENTS file before touching code:
    - `packages/shared/AGENTS.md`
-   - `packages/runtime/AGENTS.md`
    - `packages/forge/AGENTS.md`
    - `packages/writer/AGENTS.md`
    - `packages/video/AGENTS.md`
@@ -17,7 +16,6 @@ After changes, update STATUS + the relevant domain AGENTS with new footguns or r
 ## Repo Structure (Current)
 - `apps/host/` = Next.js host app + adapters (PayloadCMS, routes, API).
 - `packages/shared/` = shared types, UI, utilities (no internal deps).
-- `packages/runtime/` = execution engine (shared-only).
 - `packages/forge/` = Forge editor domain.
 - `packages/writer/` = Writer domain.
 - `packages/video/` = Video domain (Twick wrapper).
@@ -28,8 +26,7 @@ After changes, update STATUS + the relevant domain AGENTS with new footguns or r
 ## Boundaries (Non-Negotiable)
 - `packages/**` must never import from `apps/host/**`.
 - `packages/shared` has no internal deps.
-- `packages/runtime` depends on `packages/shared` only.
-- Domain packages depend on `packages/shared` + `packages/runtime` (AI allowed only for CopilotKit wiring).
+- Domain packages depend on `packages/shared` (AI allowed only for CopilotKit wiring).
 - No cross-domain imports between forge/writer/video/characters.
 - AI package imports shared only (no domain imports).
 - No `@/` alias in code; use `@magicborn/<domain>/*` or relative paths.

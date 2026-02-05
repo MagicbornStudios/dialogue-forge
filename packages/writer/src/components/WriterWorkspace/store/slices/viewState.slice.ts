@@ -19,7 +19,6 @@ const defaultPanelLayout: WriterPanelLayoutState = {
 
 export interface WriterModalState {
   isYarnModalOpen: boolean;
-  isPlayModalOpen: boolean;
   isSettingsModalOpen: boolean;
 }
 
@@ -29,7 +28,6 @@ export interface WriterPageLayoutState {
 
 const defaultModalState: WriterModalState = {
   isYarnModalOpen: false,
-  isPlayModalOpen: false,
   isSettingsModalOpen: false,
 };
 
@@ -47,8 +45,6 @@ export interface ViewStateSlice {
 export interface ViewStateActions {
   openYarnModal: () => void;
   closeYarnModal: () => void;
-  openPlayModal: () => void;
-  closePlayModal: () => void;
   openSettingsModal: () => void;
   closeSettingsModal: () => void;
   togglePanel: (panel: 'sidebar' | 'editor') => void;
@@ -86,20 +82,6 @@ export function createViewStateSlice(
         const currentModalState = (state.modalState as WriterModalState) ?? defaultModalState;
         return {
           modalState: { ...currentModalState, isYarnModalOpen: false },
-        };
-      }),
-    openPlayModal: () =>
-      set((state: WriterWorkspaceState) => {
-        const currentModalState = (state.modalState as WriterModalState) ?? defaultModalState;
-        return {
-          modalState: { ...currentModalState, isPlayModalOpen: true },
-        };
-      }),
-    closePlayModal: () =>
-      set((state: WriterWorkspaceState) => {
-        const currentModalState = (state.modalState as WriterModalState) ?? defaultModalState;
-        return {
-          modalState: { ...currentModalState, isPlayModalOpen: false },
         };
       }),
     openSettingsModal: () =>

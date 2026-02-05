@@ -1,6 +1,6 @@
 export { ForgeWorkspace } from './components/ForgeWorkspace/ForgeWorkspace';
+export { ForgeDataContext, useForgeDataContext } from './components/ForgeWorkspace/ForgeDataContext';
 export { ForgeStoryletGraphEditor } from './components/ForgeWorkspace/components/GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditor';
-export { GamePlayer } from './components/ForgeWorkspace/components/GamePlayer/GamePlayer';
 export { GuidePanel } from './components/ForgeWorkspace/components/GraphEditors/shared/GuidePanel';
 export { FlagSelector } from './components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/FlagSelector';
 export { ForgeFlagManager as FlagManager } from './components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagManager';

@@ -21,8 +21,6 @@ import { createViewStateSlice } from "@magicborn/forge/components/ForgeWorkspace
 import { createProjectSlice } from "@magicborn/forge/components/ForgeWorkspace/store/slices/project.slice"
 import { createForgeDraftSlice } from "@magicborn/forge/components/ForgeWorkspace/store/slices/draft.slice"
 import type { ForgeDataAdapter } from "@magicborn/forge/adapters/forge-data-adapter"
-import type { VideoTemplateWorkspaceAdapter } from "@magicborn/video/workspace/video-template-workspace-contracts"
-import type { VideoTemplateOverrides } from "@magicborn/video/templates/types/video-template-overrides"
 
 export interface EventSink {
   emit(event: ForgeEvent): void
@@ -65,11 +63,6 @@ export interface ForgeWorkspaceState {
 
   // Project slice
   selectedProjectId: ReturnType<typeof createProjectSlice>["selectedProjectId"]
-
-  // Data adapter
-  dataAdapter?: ForgeDataAdapter
-  videoTemplateAdapter?: VideoTemplateWorkspaceAdapter
-  videoTemplateOverrides?: VideoTemplateOverrides
 
   actions: {
     // Graph actions
@@ -119,8 +112,6 @@ export interface ForgeWorkspaceState {
     dockPanel: ReturnType<typeof createViewStateSlice>["dockPanel"]
     undockPanel: ReturnType<typeof createViewStateSlice>["undockPanel"]
     setFocusedEditor: ReturnType<typeof createViewStateSlice>["setFocusedEditor"]
-    openPlayModal: ReturnType<typeof createViewStateSlice>["openPlayModal"]
-    closePlayModal: ReturnType<typeof createViewStateSlice>["closePlayModal"]
     openYarnModal: ReturnType<typeof createViewStateSlice>["openYarnModal"]
     closeYarnModal: ReturnType<typeof createViewStateSlice>["closeYarnModal"]
     openFlagModal: ReturnType<typeof createViewStateSlice>["openFlagModal"]
@@ -133,7 +124,6 @@ export interface ForgeWorkspaceState {
     
     // Project actions
     setSelectedProjectId: ReturnType<typeof createProjectSlice>["setSelectedProjectId"]
-    setVideoTemplateOverrides: (overrides?: VideoTemplateOverrides) => void
   }
 }
 
@@ -147,8 +137,6 @@ export interface CreateForgeWorkspaceStoreOptions {
   initialGameStates?: ForgeGameStateRecord[]
   resolveGraph?: (id: string) => Promise<ForgeGraphDoc>
   dataAdapter?: ForgeDataAdapter
-  videoTemplateAdapter?: VideoTemplateWorkspaceAdapter
-  videoTemplateOverrides?: VideoTemplateOverrides
 }
 
 export function createForgeWorkspaceStore(
@@ -164,9 +152,7 @@ export function createForgeWorkspaceStore(
     initialNarrativeGraphId,
     initialStoryletGraphId,
     resolveGraph,
-    dataAdapter,
-    videoTemplateAdapter,
-    videoTemplateOverrides,
+    getDataAdapter,
   } = options
 
   // Extract IDs from provided graphs if IDs not explicitly provided
@@ -207,7 +193,7 @@ export function createForgeWorkspaceStore(
         immer(
           (set, get) => {
         // Create resolver with get function (will have access to state once store is created)
-        const graphResolver = createGraphResolver(get, dataAdapter)
+        const graphResolver = createGraphResolver(get, getDataAdapter)
         const finalResolver = resolveGraph ?? graphResolver
         
         const graphSlice = createGraphSlice(set, get, narrativeGraphId, storyletGraphId, finalResolver)
@@ -280,9 +266,6 @@ export function createForgeWorkspaceStore(
           ...gameStateSlice,
           ...viewStateSlice,
           ...projectSlice,
-          dataAdapter,
-          videoTemplateAdapter,
-          videoTemplateOverrides,
           actions: {
             // Graph actions
             setGraph: setGraphWithEvents,
@@ -326,8 +309,6 @@ export function createForgeWorkspaceStore(
             dockPanel: viewStateSlice.dockPanel,
             undockPanel: viewStateSlice.undockPanel,
             setFocusedEditor: viewStateSlice.setFocusedEditor,
-            openPlayModal: viewStateSlice.openPlayModal,
-            closePlayModal: viewStateSlice.closePlayModal,
             openYarnModal: viewStateSlice.openYarnModal,
             closeYarnModal: viewStateSlice.closeYarnModal,
             openFlagModal: viewStateSlice.openFlagModal,
@@ -340,11 +321,6 @@ export function createForgeWorkspaceStore(
             
             // Project actions
             setSelectedProjectId: projectSlice.setSelectedProjectId,
-            setVideoTemplateOverrides: (overrides?: VideoTemplateOverrides) => {
-              set((state) => {
-                state.videoTemplateOverrides = overrides
-              })
-            },
           },
         }
         }),

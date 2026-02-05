@@ -14,7 +14,7 @@
 
 **Domains (packages/forge/, packages/writer/, packages/video/, packages/characters/)**
 - Domain-specific types, stores, components, and libraries.
-- May depend on shared + runtime (and AI for CopilotKit wiring).
+- May depend on shared (and AI for CopilotKit wiring).
 - **Forge ↔ Writer cross-imports are prohibited. Forge may import Video types/renderers for playback; avoid new cross-domain links.**
 
 **AI (packages/ai/ or packages/ai/src/)**
@@ -28,7 +28,6 @@ When the monorepo migration is complete, the same layers map to packages:
 
 - **Host** → `apps/host/`
 - **Shared** → `packages/shared/`
-- **Runtime** → `packages/runtime/`
 - **Domains** → `packages/forge/`, `packages/writer/`, `packages/video/`, `packages/characters/`
 - **AI** → `packages/ai/`
 - **Umbrella** → `packages/dialogue-forge/` (re-exports domain APIs)

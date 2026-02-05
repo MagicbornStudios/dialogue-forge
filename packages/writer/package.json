@@ -13,6 +13,7 @@
     "typecheck": "tsc -p tsconfig.json --pretty false --noEmit"
   },
   "dependencies": {
+    "@magicborn/forge": "workspace:*",
     "@magicborn/shared": "workspace:*",
     "@magicborn/ai": "workspace:*"
   },

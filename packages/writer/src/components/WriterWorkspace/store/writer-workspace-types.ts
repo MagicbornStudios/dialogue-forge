@@ -97,8 +97,6 @@ export interface WriterWorkspaceState {
   panelLayout: unknown;
   pageLayout: unknown;
   autosaveEnabled: boolean;
-  dataAdapter?: unknown;
-  forgeDataAdapter?: unknown;
   narrativeGraphs: ForgeGraphDoc[];
   selectedNarrativeGraphId: number | null;
   narrativeGraph: ForgeGraphDoc | null;

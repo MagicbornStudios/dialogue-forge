@@ -29,7 +29,6 @@ const defaultPanelLayout: PanelLayoutState = {
 };
 
 export interface ModalState {
-  isPlayModalOpen: boolean;
   isYarnModalOpen: boolean;
   isFlagModalOpen: boolean;
   isGuideOpen: boolean;
@@ -37,7 +36,6 @@ export interface ModalState {
 }
 
 const defaultModalState: ModalState = {
-  isPlayModalOpen: false,
   isYarnModalOpen: false,
   isFlagModalOpen: false,
   isGuideOpen: false,
@@ -71,8 +69,6 @@ export interface ViewStateActions {
   dockPanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor' | 'nodeEditor') => void
   undockPanel: (panel: 'sidebar' | 'narrativeEditor' | 'storyletEditor' | 'nodeEditor') => void
   setFocusedEditor: (editor: "narrative" | "storylet" | null) => void
-  openPlayModal: () => void
-  closePlayModal: () => void
   openYarnModal: () => void
   closeYarnModal: () => void
   openFlagModal: () => void
@@ -165,12 +161,6 @@ export function createViewStateSlice(
       }))
     },
     setFocusedEditor: (editor) => set({ focusedEditor: editor }),
-    openPlayModal: () => set((state) => ({
-      modalState: { ...state.modalState, isPlayModalOpen: true }
-    })),
-    closePlayModal: () => set((state) => ({
-      modalState: { ...state.modalState, isPlayModalOpen: false }
-    })),
     openYarnModal: () => set((state) => ({
       modalState: { ...state.modalState, isYarnModalOpen: true }
     })),

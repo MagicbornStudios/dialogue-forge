@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronRight, Home, Edit } from 'lucide-react';
 import { useForgeWorkspaceStoreInstance } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
+import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import { useStore } from 'zustand';
 import { useShallow } from 'zustand/shallow';
 import type { BreadcrumbItem } from '@magicborn/forge/components/ForgeWorkspace/store/slices/graph.slice';
@@ -22,19 +23,15 @@ interface ForgeGraphBreadcrumbsProps {
 
 export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
   const [renamingGraphId, setRenamingGraphId] = useState<string | null>(null);
-  
-  // Get store instance once - reduces hook calls
+  const dataAdapter = useForgeDataContext();
   const store = useForgeWorkspaceStoreInstance();
   
-  // Use useShallow to prevent infinite re-renders from object recreation
-  // useShallow does shallow comparison of the returned object
   const storeState = useStore(
     store,
     useShallow((state) => ({
       breadcrumbHistory: state.breadcrumbHistoryByScope[scope],
       activeGraphId: scope === 'narrative' ? state.activeNarrativeGraphId : state.activeStoryletGraphId,
       graphs: state.graphs.byId,
-      dataAdapter: state.dataAdapter,
       selectedProjectId: state.selectedProjectId,
       navigateToBreadcrumb: state.actions.navigateToBreadcrumb,
       clearBreadcrumbs: state.actions.clearBreadcrumbs,
@@ -56,11 +53,10 @@ export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
     }
   }, { enableOnFormTags: true, enabled: !!storeState.activeGraphId && !renamingGraphId });
   
-  // Handle rename
   const handleRenameGraph = async (graphId: string, newTitle: string) => {
-    if (!storeState.dataAdapter || !storeState.selectedProjectId) return;
+    if (!dataAdapter || !storeState.selectedProjectId) return;
     try {
-      await storeState.dataAdapter.updateGraph(Number(graphId), { title: newTitle });
+      await dataAdapter.updateGraph(Number(graphId), { title: newTitle });
       // Update local store
       if (currentGraph) {
         storeState.setGraph(graphId, { ...currentGraph, title: newTitle });

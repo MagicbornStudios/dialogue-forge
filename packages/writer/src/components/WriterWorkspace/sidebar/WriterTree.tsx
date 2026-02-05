@@ -5,6 +5,7 @@ import { BookOpen, FileText, File, Plus } from 'lucide-react';
 import { Tree } from 'react-arborist';
 import { WriterTreeRow } from './WriterTreeRow';
 import { useWriterWorkspaceStore } from '@magicborn/writer/components/WriterWorkspace/store/writer-workspace-store';
+import { useWriterDataContext } from '@magicborn/writer/components/WriterWorkspace/WriterDataContext';
 import { PAGE_TYPE, buildNarrativeHierarchy, type ForgePage, type PageType } from '@magicborn/shared/types/narrative';
 import { useToast } from '@magicborn/shared/ui/toast';
 
@@ -63,7 +64,7 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
 
   const pages = useWriterWorkspaceStore((state) => state.pages);
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
-  const dataAdapter = useWriterWorkspaceStore((state) => state.dataAdapter);
+  const dataAdapter = useWriterDataContext();
   const narrativeGraphs = useWriterWorkspaceStore((state) => state.narrativeGraphs);
   const selectedNarrativeGraphId = useWriterWorkspaceStore((state) => state.selectedNarrativeGraphId);
 

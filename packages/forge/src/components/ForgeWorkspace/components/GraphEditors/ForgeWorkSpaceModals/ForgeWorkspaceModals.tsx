@@ -3,13 +3,11 @@ import type { ForgeGraphDoc } from '@magicborn/forge/types/forge-graph';
 import type { ForgeGameState } from '@magicborn/shared/types/forge-game-state';
 import type { ForgeCharacter } from '@magicborn/forge/types/characters';
 import type { FlagSchema } from '@magicborn/forge/types/flags';
-import { ForgePlayModal } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgePlayModal';
 import { ForgeYarnModal } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeYarnModal';
 import { GuidePanel } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/shared/GuidePanel';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { ForgeFlagManagerModal } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagManagerModal';
 import { GRAPH_SCOPE } from '@magicborn/forge/types/constants';
-import { FORGE_GRAPH_KIND } from '@magicborn/forge/types/forge-graph';
 interface ForgeWorkspaceModalsProps {
   narrativeGraph: ForgeGraphDoc | null;
   storyletGraph: ForgeGraphDoc | null;
@@ -32,7 +30,6 @@ export function ForgeWorkspaceModalsRenderer({
   onUpdateGameState,
 }: ForgeWorkspaceModalsRendererProps) {
   const modalState = useForgeWorkspaceStore((s) => s.modalState);
-  const closePlayModal = useForgeWorkspaceStore((s) => s.actions.closePlayModal);
   const closeYarnModal = useForgeWorkspaceStore((s) => s.actions.closeYarnModal);
   const closeFlagModal = useForgeWorkspaceStore((s) => s.actions.closeFlagModal);
   const closeGuide = useForgeWorkspaceStore((s) => s.actions.closeGuide);
@@ -41,16 +38,6 @@ export function ForgeWorkspaceModalsRenderer({
   const resolvedScope = focusedEditor ?? graphScope;
   const scopedGraph = resolvedScope === GRAPH_SCOPE.NARRATIVE ? narrativeGraph : storyletGraph;
   const fallbackGraph = narrativeGraph ?? storyletGraph;
-  
-  // Determine which graph to use for modals (prefer narrative, fallback to storylet)
-  const playGraph = scopedGraph ?? fallbackGraph;
-  const playTitle =
-    playGraph?.kind === FORGE_GRAPH_KIND.NARRATIVE
-      ? 'Narrative'
-      : playGraph?.kind === FORGE_GRAPH_KIND.STORYLET
-        ? 'Storylet'
-        : '';
-  const playSubtitle = playGraph?.title ?? '';
 
   const yarnGraph = scopedGraph ?? fallbackGraph;
   const flagGraph = scopedGraph ?? fallbackGraph;
@@ -65,18 +52,6 @@ export function ForgeWorkspaceModalsRenderer({
 
   return (
     <>
-      {playGraph && (
-        <ForgePlayModal
-          isOpen={modalState.isPlayModalOpen}
-          onClose={closePlayModal}
-          graph={playGraph}
-          flagSchema={flagSchema}
-          gameState={gameState}
-          title={playTitle}
-          subtitle={playSubtitle}
-        />
-      )}
-      
       {yarnGraph && (
         <ForgeYarnModal
           isOpen={modalState.isYarnModalOpen}

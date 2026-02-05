@@ -4,6 +4,8 @@ import type { WriterDataAdapter } from '@magicborn/writer/lib/data-adapter/write
 import type { WriterForgeDataAdapter } from '@magicborn/writer/types/forge-data-adapter';
 import type { WriterEvent } from '@magicborn/writer/events/writer-events';
 import { FORGE_GRAPH_KIND } from '@magicborn/shared/types/forge-graph';
+import { useWriterDataContext } from '@magicborn/writer/components/WriterWorkspace/WriterDataContext';
+import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import {
   WriterWorkspaceStoreProvider,
   createWriterWorkspaceStore,
@@ -189,7 +191,7 @@ function WriterWorkspaceContent({
   const pages = useWriterWorkspaceStore((state) => state.pages);
   const activePage = activePageId ? pages.find(p => p.id === activePageId) ?? null : null;
   const selectedNarrativeGraphId = useWriterWorkspaceStore((state) => state.selectedNarrativeGraphId);
-  const dataAdapter = useWriterWorkspaceStore((state) => state.dataAdapter);
+  const dataAdapter = useWriterDataContext();
   const setPages = useWriterWorkspaceStore((state) => state.actions.setPages);
   const setActivePageId = useWriterWorkspaceStore((state) => state.actions.setActivePageId);
   const setContentError = useWriterWorkspaceStore((state) => state.actions.setContentError);

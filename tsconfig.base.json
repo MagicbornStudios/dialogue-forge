@@ -20,8 +20,6 @@
       "@magicborn/dialogue-forge/*": ["./packages/dialogue-forge/src/*"],
       "@magicborn/shared": ["./packages/shared/src"],
       "@magicborn/shared/*": ["./packages/shared/src/*"],
-      "@magicborn/runtime": ["./packages/runtime/src"],
-      "@magicborn/runtime/*": ["./packages/runtime/src/*"],
       "@magicborn/forge": ["./packages/forge/src"],
       "@magicborn/forge/*": ["./packages/forge/src/*"],
       "@magicborn/writer": ["./packages/writer/src"],

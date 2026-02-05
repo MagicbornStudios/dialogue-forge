@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { prepareGraphForYarnExport } from '../utils/runtime-export';
 import { createMockForgeFlowNode, createMockForgeGraphDoc } from './helpers';
 import { FORGE_NODE_TYPE } from '@magicborn/forge/types/forge-graph';
-import { RUNTIME_DIRECTIVE_TYPE } from '@magicborn/runtime/engine/constants';
+import { RUNTIME_DIRECTIVE_TYPE } from '@magicborn/shared/types/runtime';
 
 describe('prepareGraphForYarnExport', () => {
   it('strips runtime-only presentation/directives while preserving dialogue flow', () => {

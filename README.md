@@ -2,7 +2,7 @@
 
 A comprehensive narrative development platform combining visual dialogue editing, narrative structure management, AI-assisted writing, and runtime simulation. Built as both a **Next.js application** and a **library package** (`@magicborn/dialogue-forge`).
 
-> Monorepo note: The repo now uses pps/host + packages/* (domain packages like @magicborn/forge, @magicborn/writer, @magicborn/video, @magicborn/shared, @magicborn/runtime, @magicborn/ai). The umbrella @magicborn/dialogue-forge still re-exports for compatibility. See docs/conventions/repo-structure.md for the current layout.
+> Monorepo note: The repo now uses pps/host + packages/* (domain packages like @magicborn/forge, @magicborn/writer, @magicborn/video, @magicborn/shared, @magicborn/ai). The umbrella @magicborn/dialogue-forge still re-exports for compatibility. See docs/conventions/repo-structure.md for the current layout.
 
 ## 🎯 Project Vision
 

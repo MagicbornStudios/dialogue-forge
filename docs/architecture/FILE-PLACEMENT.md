@@ -26,7 +26,6 @@ Current package paths:
 
 - Host → `apps/host/`
 - Shared → `packages/shared/`
-- Runtime → `packages/runtime/`
 - Domains → `packages/forge/`, `packages/writer/`, `packages/video/`, `packages/characters/`
 - AI → `packages/ai/`
 

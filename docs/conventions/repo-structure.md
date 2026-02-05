@@ -7,16 +7,15 @@ This document defines the standard layout for the Dialogue Forge monorepo. It is
 ```
 .
 +-- apps/
-¦   +-- host/                 # Next.js host app (Payload + demo UI)
+?   +-- host/                 # Next.js host app (Payload + demo UI)
 +-- packages/
-¦   +-- shared/               # Cross-domain types, utils, UI primitives
-¦   +-- runtime/              # Runtime execution + playback utilities
-¦   +-- forge/                # Forge domain (graph editor)
-¦   +-- writer/               # Writer domain (narrative editor)
-¦   +-- video/                # Video domain (template editor)
-¦   +-- ai/                   # AI infrastructure and adapters
-¦   +-- characters/           # Character workspace domain
-¦   +-- dialogue-forge/       # Umbrella package that re-exports domains
+?   +-- shared/               # Cross-domain types, utils, UI primitives
+?   +-- forge/                # Forge domain (graph editor)
+?   +-- writer/               # Writer domain (narrative editor)
+?   +-- video/                # Video domain (template editor)
+?   +-- ai/                   # AI infrastructure and adapters
+?   +-- characters/           # Character workspace domain
+?   +-- dialogue-forge/       # Umbrella package that re-exports domains
 +-- docs/
 +-- scripts/
 +-- vendor/
@@ -60,7 +59,6 @@ This document defines the standard layout for the Dialogue Forge monorepo. It is
 2. Cross-domain types and utilities go in packages/shared.
 3. Domain-specific logic goes in that domain package.
 4. AI providers and adapters go in packages/ai.
-5. Runtime execution and playback go in packages/runtime.
 
 ## Package Naming
 

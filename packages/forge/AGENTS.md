@@ -6,7 +6,7 @@
 ## Owner Map
 - Forge workspace shell: src/components/ForgeWorkspace/ForgeWorkspace.tsx
 - Graph editors: src/components/ForgeWorkspace/components/GraphEditors/
-- Runtime (execution): packages/runtime/src/engine/
+- Runtime types: packages/shared/src/types/runtime.ts (execution engine removed)
 
 ## Public API
 - DialogueGraphEditor

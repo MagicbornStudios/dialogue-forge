@@ -308,7 +308,6 @@ Dialogue Forge supports multiple themes via CSS custom properties:
 - Themes defined in `src/styles/themes.css`
 - Uses CSS custom properties (`--color-df-*`)
 - Theme switching via `data-theme` attribute on `<html>`
-- Theme switcher component: `components/ThemeSwitcher.tsx`
 
 **Domain-Specific Tokens:**
 - `--color-df-info-*` - Information/blue colors

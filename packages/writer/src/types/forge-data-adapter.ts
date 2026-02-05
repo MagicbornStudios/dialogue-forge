@@ -1,13 +1,8 @@
+import type { ForgeProjectSummary } from '@magicborn/forge';
 import type { ForgeGraphDoc, ForgeGraphKind, ForgeReactFlowJson } from '@magicborn/shared/types/forge-graph';
 import type { ForgePage } from '@magicborn/shared/types/narrative';
 
-export type ForgeProjectSummary = {
-  id: number;
-  name: string;
-  slug?: string | null;
-  narrativeGraph?: number | null;
-  storyletGraphs?: number[] | null;
-};
+export type { ForgeProjectSummary };
 
 export interface WriterForgeDataAdapter {
   listGraphs(projectId: number, kind?: ForgeGraphKind): Promise<ForgeGraphDoc[]>;

@@ -12,6 +12,7 @@ export * from './types/flags';
 export * from './types/forge-game-state';
 export * from './types/characters';
 export * from './types/narrative';
+export type { ForgeProjectSummary, ForgeFlagSchema, ForgeDataAdapter } from './adapters/forge-data-adapter';
 
 export {
   flattenGameState,

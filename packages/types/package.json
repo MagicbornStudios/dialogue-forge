@@ -12,5 +12,8 @@
   "scripts": {
     "build": "tsc --build",
     "typecheck": "tsc -p tsconfig.json --pretty false --noEmit"
+  },
+  "devDependencies": {
+    "payload": "^3.74.0"
   }
 }

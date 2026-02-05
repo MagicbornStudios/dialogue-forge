@@ -53,7 +53,7 @@
 - Runtime package removed; runtime types remain in shared.
 - Host app now depends on domain packages (`@magicborn/<domain>`).
 - `@/` imports removed from code; host uses `@magicborn/<domain>/*` + relative paths.
-- Writer project switcher now accepts a render prop; Forge menu bar no longer imports host ThemeSwitcher.
+- Writer project switcher now accepts a render prop; theme switching is optional (no host ThemeSwitcher component).
 - Legacy video workspace removed; Twick is the only editor surface.
 - Archived legacy `ARCHITECTURE.md`; canonical docs live under `docs/architecture/`.
 - Switched workspace installs to pnpm and added `packageManager` field.

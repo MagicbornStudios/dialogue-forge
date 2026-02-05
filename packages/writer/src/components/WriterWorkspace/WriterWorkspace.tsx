@@ -1,23 +1,24 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import type { ForgePage } from '@magicborn/shared/types/narrative';
 import type { WriterDataAdapter } from '@magicborn/writer/lib/data-adapter/writer-adapter';
 import type { WriterForgeDataAdapter } from '@magicborn/writer/types/forge-data-adapter';
 import type { WriterEvent } from '@magicborn/writer/events/writer-events';
 import { FORGE_GRAPH_KIND } from '@magicborn/shared/types/forge-graph';
 import { useWriterDataContext } from '@magicborn/writer/components/WriterWorkspace/WriterDataContext';
-import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
+import { useForgeDataContext } from '@magicborn/forge';
 import {
   WriterWorkspaceStoreProvider,
   createWriterWorkspaceStore,
   useWriterWorkspaceStore,
+  buildOnCommitWriterDraft,
+  createNarrativeGraphWithAdapter,
+  type WriterWorkspaceCallbacks,
 } from '@magicborn/writer/components/WriterWorkspace/store/writer-workspace-store';
 import { setupWriterWorkspaceSubscriptions } from '@magicborn/writer/components/WriterWorkspace/store/slices/subscriptions';
 import { WriterTree } from '@magicborn/writer/components/WriterWorkspace/sidebar/WriterTree';
 import { WriterLayout } from '@magicborn/writer/components/WriterWorkspace/layout/WriterLayout';
 import { WriterEditorPane } from '@magicborn/writer/components/WriterWorkspace/editor/WriterEditorPane';
 import { WriterWorkspaceModalsRenderer } from '@magicborn/writer/components/WriterWorkspace/modals/WriterWorkspaceModals';
-import { CopilotKitProvider } from '@magicborn/ai/copilotkit/providers/CopilotKitProvider';
-import { useWriterWorkspaceActions, useWriterCopilotContext } from '@magicborn/writer/copilotkit';
 import { Toaster } from '@magicborn/shared/ui/toast';
 import { validateNarrativeGraph } from '@magicborn/shared/lib/graph-validation';
 import { toast } from 'sonner';
@@ -47,29 +48,54 @@ export function WriterWorkspace({
   onProjectChange,
   topBar,
 }: WriterWorkspaceProps) {
+  const writerAdapterFromContext = useWriterDataContext();
+  const forgeAdapterFromContext = useForgeDataContext();
+  const effectiveWriterAdapter = dataAdapter ?? writerAdapterFromContext ?? undefined;
+  const effectiveForgeAdapter = forgeDataAdapter ?? forgeAdapterFromContext ?? undefined;
+
   const eventSinkRef = useRef({
     emit: (event: WriterEvent) => {
-      if (onEvent) {
-        onEvent(event);
-      }
+      if (onEvent) onEvent(event);
     },
   });
+
+  const callbacksRef = useRef<WriterWorkspaceCallbacks | null>(null);
+  function buildCallbacks(w: WriterDataAdapter | undefined, f: WriterForgeDataAdapter | undefined): WriterWorkspaceCallbacks | null {
+    if (!w || !f) return null;
+    return {
+      updatePage: (id: number, patch: Partial<ForgePage>) => w.updatePage(id, patch),
+      createPage: (input) => w.createPage(input as Parameters<WriterDataAdapter['createPage']>[0]),
+      getNarrativeGraph: (id: number) => f.getGraph(id),
+      createNarrativeGraph: (projectId: number) => createNarrativeGraphWithAdapter(f, projectId),
+      onCommitWriterDraft: buildOnCommitWriterDraft(w, f),
+    };
+  }
+  callbacksRef.current = buildCallbacks(effectiveWriterAdapter, effectiveForgeAdapter);
+
+  const getCallbacks = useCallback(() => callbacksRef.current, []);
 
   const storeRef = useRef(
     createWriterWorkspaceStore(
       {
         initialPages: pages,
         initialActivePageId,
-        dataAdapter,
-        forgeDataAdapter,
+        getCallbacks,
       },
       eventSinkRef.current
     )
   );
 
+  const fetchNarrativeGraphRef = useRef<((id: number) => Promise<import('@magicborn/shared/types/forge-graph').ForgeGraphDoc>) | null>(null);
+  fetchNarrativeGraphRef.current = effectiveForgeAdapter ? (id: number) => effectiveForgeAdapter.getGraph(id) : null;
+  const fetchNarrativeGraph = useCallback((id: number) => {
+    const fn = fetchNarrativeGraphRef.current;
+    if (!fn) return Promise.reject(new Error('No narrative graph loader'));
+    return fn(id);
+  }, []);
+
   React.useEffect(() => {
-    setupWriterWorkspaceSubscriptions(storeRef.current, eventSinkRef.current, dataAdapter, forgeDataAdapter);
-  }, [dataAdapter, forgeDataAdapter]);
+    setupWriterWorkspaceSubscriptions(storeRef.current, eventSinkRef.current, fetchNarrativeGraph);
+  }, [fetchNarrativeGraph]);
 
   useEffect(() => {
     const store = storeRef.current;
@@ -82,7 +108,7 @@ export function WriterWorkspace({
 
   // Load all narrative graphs when project changes
   useEffect(() => {
-    if (!projectId || !forgeDataAdapter) {
+    if (!projectId || !effectiveForgeAdapter) {
       const store = storeRef.current;
       store.getState().actions.setNarrativeGraphs([]);
       store.getState().actions.setSelectedNarrativeGraphId(null);
@@ -94,24 +120,25 @@ export function WriterWorkspace({
     const store = storeRef.current;
 
     async function loadNarrativeGraphs() {
-      if (!forgeDataAdapter || !projectId) {
+      if (!effectiveForgeAdapter || !projectId) {
         return;
       }
       try {
-        const project = await forgeDataAdapter.getProject(projectId);
-        const graphs = await forgeDataAdapter.listGraphs(projectId, FORGE_GRAPH_KIND.NARRATIVE);
+        const project = await effectiveForgeAdapter.getProject(projectId);
+        const graphs = await effectiveForgeAdapter.listGraphs(projectId, FORGE_GRAPH_KIND.NARRATIVE);
         
         if (!cancelled) {
           store.getState().actions.setNarrativeGraphs(graphs);
           
           // Set default: use project.narrativeGraph if it exists and is in list, otherwise first graph
-          const defaultGraphId = project.narrativeGraph && 
-            graphs.find(g => g.id === project.narrativeGraph) 
-              ? project.narrativeGraph 
+          const narrativeGraphId = typeof project.narrativeGraph === 'object' && project.narrativeGraph !== null ? (project.narrativeGraph as { id: number }).id : project.narrativeGraph;
+          const defaultGraphId = narrativeGraphId != null &&
+            graphs.some((g: { id: number }) => g.id === narrativeGraphId)
+              ? narrativeGraphId
               : graphs[0]?.id ?? null;
-          
+
           store.getState().actions.setSelectedNarrativeGraphId(defaultGraphId);
-          const selectedGraph = graphs.find(g => g.id === defaultGraphId) ?? null;
+          const selectedGraph = graphs.find((g: { id: number }) => g.id === defaultGraphId) ?? null;
           store.getState().actions.setNarrativeGraph(selectedGraph);
           
           if (selectedGraph) {
@@ -144,41 +171,21 @@ export function WriterWorkspace({
     return () => {
       cancelled = true;
     };
-  }, [projectId, forgeDataAdapter]);
+  }, [projectId, effectiveForgeAdapter]);
 
   return (
     <>
-      <CopilotKitProvider
-        instructions="You are an AI assistant for the Writer workspace. Help users edit and improve their writing."
-        defaultOpen={false}
-      >
-        <WriterWorkspaceStoreProvider store={storeRef.current}>
-          <WriterWorkspaceActionsWrapper store={storeRef.current}>
-            <WriterWorkspaceContent
-              className={className}
-              onActivePageChange={onActivePageChange}
-              projectId={projectId}
-              topBar={topBar}
-            />
-          </WriterWorkspaceActionsWrapper>
-        </WriterWorkspaceStoreProvider>
-      </CopilotKitProvider>
+      <WriterWorkspaceStoreProvider store={storeRef.current}>
+        <WriterWorkspaceContent
+          className={className}
+          onActivePageChange={onActivePageChange}
+          projectId={projectId}
+          topBar={topBar}
+        />
+      </WriterWorkspaceStoreProvider>
       <Toaster />
     </>
   );
-}
-
-function WriterWorkspaceActionsWrapper({ 
-  children,
-  store,
-}: { 
-  children: React.ReactNode;
-  store: ReturnType<typeof createWriterWorkspaceStore>;
-}) {
-  // Register workspace actions and provide context
-  useWriterWorkspaceActions(store);
-  useWriterCopilotContext(store);
-  return <>{children}</>;
 }
 
 function WriterWorkspaceContent({

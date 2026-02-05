@@ -3,8 +3,6 @@ import { Panel } from 'reactflow';
 import { Grid3x3, Map as MapIcon, Settings, BookOpen } from 'lucide-react';
 import { listLayouts } from '@magicborn/forge/lib/utils/layout/layout';
 import { ANIMATION_CONSTANTS } from '@magicborn/forge/lib/utils/constants';
-import { CopilotButton, CopilotButtonContainer } from '@magicborn/forge/components/ForgeWorkspace/components/CopilotButton';
-import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
 
 interface GraphLeftToolbarProps {
   layoutStrategy: string;
@@ -16,7 +14,6 @@ interface GraphLeftToolbarProps {
   onOpenGuide?: () => void;
   onLoadExampleDialogue?: (dialogue: any) => void;
   onLoadExampleFlags?: (flags: any) => void;
-  onOpenCopilot?: () => void;
 }
 
 export function GraphLeftToolbar({
@@ -29,15 +26,13 @@ export function GraphLeftToolbar({
   onOpenGuide,
   onLoadExampleDialogue,
   onLoadExampleFlags,
-  onOpenCopilot,
 }: GraphLeftToolbarProps) {
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
   
 
   return (
     <Panel position="top-left" className="!bg-transparent !border-0 !p-0 !m-2">
-      <CopilotButtonContainer>
-        <div className="group flex flex-col gap-1.5 bg-df-sidebar-bg border border-df-sidebar-border rounded-lg p-1.5 shadow-lg">
+      <div className="group flex flex-col gap-1.5 bg-df-sidebar-bg border border-df-sidebar-border rounded-lg p-1.5 shadow-lg">
         {/* Layout Strategy Dropdown */}
         <div className="relative">
           <button
@@ -118,9 +113,7 @@ export function GraphLeftToolbar({
           </button>
         )}
 
-   
       </div>
-      </CopilotButtonContainer>
     </Panel>
   );
 }

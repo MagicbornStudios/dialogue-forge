@@ -2,29 +2,37 @@
 
 import { CharacterWorkspace } from '@magicborn/characters/components/CharacterWorkspace/CharacterWorkspace';
 import { CharacterWorkspaceStoreProvider, createCharacterWorkspaceStore } from '@magicborn/characters/components/CharacterWorkspace/store/character-workspace-store';
-import { useCharacterData } from '../../lib/characters/use-character-data';
+import { CharacterDataProvider } from '../../lib/characters/CharacterDataProvider';
+import { useCharacterDataFromContext } from '../../lib/characters/CharacterDataContext';
 import { useState, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
 
 export const dynamic = 'force-static';
 
-export default function CharactersApp() {
+function CharactersAppContent() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const searchParams = useSearchParams();
-  const characterData = useCharacterData();
-
+  const adapter = useCharacterDataFromContext();
   const store = useMemo(
-    () => createCharacterWorkspaceStore({ dataAdapter: characterData }),
-    [characterData]
+    () => (adapter ? createCharacterWorkspaceStore({ dataAdapter: adapter }) : null),
+    [adapter]
   );
+
+  if (!store || !adapter) return null;
 
   return (
     <CharacterWorkspaceStoreProvider store={store}>
       <CharacterWorkspace
-        dataAdapter={characterData}
+        dataAdapter={adapter}
         selectedProjectId={selectedProjectId}
         onProjectChange={setSelectedProjectId}
       />
     </CharacterWorkspaceStoreProvider>
+  );
+}
+
+export default function CharactersApp() {
+  return (
+    <CharacterDataProvider>
+      <CharactersAppContent />
+    </CharacterDataProvider>
   );
 }

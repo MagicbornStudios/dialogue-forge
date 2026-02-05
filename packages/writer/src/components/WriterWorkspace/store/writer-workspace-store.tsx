@@ -17,7 +17,6 @@ import { createEditorSlice } from './slices/editor.slice';
 import { createAiSlice } from './slices/ai.slice';
 import { createNavigationSlice } from './slices/navigation.slice';
 import { createViewStateSlice } from './slices/viewState.slice';
-import { createWriterDraftSlice } from './slices/draft.slice';
 import type { EventSink } from '@magicborn/writer/events/writer-events';
 import { createEvent } from '@magicborn/writer/events/events';
 import { WRITER_EVENT_TYPE } from '@magicborn/writer/events/writer-events';
@@ -32,6 +31,70 @@ import {
 import type { WriterForgeDataAdapter } from '@magicborn/writer/types/forge-data-adapter';
 import { createEmptyForgeGraphDoc } from '@magicborn/shared/utils/forge-graph-helpers';
 import { FORGE_GRAPH_KIND } from '@magicborn/shared/types/forge-graph';
+import type { DraftPendingPageCreation } from '@magicborn/shared/types/draft';
+import { PAGE_TYPE } from '@magicborn/shared/types/narrative';
+import { createWriterDraftSlice, type OnCommitWriterDraft } from './slices/draft.slice';
+import type { WriterDraftDelta } from './slices/draft.slice';
+import type { ForgeReactFlowNode } from '@magicborn/shared/types/forge-graph';
+
+export function buildOnCommitWriterDraft(
+  dataAdapter: WriterDataAdapter,
+  forgeDataAdapter: WriterForgeDataAdapter
+): OnCommitWriterDraft {
+  return async (draft: ForgeGraphDoc, deltas: WriterDraftDelta[]) => {
+    const pendingPageCreations = (deltas[deltas.length - 1]?.pendingPageCreations ?? []) as DraftPendingPageCreation[];
+    const createdPages = new Map<string, ForgePage>();
+    const pageTypeOrder = [PAGE_TYPE.ACT, PAGE_TYPE.CHAPTER, PAGE_TYPE.PAGE];
+    for (const pageType of pageTypeOrder) {
+      const creations = pendingPageCreations.filter((c) => c.pageType === pageType);
+      for (const creation of creations) {
+        const parentId = creation.parentPageId ?? (creation.parentNodeId ? createdPages.get(creation.parentNodeId)?.id ?? null : null);
+        const page = await dataAdapter.createPage({
+          projectId: creation.projectId,
+          pageType: creation.pageType,
+          title: creation.title,
+          order: creation.order,
+          parent: parentId ?? null,
+        });
+        createdPages.set(creation.nodeId, page);
+      }
+    }
+    const nextDraft: ForgeGraphDoc = createdPages.size
+      ? {
+          ...draft,
+          flow: {
+            ...draft.flow,
+            nodes: draft.flow.nodes.map((node: ForgeReactFlowNode) => {
+              const createdPage = node.id ? createdPages.get(node.id) : undefined;
+              if (!createdPage) return node;
+              const nodeData = (node.data ?? {}) as Record<string, unknown>;
+              return { ...node, data: { ...nodeData, pageId: createdPage.id } } as ForgeReactFlowNode;
+            }),
+          },
+        }
+      : draft;
+    return forgeDataAdapter.updateGraph(nextDraft.id, {
+      title: nextDraft.title,
+      flow: nextDraft.flow,
+      startNodeId: nextDraft.startNodeId,
+      endNodeIds: nextDraft.endNodeIds,
+      compiledYarn: nextDraft.compiledYarn ?? null,
+    });
+  };
+}
+
+/** Create a narrative graph via adapter. Exported for host/WriterWorkspace to build callbacks. */
+export async function createNarrativeGraphWithAdapter(adapter: WriterForgeDataAdapter, projectId: number): Promise<ForgeGraphDoc> {
+  const emptyGraph = createEmptyForgeGraphDoc({ projectId, kind: FORGE_GRAPH_KIND.NARRATIVE, title: 'Narrative Graph' });
+  return adapter.createGraph({
+    projectId,
+    kind: FORGE_GRAPH_KIND.NARRATIVE,
+    title: 'Narrative Graph',
+    flow: emptyGraph.flow,
+    startNodeId: emptyGraph.startNodeId,
+    endNodeIds: emptyGraph.endNodeIds,
+  });
+}
 
 // Re-export types for convenience
 export type { WriterDocSnapshot, WriterPatchOp, WriterSelectionSnapshot } from '@magicborn/writer/types/writer-ai-types';
@@ -135,11 +198,29 @@ export interface WriterWorkspaceState {
   };
 }
 
+/** Callbacks for persistence and loading. Host provides these (e.g. from RQ hooks). */
+export interface WriterWorkspaceCallbacks {
+  updatePage?: (pageId: number, patch: Partial<ForgePage>) => Promise<ForgePage>;
+  createPage?: (input: {
+    projectId: number;
+    pageType: string;
+    title: string;
+    order: number;
+    parent?: number | null;
+    narrativeGraph?: number | null;
+  }) => Promise<ForgePage>;
+  getNarrativeGraph?: (id: number) => Promise<ForgeGraphDoc>;
+  createNarrativeGraph?: (projectId: number) => Promise<ForgeGraphDoc>;
+  onCommitWriterDraft?: OnCommitWriterDraft;
+}
+
 export interface CreateWriterWorkspaceStoreOptions {
   initialPages?: ForgePage[];
   initialActivePageId?: number | null;
-  dataAdapter?: WriterDataAdapter;
-  forgeDataAdapter?: WriterForgeDataAdapter;
+  /** Callbacks for save/load. If omitted, corresponding actions no-op or throw. */
+  callbacks?: WriterWorkspaceCallbacks;
+  /** Optional getter for callbacks (e.g. from ref). When set, used at call time so callbacks can update after mount. */
+  getCallbacks?: () => WriterWorkspaceCallbacks | null;
 }
 
 export function createWriterWorkspaceStore(
@@ -149,24 +230,27 @@ export function createWriterWorkspaceStore(
   const {
     initialPages = [],
     initialActivePageId = null,
-    getDataAdapter,
-    getForgeDataAdapter,
+    callbacks: staticCallbacks,
+    getCallbacks,
   } = options;
+
+  const resolveCallbacks = () => getCallbacks?.() ?? staticCallbacks ?? null;
+  const updatePage = staticCallbacks?.updatePage ?? (getCallbacks ? (id: number, patch: Partial<ForgePage>) => resolveCallbacks()?.updatePage?.(id, patch) ?? Promise.reject(new Error('updatePage not available')) : undefined);
+  const onCommitWriterDraft = staticCallbacks?.onCommitWriterDraft ?? (getCallbacks ? (draft: ForgeGraphDoc, deltas: WriterDraftDelta[]) => resolveCallbacks()?.onCommitWriterDraft?.(draft, deltas) ?? Promise.reject(new Error('onCommitWriterDraft not available')) : undefined);
+  const createNarrativeGraphCallback = staticCallbacks?.createNarrativeGraph ?? (getCallbacks ? (projectId: number) => resolveCallbacks()?.createNarrativeGraph?.(projectId) ?? Promise.reject(new Error('createNarrativeGraph not available')) : undefined);
 
   return createStore<WriterWorkspaceState>()(
     devtools(
       immer<WriterWorkspaceState>((set, get) => {
-        // Type cast needed because Immer's set function signature differs from Zustand's
-        // The slices expect Zustand's set signature, but Immer wraps it
         const setTyped = set as Parameters<typeof createContentSlice>[0];
         const getTyped = get as Parameters<typeof createContentSlice>[1];
-        
+
         const contentSlice = createContentSlice(setTyped, getTyped, initialPages);
-        const editorSlice = createEditorSlice(setTyped, getTyped);
-        const aiSlice = createAiSlice(setTyped, getTyped);
+        const editorSlice = createEditorSlice(setTyped, getTyped, updatePage);
+        const aiSlice = createAiSlice(setTyped, getTyped, updatePage);
         const navigationSlice = createNavigationSlice(setTyped, getTyped, initialActivePageId);
         const viewStateSlice = createViewStateSlice(setTyped, getTyped);
-        const draftSlice = createWriterDraftSlice(setTyped, getTyped, undefined, getDataAdapter, getForgeDataAdapter);
+        const draftSlice = createWriterDraftSlice(setTyped, getTyped, undefined, onCommitWriterDraft);
 
         // Wrap actions to emit events
         const setPagesWithEvents = (pages: ForgePage[]) => {
@@ -212,8 +296,6 @@ export function createWriterWorkspaceStore(
           selectedNarrativeGraphId: null,
           narrativeGraph: null,
           narrativeHierarchy: null,
-          dataAdapter,
-          forgeDataAdapter,
           actions: {
             // Content actions
             setPages: setPagesWithEvents,
@@ -232,36 +314,16 @@ export function createWriterWorkspaceStore(
             },
             setNarrativeHierarchy: (hierarchy: NarrativeHierarchy | null) => set({ narrativeHierarchy: hierarchy }),
             createNarrativeGraph: async (projectId: number) => {
-              const adapter = getForgeDataAdapter?.() ?? null;
-              if (!adapter) {
-                throw new Error('ForgeDataAdapter not available');
+              if (!createNarrativeGraphCallback) {
+                throw new Error('createNarrativeGraph callback not available');
               }
-              
-              const emptyGraph = createEmptyForgeGraphDoc({
-                projectId,
-                kind: FORGE_GRAPH_KIND.NARRATIVE,
-                title: 'Narrative Graph',
-              });
-              
-              const graph = await adapter.createGraph({
-                projectId,
-                kind: FORGE_GRAPH_KIND.NARRATIVE,
-                title: 'Narrative Graph',
-                flow: emptyGraph.flow,
-                startNodeId: emptyGraph.startNodeId,
-                endNodeIds: emptyGraph.endNodeIds,
-              });
-              
-              // Add to graphs list and select it
+              const graph = await createNarrativeGraphCallback(projectId);
               set((state) => ({
                 narrativeGraphs: [...state.narrativeGraphs, graph],
                 selectedNarrativeGraphId: graph.id,
               }));
-              
-              // Also set as the active narrative graph
               set({ narrativeGraph: graph });
               draftSlice.resetDraft(graph);
-              
               return graph;
             },
 

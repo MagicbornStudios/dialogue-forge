@@ -19,8 +19,7 @@ import { createGraphSlice } from "@magicborn/forge/components/ForgeWorkspace/sto
 import { createGameStateSlice } from "@magicborn/forge/components/ForgeWorkspace/store/slices/gameState.slice"
 import { createViewStateSlice } from "@magicborn/forge/components/ForgeWorkspace/store/slices/viewState.slice"
 import { createProjectSlice } from "@magicborn/forge/components/ForgeWorkspace/store/slices/project.slice"
-import { createForgeDraftSlice } from "@magicborn/forge/components/ForgeWorkspace/store/slices/draft.slice"
-import type { ForgeDataAdapter } from "@magicborn/forge/adapters/forge-data-adapter"
+import { createForgeDraftSlice, type OnCommitForgeDraft } from "./slices/draft.slice"
 
 export interface EventSink {
   emit(event: ForgeEvent): void
@@ -135,70 +134,40 @@ export interface CreateForgeWorkspaceStoreOptions {
   initialFlagSchema?: FlagSchema
   initialGameState?: ForgeGameState
   initialGameStates?: ForgeGameStateRecord[]
-  resolveGraph?: (id: string) => Promise<ForgeGraphDoc>
-  dataAdapter?: ForgeDataAdapter
+  /** Resolver to load a graph by id (e.g. from host RQ). Required for ensureGraph when not in cache. */
+  resolveGraph: (id: string) => Promise<ForgeGraphDoc>
+  /** Called when committing the narrative draft (create pages + update graph). */
+  onCommitDraft?: OnCommitForgeDraft
 }
 
 export function createForgeWorkspaceStore(
   options: CreateForgeWorkspaceStoreOptions,
   eventSink: EventSink
 ): StoreApi<ForgeWorkspaceState> {
-  const { 
-    initialFlagSchema: flagSchema, 
+  const {
+    initialFlagSchema: flagSchema,
     initialGameState: gameState,
     initialGameStates,
-    initialNarrativeGraph, 
+    initialNarrativeGraph,
     initialStoryletGraph,
     initialNarrativeGraphId,
     initialStoryletGraphId,
     resolveGraph,
-    getDataAdapter,
+    onCommitDraft,
   } = options
 
   // Extract IDs from provided graphs if IDs not explicitly provided
   const narrativeGraphId = initialNarrativeGraphId ?? (initialNarrativeGraph ? String(initialNarrativeGraph.id) : null)
   const storyletGraphId = initialStoryletGraphId ?? (initialStoryletGraph ? String(initialStoryletGraph.id) : null)
 
-  // Create cache-first resolver factory
-  function createGraphResolver(
-    getState: () => ForgeWorkspaceState,
-    adapter?: ForgeDataAdapter
-  ): (id: string) => Promise<ForgeGraphDoc> {
-    return async (graphId: string): Promise<ForgeGraphDoc> => {
-      const state = getState()
-      
-      // 1. Check cache first
-      if (state.graphs.byId[graphId] && state.graphs.statusById[graphId] === "ready") {
-        return state.graphs.byId[graphId]
-      }
-      
-      // 2. If not in cache and adapter available, fetch via adapter
-      if (!adapter) {
-        throw new Error(`No dataAdapter available and graph ${graphId} not in cache`)
-      }
-      
-      // 3. Fetch from adapter (graphId is string, adapter expects number)
-      const graph = await adapter.getGraph(Number(graphId))
-      
-      // 4. Store in cache (this will also emit events via setGraphWithEvents)
-      state.actions.setGraph(graphId, graph)
-      
-      return graph
-    }
-  }
-
   return createStore<ForgeWorkspaceState>()(
     devtools(
       persist(
         immer(
           (set, get) => {
-        // Create resolver with get function (will have access to state once store is created)
-        const graphResolver = createGraphResolver(get, getDataAdapter)
-        const finalResolver = resolveGraph ?? graphResolver
-        
-        const graphSlice = createGraphSlice(set, get, narrativeGraphId, storyletGraphId, finalResolver)
+        const graphSlice = createGraphSlice(set, get, narrativeGraphId, storyletGraphId, resolveGraph)
         const initialDraftGraph = initialNarrativeGraph ?? initialStoryletGraph ?? null
-        const draftSlice = createForgeDraftSlice(set, get, initialDraftGraph)
+        const draftSlice = createForgeDraftSlice(set, get, initialDraftGraph, onCommitDraft)
         
         // If initial graphs provided, add them to cache
         if (initialNarrativeGraph) {

@@ -1,94 +1,56 @@
 import type { StoreApi } from 'zustand/vanilla';
 import type { WriterWorkspaceState } from '../writer-workspace-store';
-import type { WriterDataAdapter } from '@magicborn/writer/lib/data-adapter/writer-adapter';
-import type { WriterForgeDataAdapter } from '@magicborn/writer/types/forge-data-adapter';
+import type { ForgeGraphDoc } from '@magicborn/shared/types/forge-graph';
 import type { EventSink } from '@magicborn/writer/events/writer-events';
 import { extractNarrativeHierarchySync } from '@magicborn/writer/lib/sync/narrative-graph-sync';
 
+export type FetchNarrativeGraphCallback = (id: number) => Promise<ForgeGraphDoc>;
+
 /**
  * Setup subscriptions for side-effect events.
- * These subscriptions handle automatic behaviors like loading content when project changes.
+ * fetchNarrativeGraph: when provided, used to load the selected narrative graph when selectedNarrativeGraphId changes.
  */
 export function setupWriterWorkspaceSubscriptions(
   domainStore: StoreApi<WriterWorkspaceState>,
-  eventSink: EventSink,
-  dataAdapter?: WriterDataAdapter,
-  forgeDataAdapter?: WriterForgeDataAdapter
+  _eventSink: EventSink,
+  fetchNarrativeGraph?: FetchNarrativeGraphCallback
 ) {
-  if (!dataAdapter) return;
-
-  // Track in-flight requests to prevent duplicates
-  const inFlightRequests = new Set<string>();
-
-  // Subscribe to selected graph ID changes and load the graph
-  domainStore.subscribe(
-    async (state, prevState) => {
+  if (fetchNarrativeGraph) {
+    domainStore.subscribe((state, prevState) => {
       const selectedId = state.selectedNarrativeGraphId;
       const prevId = prevState.selectedNarrativeGraphId;
-      
       if (selectedId === prevId) return;
-      
-      if (selectedId && forgeDataAdapter) {
-        try {
-          const graph = await forgeDataAdapter.getGraph(selectedId);
-          domainStore.getState().actions.setNarrativeGraph(graph);
-        } catch (error) {
-          console.error('Failed to load selected narrative graph:', error);
-          domainStore.getState().actions.setNarrativeGraph(null);
-        }
+      if (selectedId) {
+        fetchNarrativeGraph(selectedId)
+          .then((graph) => domainStore.getState().actions.setNarrativeGraph(graph))
+          .catch((error) => {
+            console.error('Failed to load selected narrative graph:', error);
+            domainStore.getState().actions.setNarrativeGraph(null);
+          });
       } else {
         domainStore.getState().actions.setNarrativeGraph(null);
       }
-    }
-  );
+    });
+  }
 
-  // Subscribe to narrative graph changes and sync hierarchy
-  domainStore.subscribe(
-    async (state, prevState) => {
-      const narrativeGraph = state.draftGraph ?? state.narrativeGraph;
-      const prevNarrativeGraph = prevState.draftGraph ?? prevState.narrativeGraph;
-      
-      // Only process if graph actually changed
-      if (narrativeGraph === prevNarrativeGraph) return;
-      
-      if (narrativeGraph && dataAdapter) {
-        // Extract hierarchy from graph using unified pages collection
-        // All pages (acts, chapters, content pages) are in the same array
-        const hierarchy = extractNarrativeHierarchySync(
-          narrativeGraph,
-          state.pages
-        );
-        
-        // Update store with hierarchy
-        domainStore.getState().actions.setNarrativeHierarchy(hierarchy);
-        
-        // TODO: Sync graph to database (create missing entries)
-        // This is handled by the Forge editor when nodes are created
-        // But we could also do a background sync here if needed
-      } else {
-        // Clear hierarchy if no graph
-        domainStore.getState().actions.setNarrativeHierarchy(null);
-      }
+  domainStore.subscribe((state, prevState) => {
+    const narrativeGraph = state.draftGraph ?? state.narrativeGraph;
+    const prevNarrativeGraph = prevState.draftGraph ?? prevState.narrativeGraph;
+    if (narrativeGraph === prevNarrativeGraph) return;
+    if (narrativeGraph) {
+      const hierarchy = extractNarrativeHierarchySync(narrativeGraph, state.pages);
+      domainStore.getState().actions.setNarrativeHierarchy(hierarchy);
+    } else {
+      domainStore.getState().actions.setNarrativeHierarchy(null);
     }
-  );
+  });
 
-  // Subscribe to pages changes to rebuild hierarchy if graph exists
-  domainStore.subscribe(
-    async (state, prevState) => {
-      const narrativeGraph = state.draftGraph ?? state.narrativeGraph;
-      if (!narrativeGraph || !dataAdapter) return;
-      
-      // Rebuild hierarchy when pages change
-      const pagesChanged = state.pages !== prevState.pages;
-      
-      if (pagesChanged) {
-        const hierarchy = extractNarrativeHierarchySync(
-          narrativeGraph,
-          state.pages
-        );
-        
-        domainStore.getState().actions.setNarrativeHierarchy(hierarchy);
-      }
+  domainStore.subscribe((state, prevState) => {
+    const narrativeGraph = state.draftGraph ?? state.narrativeGraph;
+    if (!narrativeGraph) return;
+    if (state.pages !== prevState.pages) {
+      const hierarchy = extractNarrativeHierarchySync(narrativeGraph, state.pages);
+      domainStore.getState().actions.setNarrativeHierarchy(hierarchy);
     }
-  );
+  });
 }

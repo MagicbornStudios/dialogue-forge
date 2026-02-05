@@ -41,7 +41,7 @@ const nextConfig = {
   },
 
   // Transpile external packages that need to be processed by Next.js
-  transpilePackages: ['@langchain/core', '@copilotkit/runtime'],
+  transpilePackages: [],
 
   webpack: (config) => {
     config.resolve.alias = {
@@ -90,7 +90,6 @@ const nextConfig = {
       '@magicborn/forge': '../../packages/forge/src',
       '@magicborn/writer': '../../packages/writer/src',
       '@magicborn/characters': '../../packages/characters/src',
-      '@magicborn/ai': '../../packages/ai/src',
       '@payload-config': './app/payload.config.ts',
       // Relative paths so Turbopack does not use Windows absolute paths (not implemented)
       'payload/shared': '../../node_modules/payload/dist/exports/shared.js',

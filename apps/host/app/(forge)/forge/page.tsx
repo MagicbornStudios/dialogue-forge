@@ -1,18 +1,17 @@
 'use client';
 
-import { ForgeWorkspace, ForgeDataContext } from '@magicborn/forge';
+import { ForgeWorkspace } from '@magicborn/forge';
 import { useState } from 'react';
-import { useForgeData } from '../../lib/forge/use-forge-data';
+import { ForgeDataProvider } from '../../lib/forge/ForgeDataProvider';
 import { Settings, Code } from 'lucide-react';
 
 export const dynamic = 'force-static';
 
 export default function DialogueForgeApp() {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const forgeData = useForgeData();
 
   return (
-    <ForgeDataContext.Provider value={forgeData}>
+    <ForgeDataProvider>
       <ForgeWorkspace
         className="h-screen"
         selectedProjectId={selectedProjectId}
@@ -22,6 +21,6 @@ export default function DialogueForgeApp() {
           { label: 'API', href: '/api/graphql-playground', icon: <Code size={14} /> }
         ]}
       />
-    </ForgeDataContext.Provider>
+    </ForgeDataProvider>
   );
 }

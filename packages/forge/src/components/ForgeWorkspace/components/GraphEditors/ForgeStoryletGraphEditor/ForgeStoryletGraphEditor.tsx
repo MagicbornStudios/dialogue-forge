@@ -88,8 +88,6 @@ import {
   makeForgeEditorActions,
   useForgeEditorActions,
 } from '@magicborn/forge/lib/graph-editor/hooks/useForgeEditorActions';
-import { useForgeGraphEditorActions } from '@magicborn/forge/copilotkit';
-
 const nodeTypes = {
   CHARACTER: CharacterNode,
   PLAYER: PlayerNode,
@@ -153,7 +151,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     pendingFocus,
     clearFocus,
     setContextNodeType,
-    openCopilotChat,
     selectedProjectId,
     openGraphInScope,
   } = useForgeWorkspaceStore(
@@ -164,7 +161,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
       pendingFocus: s.pendingFocusByScope.storylet,
       clearFocus: s.actions.clearFocus,
       setContextNodeType: s.actions.setContextNodeType,
-      openCopilotChat: s.actions.openCopilotChat,
       selectedProjectId: s.selectedProjectId,
       openGraphInScope: s.actions.openGraphInScope,
     }))
@@ -441,7 +437,6 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
         isFocused={isFocused}
         isSaving={isSaving}
         openYarnModal={openYarnModal}
-        openCopilotChat={openCopilotChat}
         handleClick={handleClick}
         handleCreateNewGraph={handleCreateNewGraph}
         setLayoutDirection={setLayoutDirection}
@@ -472,7 +467,6 @@ function ForgeStoryletGraphEditorContent({
   isFocused,
   isSaving,
   openYarnModal,
-  openCopilotChat,
   handleClick,
   handleCreateNewGraph,
   setLayoutDirection,
@@ -497,7 +491,6 @@ function ForgeStoryletGraphEditorContent({
   isFocused: boolean;
   isSaving: boolean;
   openYarnModal: () => void;
-  openCopilotChat: () => void;
   handleClick: () => void;
   handleCreateNewGraph: () => Promise<void>;
   setLayoutDirection: (dir: LayoutDirection) => void;
@@ -509,9 +502,6 @@ function ForgeStoryletGraphEditorContent({
   characters?: Record<string, ForgeCharacter>;
   className: string;
 }) {
-  // Register CopilotKit editor actions (must be inside provider)
-  useForgeGraphEditorActions();
-  
   const actions = useForgeEditorActions();
 
   return (
@@ -639,7 +629,6 @@ function ForgeStoryletGraphEditorContent({
                 layoutStrategy="dagre"
                 showMiniMap={showMiniMap}
                 onToggleMiniMap={() => setShowMiniMap(!showMiniMap)}
-                onOpenCopilot={openCopilotChat}
               />
 
               <GraphLayoutControls

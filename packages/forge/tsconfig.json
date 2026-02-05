@@ -12,14 +12,11 @@
       "@magicborn/forge": ["src"],
       "@magicborn/forge/*": ["src/*"],
       "@magicborn/shared": ["../shared/dist"],
-      "@magicborn/shared/*": ["../shared/dist/*"],
-      "@magicborn/ai": ["../ai/dist"],
-      "@magicborn/ai/*": ["../ai/dist/*"]
+      "@magicborn/shared/*": ["../shared/dist/*"]
     }
   },
   "references": [
-    { "path": "../shared/tsconfig.json" },
-    { "path": "../ai/tsconfig.json" }
+    { "path": "../shared/tsconfig.json" }
   ],
   "include": ["src/**/*", "../../types/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]

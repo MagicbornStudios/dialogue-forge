@@ -17,14 +17,14 @@ import {
   type EventSink,
 } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
 
-import { setupForgeWorkspaceSubscriptions } from '@magicborn/forge/components/ForgeWorkspace/store/slices/subscriptions';
+import {
+  setupForgeWorkspaceSubscriptions,
+  loadForgeProjectDataWithAdapter,
+} from '@magicborn/forge/components/ForgeWorkspace/store/slices/subscriptions';
+import { commitForgeDraftWithAdapter } from '@magicborn/forge/components/ForgeWorkspace/store/slices/draft.slice';
 import type { ForgeEvent } from '@magicborn/forge/events/events';
-import { ForgeDataAdapter } from '@magicborn/forge/adapters/forge-data-adapter';
+import type { ForgeDataAdapter } from '@magicborn/forge/adapters/forge-data-adapter';
 import { useForgeDataContext } from './ForgeDataContext';
-import { useForgeWorkspaceActions } from '@magicborn/forge/copilotkit';
-import { useForgeCopilotContext } from '@magicborn/forge/copilotkit/hooks/useForgeCopilotContext';
-import { CopilotKitProvider } from '@magicborn/ai/copilotkit/providers/CopilotKitProvider';
-import { CopilotChatModal } from './components/CopilotChatModal';
 import { CommandBar, useCommandBar } from './components/CommandBar/CommandBar';
 import { TooltipProvider } from '@magicborn/shared/ui/tooltip';
 
@@ -79,17 +79,42 @@ export function ForgeWorkspace({
 }: ForgeWorkspaceProps) {
   const adapterFromContext = useForgeDataContext();
   const effectiveAdapter = dataAdapter ?? adapterFromContext;
+  const adapterRef = useRef<ForgeDataAdapter | null>(effectiveAdapter);
+  adapterRef.current = effectiveAdapter;
+
+  const resolveGraphPropRef = useRef(resolveGraph);
+  resolveGraphPropRef.current = resolveGraph;
+
+  const resolveGraphFn = useCallback((id: string) => {
+    if (resolveGraphPropRef.current) return resolveGraphPropRef.current(id);
+    const adapter = adapterRef.current;
+    if (adapter) return adapter.getGraph(Number(id));
+    return Promise.reject(new Error(`No adapter or resolveGraph: cannot load graph ${id}`));
+  }, []);
+
+  const onCommitDraftFn = useCallback(
+    (draft: import('@magicborn/forge/types/forge-graph').ForgeGraphDoc, deltas: import('@magicborn/forge/components/ForgeWorkspace/store/slices/draft.slice').ForgeDraftDelta[]) => {
+      const adapter = adapterRef.current;
+      if (!adapter) return Promise.resolve(draft);
+      return commitForgeDraftWithAdapter(adapter, draft, deltas);
+    },
+    []
+  );
+
+  const loadProjectDataFn = useCallback(
+    (projectId: number, store: import('@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store').ForgeWorkspaceStore) => {
+      const adapter = adapterRef.current;
+      if (!adapter) return Promise.resolve();
+      return loadForgeProjectDataWithAdapter(adapter, projectId, store);
+    },
+    []
+  );
 
   const eventSinkRef = useRef<EventSink>({
     emit: (event) => {
-      if (onEvent) {
-        onEvent(event);
-      }
+      if (onEvent) onEvent(event);
     },
   });
-
-  const adapterRef = useRef<ForgeDataAdapter | null>(effectiveAdapter);
-  adapterRef.current = effectiveAdapter;
 
   const storeRef = useRef(
     createForgeWorkspaceStore(
@@ -98,50 +123,31 @@ export function ForgeWorkspace({
         initialStoryletGraph: storyletGraph ?? null,
         initialFlagSchema: initialFlagSchema,
         initialGameState: initialGameState,
-        resolveGraph,
-        getDataAdapter: () => adapterRef.current ?? null,
+        resolveGraph: resolveGraphFn,
+        onCommitDraft: onCommitDraftFn,
       },
       eventSinkRef.current
     )
   );
 
   React.useEffect(() => {
-    setupForgeWorkspaceSubscriptions(storeRef.current, eventSinkRef.current, effectiveAdapter ?? undefined);
-  }, [effectiveAdapter]);
+    setupForgeWorkspaceSubscriptions(storeRef.current, eventSinkRef.current, loadProjectDataFn);
+  }, [loadProjectDataFn]);
 
   return (
-    <CopilotKitProvider
-      instructions="You are an AI assistant for the Forge workspace. Help users create and edit dialogue graphs, manage flags, and build interactive narratives."
-      defaultOpen={false}
-    >
-      <ForgeWorkspaceStoreProvider store={storeRef.current}>
-        <TooltipProvider>
-          <ForgeWorkspaceActionsWrapper store={storeRef.current}>
-            <NodeDragProvider>
-              <ProjectSync selectedProjectId={selectedProjectId} />
-              <ForgeWorkspaceContent
-                characters={initialCharacters}
-                className={className}
-                headerLinks={headerLinks}
-              />
-            </NodeDragProvider>
-          </ForgeWorkspaceActionsWrapper>
-        </TooltipProvider>
-      </ForgeWorkspaceStoreProvider>
-    </CopilotKitProvider>
+    <ForgeWorkspaceStoreProvider store={storeRef.current}>
+      <TooltipProvider>
+        <NodeDragProvider>
+          <ProjectSync selectedProjectId={selectedProjectId} />
+          <ForgeWorkspaceContent
+            characters={initialCharacters}
+            className={className}
+            headerLinks={headerLinks}
+          />
+        </NodeDragProvider>
+      </TooltipProvider>
+    </ForgeWorkspaceStoreProvider>
   );
-}
-
-function ForgeWorkspaceActionsWrapper({
-  children,
-  store,
-}: {
-  children: React.ReactNode;
-  store: ReturnType<typeof createForgeWorkspaceStore>;
-}) {
-  useForgeWorkspaceActions(store);
-  useForgeCopilotContext(store);
-  return <>{children}</>;
 }
 
 type PanelId = 'sidebar' | 'narrative-editor' | 'storylet-editor';
@@ -345,9 +351,7 @@ function ForgeWorkspaceContent({
   // Modal actions from store
   const openFlagModal = useForgeWorkspaceStore((s) => s.actions.openFlagModal);
   const openGuide = useForgeWorkspaceStore((s) => s.actions.openGuide);
-  const isCopilotChatOpen = useForgeWorkspaceStore((s) => s.modalState.isCopilotChatOpen);
-  const closeCopilotChat = useForgeWorkspaceStore((s) => s.actions.closeCopilotChat);
-  
+
   // Command bar
   const { open: commandBarOpen, setOpen: setCommandBarOpen } = useCommandBar();
 
@@ -387,12 +391,6 @@ function ForgeWorkspaceContent({
         panelVisibility={panelVisibility}
         onTogglePanel={togglePanel}
         headerLinks={headerLinks}
-      />
-      
-      <CopilotChatModal
-        isOpen={isCopilotChatOpen}
-        onClose={closeCopilotChat}
-        instructions="You are an AI assistant for the Forge workspace. Help users create and edit dialogue graphs, manage flags, and build interactive narratives. You have access to chapters, acts, pages, and graphs for context."
       />
 
       <CommandBar open={commandBarOpen} onOpenChange={setCommandBarOpen} />

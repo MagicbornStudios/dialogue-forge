@@ -197,7 +197,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
                           >
                             <CommentContextProvider
                               pageId={activePageId}
-                              dataAdapter={dataAdapter}
+                              dataAdapter={dataAdapter ?? undefined}
                             >
                               <div className="editor-shell flex min-h-0 flex-1 flex-col overflow-hidden relative">
                                 <Editor />

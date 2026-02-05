@@ -11,11 +11,11 @@ import {
   CommandItem,
   CommandShortcut,
 } from '@magicborn/shared/ui/command';
-import { Kbd, KbdGroup } from '@magicborn/shared/ui/kbd';
+import { Kbd } from '@magicborn/shared/ui/kbd';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { useForgeWorkspaceActions } from '@magicborn/forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
 import { FORGE_GRAPH_KIND } from '@magicborn/forge/types/forge-graph';
-import { BookOpen, Layers, Bot, Edit } from 'lucide-react';
+import { BookOpen, Layers, Edit } from 'lucide-react';
 import { cn } from '@magicborn/shared/lib/utils';
 
 interface CommandBarProps {
@@ -60,25 +60,6 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
       <CommandInput placeholder="Type a command or search..." />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
-
-        {/* Quick Actions */}
-        <CommandGroup heading="Quick Actions">
-          <CommandItem
-            onSelect={() => {
-              openCopilotChat();
-              onOpenChange(false);
-            }}
-          >
-            <Bot className="mr-2 h-4 w-4" />
-            <span>Open AI Assistant</span>
-            <CommandShortcut>
-              <KbdGroup>
-                <Kbd>{modifierKey}</Kbd>
-                <Kbd>K</Kbd>
-              </KbdGroup>
-            </CommandShortcut>
-          </CommandItem>
-        </CommandGroup>
 
         {/* Editor-specific commands */}
         {focusedEditor && currentGraphId && (

@@ -20,17 +20,14 @@
       "@magicborn/video": ["../video/dist"],
       "@magicborn/video/*": ["../video/dist/*"],
       "@magicborn/characters": ["../characters/dist"],
-      "@magicborn/characters/*": ["../characters/dist/*"],
-      "@magicborn/ai": ["../ai/dist"],
-      "@magicborn/ai/*": ["../ai/dist/*"]
+      "@magicborn/characters/*": ["../characters/dist/*"]
     }
   },
   "references": [
     { "path": "../shared/tsconfig.json" },
     { "path": "../forge/tsconfig.json" },
     { "path": "../writer/tsconfig.json" },
-    { "path": "../characters/tsconfig.json" },
-    { "path": "../ai/tsconfig.json" }
+    { "path": "../characters/tsconfig.json" }
   ],
   "include": ["src/**/*", "../../types/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]

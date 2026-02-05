@@ -90,7 +90,6 @@ export interface Config {
     'forge-graphs': ForgeGraphsSelect<false> | ForgeGraphsSelect<true>;
     'flag-schemas': FlagSchemasSelect<false> | FlagSchemasSelect<true>;
     'game-states': GameStatesSelect<false> | GameStatesSelect<true>;
-    'video-templates': VideoTemplatesSelect<false> | VideoTemplatesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -457,10 +456,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'game-states';
         value: number | GameState;
-      } | null)
-    | ({
-        relationTo: 'video-templates';
-        value: number | VideoTemplate;
       } | null);
   globalSlug?: string | null;
   user: {

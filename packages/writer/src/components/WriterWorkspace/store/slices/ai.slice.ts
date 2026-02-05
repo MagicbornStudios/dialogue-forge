@@ -11,7 +11,9 @@ import type {
 } from '../writer-workspace-types';
 import { getPlainTextFromSerializedContent, WRITER_AI_PROPOSAL_STATUS } from '../writer-workspace-types';
 import { applyWriterPatchOps } from '@magicborn/writer/lib/editor/patches';
-import type { WriterDataAdapter } from '@magicborn/writer/lib/data-adapter/writer-adapter';
+import type { ForgePage } from '@magicborn/shared/types/narrative';
+
+export type UpdatePageCallback = (pageId: number, patch: Partial<ForgePage>) => Promise<ForgePage>;
 
 const createSnapshotFromPage = (page: { title: string; bookBody?: string | null }): WriterDocSnapshot => ({
   title: page.title,
@@ -38,7 +40,7 @@ export interface AiActions {
 export function createAiSlice(
   set: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[0],
   get: Parameters<StateCreator<WriterWorkspaceState, [], [], WriterWorkspaceState>>[1],
-  getDataAdapter?: () => WriterDataAdapter | null
+  updatePage?: UpdatePageCallback
 ): AiSlice & AiActions {
   return {
     aiPreview: null,
@@ -175,13 +177,10 @@ export function createAiSlice(
       const nextPageMap = new Map(state.pageMap);
       nextPageMap.set(targetId, { ...page, title: nextSnapshotTyped.title ?? page.title, bookBody: nextSnapshotTyped.content ?? page.bookBody });
       set({ pages: nextPages, pageMap: nextPageMap });
-      const dataAdapter = getDataAdapter?.() ?? null;
-      dataAdapter
-        ?.updatePage(targetId, {
-          title: nextSnapshotTyped.title ?? undefined,
-          bookBody: nextSnapshotTyped.content ?? undefined,
-        })
-        .catch(console.error);
+      updatePage?.(targetId, {
+        title: nextSnapshotTyped.title ?? undefined,
+        bookBody: nextSnapshotTyped.content ?? undefined,
+      }).catch(console.error);
     },
     revertAiDraft: () => {
       const state = get();
@@ -207,13 +206,10 @@ export function createAiSlice(
         const nextPageMap = new Map(state.pageMap);
         nextPageMap.set(targetId, { ...page, title: undoSnapshotTyped.title ?? page.title, bookBody: undoSnapshotTyped.content ?? page.bookBody });
         set({ pages: nextPages, pageMap: nextPageMap });
-        const dataAdapter = getDataAdapter?.() ?? null;
-        dataAdapter
-          ?.updatePage(targetId, {
-            title: undoSnapshotTyped.title ?? undefined,
-            bookBody: undoSnapshotTyped.content ?? undefined,
-          })
-          .catch(console.error);
+        updatePage?.(targetId, {
+          title: undoSnapshotTyped.title ?? undefined,
+          bookBody: undoSnapshotTyped.content ?? undefined,
+        }).catch(console.error);
       }
     },
   };

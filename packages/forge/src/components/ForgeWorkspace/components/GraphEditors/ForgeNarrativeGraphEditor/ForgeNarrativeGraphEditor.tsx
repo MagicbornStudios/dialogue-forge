@@ -39,7 +39,6 @@ import { createForgeEditorSessionStore, ForgeEditorSessionProvider, useForgeEdit
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import { ForgeEditorActionsProvider, makeForgeEditorActions, useForgeEditorActions } from '@magicborn/forge/lib/graph-editor/hooks/useForgeEditorActions';
-import { useForgeGraphEditorActions } from '@magicborn/forge/copilotkit';
 import { NarrativeGraphEditorPaneContextMenu } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/NarrativeGraphEditorPaneContextMenu';
 import { NARRATIVE_FORGE_NODE_TYPE } from '@magicborn/forge/types/forge-graph';
 import { ForgeGraphBreadcrumbs } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/shared/ForgeGraphBreadcrumbs';
@@ -94,7 +93,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
   
   const {
     openYarnModal,
-    openCopilotChat,  
     focusedEditor,
     setFocusedEditor,
     pendingFocus,
@@ -105,7 +103,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
   } = useForgeWorkspaceStore(
     useShallow((s) => ({
       openYarnModal: s.actions.openYarnModal,
-      openCopilotChat: s.actions.openCopilotChat,
       focusedEditor: s.focusedEditor,
       setFocusedEditor: s.actions.setFocusedEditor,
       pendingFocus: s.pendingFocusByScope.narrative,
@@ -310,7 +307,6 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
   return (
     <ForgeEditorActionsProvider actions={actions}>
       <ForgeNarrativeGraphEditorContent
-        openCopilotChat={openCopilotChat}
         graph={graph}
         shell={shell}
         reactFlow={reactFlow}
@@ -357,7 +353,6 @@ function ForgeNarrativeGraphEditorContent({
   isFocused,
   isSaving,
   openYarnModal,
-  openCopilotChat,
   handleClick,
   handleAutoLayout,
   setLayoutDirection,
@@ -385,7 +380,6 @@ function ForgeNarrativeGraphEditorContent({
   isFocused: boolean;
   isSaving: boolean;
   openYarnModal: () => void;
-  openCopilotChat: () => void;
   handleClick: () => void;
   handleAutoLayout: (direction?: LayoutDirection) => void;
   setLayoutDirection: (dir: LayoutDirection) => void;
@@ -400,9 +394,6 @@ function ForgeNarrativeGraphEditorContent({
   flagSchema?: FlagSchema;
   characters?: Record<string, ForgeCharacter>;
 }) {
-  // Register CopilotKit editor actions (must be inside provider)
-  useForgeGraphEditorActions();
-  
   const actions = useForgeEditorActions();
 
   const handleCreateNewNarrative = React.useCallback(async () => {
@@ -522,7 +513,6 @@ function ForgeNarrativeGraphEditorContent({
           layoutStrategy="dagre"
           showMiniMap={showMiniMap}
           onToggleMiniMap={() => setShowMiniMap(!showMiniMap)}
-          onOpenCopilot={openCopilotChat}
         />
         <GraphLayoutControls
           autoOrganize={autoOrganize}

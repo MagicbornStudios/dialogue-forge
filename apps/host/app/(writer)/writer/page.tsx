@@ -1,23 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { WriterWorkspace, WriterDataContext } from '@magicborn/writer';
-import { ForgeDataContext } from '@magicborn/forge';
-import { useForgeData } from '../../lib/forge/use-forge-data';
-import { useWriterData } from '../../lib/writer/use-writer-data';
-import { ProjectSwitcher } from '../../../components/ProjectSwitcher';
+import { WriterWorkspace } from '@magicborn/writer';
 import { WriterProjectSwitcher } from '@magicborn/writer/components/WriterWorkspace/layout/WriterProjectSwitcher';
+import { ForgeDataProvider } from '../../lib/forge/ForgeDataProvider';
+import { WriterDataProvider } from '../../lib/writer/WriterDataProvider';
+import { ProjectSwitcher } from '../../../components/ProjectSwitcher';
 
 export const dynamic = 'force-static';
 
 export default function WriterApp() {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const writerData = useWriterData();
-  const forgeData = useForgeData();
 
   return (
-    <WriterDataContext.Provider value={writerData}>
-      <ForgeDataContext.Provider value={forgeData}>
+    <ForgeDataProvider>
+      <WriterDataProvider>
         <div className="w-full h-screen flex flex-col">
           <div className="flex-1 w-full min-h-0 flex flex-col">
             <WriterWorkspace
@@ -34,7 +31,7 @@ export default function WriterApp() {
             />
           </div>
         </div>
-      </ForgeDataContext.Provider>
-    </WriterDataContext.Provider>
+      </WriterDataProvider>
+    </ForgeDataProvider>
   );
 }

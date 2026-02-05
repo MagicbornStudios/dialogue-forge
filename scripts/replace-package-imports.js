@@ -45,7 +45,7 @@ function replaceDomainImports(content) {
 function run() {
   const targets = [
     path.join(repoRoot, 'packages'),
-    path.join(repoRoot, 'apps/host'),
+    path.join(repoRoot, 'apps/studio'),
   ];
 
   const files = targets.flatMap((target) => walk(target));

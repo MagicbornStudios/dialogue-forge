@@ -1,0 +1,16 @@
+{
+  "name": "@magicborn/types",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*"
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc -p tsconfig.json --pretty false --noEmit"
+  }
+}

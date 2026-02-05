@@ -26,7 +26,7 @@ module.exports = {
         path: '^packages/(shared|runtime|forge|writer|video|characters|ai)/src/'
       },
       to: {
-        path: '^apps/host/'
+        path: '^apps/studio/'
       }
     },
     {

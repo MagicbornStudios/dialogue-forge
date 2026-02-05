@@ -73,7 +73,7 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.19.30)(@vitest/ui@2.1.9)(jsdom@20.0.3(canvas@2.11.2))(lightningcss@1.30.2)(sass@1.97.3)
 
-  apps/host:
+  apps/studio:
     dependencies:
       '@magicborn/characters':
         specifier: workspace:*
@@ -84,6 +84,9 @@ importers:
       '@magicborn/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@magicborn/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@magicborn/writer':
         specifier: workspace:*
         version: link:../../packages/writer
@@ -409,6 +412,12 @@ importers:
       react-dom:
         specifier: ^18.0.0 || ^19.0.0
         version: 19.2.1(react@19.2.1)
+
+  packages/types:
+    devDependencies:
+      payload:
+        specifier: ^3.74.0
+        version: 3.74.0(graphql@16.12.0)(typescript@5.9.3)
 
   packages/writer:
     dependencies:
@@ -16718,7 +16727,7 @@ snapshots:
   tsx@4.21.0:
     dependencies:
       esbuild: 0.27.2
-      get-tsconfig: 4.8.1
+      get-tsconfig: 4.13.1
     optionalDependencies:
       fsevents: 2.3.3
 

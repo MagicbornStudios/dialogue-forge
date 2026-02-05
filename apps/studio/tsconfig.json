@@ -1,0 +1,40 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "noEmit": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./*"],
+      "@magicborn/dialogue-forge": ["../../packages/dialogue-forge/src"],
+      "@magicborn/dialogue-forge/*": ["../../packages/dialogue-forge/src/*"],
+      "@magicborn/shared": ["../../packages/shared/src"],
+      "@magicborn/shared/*": ["../../packages/shared/src/*"],
+      "@magicborn/forge": ["../../packages/forge/src"],
+      "@magicborn/forge/*": ["../../packages/forge/src/*"],
+      "@magicborn/writer": ["../../packages/writer/src"],
+      "@magicborn/writer/*": ["../../packages/writer/src/*"],
+      "@magicborn/characters": ["../../packages/characters/src"],
+      "@magicborn/characters/*": ["../../packages/characters/src/*"],
+      "@magicborn/types": ["../../packages/types/src"],
+      "@magicborn/types/*": ["../../packages/types/src/*"],
+      "@payload-config": ["./payload/payload.config.ts"],
+      "@payloadcms/ui": ["../../node_modules/@payloadcms/ui"],
+      "@payloadcms/ui/*": ["../../node_modules/@payloadcms/ui/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "app/**/*",
+    "components/**/*",
+    "lib/**/*",
+    "payload/**/*",
+    "styles/**/*",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "src"]
+}

@@ -1,6 +1,6 @@
 const baseRestrictedPatterns = [
-  "apps/host/**",
-  "apps/host/app/payload-types",
+  "apps/studio/**",
+  "apps/studio/app/payload-types",
   "@/app/**",
   "@/app/payload-types",
   "@/host/**",
@@ -66,7 +66,7 @@ module.exports = {
   plugins: ["@typescript-eslint"],
   overrides: [
     {
-      files: ["apps/host/app/**/*.{js,jsx,ts,tsx}"],
+      files: ["apps/studio/app/**/*.{js,jsx,ts,tsx}"],
       extends: ["next/core-web-vitals"],
       rules: {
         // Next.js recommended rules are included via extends

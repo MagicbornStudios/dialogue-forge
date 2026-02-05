@@ -14,10 +14,10 @@ const domainTargets = {
 };
 
 const hostTargets = {
-  app: path.join(repoRoot, 'apps/host/app'),
-  components: path.join(repoRoot, 'apps/host/components'),
-  styles: path.join(repoRoot, 'apps/host/styles'),
-  host: path.join(repoRoot, 'apps/host/app/lib'),
+  app: path.join(repoRoot, 'apps/studio/app'),
+  components: path.join(repoRoot, 'apps/studio/components'),
+  styles: path.join(repoRoot, 'apps/studio/styles'),
+  host: path.join(repoRoot, 'apps/studio/app/lib'),
 };
 
 const fileExtensions = new Set(['.ts', '.tsx', '.js', '.jsx']);
@@ -88,7 +88,7 @@ function walk(dir, results = []) {
 function run() {
   const targets = [
     path.join(repoRoot, 'packages'),
-    path.join(repoRoot, 'apps/host'),
+    path.join(repoRoot, 'apps/studio'),
   ];
 
   const files = targets.flatMap((target) => walk(target));

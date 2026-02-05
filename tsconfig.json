@@ -21,7 +21,10 @@
       "path": "./packages/dialogue-forge/tsconfig.json"
     },
     {
-      "path": "./apps/host/tsconfig.json"
+      "path": "./packages/types/tsconfig.json"
+    },
+    {
+      "path": "./apps/studio/tsconfig.json"
     }
   ],
   "include": [],

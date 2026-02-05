@@ -57,7 +57,7 @@
         "./packages/ai/src/*"
       ],
       "@payload-config": [
-        "./apps/host/app/payload.config.ts"
+        "./apps/studio/payload/payload.config.ts"
       ],
       "@payloadcms/ui": [
         "./node_modules/@payloadcms/ui"

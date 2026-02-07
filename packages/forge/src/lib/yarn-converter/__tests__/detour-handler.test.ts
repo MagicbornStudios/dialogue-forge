@@ -6,12 +6,15 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { DetourHandler } from '../handlers/detour-handler';
+import { CharacterHandler } from '../handlers/character-handler';
 import { YarnTextBuilder } from '../builders/yarn-text-builder';
+import { defaultRegistry } from '../registry';
 import {
   createMockForgeFlowNode,
   createMockYarnConverterContext,
   createMockAdapter,
   createMockForgeGraphDoc,
+  parseYarnNode,
 } from './helpers';
 import { FORGE_NODE_TYPE, FORGE_STORYLET_CALL_MODE } from '@magicborn/forge/types/forge-graph';
 
@@ -22,6 +25,7 @@ describe('DetourHandler', () => {
   beforeEach(() => {
     handler = new DetourHandler();
     builder = new YarnTextBuilder();
+    defaultRegistry.registerHandler(FORGE_NODE_TYPE.CHARACTER, new CharacterHandler());
   });
 
   describe('canHandle', () => {
@@ -109,6 +113,19 @@ describe('DetourHandler', () => {
       expect(result.id).toBe('detour1');
       expect(result.data?.type).toBe(FORGE_NODE_TYPE.DETOUR);
       expect(result.data?.content).toContain('This is a detour');
+    });
+
+    it('should round-trip export then import detour node', async () => {
+      const node = createMockForgeFlowNode('detour_round', FORGE_NODE_TYPE.DETOUR, {
+        content: 'Detour content here.',
+      });
+      const exported = await handler.exportNode(node, builder);
+      const yarnBlock = parseYarnNode(exported);
+      const imported = await handler.importNode(yarnBlock);
+
+      expect(imported.id).toBe('detour_round');
+      expect(imported.data?.type).toBe(FORGE_NODE_TYPE.DETOUR);
+      expect(imported.data?.content).toContain('Detour content here');
     });
   });
 });

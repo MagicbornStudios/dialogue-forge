@@ -9,7 +9,7 @@ import { YarnTextBuilder } from './yarn-text-builder';
 import type { ForgeConditionalBlock, ForgeChoice } from '@magicborn/forge/types/forge-graph';
 import { formatConditions } from '@magicborn/forge/lib/yarn-converter/utils/condition-formatter';
 import { extractSetCommands } from '@magicborn/forge/lib/yarn-converter/utils/content-formatter';
-import { CONDITION_BLOCK_TYPE } from '@magicborn/forge/lib/yarn-converter';
+import { CONDITION_BLOCK_TYPE } from '@magicborn/forge/lib/yarn-converter/constants';
 
 /**
  * NodeBlockBuilder - Builds complete Yarn node blocks

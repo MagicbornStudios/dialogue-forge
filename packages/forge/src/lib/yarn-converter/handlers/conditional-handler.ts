@@ -12,7 +12,7 @@ import type { YarnConverterContext, YarnNodeBlock, YarnTextBuilder } from '@magi
 import { FORGE_NODE_TYPE } from '@magicborn/forge/types/forge-graph';
 import { extractSetCommands } from '@magicborn/forge/lib/yarn-converter/utils/content-formatter';
 import { parseCondition } from '@magicborn/forge/lib/yarn-converter/utils/condition-parser';
-import { CONDITION_BLOCK_TYPE } from '@magicborn/forge/lib/yarn-converter';
+import { CONDITION_BLOCK_TYPE } from '@magicborn/forge/lib/yarn-converter/constants';
 
 export class ConditionalHandler extends BaseNodeHandler {
   canHandle(nodeType: ForgeNodeType): boolean {

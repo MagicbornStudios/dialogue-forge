@@ -6,12 +6,15 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { StoryletHandler } from '../handlers/storylet-handler';
+import { CharacterHandler } from '../handlers/character-handler';
 import { YarnTextBuilder } from '../builders/yarn-text-builder';
+import { defaultRegistry } from '../registry';
 import {
   createMockForgeFlowNode,
   createMockYarnConverterContext,
   createMockAdapter,
   createMockForgeGraphDoc,
+  parseYarnNode,
 } from './helpers';
 import { FORGE_NODE_TYPE, FORGE_STORYLET_CALL_MODE } from '@magicborn/forge/types/forge-graph';
 
@@ -22,6 +25,8 @@ describe('StoryletHandler', () => {
   beforeEach(() => {
     handler = new StoryletHandler();
     builder = new YarnTextBuilder();
+    // Register CHARACTER handler so exportReferencedGraph can export character nodes
+    defaultRegistry.registerHandler(FORGE_NODE_TYPE.CHARACTER, new CharacterHandler());
   });
 
   describe('canHandle', () => {
@@ -105,7 +110,9 @@ describe('StoryletHandler', () => {
         },
       });
 
-      await expect(handler.exportNode(node, builder, context)).rejects.toThrow();
+      const result = await handler.exportNode(node, builder, context);
+      expect(result).toContain('title: storylet1');
+      expect(result).toContain('[Storylet: 999 - Error loading]');
     });
   });
 
@@ -122,6 +129,20 @@ describe('StoryletHandler', () => {
       expect(result.id).toBe('storylet1');
       expect(result.data?.type).toBe(FORGE_NODE_TYPE.STORYLET);
       expect(result.data?.content).toContain('This is a storylet');
+    });
+
+    it('should round-trip export then import storylet node', async () => {
+      const node = createMockForgeFlowNode('story_round', FORGE_NODE_TYPE.STORYLET, {
+        content: 'Line one.\nLine two.',
+      });
+      const exported = await handler.exportNode(node, builder);
+      const yarnBlock = parseYarnNode(exported);
+      const imported = await handler.importNode(yarnBlock);
+
+      expect(imported.id).toBe('story_round');
+      expect(imported.data?.type).toBe(FORGE_NODE_TYPE.STORYLET);
+      expect(imported.data?.content).toContain('Line one');
+      expect(imported.data?.content).toContain('Line two');
     });
   });
 });

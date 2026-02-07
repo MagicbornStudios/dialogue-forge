@@ -13,6 +13,10 @@
 
 After changes, update STATUS + the relevant domain AGENTS with new footguns or rules.
 
+## Migration to forge-agent
+
+When working on migration to forge-agent: read [docs/plans/migration-forge-agent/00-index.md](docs/plans/migration-forge-agent/00-index.md) and the relevant plan (30–33). Do not migrate edge-drop (see [docs/plans/migration-forge-agent/11-out-of-scope.md](docs/plans/migration-forge-agent/11-out-of-scope.md)). After each slice, update the plan and [docs/agent-artifacts/core/MIGRATION.md](docs/agent-artifacts/core/MIGRATION.md).
+
 ## Repo Structure (Current)
 - `apps/host/` = Next.js host app + adapters (PayloadCMS, routes, API).
 - `packages/shared/` = shared types, UI, utilities (no internal deps).

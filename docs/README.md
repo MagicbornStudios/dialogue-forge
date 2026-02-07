@@ -11,6 +11,7 @@ This repo is deprecated. Documentation is kept for **knowledge capture and reimp
 - **[conventions/](conventions/README.md)** — Coding conventions, repo structure, adapters.
 - **[agent-artifacts/](agent-artifacts/README.md)** — Status, decisions, errors/attempts, tool usage; archive of superseded artifacts.
 - **[plans/](plans/)** — Migration and audit plans.
+- **[plans/migration-forge-agent/00-index.md](plans/migration-forge-agent/00-index.md)** — Migration to forge-agent: plans, parity, inventories; read first when doing migration work.
 
 ## Quick links
 

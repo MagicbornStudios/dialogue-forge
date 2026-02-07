@@ -202,18 +202,8 @@ function determineNodeTypeFromYarn(
   return FORGE_NODE_TYPE.CHARACTER;
 }
 
-/**
- * Yarn block type constants for Yarn syntax generation
- */
-export const CONDITION_BLOCK_TYPE = {
-  IF: 'if',
-  ELSEIF: 'elseif',
-  ELSE: 'else',
-  ENDIF: 'endif',
-} as const;
-
-export type ConditionBlockType = typeof CONDITION_BLOCK_TYPE[keyof typeof CONDITION_BLOCK_TYPE];
-
+// Re-export constants (defined in constants.ts to avoid circular imports)
+export { CONDITION_BLOCK_TYPE, type ConditionBlockType } from './constants';
 
 // Re-export types and utilities for convenience
 export type { YarnConverterContext } from './types';

@@ -5,7 +5,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['packages/dialogue-forge/src/**/*.test.ts', 'packages/dialogue-forge/src/**/*.test.tsx'],
+    include: [
+    'packages/dialogue-forge/src/**/*.test.ts',
+    'packages/dialogue-forge/src/**/*.test.tsx',
+    'packages/forge/src/**/*.test.ts',
+    'packages/forge/src/**/*.test.tsx',
+  ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -21,6 +26,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'packages/dialogue-forge/src'),
+      '@magicborn/forge': path.resolve(__dirname, 'packages/forge/src'),
+      '@magicborn/shared': path.resolve(__dirname, 'packages/shared/src'),
     },
   },
 });

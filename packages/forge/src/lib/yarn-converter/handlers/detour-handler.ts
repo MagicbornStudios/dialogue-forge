@@ -7,7 +7,7 @@
 
 import { BaseNodeHandler } from '@magicborn/forge/lib/yarn-converter/handlers/base-handler';
 import { NodeBlockBuilder } from '@magicborn/forge/lib/yarn-converter/builders/node-block-builder';
-import type { ForgeReactFlowNode, ForgeNodeType, ForgeGraphDoc } from '@magicborn/forge/types/forge-graph';
+import type { ForgeReactFlowNode, ForgeNodeType, ForgeGraphDoc, ForgeNode } from '@magicborn/forge/types/forge-graph';
 import type { YarnConverterContext, YarnNodeBlock, YarnTextBuilder } from '@magicborn/forge/lib/yarn-converter/types';
 import { FORGE_NODE_TYPE } from '@magicborn/forge/types/forge-graph';
 import { defaultRegistry } from '@magicborn/forge/lib/yarn-converter/registry';
@@ -164,7 +164,33 @@ export class DetourHandler extends BaseNodeHandler {
   }
 
   async importNode(yarnBlock: YarnNodeBlock, context?: YarnConverterContext): Promise<ForgeReactFlowNode> {
-    // This will be implemented when we refactor importFromYarn
-    throw new Error('DetourHandler.importNode not yet implemented');
+    const lines = yarnBlock.lines;
+    let content = '';
+    let defaultNextNodeId: string | undefined;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      const jumpMatch = trimmed.match(/<<jump\s+(\S+)>>/);
+      if (jumpMatch) {
+        defaultNextNodeId = jumpMatch[1];
+      } else {
+        content += (content ? '\n' : '') + trimmed;
+      }
+    }
+
+    const nodeData: ForgeNode = {
+      id: yarnBlock.nodeId,
+      type: FORGE_NODE_TYPE.DETOUR,
+      content: content.trim() || undefined,
+      defaultNextNodeId,
+    };
+
+    return {
+      id: yarnBlock.nodeId,
+      type: FORGE_NODE_TYPE.DETOUR,
+      position: { x: 0, y: 0 },
+      data: nodeData,
+    };
   }
 }

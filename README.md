@@ -527,12 +527,16 @@ cp .env.example .env.local
 
 ## 📖 Documentation
 
+### Documentation index
+
+- **[docs/README.md](./docs/README.md)** - Documentation index (architecture, domains, how-to, design, conventions, agent-artifacts)
+
 ### Architecture
 
-- **[docs/architecture/BOUNDARIES.md](./docs/architecture/BOUNDARIES.md)** - Layer boundaries and import rules
-- **[docs/architecture/FILE-PLACEMENT.md](./docs/architecture/FILE-PLACEMENT.md)** - File placement decision tree
-- **[docs/architecture/GLOSSARY.md](./docs/architecture/GLOSSARY.md)** - Architecture glossary
-- **[docs/architecture/PATTERNS.md](./docs/architecture/PATTERNS.md)** - Architecture patterns and recommended practices
+- **[docs/architecture/workspace-editor-architecture.md](./docs/architecture/workspace-editor-architecture.md)** - Workspace pattern (store, session, shell, no draft slices, no event bus)
+- **[docs/architecture/boundaries-and-patterns.md](./docs/architecture/boundaries-and-patterns.md)** - Layer boundaries, file placement, patterns, glossary (merged)
+- **[docs/architecture/dialogue-domain-and-yarn.md](./docs/architecture/dialogue-domain-and-yarn.md)** - Forge: narrative/storylet, nodes, Yarn export
+- **[docs/architecture/writer-workspace-architecture.md](./docs/architecture/writer-workspace-architecture.md)** - Writer: store, layout, editor, sync, AI patch
 - **[ARCHITECTURE_REVIEW.md](./ARCHITECTURE_REVIEW.md)** - Architecture review and cleanup priorities
 
 ### Integration
@@ -546,13 +550,13 @@ cp .env.example .env.local
 - **[AGENTS.md](./AGENTS.md)** - AI agent guide (coding preferences, conventions)
 - **[docs/nodes-and-editors.md](./docs/nodes-and-editors.md)** - Node types and editor architecture
 
-### Domain Docs
+### Domain docs
 
-- **[docs/forge.md](./docs/forge.md)** - Forge domain overview
-- **[docs/writer.md](./docs/writer.md)** - Writer domain overview
-- **[docs/shared.md](./docs/shared.md)** - Shared domain overview
-- **[docs/ai.md](./docs/ai.md)** - AI domain overview
-- **[docs/runtime.md](./docs/runtime.md)** - Runtime systems overview
+- **[docs/domains/forge.md](./docs/domains/forge.md)** - Forge domain overview
+- **[docs/domains/writer.md](./docs/domains/writer.md)** - Writer domain overview
+- **[docs/domains/shared.md](./docs/domains/shared.md)** - Shared domain overview
+- **[docs/domains/video.md](./docs/domains/video.md)** - Video domain overview
+- **[docs/domains/runtime.md](./docs/domains/runtime.md)** - Runtime types and Yarn (playback removed)
 
 ## 🧪 Development
 

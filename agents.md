@@ -1,7 +1,7 @@
 # AGENTS (Repo Guide)
 
 ## Start Here (Required)
-1. Read `docs/STATUS.md` first.
+1. Read `docs/agent-artifacts/core/STATUS.md` first (or `docs/STATUS.md` which redirects there).
 2. Read `docs/architecture/workspace-editor-architecture.md`.
 3. Read the domain AGENTS file before touching code:
    - `packages/shared/AGENTS.md`

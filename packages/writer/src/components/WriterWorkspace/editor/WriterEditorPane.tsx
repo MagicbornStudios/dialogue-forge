@@ -5,7 +5,6 @@ import {
   WRITER_AI_PROPOSAL_STATUS,
   WriterWorkspaceState,
 } from '@magicborn/writer/components/WriterWorkspace/store/writer-workspace-store';
-import { useWriterDataContext } from '@magicborn/writer/components/WriterWorkspace/WriterDataContext';
 import { getPlainTextFromSerializedContent } from '@magicborn/writer/components/WriterWorkspace/store/writer-workspace-types';
 import { applyWriterPatchOps } from '@magicborn/writer/lib/editor/patches';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
@@ -29,6 +28,7 @@ import { useSettings } from './lexical/context/SettingsContext';
 import { FlashMessageContext } from './lexical/context/FlashMessageContext';
 import { EditorSyncContextProvider } from './lexical/context/EditorSyncContext';
 import { CommentContextProvider } from './lexical/context/CommentContext';
+import { useUpdateWriterPage } from '@magicborn/writer/data/writer-queries';
 
 interface WriterEditorPaneProps {
   className?: string;
@@ -98,7 +98,7 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
   const updatePage = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.updatePage);
   const applyAiEdits = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.applyAiEdits);
   const revertAiDraft = useWriterWorkspaceStore((state: WriterWorkspaceState) => state.actions.revertAiDraft);
-  const dataAdapter = useWriterDataContext();
+  const updateWriterPage = useUpdateWriterPage();
 
   const activePage = activePageId ? pageMap.get(activePageId) ?? null : null;
 
@@ -160,9 +160,12 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
               value={titleValue}
               onChange={(e) => setTitleValue(e.target.value)}
               onBlur={async () => {
-                if (!activePageId || !dataAdapter || titleValue === (activePage?.title ?? '')) return;
+                if (!activePageId || titleValue === (activePage?.title ?? '')) return;
                 try {
-                  await dataAdapter.updatePage(activePageId, { title: titleValue.trim() || 'Untitled' });
+                  await updateWriterPage.mutateAsync({
+                    pageId: activePageId,
+                    patch: { title: titleValue.trim() || 'Untitled' },
+                  });
                   updatePage(activePageId, { title: titleValue.trim() || 'Untitled' });
                 } catch (err) {
                   console.error('Failed to save title', err);
@@ -197,7 +200,6 @@ export function WriterEditorPane({ className }: WriterEditorPaneProps) {
                           >
                             <CommentContextProvider
                               pageId={activePageId}
-                              dataAdapter={dataAdapter ?? undefined}
                             >
                               <div className="editor-shell flex min-h-0 flex-1 flex-col overflow-hidden relative">
                                 <Editor />

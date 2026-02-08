@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { ForgeWorkspace } from '@magicborn/forge';
+import { ForgePayloadProvider, ForgeWorkspace } from '@magicborn/forge';
 import { WriterWorkspace } from '@magicborn/writer';
 import { WriterProjectSwitcher } from '@magicborn/writer/components/WriterWorkspace/layout/WriterProjectSwitcher';
 import { CharacterWorkspace } from '@magicborn/characters/components/CharacterWorkspace/CharacterWorkspace';
@@ -12,13 +12,12 @@ import {
 import { setupCharacterWorkspaceSubscriptions } from '@magicborn/characters/components/CharacterWorkspace/store/slices/subscriptions';
 import { useCharacterDataContext } from '@magicborn/characters/components/CharacterWorkspace/CharacterDataContext';
 import { ThemeWorkspace } from '@magicborn/theme';
-import { ForgeDataProvider } from '@/lib/forge/ForgeDataProvider';
-import { WriterDataProvider } from '@/lib/writer/WriterDataProvider';
 import { CharacterDataProvider } from '@/lib/characters/CharacterDataProvider';
 import { ThemeDataProvider } from '@/lib/theme/ThemeDataProvider';
 import { ProjectSwitcher } from '@/components/ProjectSwitcher';
 import { Code2, BookOpen, Users, Settings, Palette } from 'lucide-react';
 import Link from 'next/link';
+import { payload } from '@/lib/forge/payload';
 
 type Workspace = 'forge' | 'writer' | 'theme' | 'characters';
 
@@ -103,8 +102,8 @@ export default function StudioPage() {
       </header>
 
       <main className="flex-1 min-h-0 flex flex-col">
-        {workspace === 'forge' && (
-          <ForgeDataProvider>
+        <ForgePayloadProvider client={payload}>
+          {workspace === 'forge' && (
             <ForgeWorkspace
               className="h-full"
               selectedProjectId={selectedProjectId}
@@ -114,12 +113,9 @@ export default function StudioPage() {
                 { label: 'API', href: '/api/graphql-playground', icon: <Code2 size={14} /> },
               ]}
             />
-          </ForgeDataProvider>
-        )}
+          )}
 
-        {workspace === 'writer' && (
-          <ForgeDataProvider>
-            <WriterDataProvider>
+          {workspace === 'writer' && (
               <div className="w-full h-full flex flex-col">
                 <WriterWorkspace
                   className="h-full"
@@ -134,9 +130,8 @@ export default function StudioPage() {
                   }
                 />
               </div>
-            </WriterDataProvider>
-          </ForgeDataProvider>
-        )}
+          )}
+        </ForgePayloadProvider>
 
         {workspace === 'theme' && (
           <ThemeDataProvider>

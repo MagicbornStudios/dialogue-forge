@@ -51,6 +51,12 @@ import { AddCommentBox } from './AddCommentBox';
 import { CommentInputBox } from './CommentInputBox';
 import { CommentsPanel } from './CommentsPanel';
 import { useCommentMode } from './useCommentMode';
+import {
+  useCreateWriterComment,
+  useDeleteWriterComment,
+  useUpdateWriterComment,
+  useWriterComments,
+} from '@magicborn/writer/data/writer-queries';
 
 export const INSERT_INLINE_COMMAND: LexicalCommand<void> = createCommand(
   'INSERT_INLINE_COMMAND',
@@ -68,7 +74,7 @@ export default function CommentPlugin({
   showCommentsButtonContainer?: HTMLElement | null;
 }): JSX.Element {
   const collabContext = useCollaborationContext();
-  const { pageId, dataAdapter } = useCommentContext();
+  const { pageId } = useCommentContext();
   const [editor] = useLexicalComposerContext();
   const commentStore = useMemo(() => new CommentStore(editor), [editor]);
   const comments = useCommentStore(commentStore);
@@ -84,40 +90,30 @@ export default function CommentPlugin({
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [commentModeEnabled, setCommentModeEnabled] = useCommentMode();
   const { yjsDocMap } = collabContext;
+  const commentsQuery = useWriterComments(pageId);
+  const createComment = useCreateWriterComment();
+  const updateComment = useUpdateWriterComment();
+  const deleteComment = useDeleteWriterComment();
 
-  // Load comments from Payload on mount
+  // Load comments from Payload query and sync into the lexical comment store.
   useEffect(() => {
-    if (!pageId || !dataAdapter?.listComments) {
+    if (!pageId) {
+      setIsLoadingComments(false);
       return;
     }
 
-    setIsLoadingComments(true);
-    dataAdapter
-      .listComments(pageId)
-      .then((payloadComments) => {
-        // Clear existing comments and load from Payload
-        const currentComments = commentStore.getComments();
-        currentComments.forEach((comment) => {
-          if (comment.type === 'thread') {
-            commentStore.deleteCommentOrThread(comment);
-          } else {
-            commentStore.deleteCommentOrThread(comment);
-          }
-        });
+    setIsLoadingComments(commentsQuery.isLoading);
+    if (!commentsQuery.data) return;
 
-        // Add comments from Payload (preserve nodeKeys from Payload)
-        payloadComments.forEach((comment) => {
-          // nodeKey is already included in the comment from Payload
-          commentStore.addComment(comment);
-        });
-      })
-      .catch((error) => {
-        console.error('Failed to load comments from Payload:', error);
-      })
-      .finally(() => {
-        setIsLoadingComments(false);
-      });
-  }, [pageId, dataAdapter, commentStore]);
+    const currentComments = commentStore.getComments();
+    currentComments.forEach((comment) => {
+      commentStore.deleteCommentOrThread(comment);
+    });
+
+    commentsQuery.data.forEach((comment) => {
+      commentStore.addComment(comment);
+    });
+  }, [commentStore, commentsQuery.data, commentsQuery.isLoading, pageId]);
 
   useEffect(() => {
     if (providerFactory) {
@@ -148,11 +144,15 @@ export default function CommentPlugin({
         commentStore.addComment(markedComment, thread, index);
 
         // Persist to Payload
-        if (pageId && dataAdapter?.updateComment) {
+        if (pageId) {
           try {
-            await dataAdapter.updateComment(pageId, comment.id, {
+            await updateComment.mutateAsync({
+              pageId,
+              commentId: comment.id,
+              patch: {
               deleted: true,
               content: '[Deleted Comment]',
+              },
             });
           } catch (error) {
             console.error('Failed to delete comment in Payload:', error);
@@ -180,14 +180,14 @@ export default function CommentPlugin({
         }
 
         // Persist to Payload (fire and forget to avoid blocking)
-        if (pageId && dataAdapter?.deleteComment) {
-          dataAdapter.deleteComment(pageId, comment.id).catch((error) => {
+        if (pageId) {
+          deleteComment.mutateAsync({ pageId, commentId: comment.id }).catch((error) => {
             console.error('Failed to delete thread in Payload:', error);
           });
         }
       }
     },
-    [commentStore, editor, markNodeMap, pageId, dataAdapter]
+    [commentStore, deleteComment, editor, markNodeMap, pageId, updateComment]
   );
 
   const submitAddComment = useCallback(
@@ -200,23 +200,29 @@ export default function CommentPlugin({
       commentStore.addComment(commentOrThread, thread);
 
       // Persist to Payload
-      if (pageId && dataAdapter?.createComment) {
+      if (pageId) {
         try {
           if (commentOrThread.type === 'thread') {
             const thread = commentOrThread as Thread;
-            await dataAdapter.createComment(pageId, {
+            await createComment.mutateAsync({
+              pageId,
+              input: {
               author: thread.comments[0]?.author || 'Unknown',
               content: thread.comments[0]?.content || '',
               quote: thread.quote,
               nodeKey: (thread as any).nodeKey,
+              },
             });
           } else {
             const comment = commentOrThread as Comment;
-            await dataAdapter.createComment(pageId, {
-              author: comment.author,
-              content: comment.content,
-              threadId: thread?.id || null,
-              nodeKey: (comment as any).nodeKey,
+            await createComment.mutateAsync({
+              pageId,
+              input: {
+                author: comment.author,
+                content: comment.content,
+                threadId: thread?.id || null,
+                nodeKey: (comment as any).nodeKey,
+              },
             });
           }
         } catch (error) {
@@ -237,7 +243,7 @@ export default function CommentPlugin({
         setShowCommentInput(false);
       }
     },
-    [commentStore, editor, pageId, dataAdapter]
+    [commentStore, createComment, editor, pageId]
   );
 
   useEffect(() => {

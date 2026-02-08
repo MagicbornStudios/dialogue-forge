@@ -19,10 +19,14 @@ import {
   Layers,
 } from 'lucide-react';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
-import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import { Button } from '@magicborn/shared/ui/button';
 import { ForgeProjectSwitcher } from './ForgeProjectSwitcher';
 import type { ForgeGameStateRecord } from '@magicborn/shared/types/forge-game-state';
+import {
+  useCreateForgeGameState,
+  useDeleteForgeGameState,
+  useSetActiveForgeGameState,
+} from '@magicborn/forge/data/forge-queries';
 
 type PanelId = 'sidebar' | 'narrative-editor' | 'storylet-editor';
 
@@ -58,10 +62,12 @@ export function ForgeWorkspaceMenuBar({
   const gameStatesById = useForgeWorkspaceStore((s) => s.gameStatesById);
   const activeGameStateId = useForgeWorkspaceStore((s) => s.activeGameStateId);
   const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
-  const dataAdapter = useForgeDataContext();
   const setActiveGameStateId = useForgeWorkspaceStore((s) => s.actions.setActiveGameStateId);
   const upsertGameState = useForgeWorkspaceStore((s) => s.actions.upsertGameState);
   const removeGameState = useForgeWorkspaceStore((s) => s.actions.removeGameState);
+  const createGameStateMutation = useCreateForgeGameState();
+  const setActiveGameStateMutation = useSetActiveForgeGameState();
+  const deleteGameStateMutation = useDeleteForgeGameState();
 
   const sortedGameStates = React.useMemo(() => {
     return Object.values(gameStatesById).sort((a, b) => {
@@ -81,27 +87,17 @@ export function ForgeWorkspaceMenuBar({
     const name = window.prompt('Name your new game state');
     if (!name) return;
     try {
-      if (dataAdapter) {
-        const created = await dataAdapter.createGameState({
-          projectId: selectedProjectId,
-          name,
-          state: { flags: {} },
-        });
-        upsertGameState(created, selectedProjectId);
-        setActiveGameStateId(created.id, selectedProjectId);
-        await dataAdapter.setActiveGameState(selectedProjectId, created.id);
-      } else {
-        const localId = Date.now();
-        const record: ForgeGameStateRecord = {
-          id: localId,
-          projectId: selectedProjectId,
-          name,
-          createdAt: new Date().toISOString(),
-          state: { flags: {} },
-        };
-        upsertGameState(record, selectedProjectId);
-        setActiveGameStateId(record.id, selectedProjectId);
-      }
+      const created = await createGameStateMutation.mutateAsync({
+        projectId: selectedProjectId,
+        name,
+        state: { flags: {} },
+      });
+      upsertGameState(created, selectedProjectId);
+      setActiveGameStateId(created.id, selectedProjectId);
+      await setActiveGameStateMutation.mutateAsync({
+        projectId: selectedProjectId,
+        gameStateId: created.id,
+      });
     } catch (error) {
       console.error('Failed to create game state:', error);
     }
@@ -110,9 +106,11 @@ export function ForgeWorkspaceMenuBar({
   const handleSwitchGameState = async (gameStateId: number) => {
     if (!selectedProjectId) return;
     setActiveGameStateId(gameStateId, selectedProjectId);
-    if (!dataAdapter) return;
     try {
-      await dataAdapter.setActiveGameState(selectedProjectId, gameStateId);
+      await setActiveGameStateMutation.mutateAsync({
+        projectId: selectedProjectId,
+        gameStateId,
+      });
     } catch (error) {
       console.error('Failed to set active game state:', error);
     }
@@ -124,16 +122,15 @@ export function ForgeWorkspaceMenuBar({
     const confirmed = window.confirm(`Delete game state "${activeGameState?.name ?? 'Untitled'}"?`);
     if (!confirmed) return;
     try {
-      if (dataAdapter) {
-        await dataAdapter.deleteGameState(activeGameStateId);
-      }
+      await deleteGameStateMutation.mutateAsync(activeGameStateId);
       removeGameState(activeGameStateId, selectedProjectId);
       const remaining = sortedGameStates.filter((state) => state.id !== activeGameStateId);
       const nextActive = remaining[0]?.id ?? null;
-      if (nextActive !== null && dataAdapter) {
-        await dataAdapter.setActiveGameState(selectedProjectId, nextActive);
-      }
       if (nextActive !== null) {
+        await setActiveGameStateMutation.mutateAsync({
+          projectId: selectedProjectId,
+          gameStateId: nextActive,
+        });
         setActiveGameStateId(nextActive, selectedProjectId);
       }
     } catch (error) {

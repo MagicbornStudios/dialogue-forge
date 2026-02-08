@@ -3,12 +3,34 @@ import type { ForgeGraphDoc } from '@magicborn/shared/types/forge-graph';
 import { FORGE_NODE_TYPE } from '@magicborn/shared/types/forge-graph';
 import type { ForgePage, PageType } from '@magicborn/shared/types/narrative';
 import { PAGE_TYPE } from '@magicborn/shared/types/narrative';
-import type { WriterDataAdapter } from '@magicborn/writer/lib/data-adapter/writer-adapter';
-import type { WriterForgeDataAdapter } from '@magicborn/writer/types/forge-data-adapter';
 import { createFlowNode } from '@magicborn/shared/utils/forge-graph-helpers';
 import { findLastNodeInHierarchy, findNodeByPageId } from '@magicborn/shared/lib/graph-validation';
 import { useToast } from '@magicborn/shared/ui/toast';
 import { calculateDelta } from '@magicborn/shared/lib/draft/draft-helpers';
+
+export type GraphPageCreateApi = {
+  createPage: (input: {
+    projectId: number;
+    pageType: 'ACT' | 'CHAPTER' | 'PAGE';
+    title: string;
+    order: number;
+    parent?: number | null;
+    narrativeGraph?: number | null;
+    bookBody?: string | null;
+  }) => Promise<ForgePage>;
+};
+
+export type GraphUpdateApi = {
+  updateGraph: (
+    graphId: number,
+    patch: Partial<
+      Pick<
+        ForgeGraphDoc,
+        'title' | 'flow' | 'startNodeId' | 'endNodeIds' | 'compiledYarn'
+      >
+    >
+  ) => Promise<ForgeGraphDoc>;
+};
 
 export interface UseGraphPageSyncOptions {
   graph: ForgeGraphDoc | null;
@@ -18,8 +40,8 @@ export interface UseGraphPageSyncOptions {
   commitDraft?: () => Promise<void>;
   pages: ForgePage[];
   projectId: number | null;
-  dataAdapter?: WriterDataAdapter;
-  forgeDataAdapter?: WriterForgeDataAdapter;
+  pageApi?: GraphPageCreateApi;
+  graphApi?: GraphUpdateApi;
   onGraphUpdate?: (graph: ForgeGraphDoc) => void;
   onPagesUpdate: (pages: ForgePage[]) => void;
 }
@@ -63,8 +85,8 @@ export function useGraphPageSync({
   commitDraft,
   pages,
   projectId,
-  dataAdapter,
-  forgeDataAdapter,
+  pageApi,
+  graphApi,
   onGraphUpdate,
   onPagesUpdate,
 }: UseGraphPageSyncOptions) {
@@ -77,7 +99,7 @@ export function useGraphPageSync({
     title: string;
     parentPageId?: number | null;
   }) => {
-    if (!dataAdapter || !effectiveGraph || !projectId) {
+    if (!pageApi || !effectiveGraph || !projectId) {
       toast.error('Required adapters or graph not available');
       return null;
     }
@@ -93,7 +115,7 @@ export function useGraphPageSync({
       const order = siblings.length;
       
       // 1. Create page in DB
-      const newPage = await dataAdapter.createPage({
+      const newPage = await pageApi.createPage({
         projectId,
         pageType: input.pageType,
         title: input.title,
@@ -163,8 +185,8 @@ export function useGraphPageSync({
       }
 
       const hasDraftPipeline = Boolean(applyDelta && commitDraft && (committedGraph ?? effectiveGraph));
-      if (!hasDraftPipeline && !forgeDataAdapter) {
-        throw new Error('ForgeDataAdapter not available');
+      if (!hasDraftPipeline && !graphApi) {
+        throw new Error('Graph update API not available');
       }
 
       if (hasDraftPipeline) {
@@ -174,8 +196,8 @@ export function useGraphPageSync({
         }
         applyDelta?.(calculateDelta(committedGraphForDelta, updatedGraph));
         await commitDraft?.();
-      } else if (forgeDataAdapter) {
-        const persistedGraph = await forgeDataAdapter.updateGraph(updatedGraph.id, {
+      } else if (graphApi) {
+        const persistedGraph = await graphApi.updateGraph(updatedGraph.id, {
           flow: updatedGraph.flow,
           startNodeId: updatedGraph.startNodeId,
           endNodeIds: updatedGraph.endNodeIds,
@@ -193,7 +215,7 @@ export function useGraphPageSync({
       toast.error(`Failed to create ${input.pageType.toLowerCase()}`);
       return null;
     }
-  }, [applyDelta, commitDraft, committedGraph, effectiveGraph, pages, projectId, dataAdapter, forgeDataAdapter, onGraphUpdate, onPagesUpdate, toast]);
+  }, [applyDelta, commitDraft, committedGraph, effectiveGraph, graphApi, onGraphUpdate, onPagesUpdate, pageApi, pages, projectId, toast]);
   
   return { createPageWithNode };
 }

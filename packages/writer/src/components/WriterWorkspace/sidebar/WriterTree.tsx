@@ -1,13 +1,22 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { BookOpen, FileText, File, Plus } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { BookOpen, File, FileText, Plus } from 'lucide-react';
 import { Tree } from 'react-arborist';
 import { WriterTreeRow } from './WriterTreeRow';
 import { useWriterWorkspaceStore } from '@magicborn/writer/components/WriterWorkspace/store/writer-workspace-store';
-import { useWriterDataContext } from '@magicborn/writer/components/WriterWorkspace/WriterDataContext';
-import { PAGE_TYPE, buildNarrativeHierarchy, type ForgePage, type PageType } from '@magicborn/shared/types/narrative';
+import {
+  PAGE_TYPE,
+  buildNarrativeHierarchy,
+  type ForgePage,
+  type PageType,
+} from '@magicborn/shared/types/narrative';
 import { useToast } from '@magicborn/shared/ui/toast';
+import {
+  useCreateWriterPage,
+  useDeleteWriterPage,
+  useUpdateWriterPage,
+} from '@magicborn/writer/data/writer-queries';
 
 interface WriterTreeProps {
   className?: string;
@@ -34,9 +43,8 @@ function getIconForPageType(pageType: string) {
   }
 }
 
-/** Build tree nodes from pages using parent + order (no graph). */
 function buildTreeFromPages(pages: ForgePage[]): TreeNode[] {
-  if (!pages?.length) return [];
+  if (!pages.length) return [];
   const hierarchy = buildNarrativeHierarchy(pages);
   return hierarchy.acts.map(({ page: actPage, chapters }) => ({
     id: `page-${actPage.id}`,
@@ -46,11 +54,10 @@ function buildTreeFromPages(pages: ForgePage[]): TreeNode[] {
       id: `page-${chapterPage.id}`,
       name: chapterPage.title,
       page: chapterPage,
-      children: contentPages.map((p) => ({
-        id: `page-${p.id}`,
-        name: p.title,
-        page: p,
-        children: undefined,
+      children: contentPages.map((page) => ({
+        id: `page-${page.id}`,
+        name: page.title,
+        page,
       })),
     })),
   }));
@@ -64,55 +71,52 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
 
   const pages = useWriterWorkspaceStore((state) => state.pages);
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
-  const dataAdapter = useWriterDataContext();
   const narrativeGraphs = useWriterWorkspaceStore((state) => state.narrativeGraphs);
-  const selectedNarrativeGraphId = useWriterWorkspaceStore((state) => state.selectedNarrativeGraphId);
+  const selectedNarrativeGraphId = useWriterWorkspaceStore(
+    (state) => state.selectedNarrativeGraphId
+  );
 
   const setActivePageId = useWriterWorkspaceStore((state) => state.actions.setActivePageId);
   const setPages = useWriterWorkspaceStore((state) => state.actions.setPages);
-  const setSelectedNarrativeGraphId = useWriterWorkspaceStore((state) => state.actions.setSelectedNarrativeGraphId);
-  const setNarrativeGraph = useWriterWorkspaceStore((state) => state.actions.setNarrativeGraph);
-  const createNarrativeGraph = useWriterWorkspaceStore((state) => state.actions.createNarrativeGraph);
+  const setSelectedNarrativeGraphId = useWriterWorkspaceStore(
+    (state) => state.actions.setSelectedNarrativeGraphId
+  );
+  const setNarrativeGraph = useWriterWorkspaceStore(
+    (state) => state.actions.setNarrativeGraph
+  );
+  const createNarrativeGraph = useWriterWorkspaceStore(
+    (state) => state.actions.createNarrativeGraph
+  );
+
+  const createPage = useCreateWriterPage();
+  const updatePage = useUpdateWriterPage();
+  const deletePage = useDeleteWriterPage();
 
   const projectId = projectIdProp ?? pages[0]?.project ?? null;
-
-  const refetchPagesForGraph = useCallback(async () => {
-    if (!projectId || !dataAdapter || selectedNarrativeGraphId == null) return;
-    try {
-      const list = await dataAdapter.listPages(projectId, selectedNarrativeGraphId);
-      setPages(list);
-    } catch (err) {
-      console.error('[WriterTree] Failed to refetch pages:', err);
-    }
-  }, [projectId, selectedNarrativeGraphId, dataAdapter, setPages]);
 
   const handleCreateNewGraph = useCallback(async () => {
     if (!projectId || isCreating) return;
     try {
       setIsCreating(true);
       await createNarrativeGraph(projectId);
-      // Pages for the new graph load via WriterWorkspaceContent useEffect when selectedNarrativeGraphId updates
-    } catch (err) {
-      console.error('[WriterTree] Failed to create narrative graph:', err);
+    } catch (error) {
+      console.error('[WriterTree] Failed to create narrative graph:', error);
       toast.error('Failed to create narrative graph');
     } finally {
       setIsCreating(false);
     }
-  }, [projectId, isCreating, createNarrativeGraph, toast]);
+  }, [createNarrativeGraph, isCreating, projectId, toast]);
 
-  const treeNodes = useMemo(
-    () => buildTreeFromPages(pages ?? []),
-    [pages]
-  );
+  const treeNodes = useMemo(() => buildTreeFromPages(pages ?? []), [pages]);
 
   const treeData = useMemo(() => {
-    const convertNode = (node: TreeNode): any => ({
+    const toArboristNode = (node: TreeNode): any => ({
       id: node.id,
       name: node.name,
       page: node.page,
-      children: node.children?.map(convertNode) || [],
+      children: node.children?.map(toArboristNode) ?? [],
     });
-    return treeNodes.map(convertNode);
+    return treeNodes.map(toArboristNode);
   }, [treeNodes]);
 
   const selectedNodeId: string | undefined = useMemo(() => {
@@ -148,15 +152,13 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
   }, [treeData.length]);
 
   const handleCreateFirstAct = useCallback(async () => {
-    if (!projectId || !dataAdapter || !selectedNarrativeGraphId || isCreating) {
-      if (!selectedNarrativeGraphId) {
-        toast.error('Select a narrative graph first');
-      }
+    if (!projectId || !selectedNarrativeGraphId || isCreating) {
+      if (!selectedNarrativeGraphId) toast.error('Select a narrative graph first');
       return;
     }
     try {
       setIsCreating(true);
-      const newPage = await dataAdapter.createPage({
+      const newPage = await createPage.mutateAsync({
         projectId,
         narrativeGraph: selectedNarrativeGraphId,
         pageType: PAGE_TYPE.ACT,
@@ -171,28 +173,30 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
     } finally {
       setIsCreating(false);
     }
-  }, [projectId, selectedNarrativeGraphId, dataAdapter, isCreating, pages, setPages, toast]);
+  }, [createPage, isCreating, pages, projectId, selectedNarrativeGraphId, setPages, toast]);
 
   const handleAddChild = useCallback(
     async (parentPage: ForgePage | null, pageType?: PageType) => {
-      if (isCreating || !projectId || !dataAdapter || !selectedNarrativeGraphId) {
+      if (isCreating || !projectId || !selectedNarrativeGraphId) {
         if (!selectedNarrativeGraphId) toast.error('Select a narrative graph first');
         return;
       }
+
       try {
         setIsCreating(true);
         const childType =
           pageType ||
           (parentPage?.pageType === PAGE_TYPE.ACT ? PAGE_TYPE.CHAPTER : PAGE_TYPE.PAGE);
         const siblings = (pages ?? []).filter(
-          (p) => p.pageType === childType && p.parent === (parentPage?.id ?? null)
+          (page) => page.pageType === childType && page.parent === (parentPage?.id ?? null)
         );
         const order = siblings.length;
         const title =
           childType === PAGE_TYPE.CHAPTER
             ? `Chapter ${order + 1}`
             : `Page ${order + 1}`;
-        const newPage = await dataAdapter.createPage({
+
+        const newPage = await createPage.mutateAsync({
           projectId,
           narrativeGraph: selectedNarrativeGraphId,
           pageType: childType,
@@ -200,7 +204,8 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
           order,
           parent: parentPage?.id ?? null,
         });
-        await refetchPagesForGraph();
+
+        setPages([...(pages ?? []), newPage]);
         if (childType === PAGE_TYPE.PAGE) setActivePageId(newPage.id);
       } catch (error) {
         console.error('[WriterTree] Failed to add child:', error);
@@ -210,14 +215,13 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
       }
     },
     [
+      createPage,
       isCreating,
+      pages,
       projectId,
       selectedNarrativeGraphId,
-      dataAdapter,
-      pages,
-      setPages,
       setActivePageId,
-      refetchPagesForGraph,
+      setPages,
       toast,
     ]
   );
@@ -227,30 +231,31 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
       const newTitle = prompt('Rename page:', page.title);
       if (!newTitle || newTitle === page.title) return;
       try {
-        await dataAdapter!.updatePage(page.id, { title: newTitle });
-        setPages(
-          (pages ?? []).map((p) => (p.id === page.id ? { ...p, title: newTitle } : p))
-        );
+        await updatePage.mutateAsync({
+          pageId: page.id,
+          patch: { title: newTitle },
+        });
+        setPages((pages ?? []).map((item) => (item.id === page.id ? { ...item, title: newTitle } : item)));
         toast.success('Page renamed');
       } catch (error) {
         console.error('Failed to rename page:', error);
         toast.error('Failed to rename page');
       }
     },
-    [dataAdapter, pages, setPages, toast]
+    [pages, setPages, toast, updatePage]
   );
 
   const handleDeletePage = useCallback(
     async (page: ForgePage) => {
-      const hasChildren = (pages ?? []).some((p) => p.parent === page.id);
+      const hasChildren = (pages ?? []).some((item) => item.parent === page.id);
       if (hasChildren) {
         toast.warning('Cannot delete page with children. Delete children first.');
         return;
       }
       if (!confirm(`Delete "${page.title}"?`)) return;
       try {
-        await dataAdapter!.deletePage(page.id);
-        setPages((pages ?? []).filter((p) => p.id !== page.id));
+        await deletePage.mutateAsync(page.id);
+        setPages((pages ?? []).filter((item) => item.id !== page.id));
         if (activePageId === page.id) setActivePageId(null);
         toast.success('Page deleted');
       } catch (error) {
@@ -258,12 +263,11 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
         toast.error('Failed to delete page');
       }
     },
-    [dataAdapter, pages, activePageId, setPages, setActivePageId, toast]
+    [activePageId, deletePage, pages, setActivePageId, setPages, toast]
   );
 
   const handleAddAct = useCallback(() => handleAddChild(null, PAGE_TYPE.ACT), [handleAddChild]);
-
-  const canAddActs = !!selectedNarrativeGraphId && !!projectId && !!dataAdapter;
+  const canAddActs = !!selectedNarrativeGraphId && !!projectId;
 
   return (
     <div className={`flex h-full min-h-0 flex-col gap-2 ${className ?? ''}`}>
@@ -275,12 +279,12 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
           <select
             className="mt-1 flex-1 min-w-0 rounded-md border border-df-node-border bg-df-control-bg px-2 py-1 text-xs text-df-text-primary"
             value={selectedNarrativeGraphId ?? ''}
-            onChange={(e) => {
-              const graphId = e.target.value ? Number(e.target.value) : null;
+            onChange={(event) => {
+              const graphId = event.target.value ? Number(event.target.value) : null;
               setSelectedNarrativeGraphId(graphId);
               if (graphId) {
-                const selected = narrativeGraphs.find((g) => g.id === graphId);
-                if (selected) setNarrativeGraph(selected);
+                const selectedGraph = narrativeGraphs.find((graph) => graph.id === graphId);
+                if (selectedGraph) setNarrativeGraph(selectedGraph);
               }
             }}
             disabled={narrativeGraphs.length === 0}
@@ -295,7 +299,7 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
               ))
             )}
           </select>
-          {projectId && dataAdapter && (
+          {projectId && (
             <button
               type="button"
               className="mt-1 flex-shrink-0 rounded-md border border-df-node-border bg-df-control-bg px-2 py-1 text-xs text-df-text-primary hover:bg-df-control-hover"
@@ -323,9 +327,7 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
                 <BookOpen size={14} className="text-df-text-tertiary" />
               </div>
               <div className="flex flex-1 items-center gap-2 text-xs text-df-text-tertiary italic">
-                {!selectedNarrativeGraphId
-                  ? 'Select a narrative graph'
-                  : 'No acts yet'}
+                {!selectedNarrativeGraphId ? 'Select a narrative graph' : 'No acts yet'}
               </div>
               {canAddActs && (
                 <button
@@ -363,6 +365,7 @@ export function WriterTree({ className, projectId: projectIdProp }: WriterTreePr
               const pageId = page?.id;
               const isSelected = pageId === activePageId;
               const canAddChild = page?.pageType !== PAGE_TYPE.PAGE;
+
               return (
                 <WriterTreeRow
                   node={props.node}

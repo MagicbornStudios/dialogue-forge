@@ -1,18 +1,60 @@
 export { ForgeWorkspace } from './components/ForgeWorkspace/ForgeWorkspace';
-export { ForgeDataContext, useForgeDataContext } from './components/ForgeWorkspace/ForgeDataContext';
 export { ForgeStoryletGraphEditor } from './components/ForgeWorkspace/components/GraphEditors/ForgeStoryletGraphEditor/ForgeStoryletGraphEditor';
 export { GuidePanel } from './components/ForgeWorkspace/components/GraphEditors/shared/GuidePanel';
 export { FlagSelector } from './components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/FlagSelector';
 export { ForgeFlagManager as FlagManager } from './components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagManager';
 export { CharacterSelector } from './components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/shared/CharacterSelector';
 export { useForgeWorkspaceCompositionCompiler } from './components/ForgeWorkspace/hooks/useForgeWorkspaceCompositionCompiler';
+export {
+  ForgePayloadProvider,
+  useForgePayloadClient,
+  type ForgePayloadClient,
+} from './data/ForgePayloadContext';
+export {
+  forgeQueryKeys,
+  useForgeProjects,
+  useForgeProject,
+  useForgeGraphs,
+  useForgeGraph,
+  useForgePages,
+  useForgeFlagSchema,
+  useForgeGameStates,
+  useActiveForgeGameStateId,
+  useForgeCharacters,
+  fetchForgeProjects,
+  fetchForgeProject,
+  fetchForgeGraphs,
+  fetchForgeGraph,
+  fetchForgePages,
+  fetchForgeFlagSchema,
+  fetchForgeGameStates,
+  fetchForgeCharacters,
+  fetchActiveForgeGameStateId,
+  useCreateForgeProject,
+  useCreateForgeGraph,
+  useUpdateForgeGraph,
+  useDeleteForgeGraph,
+  useCreateForgePage,
+  useUpdateForgePage,
+  useDeleteForgePage,
+  useCreateForgeGameState,
+  useUpdateForgeGameState,
+  useDeleteForgeGameState,
+  useSetActiveForgeGameState,
+  useCreateForgeCharacter,
+  useUpdateForgeCharacter,
+  useDeleteForgeCharacter,
+  useCreateForgeFlagSchema,
+  useUpdateForgeFlagSchema,
+  useDeleteForgeFlagSchema,
+} from './data/forge-queries';
+export type { ForgeProjectSummary, ForgeFlagSchema } from './data/forge-types';
 
 export * from './types/forge-graph';
 export * from './types/flags';
 export * from './types/forge-game-state';
 export * from './types/characters';
 export * from './types/narrative';
-export type { ForgeProjectSummary, ForgeFlagSchema, ForgeDataAdapter } from './adapters/forge-data-adapter';
 
 export {
   flattenGameState,

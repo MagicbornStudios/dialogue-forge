@@ -1,17 +1,27 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { ForgePage } from '@magicborn/shared/types/narrative';
-import type { WriterDataAdapter } from '@magicborn/writer/lib/data-adapter/writer-adapter';
-import type { WriterForgeDataAdapter } from '@magicborn/writer/types/forge-data-adapter';
 import type { WriterEvent } from '@magicborn/writer/events/writer-events';
 import { FORGE_GRAPH_KIND } from '@magicborn/shared/types/forge-graph';
-import { useWriterDataContext } from '@magicborn/writer/components/WriterWorkspace/WriterDataContext';
-import { useForgeDataContext } from '@magicborn/forge';
+import {
+  fetchForgeGraph,
+  useCreateForgeGraph,
+  useForgeGraphs,
+  useForgeProject,
+  useUpdateForgeGraph,
+  useForgePayloadClient,
+} from '@magicborn/forge';
+import {
+  useCreateWriterPage,
+  useUpdateWriterPage,
+  useWriterPages,
+} from '@magicborn/writer/data/writer-queries';
 import {
   WriterWorkspaceStoreProvider,
   createWriterWorkspaceStore,
   useWriterWorkspaceStore,
   buildOnCommitWriterDraft,
-  createNarrativeGraphWithAdapter,
+  createNarrativeGraph,
   type WriterWorkspaceCallbacks,
 } from '@magicborn/writer/components/WriterWorkspace/store/writer-workspace-store';
 import { setupWriterWorkspaceSubscriptions } from '@magicborn/writer/components/WriterWorkspace/store/slices/subscriptions';
@@ -29,8 +39,6 @@ interface WriterWorkspaceProps {
   initialActivePageId?: number | null;
   onActivePageChange?: (pageId: number | null) => void;
   onEvent?: (event: WriterEvent) => void;
-  dataAdapter?: WriterDataAdapter;
-  forgeDataAdapter?: WriterForgeDataAdapter;
   projectId?: number | null;
   onProjectChange?: (projectId: number | null) => void;
   topBar?: React.ReactNode;
@@ -42,35 +50,60 @@ export function WriterWorkspace({
   initialActivePageId = null,
   onActivePageChange,
   onEvent,
-  dataAdapter,
-  forgeDataAdapter,
   projectId,
-  onProjectChange,
   topBar,
 }: WriterWorkspaceProps) {
-  const writerAdapterFromContext = useWriterDataContext();
-  const forgeAdapterFromContext = useForgeDataContext();
-  const effectiveWriterAdapter = dataAdapter ?? writerAdapterFromContext ?? undefined;
-  const effectiveForgeAdapter = forgeDataAdapter ?? forgeAdapterFromContext ?? undefined;
+  const payloadClient = useForgePayloadClient();
+  const queryClient = useQueryClient();
+  const createWriterPage = useCreateWriterPage();
+  const updateWriterPage = useUpdateWriterPage();
+  const createForgeGraph = useCreateForgeGraph();
+  const updateForgeGraph = useUpdateForgeGraph();
+  const narrativeGraphsQuery = useForgeGraphs(projectId ?? null, FORGE_GRAPH_KIND.NARRATIVE);
+  const projectQuery = useForgeProject(projectId ?? null);
 
   const eventSinkRef = useRef({
     emit: (event: WriterEvent) => {
-      if (onEvent) onEvent(event);
+      onEvent?.(event);
     },
   });
 
+  const queryClientRef = useRef(queryClient);
+  queryClientRef.current = queryClient;
+  const payloadClientRef = useRef(payloadClient);
+  payloadClientRef.current = payloadClient;
+  const createWriterPageRef = useRef(createWriterPage);
+  createWriterPageRef.current = createWriterPage;
+  const updateWriterPageRef = useRef(updateWriterPage);
+  updateWriterPageRef.current = updateWriterPage;
+  const createForgeGraphRef = useRef(createForgeGraph);
+  createForgeGraphRef.current = createForgeGraph;
+  const updateForgeGraphRef = useRef(updateForgeGraph);
+  updateForgeGraphRef.current = updateForgeGraph;
+
   const callbacksRef = useRef<WriterWorkspaceCallbacks | null>(null);
-  function buildCallbacks(w: WriterDataAdapter | undefined, f: WriterForgeDataAdapter | undefined): WriterWorkspaceCallbacks | null {
-    if (!w || !f) return null;
-    return {
-      updatePage: (id: number, patch: Partial<ForgePage>) => w.updatePage(id, patch),
-      createPage: (input) => w.createPage(input as Parameters<WriterDataAdapter['createPage']>[0]),
-      getNarrativeGraph: (id: number) => f.getGraph(id),
-      createNarrativeGraph: (projectId: number) => createNarrativeGraphWithAdapter(f, projectId),
-      onCommitWriterDraft: buildOnCommitWriterDraft(w, f),
-    };
-  }
-  callbacksRef.current = buildCallbacks(effectiveWriterAdapter, effectiveForgeAdapter);
+  callbacksRef.current = {
+    updatePage: (id, patch) =>
+      updateWriterPageRef.current.mutateAsync({ pageId: id, patch }),
+    createPage: (input) =>
+      createWriterPageRef.current.mutateAsync(
+        input as Parameters<typeof createWriterPageRef.current.mutateAsync>[0]
+      ),
+    getNarrativeGraph: (id) =>
+      fetchForgeGraph(queryClientRef.current, payloadClientRef.current, id),
+    createNarrativeGraph: (nextProjectId: number) =>
+      createNarrativeGraph(
+        {
+          createGraph: (input) => createForgeGraphRef.current.mutateAsync(input),
+        },
+        nextProjectId
+      ),
+    onCommitWriterDraft: buildOnCommitWriterDraft({
+      createPage: (input) => createWriterPageRef.current.mutateAsync(input),
+      updateGraph: (graphId, patch) =>
+        updateForgeGraphRef.current.mutateAsync({ graphId, patch }),
+    }),
+  };
 
   const getCallbacks = useCallback(() => callbacksRef.current, []);
 
@@ -85,15 +118,18 @@ export function WriterWorkspace({
     )
   );
 
-  const fetchNarrativeGraphRef = useRef<((id: number) => Promise<import('@magicborn/shared/types/forge-graph').ForgeGraphDoc>) | null>(null);
-  fetchNarrativeGraphRef.current = effectiveForgeAdapter ? (id: number) => effectiveForgeAdapter.getGraph(id) : null;
+  const fetchNarrativeGraphRef = useRef<
+    ((id: number) => Promise<import('@magicborn/shared/types/forge-graph').ForgeGraphDoc>) | null
+  >(null);
+  fetchNarrativeGraphRef.current = (id: number) =>
+    fetchForgeGraph(queryClientRef.current, payloadClientRef.current, id);
   const fetchNarrativeGraph = useCallback((id: number) => {
     const fn = fetchNarrativeGraphRef.current;
     if (!fn) return Promise.reject(new Error('No narrative graph loader'));
     return fn(id);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setupWriterWorkspaceSubscriptions(storeRef.current, eventSinkRef.current, fetchNarrativeGraph);
   }, [fetchNarrativeGraph]);
 
@@ -106,72 +142,56 @@ export function WriterWorkspace({
     storeRef.current.getState().actions.setActivePageId(initialActivePageId ?? null);
   }, [initialActivePageId]);
 
-  // Load all narrative graphs when project changes
   useEffect(() => {
-    if (!projectId || !effectiveForgeAdapter) {
-      const store = storeRef.current;
+    const store = storeRef.current;
+    if (!projectId) {
       store.getState().actions.setNarrativeGraphs([]);
       store.getState().actions.setSelectedNarrativeGraphId(null);
       store.getState().actions.setNarrativeGraph(null);
       return;
     }
 
-    let cancelled = false;
-    const store = storeRef.current;
+    if (!narrativeGraphsQuery.isSuccess) return;
 
-    async function loadNarrativeGraphs() {
-      if (!effectiveForgeAdapter || !projectId) {
-        return;
-      }
-      try {
-        const project = await effectiveForgeAdapter.getProject(projectId);
-        const graphs = await effectiveForgeAdapter.listGraphs(projectId, FORGE_GRAPH_KIND.NARRATIVE);
-        
-        if (!cancelled) {
-          store.getState().actions.setNarrativeGraphs(graphs);
-          
-          // Set default: use project.narrativeGraph if it exists and is in list, otherwise first graph
-          const narrativeGraphId = typeof project.narrativeGraph === 'object' && project.narrativeGraph !== null ? (project.narrativeGraph as { id: number }).id : project.narrativeGraph;
-          const defaultGraphId = narrativeGraphId != null &&
-            graphs.some((g: { id: number }) => g.id === narrativeGraphId)
-              ? narrativeGraphId
-              : graphs[0]?.id ?? null;
+    const graphs = narrativeGraphsQuery.data ?? [];
+    const projectNarrativeGraphId = projectQuery.data?.narrativeGraph ?? null;
+    const state = store.getState();
+    state.actions.setNarrativeGraphs(graphs);
 
-          store.getState().actions.setSelectedNarrativeGraphId(defaultGraphId);
-          const selectedGraph = graphs.find((g: { id: number }) => g.id === defaultGraphId) ?? null;
-          store.getState().actions.setNarrativeGraph(selectedGraph);
-          
-          if (selectedGraph) {
-            const validation = validateNarrativeGraph(selectedGraph);
-            
-            if (!validation.valid) {
-              validation.errors.forEach(error => {
-                toast.error(error.message);
-              });
-            }
-            
-            validation.warnings.forEach(warning => {
-              toast.warning(warning.message);
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load narrative graphs:', error);
-        if (!cancelled) {
-          store.getState().actions.setNarrativeGraphs([]);
-          store.getState().actions.setSelectedNarrativeGraphId(null);
-          store.getState().actions.setNarrativeGraph(null);
-          toast.error('Failed to load narrative graph');
-        }
+    const selectedGraphId = state.selectedNarrativeGraphId;
+    const hasCurrent =
+      selectedGraphId != null && graphs.some((graph) => graph.id === selectedGraphId);
+    const nextSelectedGraphId = hasCurrent
+      ? selectedGraphId
+      : projectNarrativeGraphId != null &&
+          graphs.some((graph) => graph.id === projectNarrativeGraphId)
+        ? projectNarrativeGraphId
+        : graphs[0]?.id ?? null;
+
+    state.actions.setSelectedNarrativeGraphId(nextSelectedGraphId);
+    const selectedGraph =
+      nextSelectedGraphId == null
+        ? null
+        : graphs.find((graph) => graph.id === nextSelectedGraphId) ?? null;
+    state.actions.setNarrativeGraph(selectedGraph);
+
+    if (selectedGraph) {
+      const validation = validateNarrativeGraph(selectedGraph);
+      if (!validation.valid) {
+        validation.errors.forEach((error) => {
+          toast.error(error.message);
+        });
       }
+      validation.warnings.forEach((warning) => {
+        toast.warning(warning.message);
+      });
     }
-
-    void loadNarrativeGraphs();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [projectId, effectiveForgeAdapter]);
+  }, [
+    narrativeGraphsQuery.data,
+    narrativeGraphsQuery.isSuccess,
+    projectId,
+    projectQuery.data?.narrativeGraph,
+  ]);
 
   return (
     <>
@@ -196,42 +216,47 @@ function WriterWorkspaceContent({
 }: Pick<WriterWorkspaceProps, 'className' | 'onActivePageChange' | 'projectId' | 'topBar'>) {
   const activePageId = useWriterWorkspaceStore((state) => state.activePageId);
   const pages = useWriterWorkspaceStore((state) => state.pages);
-  const activePage = activePageId ? pages.find(p => p.id === activePageId) ?? null : null;
-  const selectedNarrativeGraphId = useWriterWorkspaceStore((state) => state.selectedNarrativeGraphId);
-  const dataAdapter = useWriterDataContext();
+  const activePage = activePageId ? pages.find((page) => page.id === activePageId) ?? null : null;
+  const selectedNarrativeGraphId = useWriterWorkspaceStore(
+    (state) => state.selectedNarrativeGraphId
+  );
+
   const setPages = useWriterWorkspaceStore((state) => state.actions.setPages);
   const setActivePageId = useWriterWorkspaceStore((state) => state.actions.setActivePageId);
   const setContentError = useWriterWorkspaceStore((state) => state.actions.setContentError);
 
-  // Load pages when project or selected narrative graph changes
-  useEffect(() => {
-    if (!projectId || !dataAdapter) {
-      setPages([]);
-      setActivePageId(null);
-      return;
-    }
-    if (selectedNarrativeGraphId == null) {
-      setPages([]);
-      return;
-    }
-    let cancelled = false;
-    dataAdapter.listPages(projectId, selectedNarrativeGraphId).then((pagesData) => {
-      if (!cancelled) {
-        setPages(pagesData);
-      }
-    }).catch((error) => {
-      console.error('Failed to load writer data:', error);
-      if (!cancelled) {
-        setContentError('Failed to load data');
-      }
-    });
-    return () => { cancelled = true; };
-  }, [projectId, selectedNarrativeGraphId, dataAdapter, setPages, setActivePageId, setContentError]);
+  const pagesQuery = useWriterPages(projectId ?? null, selectedNarrativeGraphId);
 
   useEffect(() => {
-    if (onActivePageChange) {
-      onActivePageChange(activePageId ?? null);
+    if (!projectId || selectedNarrativeGraphId == null) {
+      setPages([]);
+      if (!projectId) setActivePageId(null);
+      setContentError(null);
+      return;
     }
+
+    if (pagesQuery.isError) {
+      setContentError('Failed to load data');
+      return;
+    }
+
+    if (pagesQuery.isSuccess) {
+      setPages(pagesQuery.data ?? []);
+      setContentError(null);
+    }
+  }, [
+    pagesQuery.data,
+    pagesQuery.isError,
+    pagesQuery.isSuccess,
+    projectId,
+    selectedNarrativeGraphId,
+    setActivePageId,
+    setContentError,
+    setPages,
+  ]);
+
+  useEffect(() => {
+    onActivePageChange?.(activePageId ?? null);
   }, [activePageId, onActivePageChange]);
 
   return (

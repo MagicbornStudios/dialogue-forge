@@ -10,7 +10,6 @@ import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { ForgePage } from '@magicborn/shared/types/narrative';
 import type { ForgeGraphDoc } from '@magicborn/shared/types/forge-graph';
-import type { WriterDataAdapter } from '@magicborn/writer/lib/data-adapter/writer-adapter';
 import type { NarrativeHierarchy } from '@magicborn/shared/types/narrative';
 import { createContentSlice } from './slices/content.slice';
 import { createEditorSlice } from './slices/editor.slice';
@@ -28,7 +27,6 @@ import {
   WRITER_SAVE_STATUS,
   WRITER_AI_PROPOSAL_STATUS,
 } from './writer-workspace-types';
-import type { WriterForgeDataAdapter } from '@magicborn/writer/types/forge-data-adapter';
 import { createEmptyForgeGraphDoc } from '@magicborn/shared/utils/forge-graph-helpers';
 import { FORGE_GRAPH_KIND } from '@magicborn/shared/types/forge-graph';
 import type { DraftPendingPageCreation } from '@magicborn/shared/types/draft';
@@ -36,11 +34,28 @@ import { PAGE_TYPE } from '@magicborn/shared/types/narrative';
 import { createWriterDraftSlice, type OnCommitWriterDraft } from './slices/draft.slice';
 import type { WriterDraftDelta } from './slices/draft.slice';
 import type { ForgeReactFlowNode } from '@magicborn/shared/types/forge-graph';
+export type WriterDraftCommitApi = {
+  createPage: (input: {
+    projectId: number;
+    pageType: 'ACT' | 'CHAPTER' | 'PAGE';
+    title: string;
+    order: number;
+    parent?: number | null;
+    narrativeGraph?: number | null;
+    bookBody?: string | null;
+  }) => Promise<ForgePage>;
+  updateGraph: (
+    graphId: number,
+    patch: Partial<
+      Pick<
+        ForgeGraphDoc,
+        'title' | 'flow' | 'startNodeId' | 'endNodeIds' | 'compiledYarn'
+      >
+    >
+  ) => Promise<ForgeGraphDoc>;
+};
 
-export function buildOnCommitWriterDraft(
-  dataAdapter: WriterDataAdapter,
-  forgeDataAdapter: WriterForgeDataAdapter
-): OnCommitWriterDraft {
+export function buildOnCommitWriterDraft(api: WriterDraftCommitApi): OnCommitWriterDraft {
   return async (draft: ForgeGraphDoc, deltas: WriterDraftDelta[]) => {
     const pendingPageCreations = (deltas[deltas.length - 1]?.pendingPageCreations ?? []) as DraftPendingPageCreation[];
     const createdPages = new Map<string, ForgePage>();
@@ -49,7 +64,7 @@ export function buildOnCommitWriterDraft(
       const creations = pendingPageCreations.filter((c) => c.pageType === pageType);
       for (const creation of creations) {
         const parentId = creation.parentPageId ?? (creation.parentNodeId ? createdPages.get(creation.parentNodeId)?.id ?? null : null);
-        const page = await dataAdapter.createPage({
+        const page = await api.createPage({
           projectId: creation.projectId,
           pageType: creation.pageType,
           title: creation.title,
@@ -73,7 +88,7 @@ export function buildOnCommitWriterDraft(
           },
         }
       : draft;
-    return forgeDataAdapter.updateGraph(nextDraft.id, {
+    return api.updateGraph(nextDraft.id, {
       title: nextDraft.title,
       flow: nextDraft.flow,
       startNodeId: nextDraft.startNodeId,
@@ -83,10 +98,24 @@ export function buildOnCommitWriterDraft(
   };
 }
 
-/** Create a narrative graph via adapter. Exported for host/WriterWorkspace to build callbacks. */
-export async function createNarrativeGraphWithAdapter(adapter: WriterForgeDataAdapter, projectId: number): Promise<ForgeGraphDoc> {
+export type WriterNarrativeGraphApi = {
+  createGraph: (input: {
+    projectId: number;
+    kind: typeof FORGE_GRAPH_KIND.NARRATIVE;
+    title: string;
+    flow: ForgeGraphDoc['flow'];
+    startNodeId: string;
+    endNodeIds: { nodeId: string; exitKey?: string }[];
+  }) => Promise<ForgeGraphDoc>;
+};
+
+/** Create a narrative graph with the provided createGraph API. */
+export async function createNarrativeGraph(
+  api: WriterNarrativeGraphApi,
+  projectId: number
+): Promise<ForgeGraphDoc> {
   const emptyGraph = createEmptyForgeGraphDoc({ projectId, kind: FORGE_GRAPH_KIND.NARRATIVE, title: 'Narrative Graph' });
-  return adapter.createGraph({
+  return api.createGraph({
     projectId,
     kind: FORGE_GRAPH_KIND.NARRATIVE,
     title: 'Narrative Graph',

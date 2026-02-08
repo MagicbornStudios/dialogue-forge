@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronRight, Home, Edit } from 'lucide-react';
 import { useForgeWorkspaceStoreInstance } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
-import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import { useStore } from 'zustand';
 import { useShallow } from 'zustand/shallow';
 import type { BreadcrumbItem } from '@magicborn/forge/components/ForgeWorkspace/store/slices/graph.slice';
@@ -16,6 +15,7 @@ import { Kbd } from '@magicborn/shared/ui/kbd';
 import { InlineRenameInput } from '@magicborn/forge/components/ForgeWorkspace/components/ForgeSideBar/InlineRenameInput';
 import { cn } from '@magicborn/shared/lib/utils';
 import { EditorExpandControls } from './EditorExpandControls';
+import { useUpdateForgeGraph } from '@magicborn/forge/data/forge-queries';
 
 interface ForgeGraphBreadcrumbsProps {
   scope: "narrative" | "storylet";
@@ -23,7 +23,7 @@ interface ForgeGraphBreadcrumbsProps {
 
 export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
   const [renamingGraphId, setRenamingGraphId] = useState<string | null>(null);
-  const dataAdapter = useForgeDataContext();
+  const updateGraph = useUpdateForgeGraph();
   const store = useForgeWorkspaceStoreInstance();
   
   const storeState = useStore(
@@ -54,9 +54,12 @@ export function ForgeGraphBreadcrumbs({ scope }: ForgeGraphBreadcrumbsProps) {
   }, { enableOnFormTags: true, enabled: !!storeState.activeGraphId && !renamingGraphId });
   
   const handleRenameGraph = async (graphId: string, newTitle: string) => {
-    if (!dataAdapter || !storeState.selectedProjectId) return;
+    if (!storeState.selectedProjectId) return;
     try {
-      await dataAdapter.updateGraph(Number(graphId), { title: newTitle });
+      await updateGraph.mutateAsync({
+        graphId: Number(graphId),
+        patch: { title: newTitle },
+      });
       // Update local store
       if (currentGraph) {
         storeState.setGraph(graphId, { ...currentGraph, title: newTitle });

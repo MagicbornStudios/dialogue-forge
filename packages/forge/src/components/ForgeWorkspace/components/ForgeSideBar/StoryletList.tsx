@@ -8,7 +8,6 @@ import {
   ContextMenuTrigger,
 } from '@magicborn/shared/ui/context-menu';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
-import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import { useForgeWorkspaceActions } from '@magicborn/forge/components/ForgeWorkspace/hooks/useForgeWorkspaceActions';
 import { FORGE_GRAPH_KIND } from '@magicborn/forge/types/forge-graph';
 import { createEmptyForgeGraphDoc } from '@magicborn/forge/lib/utils/forge-flow-helpers';
@@ -16,6 +15,11 @@ import { InlineRenameInput } from './InlineRenameInput';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Kbd } from '@magicborn/shared/ui/kbd';
 import { SectionHeader, type SectionToolbarAction } from './SectionHeader';
+import {
+  useCreateForgeGraph,
+  useDeleteForgeGraph,
+  useUpdateForgeGraph,
+} from '@magicborn/forge/data/forge-queries';
 
 interface StoryletsListProps {
   className?: string;
@@ -36,11 +40,13 @@ export function StoryletList({ className }: StoryletsListProps) {
   )
   const activeStoryletGraphId = useForgeWorkspaceStore(s => s.activeStoryletGraphId)
   const selectedProjectId = useForgeWorkspaceStore(s => s.selectedProjectId)
-  const dataAdapter = useForgeDataContext()
   const setGraph = useForgeWorkspaceStore(s => s.actions.setGraph)
   const removeGraph = useForgeWorkspaceStore(s => s.actions.removeGraph)
   const openGraphInScope = useForgeWorkspaceStore(s => s.actions.openGraphInScope)
   const workspaceActions = useForgeWorkspaceActions()
+  const createGraph = useCreateForgeGraph()
+  const updateGraph = useUpdateForgeGraph()
+  const deleteGraph = useDeleteForgeGraph()
   
   // F2 hotkey for rename (only when a storylet is selected)
   useHotkeys(
@@ -55,14 +61,11 @@ export function StoryletList({ className }: StoryletsListProps) {
   )
   
   const handleRename = async (graphId: string, newTitle: string) => {
-    if (!dataAdapter) {
-      console.warn('Cannot rename: dataAdapter unavailable');
-      setRenamingGraphId(null);
-      return;
-    }
-    
     try {
-      const updatedGraph = await dataAdapter.updateGraph(Number(graphId), { title: newTitle });
+      const updatedGraph = await updateGraph.mutateAsync({
+        graphId: Number(graphId),
+        patch: { title: newTitle },
+      });
       setGraph(graphId, updatedGraph);
       setRenamingGraphId(null);
     } catch (error) {
@@ -72,11 +75,6 @@ export function StoryletList({ className }: StoryletsListProps) {
   };
 
   const handleDeleteGraph = async (graphId: string, title: string) => {
-    if (!dataAdapter) {
-      console.warn('Cannot delete graph: dataAdapter unavailable');
-      return;
-    }
-
     const confirmed = confirm(`Delete storylet "${title}"?`);
     if (!confirmed) return;
 
@@ -85,7 +83,7 @@ export function StoryletList({ className }: StoryletsListProps) {
     const wasActive = activeStoryletGraphId === graphId;
 
     try {
-      await dataAdapter.deleteGraph(Number(graphId));
+      await deleteGraph.mutateAsync(Number(graphId));
       removeGraph(graphId);
 
       if (wasActive && nextGraphId) {
@@ -105,8 +103,8 @@ export function StoryletList({ className }: StoryletsListProps) {
   
   // Handle storylet creation
   const handleCreateStorylet = async () => {
-    if (!selectedProjectId || !dataAdapter) {
-      console.warn('Cannot create storylet: no project selected or dataAdapter unavailable')
+    if (!selectedProjectId) {
+      console.warn('Cannot create storylet: no project selected')
       return
     }
     
@@ -117,7 +115,7 @@ export function StoryletList({ className }: StoryletsListProps) {
         title: 'New Storylet'
       })
       
-      const createdGraph = await dataAdapter.createGraph({
+      const createdGraph = await createGraph.mutateAsync({
         projectId: selectedProjectId,
         kind: FORGE_GRAPH_KIND.STORYLET,
         title: 'New Storylet',

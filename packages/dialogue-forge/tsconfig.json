@@ -16,28 +16,28 @@
         "src/*"
       ],
       "@magicborn/shared": [
-        "../shared/dist"
+        "../shared/src"
       ],
       "@magicborn/shared/*": [
-        "../shared/dist/*"
+        "../shared/src/*"
       ],
       "@magicborn/forge": [
-        "../forge/dist"
+        "../forge/src"
       ],
       "@magicborn/forge/*": [
-        "../forge/dist/*"
+        "../forge/src/*"
       ],
       "@magicborn/writer": [
-        "../writer/dist"
+        "../writer/src"
       ],
       "@magicborn/writer/*": [
-        "../writer/dist/*"
+        "../writer/src/*"
       ],
       "@magicborn/characters": [
-        "../characters/dist"
+        "../characters/src"
       ],
       "@magicborn/characters/*": [
-        "../characters/dist/*"
+        "../characters/src/*"
       ]
     }
   },

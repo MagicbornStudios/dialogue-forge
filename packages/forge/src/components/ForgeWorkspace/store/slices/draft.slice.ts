@@ -2,7 +2,7 @@ import type { StateCreator } from "zustand"
 
 import type { ForgeGraphDoc } from "@magicborn/forge/types"
 import type { ForgeNode } from "@magicborn/forge/types/forge-graph"
-import { PAGE_TYPE, type ForgePage } from "@magicborn/forge/types/narrative"
+import { PAGE_TYPE, type ForgePage, type PageType } from "@magicborn/forge/types/narrative"
 import { validateNarrativeGraph, type GraphValidationResult } from "@magicborn/forge/lib/graph-validation"
 import { calculateDelta } from "@magicborn/shared/lib/draft/draft-helpers"
 import type { DraftPendingPageCreation } from "@magicborn/shared/types/draft"
@@ -18,11 +18,11 @@ export type OnCommitForgeDraft = (
   deltas: ForgeDraftDelta[]
 ) => Promise<ForgeGraphDoc>
 
-/** Adapter surface needed for commit (createPage + updateGraph). Used by buildCommitForgeDraft. */
-export type ForgeCommitAdapter = {
+/** Commit surface needed for draft persistence. */
+export type ForgeDraftCommitApi = {
   createPage(input: {
     projectId: number
-    pageType: string
+    pageType: PageType
     title: string
     order: number
     parent?: number | null
@@ -55,11 +55,11 @@ function patchGraphWithPageIds(graph: ForgeGraphDoc, createdPages: Map<string, F
   }
 }
 
-/** Build an onCommitDraft callback that uses the given adapter. */
-export async function commitForgeDraftWithAdapter(
-  adapter: ForgeCommitAdapter,
+/** Persist a Forge draft by creating pending pages, then updating the graph. */
+export async function commitForgeDraft(
   draft: ForgeGraphDoc,
-  deltas: ForgeDraftDelta[]
+  deltas: ForgeDraftDelta[],
+  api: ForgeDraftCommitApi
 ): Promise<ForgeGraphDoc> {
   const pendingPageCreations = resolvePendingPageCreations(deltas)
   const createdPages = new Map<string, ForgePage>()
@@ -71,7 +71,7 @@ export async function commitForgeDraftWithAdapter(
       const parentId =
         creation.parentPageId ??
         (creation.parentNodeId ? createdPages.get(creation.parentNodeId)?.id ?? null : null)
-      const page = await adapter.createPage({
+      const page = await api.createPage({
         projectId: creation.projectId,
         pageType: creation.pageType,
         title: creation.title,
@@ -84,7 +84,7 @@ export async function commitForgeDraftWithAdapter(
   }
 
   const nextDraft = patchGraphWithPageIds(draft, createdPages)
-  return adapter.updateGraph(nextDraft.id, {
+  return api.updateGraph(nextDraft.id, {
     title: nextDraft.title,
     flow: nextDraft.flow,
     startNodeId: nextDraft.startNodeId,

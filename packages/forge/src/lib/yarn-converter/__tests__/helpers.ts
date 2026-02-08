@@ -90,7 +90,7 @@ export function createMockYarnConverterContext(
 }
 
 /**
- * Create a mock ForgeDataAdapter for testing
+ * Create a mock graph loader for testing
  */
 export function createMockAdapter() {
   const graphs = new Map<number, ForgeGraphDoc>();

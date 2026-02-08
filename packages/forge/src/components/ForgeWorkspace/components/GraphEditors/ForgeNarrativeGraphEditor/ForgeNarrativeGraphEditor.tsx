@@ -37,7 +37,6 @@ import { useSimpleForgeFlowEditor, type ShellNodeData } from '@magicborn/forge/l
 import { useGraphAutoSave } from '@magicborn/forge/lib/graph-editor/hooks/useGraphAutoSave';
 import { createForgeEditorSessionStore, ForgeEditorSessionProvider, useForgeEditorSession, useForgeEditorSessionStore } from '@magicborn/forge/lib/graph-editor/hooks/useForgeEditorSession';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
-import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import { ForgeEditorActionsProvider, makeForgeEditorActions, useForgeEditorActions } from '@magicborn/forge/lib/graph-editor/hooks/useForgeEditorActions';
 import { NarrativeGraphEditorPaneContextMenu } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/ForgeNarrativeGraphEditor/NarrativeGraphEditorPaneContextMenu';
 import { NARRATIVE_FORGE_NODE_TYPE } from '@magicborn/forge/types/forge-graph';
@@ -52,6 +51,7 @@ import { Loader2 } from 'lucide-react';
 import type { FlagSchema } from '@magicborn/forge/types/flags';
 import type { ForgeCharacter } from '@magicborn/forge/types/characters';
 import type { ForgeGameFlagState, ForgeGameState } from '@magicborn/shared/types/forge-game-state';
+import { useCreateForgeGraph } from '@magicborn/forge/data/forge-queries';
 
 const nodeTypes = {
   [FORGE_NODE_TYPE.ACT]: ActNode,
@@ -112,7 +112,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
       openGraphInScope: s.actions.openGraphInScope,
     }))
   );
-  const dataAdapter = useForgeDataContext();
+  const createGraph = useCreateForgeGraph();
 
   const reactFlow = useReactFlow();
 
@@ -328,7 +328,7 @@ function ForgeNarrativeGraphEditorInternal(props: ForgeNarrativeGraphEditorProps
         setShowBackEdges={setShowBackEdges}
         setShowMiniMap={setShowMiniMap}
         className={className}
-        dataAdapter={dataAdapter}
+        createGraph={createGraph.mutateAsync}
         selectedProjectId={selectedProjectId}
         openGraphInScope={openGraphInScope}
         flagSchema={flagSchema}
@@ -361,7 +361,7 @@ function ForgeNarrativeGraphEditorContent({
   setShowBackEdges,
   setShowMiniMap,
   className,
-  dataAdapter,
+  createGraph,
   selectedProjectId,
   openGraphInScope,
   flagSchema,
@@ -388,7 +388,14 @@ function ForgeNarrativeGraphEditorContent({
   setShowBackEdges: (value: boolean) => void;
   setShowMiniMap: (value: boolean) => void;
   className: string;
-  dataAdapter: any;
+  createGraph: (input: {
+    projectId: number;
+    kind: import('@magicborn/forge/types/forge-graph').ForgeGraphKind;
+    title: string;
+    flow: import('@magicborn/forge/types/forge-graph').ForgeReactFlowJson;
+    startNodeId: string;
+    endNodeIds: { nodeId: string; exitKey?: string }[];
+  }) => Promise<ForgeGraphDoc>;
   selectedProjectId: number | null;
   openGraphInScope: (scope: 'narrative' | 'storylet', graphId: string, opts?: { focusNodeId?: string; pushBreadcrumb?: boolean }) => Promise<void>;
   flagSchema?: FlagSchema;
@@ -397,7 +404,7 @@ function ForgeNarrativeGraphEditorContent({
   const actions = useForgeEditorActions();
 
   const handleCreateNewNarrative = React.useCallback(async () => {
-    if (!dataAdapter || !selectedProjectId) return;
+    if (!selectedProjectId) return;
     const { createEmptyForgeGraphDoc } = await import('@magicborn/forge/lib/utils/forge-flow-helpers');
     const { FORGE_GRAPH_KIND } = await import('@magicborn/forge/types/forge-graph');
     const emptyGraph = createEmptyForgeGraphDoc({
@@ -405,7 +412,7 @@ function ForgeNarrativeGraphEditorContent({
       kind: FORGE_GRAPH_KIND.NARRATIVE,
       title: 'New Narrative',
     });
-    const createdGraph = await dataAdapter.createGraph({
+    const createdGraph = await createGraph({
       projectId: selectedProjectId,
       kind: FORGE_GRAPH_KIND.NARRATIVE,
       title: 'New Narrative',
@@ -414,7 +421,7 @@ function ForgeNarrativeGraphEditorContent({
       endNodeIds: emptyGraph.endNodeIds,
     });
     openGraphInScope('narrative', String(createdGraph.id));
-  }, [dataAdapter, selectedProjectId, openGraphInScope]);
+  }, [createGraph, selectedProjectId, openGraphInScope]);
 
   return (
     <div 

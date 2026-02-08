@@ -46,14 +46,32 @@ export const SUPPORT_SPEECH_RECOGNITION: boolean =
   typeof window !== 'undefined' &&
   ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
+type SpeechRecognitionCtor = new () => {
+  continuous: boolean;
+  interimResults: boolean;
+  start: () => void;
+  stop: () => void;
+  addEventListener: (
+    type: 'result',
+    listener: (event: Event) => void
+  ) => void;
+};
+
 function SpeechToTextPlugin(): null {
   const [editor] = useLexicalComposerContext();
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
-  const SpeechRecognition =
+  const speechWindow =
     typeof window !== 'undefined'
-      ? window.SpeechRecognition || (window as unknown as { webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition
+      ? (window as unknown as {
+          SpeechRecognition?: SpeechRecognitionCtor;
+          webkitSpeechRecognition?: SpeechRecognitionCtor;
+        })
       : null;
-  const recognition = useRef<InstanceType<NonNullable<typeof window.SpeechRecognition>> | null>(null);
+  const SpeechRecognition =
+    speechWindow?.SpeechRecognition ??
+    speechWindow?.webkitSpeechRecognition ??
+    null;
+  const recognition = useRef<InstanceType<SpeechRecognitionCtor> | null>(null);
   const report = useReport();
 
   useEffect(() => {

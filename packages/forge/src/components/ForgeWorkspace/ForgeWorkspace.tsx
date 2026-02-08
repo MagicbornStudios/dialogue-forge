@@ -1,32 +1,39 @@
-// src/components/ForgeWorkspace/ForgeWorkspace.tsx
-import React, { useRef, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { ForgeGraphDoc } from '@magicborn/forge/types/forge-graph';
+import { FORGE_GRAPH_KIND } from '@magicborn/forge/types/forge-graph';
 import type { ForgeGameState } from '@magicborn/shared/types/forge-game-state';
 import type { ForgeCharacter } from '@magicborn/forge/types/characters';
 import type { FlagSchema } from '@magicborn/forge/types/flags';
-import { ForgeWorkspaceMenuBar } from '@magicborn/forge/components/ForgeWorkspace/components/ForgeWorkspaceMenuBar';
-import { ProjectSync } from '@magicborn/forge/components/ForgeWorkspace/components/ProjectSync';
-import { ForgeWorkspaceLayout } from '@magicborn/forge/components/ForgeWorkspace/components/ForgeWorkspaceLayout';
-import { ForgeWorkspaceModalsRenderer } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeWorkspaceModals';
-import { NodeDragProvider } from '@magicborn/forge/components/ForgeWorkspace/hooks/useNodeDrag';
-
 import {
   ForgeWorkspaceStoreProvider,
   createForgeWorkspaceStore,
   useForgeWorkspaceStore,
   type EventSink,
 } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
-
-import {
-  setupForgeWorkspaceSubscriptions,
-  loadForgeProjectDataWithAdapter,
-} from '@magicborn/forge/components/ForgeWorkspace/store/slices/subscriptions';
-import { commitForgeDraftWithAdapter } from '@magicborn/forge/components/ForgeWorkspace/store/slices/draft.slice';
-import type { ForgeEvent } from '@magicborn/forge/events/events';
-import type { ForgeDataAdapter } from '@magicborn/forge/adapters/forge-data-adapter';
-import { useForgeDataContext } from './ForgeDataContext';
+import { commitForgeDraft } from '@magicborn/forge/components/ForgeWorkspace/store/slices/draft.slice';
+import { ForgeWorkspaceMenuBar } from '@magicborn/forge/components/ForgeWorkspace/components/ForgeWorkspaceMenuBar';
+import { ProjectSync } from '@magicborn/forge/components/ForgeWorkspace/components/ProjectSync';
+import { ForgeWorkspaceLayout } from '@magicborn/forge/components/ForgeWorkspace/components/ForgeWorkspaceLayout';
+import { ForgeWorkspaceModalsRenderer } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeWorkspaceModals';
+import { NodeDragProvider } from '@magicborn/forge/components/ForgeWorkspace/hooks/useNodeDrag';
 import { CommandBar, useCommandBar } from './components/CommandBar/CommandBar';
 import { TooltipProvider } from '@magicborn/shared/ui/tooltip';
+import type { ForgeEvent } from '@magicborn/forge/events/events';
+import {
+  fetchForgeGraph,
+  useActiveForgeGameStateId,
+  useCreateForgeGameState,
+  useCreateForgeGraph,
+  useCreateForgePage,
+  useForgeCharacters,
+  useForgeFlagSchema,
+  useForgeGameStates,
+  useForgeGraphs,
+  useSetActiveForgeGameState,
+  useUpdateForgeGraph,
+} from '@magicborn/forge/data/forge-queries';
+import { useForgePayloadClient } from '@magicborn/forge/data/ForgePayloadContext';
 
 export interface HeaderLink {
   label: string;
@@ -36,30 +43,16 @@ export interface HeaderLink {
 }
 
 interface ForgeWorkspaceProps {
-  // Initial graphs (host-provided)
   narrativeGraph?: ForgeGraphDoc | null;
   storyletGraph?: ForgeGraphDoc | null;
-
-  // Optional supporting data
   flagSchema?: FlagSchema;
   characters?: Record<string, ForgeCharacter>;
   gameState?: ForgeGameState;
-
   className?: string;
-
   onEvent?: (event: ForgeEvent) => void;
-
-  // Optional graph resolver (if you lazy-load by id)
   resolveGraph?: (graphId: string) => Promise<ForgeGraphDoc>;
-
-  // Persistence surface (already implemented)
-  dataAdapter?: ForgeDataAdapter;
-
-  // Project selection sync
   selectedProjectId?: number | null;
   onProjectChange?: (projectId: number | null) => void;
-
-  // Optional header links (Admin, API, etc.)
   headerLinks?: HeaderLink[];
 }
 
@@ -72,47 +65,46 @@ export function ForgeWorkspace({
   className = '',
   onEvent,
   resolveGraph,
-  dataAdapter,
   selectedProjectId,
-  onProjectChange,
   headerLinks,
 }: ForgeWorkspaceProps) {
-  const adapterFromContext = useForgeDataContext();
-  const effectiveAdapter = dataAdapter ?? adapterFromContext;
-  const adapterRef = useRef<ForgeDataAdapter | null>(effectiveAdapter);
-  adapterRef.current = effectiveAdapter;
+  const queryClient = useQueryClient();
+  const payloadClient = useForgePayloadClient();
+  const createPage = useCreateForgePage();
+  const updateGraph = useUpdateForgeGraph();
 
   const resolveGraphPropRef = useRef(resolveGraph);
   resolveGraphPropRef.current = resolveGraph;
+  const queryClientRef = useRef(queryClient);
+  queryClientRef.current = queryClient;
+  const payloadClientRef = useRef(payloadClient);
+  payloadClientRef.current = payloadClient;
+  const createPageRef = useRef(createPage);
+  createPageRef.current = createPage;
+  const updateGraphRef = useRef(updateGraph);
+  updateGraphRef.current = updateGraph;
 
   const resolveGraphFn = useCallback((id: string) => {
     if (resolveGraphPropRef.current) return resolveGraphPropRef.current(id);
-    const adapter = adapterRef.current;
-    if (adapter) return adapter.getGraph(Number(id));
-    return Promise.reject(new Error(`No adapter or resolveGraph: cannot load graph ${id}`));
+    return fetchForgeGraph(queryClientRef.current, payloadClientRef.current, id);
   }, []);
 
   const onCommitDraftFn = useCallback(
-    (draft: import('@magicborn/forge/types/forge-graph').ForgeGraphDoc, deltas: import('@magicborn/forge/components/ForgeWorkspace/store/slices/draft.slice').ForgeDraftDelta[]) => {
-      const adapter = adapterRef.current;
-      if (!adapter) return Promise.resolve(draft);
-      return commitForgeDraftWithAdapter(adapter, draft, deltas);
-    },
-    []
-  );
-
-  const loadProjectDataFn = useCallback(
-    (projectId: number, store: import('@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store').ForgeWorkspaceStore) => {
-      const adapter = adapterRef.current;
-      if (!adapter) return Promise.resolve();
-      return loadForgeProjectDataWithAdapter(adapter, projectId, store);
-    },
+    (
+      draft: ForgeGraphDoc,
+      deltas: import('@magicborn/forge/components/ForgeWorkspace/store/slices/draft.slice').ForgeDraftDelta[]
+    ) =>
+      commitForgeDraft(draft, deltas, {
+        createPage: (input) => createPageRef.current.mutateAsync(input),
+        updateGraph: (graphId, patch) =>
+          updateGraphRef.current.mutateAsync({ graphId, patch }),
+      }),
     []
   );
 
   const eventSinkRef = useRef<EventSink>({
     emit: (event) => {
-      if (onEvent) onEvent(event);
+      onEvent?.(event);
     },
   });
 
@@ -121,18 +113,14 @@ export function ForgeWorkspace({
       {
         initialNarrativeGraph: narrativeGraph ?? null,
         initialStoryletGraph: storyletGraph ?? null,
-        initialFlagSchema: initialFlagSchema,
-        initialGameState: initialGameState,
+        initialFlagSchema,
+        initialGameState,
         resolveGraph: resolveGraphFn,
         onCommitDraft: onCommitDraftFn,
       },
       eventSinkRef.current
     )
   );
-
-  React.useEffect(() => {
-    setupForgeWorkspaceSubscriptions(storeRef.current, eventSinkRef.current, loadProjectDataFn);
-  }, [loadProjectDataFn]);
 
   return (
     <ForgeWorkspaceStoreProvider store={storeRef.current}>
@@ -157,44 +145,71 @@ function ForgeWorkspaceContent({
   className = '',
   headerLinks,
 }: Pick<ForgeWorkspaceProps, 'characters' | 'className' | 'headerLinks'>) {
-
-  // Get active graph IDs and derive graphs from cache
-  const activeNarrativeGraphId = useForgeWorkspaceStore((s) => s.activeNarrativeGraphId);
-  const activeStoryletGraphId = useForgeWorkspaceStore((s) => s.activeStoryletGraphId);
-  const activeFlagSchema = useForgeWorkspaceStore((s) => s.activeFlagSchema);
-  const activeGameState = useForgeWorkspaceStore((s) => s.activeGameState);
-  
-  const narrativeGraph = useForgeWorkspaceStore((s) => 
-    activeNarrativeGraphId ? s.graphs.byId[activeNarrativeGraphId] ?? null : null
+  const selectedProjectId = useForgeWorkspaceStore((state) => state.selectedProjectId);
+  const activeNarrativeGraphId = useForgeWorkspaceStore(
+    (state) => state.activeNarrativeGraphId
   );
-  const storyletGraph = useForgeWorkspaceStore((s) => 
-    activeStoryletGraphId ? s.graphs.byId[activeStoryletGraphId] ?? null : null
+  const activeStoryletGraphId = useForgeWorkspaceStore(
+    (state) => state.activeStoryletGraphId
+  );
+  const activeFlagSchema = useForgeWorkspaceStore((state) => state.activeFlagSchema);
+  const activeGameState = useForgeWorkspaceStore((state) => state.activeGameState);
+  const narrativeGraph = useForgeWorkspaceStore((state) =>
+    activeNarrativeGraphId ? state.graphs.byId[activeNarrativeGraphId] ?? null : null
+  );
+  const storyletGraph = useForgeWorkspaceStore((state) =>
+    activeStoryletGraphId ? state.graphs.byId[activeStoryletGraphId] ?? null : null
   );
 
-  const setGraph = useForgeWorkspaceStore((s) => s.actions.setGraph);
-  const setActiveFlagSchema = useForgeWorkspaceStore((s) => s.actions.setActiveFlagSchema);
-  const setActiveGameState = useForgeWorkspaceStore((s) => s.actions.setActiveGameState);
+  const setGraph = useForgeWorkspaceStore((state) => state.actions.setGraph);
+  const setGraphs = useForgeWorkspaceStore((state) => state.actions.setGraphs);
+  const setActiveFlagSchema = useForgeWorkspaceStore(
+    (state) => state.actions.setActiveFlagSchema
+  );
+  const setActiveGameState = useForgeWorkspaceStore(
+    (state) => state.actions.setActiveGameState
+  );
+  const setActiveNarrativeGraphId = useForgeWorkspaceStore(
+    (state) => state.actions.setActiveNarrativeGraphId
+  );
+  const setActiveStoryletGraphId = useForgeWorkspaceStore(
+    (state) => state.actions.setActiveStoryletGraphId
+  );
+  const setGameStates = useForgeWorkspaceStore((state) => state.actions.setGameStates);
+  const openGraphInScope = useForgeWorkspaceStore((state) => state.actions.openGraphInScope);
 
-  // Panel layout state removed - using fixed layout
+  const narrativeGraphsQuery = useForgeGraphs(
+    selectedProjectId ?? null,
+    FORGE_GRAPH_KIND.NARRATIVE
+  );
+  const storyletGraphsQuery = useForgeGraphs(
+    selectedProjectId ?? null,
+    FORGE_GRAPH_KIND.STORYLET
+  );
+  const flagSchemaQuery = useForgeFlagSchema(selectedProjectId ?? null);
+  const gameStatesQuery = useForgeGameStates(selectedProjectId ?? null);
+  const activeGameStateIdQuery = useActiveForgeGameStateId(selectedProjectId ?? null);
+  const charactersQuery = useForgeCharacters(selectedProjectId ?? null);
 
-  // Panel visibility state - fix SSR
+  const createGameState = useCreateForgeGameState();
+  const setActiveForgeGameState = useSetActiveForgeGameState();
+  const createGraph = useCreateForgeGraph();
+  const updateGraph = useUpdateForgeGraph();
+
   const [panelVisibility, setPanelVisibility] = useState<Record<PanelId, boolean>>({
     sidebar: true,
     'narrative-editor': true,
     'storylet-editor': true,
   });
 
-  // Hydrate from localStorage after mount (SSR-safe)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedVisibility = localStorage.getItem('forge-panel-visibility');
-      if (savedVisibility) {
-        try {
-          setPanelVisibility(JSON.parse(savedVisibility));
-        } catch (e) {
-          // Invalid JSON, use defaults
-        }
-      }
+    if (typeof window === 'undefined') return;
+    const saved = localStorage.getItem('forge-panel-visibility');
+    if (!saved) return;
+    try {
+      setPanelVisibility(JSON.parse(saved));
+    } catch {
+      // Ignore malformed panel visibility snapshots.
     }
   }, []);
 
@@ -204,58 +219,165 @@ function ForgeWorkspaceContent({
     }
   }, [panelVisibility]);
 
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setActiveNarrativeGraphId(null);
+      setActiveStoryletGraphId(null);
+      setActiveFlagSchema(undefined, null);
+      setGameStates([], null, null);
+      return;
+    }
 
-  // Toggle panel visibility - use conditional rendering
-  const togglePanel = useCallback((panelId: PanelId) => {
-    setPanelVisibility(prev => ({ ...prev, [panelId]: !prev[panelId] }));
-  }, []);
+    const narrativeGraphs = narrativeGraphsQuery.data ?? [];
+    const storyletGraphs = storyletGraphsQuery.data ?? [];
 
-  const dataAdapter = useForgeDataContext();
-  const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
-  const openGraphInScope = useForgeWorkspaceStore((s) => s.actions.openGraphInScope);
-  const setActiveNarrativeGraphId = useForgeWorkspaceStore((s) => s.actions.setActiveNarrativeGraphId);
-  const setActiveStoryletGraphId = useForgeWorkspaceStore((s) => s.actions.setActiveStoryletGraphId);
+    if (narrativeGraphs.length) {
+      setGraphs(narrativeGraphs);
+      const hasCurrent = activeNarrativeGraphId
+        ? narrativeGraphs.some((graph) => String(graph.id) === activeNarrativeGraphId)
+        : false;
+      if (!hasCurrent) {
+        setActiveNarrativeGraphId(String(narrativeGraphs[0].id));
+      }
+    }
+
+    if (storyletGraphs.length) {
+      setGraphs(storyletGraphs);
+      const hasCurrent = activeStoryletGraphId
+        ? storyletGraphs.some((graph) => String(graph.id) === activeStoryletGraphId)
+        : false;
+      if (!hasCurrent) {
+        setActiveStoryletGraphId(String(storyletGraphs[0].id));
+      }
+    }
+  }, [
+    activeNarrativeGraphId,
+    activeStoryletGraphId,
+    narrativeGraphsQuery.data,
+    selectedProjectId,
+    setActiveNarrativeGraphId,
+    setActiveStoryletGraphId,
+    setActiveFlagSchema,
+    setGameStates,
+    setGraphs,
+    storyletGraphsQuery.data,
+  ]);
+
+  useEffect(() => {
+    if (!selectedProjectId) return;
+    if (!flagSchemaQuery.isSuccess) return;
+    const schema = flagSchemaQuery.data?.schema as FlagSchema | undefined;
+    setActiveFlagSchema(schema, selectedProjectId);
+  }, [flagSchemaQuery.data, flagSchemaQuery.isSuccess, selectedProjectId, setActiveFlagSchema]);
+
+  const creatingDefaultStateProjectRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!selectedProjectId || !gameStatesQuery.isSuccess) return;
+
+    let cancelled = false;
+    const syncStates = async () => {
+      let states = gameStatesQuery.data ?? [];
+      let activeGameStateId = activeGameStateIdQuery.data ?? null;
+
+      if (!states.length) {
+        if (creatingDefaultStateProjectRef.current === selectedProjectId) return;
+        creatingDefaultStateProjectRef.current = selectedProjectId;
+        try {
+          const created = await createGameState.mutateAsync({
+            projectId: selectedProjectId,
+            name: 'Default State',
+            state: { flags: {} },
+          });
+          await setActiveForgeGameState.mutateAsync({
+            projectId: selectedProjectId,
+            gameStateId: created.id,
+          });
+          states = [created];
+          activeGameStateId = created.id;
+        } catch (error) {
+          console.error('Failed to create default game state:', error);
+          return;
+        } finally {
+          creatingDefaultStateProjectRef.current = null;
+        }
+      } else if (
+        !activeGameStateId ||
+        !states.some((gameState) => gameState.id === activeGameStateId)
+      ) {
+        activeGameStateId = states[0].id;
+        try {
+          await setActiveForgeGameState.mutateAsync({
+            projectId: selectedProjectId,
+            gameStateId: activeGameStateId,
+          });
+        } catch (error) {
+          console.error('Failed to set active game state:', error);
+        }
+      }
+
+      if (!cancelled) {
+        setGameStates(states, selectedProjectId, activeGameStateId);
+      }
+    };
+
+    void syncStates();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    activeGameStateIdQuery.data,
+    createGameState,
+    gameStatesQuery.data,
+    gameStatesQuery.isSuccess,
+    selectedProjectId,
+    setActiveForgeGameState,
+    setGameStates,
+  ]);
+
+  const effectiveCharacters = useMemo(() => {
+    if (characters && Object.keys(characters).length) return characters;
+    const fromQuery = charactersQuery.data ?? [];
+    return fromQuery.reduce<Record<string, ForgeCharacter>>((acc, character) => {
+      acc[String(character.id)] = character;
+      return acc;
+    }, {});
+  }, [characters, charactersQuery.data]);
 
   const onNarrativeGraphChange = useCallback(
     async (next: ForgeGraphDoc) => {
-      // Immediately update local store for instant UI feedback
       setGraph(String(next.id), next);
 
-      // If graph has no ID (id === 0), it's a new graph that needs to be created in the database
-      // This happens when the first node is added to a blank graph
-      if (next.id === 0 && dataAdapter && selectedProjectId && next.flow.nodes.length > 0) {
+      if (next.id === 0 && selectedProjectId && next.flow.nodes.length > 0) {
         try {
-          // Create graph first without title (or use provided title)
-          const createdGraph = await dataAdapter.createGraph({
+          const createdGraph = await createGraph.mutateAsync({
             projectId: selectedProjectId,
             kind: next.kind,
-            title: next.title || '', // Will be set after creation if not provided
+            title: next.title || '',
             flow: next.flow,
             startNodeId: next.startNodeId,
             endNodeIds: next.endNodeIds,
           });
-          
-          // Generate default title with first 4 digits of graph ID
+
           const graphIdStr = String(createdGraph.id);
           const defaultTitle = `New Graph ${graphIdStr.slice(0, 4)}`;
           const finalTitle = createdGraph.title || defaultTitle;
-          
-          // Update title in database if we generated a default
+
           if (!createdGraph.title) {
-            await dataAdapter.updateGraph(createdGraph.id, { title: finalTitle });
+            await updateGraph.mutateAsync({
+              graphId: createdGraph.id,
+              patch: { title: finalTitle },
+            });
           }
-          
-          // Update the graph with the new ID and title, set it in store FIRST
+
           const updatedGraph = { ...next, id: createdGraph.id, title: finalTitle };
           setGraph(String(createdGraph.id), updatedGraph);
-          
-          // Set as active graph immediately (synchronously)
           setActiveNarrativeGraphId(String(createdGraph.id));
-          
-          // Then open it (which will ensure it's loaded and push breadcrumb)
-          // Graph is already in store, so ensureGraph will return early
+
           setTimeout(() => {
-            openGraphInScope('narrative', String(createdGraph.id), { pushBreadcrumb: true });
+            void openGraphInScope('narrative', String(createdGraph.id), {
+              pushBreadcrumb: true,
+            });
           }, 0);
         } catch (error) {
           console.error('Failed to create graph:', error);
@@ -264,64 +386,65 @@ function ForgeWorkspaceContent({
         return;
       }
 
-      // For existing graphs, save immediately (editor debounces continuous changes)
-      if (!dataAdapter || next.id === 0) return;
-
+      if (next.id === 0) return;
       try {
-        await dataAdapter.updateGraph(next.id, {
-          flow: next.flow,
-          startNodeId: next.startNodeId,
-          endNodeIds: next.endNodeIds,
-          title: next.title,
+        await updateGraph.mutateAsync({
+          graphId: next.id,
+          patch: {
+            flow: next.flow,
+            startNodeId: next.startNodeId,
+            endNodeIds: next.endNodeIds,
+            title: next.title,
+          },
         });
       } catch (error) {
         console.error('Failed to save graph:', error);
-        // Keep editing - changes are in memory
       }
     },
-    [dataAdapter, selectedProjectId, openGraphInScope, setGraph, setActiveNarrativeGraphId]
+    [
+      createGraph,
+      openGraphInScope,
+      selectedProjectId,
+      setActiveNarrativeGraphId,
+      setGraph,
+      updateGraph,
+    ]
   );
 
   const onStoryletGraphChange = useCallback(
     async (next: ForgeGraphDoc) => {
-      // Immediately update local store for instant UI feedback
       setGraph(String(next.id), next);
 
-      // If graph has no ID (id === 0), it's a new graph that needs to be created in the database
-      // This happens when the first node is added to a blank graph
-      if (next.id === 0 && dataAdapter && selectedProjectId && next.flow.nodes.length > 0) {
+      if (next.id === 0 && selectedProjectId && next.flow.nodes.length > 0) {
         try {
-          // Create graph first without title (or use provided title)
-          const createdGraph = await dataAdapter.createGraph({
+          const createdGraph = await createGraph.mutateAsync({
             projectId: selectedProjectId,
             kind: next.kind,
-            title: next.title || '', // Will be set after creation if not provided
+            title: next.title || '',
             flow: next.flow,
             startNodeId: next.startNodeId,
             endNodeIds: next.endNodeIds,
           });
-          
-          // Generate default title with first 4 digits of graph ID
+
           const graphIdStr = String(createdGraph.id);
           const defaultTitle = `New Graph ${graphIdStr.slice(0, 4)}`;
           const finalTitle = createdGraph.title || defaultTitle;
-          
-          // Update title in database if we generated a default
+
           if (!createdGraph.title) {
-            await dataAdapter.updateGraph(createdGraph.id, { title: finalTitle });
+            await updateGraph.mutateAsync({
+              graphId: createdGraph.id,
+              patch: { title: finalTitle },
+            });
           }
-          
-          // Update the graph with the new ID and title, set it in store FIRST
+
           const updatedGraph = { ...next, id: createdGraph.id, title: finalTitle };
           setGraph(String(createdGraph.id), updatedGraph);
-          
-          // Set as active graph immediately (synchronously)
           setActiveStoryletGraphId(String(createdGraph.id));
-          
-          // Then open it (which will ensure it's loaded and push breadcrumb)
-          // Graph is already in store, so ensureGraph will return early
+
           setTimeout(() => {
-            openGraphInScope('storylet', String(createdGraph.id), { pushBreadcrumb: true });
+            void openGraphInScope('storylet', String(createdGraph.id), {
+              pushBreadcrumb: true,
+            });
           }, 0);
         } catch (error) {
           console.error('Failed to create graph:', error);
@@ -330,44 +453,51 @@ function ForgeWorkspaceContent({
         return;
       }
 
-      // For existing graphs, save immediately (editor debounces continuous changes)
-      if (!dataAdapter || next.id === 0) return;
-
+      if (next.id === 0) return;
       try {
-        await dataAdapter.updateGraph(next.id, {
-          flow: next.flow,
-          startNodeId: next.startNodeId,
-          endNodeIds: next.endNodeIds,
-          title: next.title,
+        await updateGraph.mutateAsync({
+          graphId: next.id,
+          patch: {
+            flow: next.flow,
+            startNodeId: next.startNodeId,
+            endNodeIds: next.endNodeIds,
+            title: next.title,
+          },
         });
       } catch (error) {
         console.error('Failed to save graph:', error);
-        // Keep editing - changes are in memory
       }
     },
-    [dataAdapter, selectedProjectId, openGraphInScope, setGraph, setActiveStoryletGraphId]
+    [
+      createGraph,
+      openGraphInScope,
+      selectedProjectId,
+      setActiveStoryletGraphId,
+      setGraph,
+      updateGraph,
+    ]
   );
 
-  // Modal actions from store
-  const openFlagModal = useForgeWorkspaceStore((s) => s.actions.openFlagModal);
-  const openGuide = useForgeWorkspaceStore((s) => s.actions.openGuide);
+  const togglePanel = useCallback((panelId: PanelId) => {
+    setPanelVisibility((prev) => ({ ...prev, [panelId]: !prev[panelId] }));
+  }, []);
 
-  // Command bar
+  const openFlagModal = useForgeWorkspaceStore((state) => state.actions.openFlagModal);
+  const openGuide = useForgeWorkspaceStore((state) => state.actions.openGuide);
   const { open: commandBarOpen, setOpen: setCommandBarOpen } = useCommandBar();
 
-  // Wrapper callbacks for modals
   const handleUpdateFlagSchema = useCallback(
     (schema: FlagSchema) => {
-      setActiveFlagSchema(schema);
+      setActiveFlagSchema(schema, selectedProjectId);
     },
-    [setActiveFlagSchema]
+    [selectedProjectId, setActiveFlagSchema]
   );
 
   const handleUpdateGameState = useCallback(
     (state: ForgeGameState) => {
-      setActiveGameState(state);
+      setActiveGameState(state, selectedProjectId);
     },
-    [setActiveGameState]
+    [selectedProjectId, setActiveGameState]
   );
 
   const editorTokens = {
@@ -385,7 +515,12 @@ function ForgeWorkspaceContent({
   return (
     <div className={`flex h-full w-full flex-col ${className}`} style={editorTokens}>
       <ForgeWorkspaceMenuBar
-        counts={{ actCount: 0, chapterCount: 0, pageCount: 0, characterCount: Object.keys(characters ?? {}).length }}
+        counts={{
+          actCount: 0,
+          chapterCount: 0,
+          pageCount: 0,
+          characterCount: Object.keys(effectiveCharacters).length,
+        }}
         onGuideClick={openGuide}
         onFlagClick={openFlagModal}
         panelVisibility={panelVisibility}
@@ -402,7 +537,7 @@ function ForgeWorkspaceContent({
           storyletGraph={storyletGraph}
           flagSchema={activeFlagSchema}
           gameState={activeGameState}
-          characters={characters}
+          characters={effectiveCharacters}
           onNarrativeGraphChange={onNarrativeGraphChange}
           onStoryletGraphChange={onStoryletGraphChange}
         />
@@ -413,7 +548,7 @@ function ForgeWorkspaceContent({
         storyletGraph={storyletGraph}
         flagSchema={activeFlagSchema}
         gameState={activeGameState}
-        characters={characters}
+        characters={effectiveCharacters}
         onUpdateFlagSchema={handleUpdateFlagSchema}
         onUpdateGameState={handleUpdateGameState}
       />

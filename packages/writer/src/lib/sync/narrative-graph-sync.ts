@@ -3,8 +3,22 @@ import type { ForgeGraphDoc, ForgeNode, ForgeReactFlowNode } from '@magicborn/sh
 import { FORGE_NODE_TYPE } from '@magicborn/shared/types/forge-graph';
 import type { ForgePage, NarrativeHierarchy } from '@magicborn/shared/types/narrative';
 import { PAGE_TYPE } from '@magicborn/shared/types/narrative';
-import type { WriterDataAdapter } from '@magicborn/writer/lib/data-adapter/writer-adapter';
-import type { WriterForgeDataAdapter } from '@magicborn/writer/types/forge-data-adapter';
+
+export type NarrativePageApi = {
+  listPages: (
+    projectId: number,
+    narrativeGraphId?: number | null
+  ) => Promise<ForgePage[]>;
+  createPage?: (input: {
+    projectId: number;
+    pageType: 'ACT' | 'CHAPTER' | 'PAGE';
+    title: string;
+    order: number;
+    parent?: number | null;
+    narrativeGraph?: number | null;
+    bookBody?: string | null;
+  }) => Promise<ForgePage>;
+};
 
 /**
  * Synchronous version that works with pre-loaded data
@@ -153,14 +167,14 @@ export function extractNarrativeHierarchySync(
  */
 export async function extractNarrativeHierarchy(
   graph: ForgeGraphDoc,
-  dataAdapter: WriterDataAdapter
+  pageApi: NarrativePageApi
 ): Promise<NarrativeHierarchy> {
   const nodeMap = new Map<string, ForgeReactFlowNode>(
     graph.flow.nodes.map(n => [n.id, n])
   );
   
   // Load all pages (unified model - acts, chapters, and content pages are all pages)
-  const allPages = await dataAdapter.listPages(graph.project);
+  const allPages = await pageApi.listPages(graph.project);
   
   // Filter pages by type
   const allActs = allPages.filter(p => p.pageType === PAGE_TYPE.ACT);
@@ -353,13 +367,12 @@ export function findConditionalPageConnections(graph: ForgeGraphDoc): Map<number
  */
 export async function syncGraphToDatabase(
   graph: ForgeGraphDoc,
-  dataAdapter: WriterDataAdapter,
-  forgeDataAdapter: WriterForgeDataAdapter
+  pageApi: NarrativePageApi
 ): Promise<void> {
   const projectId = graph.project;
   
   // Get existing pages from database (unified model)
-  const allPages = await dataAdapter.listPages(projectId);
+  const allPages = await pageApi.listPages(projectId);
   
   // Filter by type
   const existingActs = allPages.filter(p => p.pageType === PAGE_TYPE.ACT);
@@ -382,9 +395,9 @@ export async function syncGraphToDatabase(
           // Database entry doesn't exist - this is an error state
           console.warn(`Act node references non-existent act ID: ${nodeData.actId}`);
         }
-      } else if (dataAdapter.createPage) {
+      } else if (pageApi.createPage) {
         // Create new act page in database (unified model)
-        await dataAdapter.createPage({
+        await pageApi.createPage({
           projectId,
           pageType: PAGE_TYPE.ACT,
           title: nodeData?.label || 'New Act',
@@ -399,12 +412,12 @@ export async function syncGraphToDatabase(
         if (!existingChapterIds.has(nodeData.chapterId)) {
           console.warn(`Chapter node references non-existent chapter ID: ${nodeData.chapterId}`);
         }
-      } else if (dataAdapter.createPage) {
+      } else if (pageApi.createPage) {
         // Find parent act from edges
         const parentActId = findParentActId(graph, node.id);
         if (parentActId) {
           // Create chapter page in database (unified model)
-          await dataAdapter.createPage({
+          await pageApi.createPage({
             projectId,
             pageType: PAGE_TYPE.CHAPTER,
             title: nodeData?.label || 'New Chapter',
@@ -418,11 +431,11 @@ export async function syncGraphToDatabase(
         if (!existingPageIds.has(nodeData.pageId)) {
           console.warn(`Page node references non-existent page ID: ${nodeData.pageId}`);
         }
-      } else if (dataAdapter.createPage) {
+      } else if (pageApi.createPage) {
         // Find parent chapter from edges
         const parentChapterId = findParentChapterId(graph, node.id);
         if (parentChapterId) {
-          const page = await dataAdapter.createPage({
+          const page = await pageApi.createPage({
             projectId,
             pageType: PAGE_TYPE.PAGE,
             title: nodeData?.label || 'New Page',

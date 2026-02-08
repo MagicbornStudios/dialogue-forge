@@ -1,55 +1,29 @@
-# Adapters and Contracts
+# Data Access Conventions
 
-Adapters are contracts to external systems. Domain packages define adapter interfaces only. The host app implements them.
+## Current Pattern (Forge + Writer)
 
-## Rules
+Forge and Writer no longer use host-implemented data adapters. Data access is package-owned and hook-driven.
 
-- Define adapter interfaces in the owning domain package.
-- Do not import host types inside domain packages.
-- Adapters must be pure TypeScript interfaces or type aliases.
-- Hosts implement adapters in apps/host and pass them into workspace components.
+- Host provides one payload client through `ForgePayloadProvider`.
+- Forge data hooks live in `packages/forge/src/data/forge-queries.ts`.
+- Writer page/comment hooks live in `packages/writer/src/data/writer-queries.ts`.
+- Components call hooks directly (`useForgeGraphs`, `useUpdateForgeGraph`, `useWriterPages`, `useCreateWriterComment`, etc.).
 
-## Suggested Folder Pattern
+## Host Responsibility
 
-```
-packages/<domain>/src/adapters/
-  <domain>-adapter.ts
-  index.ts
+The host app should only configure providers:
 
-apps/host/app/lib/<domain>/
-  <domain>-adapter.ts  // PayloadCMS or other system wiring
-```
+- `QueryClientProvider` (React Query)
+- `ForgePayloadProvider` with the payload/API client
 
-## Example (Forge)
+Host code should not build adapter objects for Forge/Writer.
 
-```ts
-// packages/forge/src/adapters/forge-adapter.ts
-export interface ForgeAdapter {
-  listGraphs(projectId: string): Promise<ForgeGraphDoc[]>;
-  saveGraph(input: ForgeGraphDoc): Promise<ForgeGraphDoc>;
-  deleteGraph(id: string): Promise<void>;
-}
-```
+## Package Responsibility
 
-```ts
-// apps/host/app/lib/forge/forge-adapter.ts
-import type { ForgeAdapter } from '@magicborn/forge';
+- Keep query keys, fetchers, mappers, and mutations inside the owning package.
+- Keep non-React helpers as small API abstractions (`createPage`, `updateGraph`) where needed for draft/commit utilities.
+- Avoid importing host app modules from packages.
 
-export const forgeAdapter: ForgeAdapter = {
-  async listGraphs(projectId) {
-    // PayloadCMS implementation
-  },
-  async saveGraph(input) {
-    // PayloadCMS implementation
-  },
-  async deleteGraph(id) {
-    // PayloadCMS implementation
-  }
-};
-```
+## Transitional Note
 
-## Why This Matters
-
-- Keeps domain packages portable.
-- Prevents hard coupling to PayloadCMS or Next.js.
-- Makes it safe to reuse packages in other hosts.
+Other domains (for example Theme/Characters) may still use adapter contracts until they are migrated to the same provider + hook model.

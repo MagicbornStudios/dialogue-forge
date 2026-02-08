@@ -14,7 +14,7 @@ Migrate Writer and ForgeWorkspace nodes and Yarn implementation from this repo (
 
 ## Done
 
-- (None yet. Add one line per completed slice, e.g. "2026-02-XX: Ported character-handler to forge-agent (plan 30).")
+- 2026-02-08: Replaced Forge/Writer adapter-context data flow with package-owned React Query hooks plus shared payload client provider in the host.
 
 ## Links
 

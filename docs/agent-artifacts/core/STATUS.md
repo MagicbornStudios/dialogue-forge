@@ -12,8 +12,8 @@
 
 ## Current Repo State
 
-- Build: `pnpm run build` - FAIL (known Writer SpeechRecognition type issue)
-- Typecheck: `pnpm run typecheck:domains` - FAIL (known Writer + dialogue-forge export path issues)
+- Build: `pnpm run build` - NOT VERIFIED (timed out locally)
+- Typecheck: `pnpm run typecheck:domains` - PASS
 - Typecheck: `pnpm run typecheck:studio` - PASS
 - Package manager: pnpm (installed via official script); `packageManager` field set in root `package.json`
 - If `pnpm` isn't found in a new shell, restart the terminal (installer updates PATH).
@@ -30,7 +30,7 @@
 - Video workspace is Twick-only. Legacy video workspace is removed.
 - No draft slices and no event bus in new or refactored workspace architecture.
 - `packages/**` must never import `apps/studio/**` or generated host app types.
-- Adapters are contracts in packages; host implements them.
+- Data access uses package-owned React Query hooks; host provides a shared payload client via `ForgePayloadProvider`.
 - Use constants for discriminated types (no string literals).
 - No @/ alias in code; use @magicborn/<domain>/* or relative paths.
 - Tweakcn submodule is reference-only; first-class runtime integration is `packages/theme` + Studio routes.
@@ -51,8 +51,7 @@
 
 ## Known Build Blockers
 
-- `pnpm run typecheck:domains` fails in `packages/writer/src/components/WriterWorkspace/editor/lexical/plugins/SpeechToTextPlugin/index.ts` because `window.SpeechRecognition` is not declared on `Window`.
-- `pnpm run typecheck:domains` fails in `packages/dialogue-forge/src/index.ts` due missing `@magicborn/forge/*` module export targets (multiple `TS2307` unresolved paths).
+- `pnpm run test` is long-running in this workspace and timed out in this environment; use targeted `vitest run <path>` for quick validation while iterating.
 
 ## Studio app layout (full-height main)
 
@@ -86,6 +85,14 @@ For the Studio home page (`apps/studio/app/page.tsx`), the main content area mus
 - Removed runtime dependency on old tweakcn helper surfaces (`/tweakcn-ai` and `/api/tweakcn/ai`).
 - Studio main content full height: set `html, body { height: 100% }` in apps/studio/styles/globals.css and page root to `h-full min-h-0` so the main (flex-1) gets the full remaining viewport instead of being cut off.
 - Forge workspace: wrapped `ForgeWorkspaceLayout` in a container with `flex-1 min-h-0 overflow-hidden` so the layout gets bounded height and the bottom (storylet) panel is visible instead of being cut off.
+- Removed Forge/Writer data adapter pattern in favor of package-owned hooks:
+  - Added `ForgePayloadProvider` and Forge React Query hooks in `packages/forge/src/data/`.
+  - Added Writer page/comment hooks in `packages/writer/src/data/` using the same payload client context.
+  - Removed adapter contexts/types/providers (`ForgeDataContext`, `WriterDataContext`, host `ForgeDataProvider` / `WriterDataProvider`).
+  - Studio now wraps Forge/Writer with a single payload provider in `apps/studio/app/page.tsx`.
+- Fixed domain typecheck blockers:
+  - Reworked SpeechRecognition typing in Writer plugin.
+  - Simplified `@magicborn/dialogue-forge` exports to consume `@magicborn/forge` public API.
 - Added numbered consumer/playground docs under `docs/guides/` aligned with forge-agent flow (01, 05, 15, 20, 21).
 - Added consumer registry guide for `@forge/*` and `@twick/*` install from local Verdaccio.
 - Added `vendor/tweakcn` submodule wiring plus root scripts for install/dev/build/update.

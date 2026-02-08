@@ -24,6 +24,7 @@
 - Forge may import Video types/renderers for playback only; avoid new cross-domain links.
 - useGraphAutoSave + useSimpleForgeFlowEditor for save paths.
 - No draft slices or event bus in new work.
+- Data access must use Forge package hooks from `src/data/forge-queries.ts`; do not reintroduce adapter contexts.
 
 ## Do / Don't
 - Do keep changes localized and reviewable.
@@ -31,8 +32,9 @@
 - Don't introduce string literals for type checks.
 
 ## Known Footguns
-- Graph deletion must use dataAdapter.deleteGraph + actions.removeGraph.
+- Graph deletion must call `useDeleteForgeGraph().mutateAsync(id)` and then `actions.removeGraph(id)` for immediate UI consistency.
 - Forge workspace content area (menu bar + layout): the layout must be wrapped in a container with `flex-1 min-h-0` (and optionally `overflow-hidden`) so it gets bounded height; otherwise the bottom (storylet) panel is cut off.
+- Forge components that use hooks require `ForgePayloadProvider` above the workspace tree.
 
 ## How to Test
 - npm run build

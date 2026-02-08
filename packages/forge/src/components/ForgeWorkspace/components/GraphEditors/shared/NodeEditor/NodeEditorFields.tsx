@@ -12,7 +12,7 @@ import { ActNodeFields } from '@magicborn/forge/components/ForgeWorkspace/compon
 import { ChapterNodeFields } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/ChapterNode/ChapterNodeFields';
 import { PageNodeFields } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/shared/Nodes/components/PageNode/PageNodeFields';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
-import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
+import { useForgePages } from '@magicborn/forge/data/forge-queries';
 
 interface NodeEditorFieldsProps {
   node: ForgeNode;
@@ -64,53 +64,21 @@ export function NodeEditorFields({
   setChoiceInputs,
   onUpdateStoryletCall,
 }: NodeEditorFieldsProps) {
-  const dataAdapter = useForgeDataContext();
   const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
-  const [narrativePages, setNarrativePages] = React.useState<ForgePage[]>([]);
-  const [isLoadingPages, setIsLoadingPages] = React.useState(false);
 
   const isNarrativePageNode =
     node.type === FORGE_NODE_TYPE.ACT ||
     node.type === FORGE_NODE_TYPE.CHAPTER ||
     node.type === FORGE_NODE_TYPE.PAGE;
 
-  React.useEffect(() => {
-    const shouldFetch = isNarrativePageNode && !!dataAdapter?.listPages;
-    if (!shouldFetch) {
-      setNarrativePages([]);
-      setIsLoadingPages(false);
-      return;
-    }
-
-    const projectId = graph.project ?? selectedProjectId;
-    if (!projectId) {
-      setNarrativePages([]);
-      setIsLoadingPages(false);
-      return;
-    }
-
-    let isActive = true;
-    setIsLoadingPages(true);
-    dataAdapter
-      .listPages(projectId, graph.id)
-      .then((pages) => {
-        if (!isActive) return;
-        const sorted = [...pages].sort((a, b) => a.order - b.order);
-        setNarrativePages(sorted);
-      })
-      .catch((error) => {
-        if (!isActive) return;
-        console.error('Failed to load narrative pages:', error);
-        setNarrativePages([]);
-      })
-      .finally(() => {
-        if (isActive) setIsLoadingPages(false);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [dataAdapter, graph.id, graph.project, selectedProjectId, isNarrativePageNode]);
+  const projectId = graph.project ?? selectedProjectId;
+  const shouldFetchPages = isNarrativePageNode && !!projectId;
+  const pagesQuery = useForgePages(
+    shouldFetchPages ? projectId : null,
+    shouldFetchPages ? graph.id : null
+  );
+  const narrativePages: ForgePage[] = pagesQuery.data ?? [];
+  const isLoadingPages = pagesQuery.isLoading;
 
   switch (node.type) {
     case FORGE_NODE_TYPE.ACT:

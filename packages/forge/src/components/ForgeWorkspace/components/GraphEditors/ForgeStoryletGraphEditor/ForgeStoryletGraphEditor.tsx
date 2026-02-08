@@ -79,9 +79,9 @@ import {
 } from '@magicborn/forge/lib/graph-editor/hooks/useForgeEditorSession';
 
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
-import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
 import { FORGE_NODE_TYPE } from '@magicborn/forge/types/forge-graph';
 import { useShallow } from 'zustand/shallow';
+import { useCreateForgeGraph } from '@magicborn/forge/data/forge-queries';
 
 import {
   ForgeEditorActionsProvider,
@@ -165,7 +165,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
       openGraphInScope: s.actions.openGraphInScope,
     }))
   );
-  const dataAdapter = useForgeDataContext();
+  const createGraph = useCreateForgeGraph();
 
   const reactFlow = useReactFlow();
 
@@ -219,7 +219,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
 
   // Create handler for creating new graph
   const handleCreateNewGraph = React.useCallback(async () => {
-    if (!dataAdapter || !selectedProjectId) return;
+    if (!selectedProjectId) return;
     
     const { createEmptyForgeGraphDoc } = await import('@magicborn/forge/lib/utils/forge-flow-helpers');
     const { FORGE_GRAPH_KIND } = await import('@magicborn/forge/types/forge-graph');
@@ -229,7 +229,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
       title: 'New Storylet'
     });
     
-    const createdGraph = await dataAdapter.createGraph({
+    const createdGraph = await createGraph.mutateAsync({
       projectId: selectedProjectId,
       kind: FORGE_GRAPH_KIND.STORYLET,
       title: 'New Storylet',
@@ -239,7 +239,7 @@ function ForgeStoryletGraphEditorInternal(props: ForgeStoryletGraphEditorProps) 
     });
     
     openGraphInScope('storylet', String(createdGraph.id));
-  }, [dataAdapter, selectedProjectId, openGraphInScope]);
+  }, [createGraph, selectedProjectId, openGraphInScope]);
 
   const shell = useSimpleForgeFlowEditor({
     graph,

@@ -1,63 +1,53 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
-import { useForgeDataContext } from '@magicborn/forge/components/ForgeWorkspace/ForgeDataContext';
-import type { ForgeProjectSummary } from '@magicborn/forge/adapters/forge-data-adapter';
+import {
+  useCreateForgeProject,
+  useForgeProjects,
+} from '@magicborn/forge/data/forge-queries';
+import type { ForgeProjectSummary } from '@magicborn/forge/data/forge-types';
 import { ProjectSwitcher } from '@magicborn/shared/ui/ProjectSwitcher';
 import type { ProjectSummary } from '@magicborn/shared/ui/ProjectSwitcher';
 
-function toSummary(p: ForgeProjectSummary): ProjectSummary {
-  return { id: p.id, name: p.name };
+function toSummary(project: ForgeProjectSummary): ProjectSummary {
+  return { id: project.id, name: project.name };
 }
 
 export function ForgeProjectSwitcher() {
-  const [projects, setProjects] = useState<ForgeProjectSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const selectedProjectId = useForgeWorkspaceStore((state) => state.selectedProjectId);
+  const setSelectedProjectId = useForgeWorkspaceStore(
+    (state) => state.actions.setSelectedProjectId
+  );
+  const projectsQuery = useForgeProjects();
+  const createProject = useCreateForgeProject();
 
-  const selectedProjectId = useForgeWorkspaceStore((s) => s.selectedProjectId);
-  const setSelectedProjectId = useForgeWorkspaceStore((s) => s.actions.setSelectedProjectId);
-  const dataAdapter = useForgeDataContext();
-
-  useEffect(() => {
-    if (!dataAdapter) return;
-    setIsLoading(true);
-    setError(null);
-    dataAdapter
-      .listProjects()
-      .then(setProjects)
-      .catch((err) => {
-        console.error('Failed to load projects:', err);
-        setError('Failed to load projects');
-      })
-      .finally(() => setIsLoading(false));
-  }, [dataAdapter]);
+  const projects = useMemo(
+    () => (projectsQuery.data ?? []).map(toSummary),
+    [projectsQuery.data]
+  );
 
   const handleCreateProject = async (data: {
     name: string;
     description?: string;
   }): Promise<ProjectSummary> => {
-    if (!dataAdapter) throw new Error('No adapter');
-    const created = await dataAdapter.createProject(data);
-    const updated = await dataAdapter.listProjects();
-    setProjects(updated);
+    const created = await createProject.mutateAsync(data);
     setSelectedProjectId(created.id);
     return toSummary(created);
   };
 
   const handleProjectChange = (id: string | number | null) => {
-    setSelectedProjectId(id === null ? null : (id as number));
+    setSelectedProjectId(id == null ? null : Number(id));
   };
 
   return (
     <ProjectSwitcher
-      projects={projects.map(toSummary)}
+      projects={projects}
       selectedProjectId={selectedProjectId}
       onProjectChange={handleProjectChange}
-      onCreateProject={dataAdapter?.createProject ? handleCreateProject : undefined}
-      isLoading={isLoading}
-      error={error}
+      onCreateProject={handleCreateProject}
+      isLoading={projectsQuery.isLoading}
+      error={projectsQuery.error ? 'Failed to load projects' : null}
       variant="compact"
     />
   );

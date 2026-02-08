@@ -12,7 +12,7 @@
 - Narrative types
 
 ## Critical Invariants
-- No imports from Forge, Video, or host app.
+- Writer may import Forge data hooks/types for narrative graph reads/writes, but must not import Forge UI/store internals or host app code.
 - Lexical editor state sync uses workspace store actions.
 - Use constants for any type discriminators.
 - No draft slices or event bus in new work.
@@ -20,6 +20,8 @@
 ## Known Footguns
 - Editor sync plugins must avoid infinite loops.
 - Keep autosave debounced and explicit.
+- Writer data access must use hooks in `src/data/writer-queries.ts`; do not reintroduce adapter contexts.
+- Writer workspace and Lexical comment flows require `ForgePayloadProvider` in the host tree.
 
 ## How to Test
 - npm run build

@@ -2,6 +2,8 @@
 
 Inventory of what to migrate from this repo. **Exclude** all edge-drop surface (see [11-out-of-scope.md](11-out-of-scope.md)).
 
+**Forge-agent:** Graph CRUD and resolution use **React Query + Payload CMS** (no store/adapter). Full export and ensureGraph-style resolution are **server-side**; see [55-data-access-and-export.md](55-data-access-and-export.md).
+
 ## Store
 
 - **packages/forge/src/components/ForgeWorkspace/store/forge-workspace-store.tsx** — Root store.

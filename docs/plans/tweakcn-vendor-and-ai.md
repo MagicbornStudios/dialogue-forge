@@ -8,6 +8,15 @@
 3. Install tweakcn as a vendor (like opencode / forge-agent vendor setup).
 4. Get tweakcn up and running with AI (OpenRouter or our copilot runtime) as soon as possible.
 
+## Execution update (2026-02-08)
+
+- Runtime integration moved to first-class `packages/theme` + Studio Theme workspace.
+- `vendor/tweakcn` is now reference-only (not required for Studio runtime path).
+- AI generation/coplay parity now uses:
+  - `POST /api/theme/generate`
+  - `POST /api/copilotkit`
+  with strict free model chain from `OPENROUTER_THEME_MODELS_FREE`.
+
 ---
 
 ## Part A: Other repo (forge-agent) — locations and structure
@@ -138,14 +147,19 @@ Architecture docs (e.g. **04 - Component library and registry**) describe publis
 
 ---
 
-## Resolved: Vendor tweakcn build errors (Studio)
+## Resolved: Runtime decoupled from vendor tweakcn
 
-When building Studio, code under `vendor/tweakcn` can trigger:
+Studio runtime no longer imports or compiles `vendor/tweakcn` as part of the primary workflow.
 
-1. **Module not found: `@neondatabase/serverless`** — Fixed by adding `@neondatabase/serverless` to `apps/studio/package.json` (drizzle/neon driver is pulled in by vendor/tweakcn db/auth/middleware).
-2. **Export `PanelResizeHandle` doesn't exist** — Fixed by aligning vendor tweakcn with workspace `react-resizable-panels` v4: `vendor/tweakcn/components/ui/resizable.tsx` uses `Group`, `Panel`, `Separator` and maps `direction` → `orientation`; `ResizablePanel` forwards `ref` to `panelRef`; `vendor/tweakcn/components/block-viewer.tsx` uses type `PanelImperativeHandle`.
+1. Theme editing is first-class in `packages/theme` and mounted in Studio (`theme` tab and `/theme` route).
+2. AI generation is served by `POST /api/theme/generate` using strict OpenRouter free-model routing.
+3. Copilot parity is served by `POST /api/copilotkit` with the same free-model chain policy.
+4. `vendor/tweakcn` remains a reference-only submodule for upstream comparison and update flow.
 
-Documented in `docs/agent-artifacts/core/STATUS.md` (Vendor tweakcn) and `docs/guides/20-vendor-tweakcn.md` (Troubleshooting).
+Documented in:
+- `docs/agent-artifacts/core/STATUS.md` (Theme workspace + AI footguns and policy)
+- `docs/guides/20-vendor-tweakcn.md` (reference-only vendor workflow)
+- `docs/guides/21-tweakcn-ai-integration.md` (canonical runtime integration path)
 
 ---
 

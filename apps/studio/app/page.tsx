@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-// Dev-kit from Verdaccio: verify install; future Dialogue editor will use EditorShell/DockLayout
-import { EditorShell } from '@/lib/forge/dev-kit-bridge';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { ForgeWorkspace } from '@magicborn/forge';
 import { WriterWorkspace } from '@magicborn/writer';
 import { WriterProjectSwitcher } from '@magicborn/writer/components/WriterWorkspace/layout/WriterProjectSwitcher';
@@ -13,19 +11,21 @@ import {
 } from '@magicborn/characters/components/CharacterWorkspace/store/character-workspace-store';
 import { setupCharacterWorkspaceSubscriptions } from '@magicborn/characters/components/CharacterWorkspace/store/slices/subscriptions';
 import { useCharacterDataContext } from '@magicborn/characters/components/CharacterWorkspace/CharacterDataContext';
+import { ThemeWorkspace } from '@magicborn/theme';
 import { ForgeDataProvider } from '@/lib/forge/ForgeDataProvider';
 import { WriterDataProvider } from '@/lib/writer/WriterDataProvider';
 import { CharacterDataProvider } from '@/lib/characters/CharacterDataProvider';
+import { ThemeDataProvider } from '@/lib/theme/ThemeDataProvider';
 import { ProjectSwitcher } from '@/components/ProjectSwitcher';
-import { Code2, BookOpen, Users, Settings } from 'lucide-react';
+import { Code2, BookOpen, Users, Settings, Palette } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useEffect, useCallback } from 'react';
 
-type Workspace = 'forge' | 'writer' | 'characters';
+type Workspace = 'forge' | 'writer' | 'theme' | 'characters';
 
 const TABS: { id: Workspace; label: string; icon: React.ReactNode }[] = [
   { id: 'forge', label: 'Forge', icon: <Code2 size={16} /> },
   { id: 'writer', label: 'Writer', icon: <BookOpen size={16} /> },
+  { id: 'theme', label: 'Theme', icon: <Palette size={16} /> },
   { id: 'characters', label: 'Characters', icon: <Users size={16} /> },
 ];
 
@@ -36,16 +36,17 @@ function CharactersWorkspaceContent() {
     (projectId: string) => (adapter ? adapter.listCharacters(projectId) : Promise.resolve([])),
     [adapter]
   );
-  const store = useMemo(
-    () => createCharacterWorkspaceStore({ loadCharacters }),
-    [loadCharacters]
-  );
+  const store = useMemo(() => createCharacterWorkspaceStore({ loadCharacters }), [loadCharacters]);
 
   useEffect(() => {
-    if (store && loadCharacters) setupCharacterWorkspaceSubscriptions(store, loadCharacters);
+    if (store && loadCharacters) {
+      setupCharacterWorkspaceSubscriptions(store, loadCharacters);
+    }
   }, [store, loadCharacters]);
 
-  if (!store || !adapter) return null;
+  if (!store || !adapter) {
+    return null;
+  }
 
   return (
     <CharacterWorkspaceStoreProvider store={store}>
@@ -83,23 +84,13 @@ export default function StudioPage() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <Link
-            href="/tweakcn-ai"
+            href="/theme"
             className="flex items-center gap-2 px-2 py-1.5 rounded text-sm text-df-text-secondary hover:bg-df-control-bg"
-            title="Tweakcn AI helper"
+            title="Open theme workspace route"
           >
-            <Code2 size={14} />
-            Tweakcn AI
+            <Palette size={14} />
+            Theme Route
           </Link>
-          <a
-            href="http://localhost:3001"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 px-2 py-1.5 rounded text-sm text-df-text-secondary hover:bg-df-control-bg"
-            title="Open tweakcn dev app"
-          >
-            <Code2 size={14} />
-            Tweakcn
-          </a>
           <Link
             href="/admin"
             className="flex items-center gap-2 px-2 py-1.5 rounded text-sm text-df-text-secondary hover:bg-df-control-bg"
@@ -145,6 +136,20 @@ export default function StudioPage() {
               </div>
             </WriterDataProvider>
           </ForgeDataProvider>
+        )}
+
+        {workspace === 'theme' && (
+          <ThemeDataProvider>
+            <ThemeWorkspace
+              className="h-full"
+              selectedProjectId={selectedProjectId}
+              onProjectChange={setSelectedProjectId}
+              headerLinks={[
+                { label: 'Admin', href: '/admin', icon: <Settings size={14} /> },
+                { label: 'API', href: '/api/graphql-playground', icon: <Code2 size={14} /> },
+              ]}
+            />
+          </ThemeDataProvider>
         )}
 
         {workspace === 'characters' && (

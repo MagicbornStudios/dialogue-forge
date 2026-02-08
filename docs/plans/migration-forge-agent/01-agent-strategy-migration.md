@@ -39,6 +39,7 @@ Use Dialogue Forge as a consumer and experimental playground for publisher patte
 2. Validate integration behavior here (`@forge/dev-kit` install flow, vendor wiring, AI experiments).
 3. Keep experiments small and explicit, then upstream stable patterns back to `forge-agent`.
 4. Update this repo docs when publisher conventions change so agents can recover context quickly.
+5. Treat `packages/theme` + Studio ThemeWorkspace as the canonical place for theme-generation experiments; keep `vendor/tweakcn` reference-only.
 
 ## When in doubt
 

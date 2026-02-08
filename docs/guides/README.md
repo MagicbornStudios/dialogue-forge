@@ -7,3 +7,7 @@ Numbered implementation guides aligned to forge-agent structure.
 - `15-install-from-local-registry.md`
 - `20-vendor-tweakcn.md`
 - `21-tweakcn-ai-integration.md`
+
+Canonical theme flow:
+- vendor is reference-only (`20`)
+- runtime integration is first-class ThemeWorkspace + AI (`21`)

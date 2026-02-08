@@ -24,7 +24,7 @@ From [Yarn Spinner documentation](https://docs.yarnspinner.dev/):
 | CONDITIONAL | `<<if>>` / `<<elseif>>` / `<<else>>` blocks; content and nextNodeId per block. |
 | STORYLET | Our node jumps to another graph’s start; we **inline** that graph’s nodes into the same .yarn output when export has workspace context. In Yarn, that’s equivalent to multiple nodes in one file; we generate a single combined output. |
 | DETOUR | Same as storylet but with return; we rewrite the inlined graph’s end nodes to `<<jump ReturnNodeId>>`. |
-| ACT / CHAPTER / PAGE | Narrative structure; we can emit them as titled nodes or as comments; export pipeline treats them as nodes with optional content. |
+| PAGE (narrative) | Act, Chapter, and Page are all **page nodes** (different kinds of pages) in our system; linking is via the page node; user selects from pages available in the project. **Export contract:** only PAGE (and narrative Detour/Jump) appear; we drop Act/Chapter as separate export concepts—they exist as page nodes. When the root graph is narrative-only, export a **structural skeleton** with **blank nodes** (no dialogue, no choices). Emit as titled nodes or comments as needed. |
 
 ## Export pipeline (our logic to keep)
 
@@ -42,7 +42,7 @@ From [Yarn Spinner documentation](https://docs.yarnspinner.dev/):
 
 ## Duplicate node errors (Yarn Spinner)
 
-If the same node title appears in more than one file (or we emit the same node id twice), Yarn Spinner reports “More than one node is named …”. Our inlining (storylet/detour) must ensure node ids are unique when combining graphs (e.g. prefix with graph id or namespace).
+If the same node title appears in more than one file (or we emit the same node id twice), Yarn Spinner reports “More than one node is named …”. We use node ids as stored (no prefix) when inlining; see [52-yarn-spinner-variables-flattening-caveats.md](52-yarn-spinner-variables-flattening-caveats.md). For migration roadmap and phases, see [54-migration-roadmap.md](54-migration-roadmap.md).
 
 ## References
 

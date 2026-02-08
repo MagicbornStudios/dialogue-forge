@@ -41,6 +41,7 @@ div[class*="poweredBy"] {
 @source "../../../packages/writer/src/**/*.{js,ts,jsx,tsx,mdx}";
 @source "../../../packages/video/src/**/*.{js,ts,jsx,tsx,mdx}";
 @source "../../../packages/characters/src/**/*.{js,ts,jsx,tsx,mdx}";
+@source "../../../packages/theme/src/**/*.{js,ts,jsx,tsx,mdx}";
 @source "../../../packages/ai/src/**/*.{js,ts,jsx,tsx,mdx}";
 
 /* Custom theme colors */

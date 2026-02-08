@@ -53,6 +53,7 @@ const nextConfig = {
       '@magicborn/forge': path.resolve(__dirname, '../../packages/forge/src'),
       '@magicborn/writer': path.resolve(__dirname, '../../packages/writer/src'),
       '@magicborn/characters': path.resolve(__dirname, '../../packages/characters/src'),
+      '@magicborn/theme': path.resolve(__dirname, '../../packages/theme/src'),
       '@magicborn/types': path.resolve(__dirname, '../../packages/types/src'),
       // Payload config alias (server-side usage)
       '@payload-config': path.resolve(__dirname, './payload/payload.config.ts'),
@@ -90,6 +91,7 @@ const nextConfig = {
       '@magicborn/forge': '../../packages/forge/src',
       '@magicborn/writer': '../../packages/writer/src',
       '@magicborn/characters': '../../packages/characters/src',
+      '@magicborn/theme': '../../packages/theme/src',
       '@magicborn/types': '../../packages/types/src',
       '@payload-config': './payload/payload.config.ts',
       // Relative paths so Turbopack does not use Windows absolute paths (not implemented)

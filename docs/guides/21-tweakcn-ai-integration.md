@@ -1,34 +1,44 @@
 ---
-title: 21 - Tweakcn + AI integration
+title: 21 - Theme workspace + AI integration
 created: 2026-02-08
 updated: 2026-02-08
 ---
 
-# 21 - Tweakcn + AI integration
+# 21 - Theme workspace + AI integration
 
 ## What
 
-Minimal AI touchpoint for tweakcn using OpenRouter through Studio API.
+Theme generation is now first-class inside Studio through `ThemeWorkspace` (`@magicborn/theme`) with project-scoped persistence and OpenRouter free-model routing.
 
-## Prerequisites
+## Architecture
 
-- `OPENROUTER_API_KEY` set in `apps/studio/.env.local`.
-- Studio running.
+- Workspace package: `packages/theme`
+- Studio integration: `apps/studio/app/page.tsx` (`theme` tab) and `apps/studio/app/theme/page.tsx`
+- Data adapter: `apps/studio/lib/theme/ThemeDataProvider.tsx`
+- Persistence: `projects.settings.themeWorkspace` (`ThemeWorkspaceSettingsV1`)
+- AI endpoint: `POST /api/theme/generate`
+- Copilot parity endpoint: `POST /api/copilotkit`
 
-## Steps
+## OpenRouter Policy
 
-1. Open `/tweakcn-ai` in Studio.
-2. Enter a theme prompt.
-3. Submit to `POST /api/tweakcn/ai`.
-4. Copy returned suggestion JSON/text into tweakcn workflow.
+- Required env:
+  - `OPENROUTER_API_KEY`
+  - `OPENROUTER_THEME_MODELS_FREE` (preferred, comma-separated `:free` model IDs)
+  - or free `OPENROUTER_MODEL_FAST` / `AI_DEFAULT_MODEL` as fallback chain sources
+- Non-free models are rejected by policy.
+- `/api/theme/generate` and `/api/copilotkit` use the same primary + fallback chain.
+- OpenRouter fallback is driven by sending `models: [primary, ...fallbacks]` on generation requests.
 
-## Implementation
+## Minimal Flow
 
-- UI: `apps/studio/app/tweakcn-ai/page.tsx`
-- API: `apps/studio/app/api/tweakcn/ai/route.ts`
-- Provider/runtime note: `packages/ai/src/copilotkit/providers/CopilotKitProvider.tsx` still points to `/api/copilotkit`; this repo currently exposes a focused tweakcn AI endpoint first.
+1. Open Studio and switch to `Theme` tab (or `/theme`).
+2. Select/create a project.
+3. Edit tokens or ask AI to generate a theme.
+4. Theme is auto-saved under `projects.settings.themeWorkspace`.
+5. Copy generated `index.css` / `tailwind.config` from code panel.
 
 ## Related
 
 - `20-vendor-tweakcn.md`
-- `../how-to/adding-ai-to-workspaces.md`
+- `15-install-from-local-registry.md`
+- `../plans/tweakcn-vendor-and-ai.md`

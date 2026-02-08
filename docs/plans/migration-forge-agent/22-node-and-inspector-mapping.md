@@ -44,7 +44,7 @@ Start with **Option A** (one section, dispatch by type) to mirror dialogue-forge
 - **ConditionAutocomplete** — Conditional node conditions; flagSchema.
 - **Choice inputs** — PlayerNodeFields: choice text, nextNodeId, conditions per choice. State (choiceInputs, debouncedChoiceInputs, expandedChoices, dismissedChoices) can live in the section render or in a small hook.
 - **Condition inputs** — ConditionalNodeFields: condition blocks; conditionInputs, debouncedConditionInputs, dismissedConditions, expandedConditions, debounceTimersRef. Same idea: local state or hook in the section.
-- **Storylet call** — StoryletNodeFields, DetourNodeFields: targetGraphId, targetStartNodeId, returnNodeId, returnGraphId; graph list for picker. Needs adapter or store to list graphs (narrative/storylet) for target selection.
+- **Storylet call** — StoryletNodeFields, DetourNodeFields: targetGraphId, targetStartNodeId, returnNodeId, returnGraphId; graph list for picker. List graphs via **React Query hooks** calling Payload (e.g. `useForgeGraphs`), not adapter. See [55-data-access-and-export.md](55-data-access-and-export.md).
 - **listPages** — Act/Chapter/Page fields need list of pages (from WriterDataAdapter or equivalent) scoped by narrative graph and page type. Forge-agent: if narrative graph nodes stay and Writer uses Notion pages, decide whether Act/Chapter/Page nodes still have “linked page” pickers or become pure graph nodes.
 
 ## Ideas and concerns

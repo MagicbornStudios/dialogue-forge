@@ -50,6 +50,12 @@
       "@magicborn/characters/*": [
         "./packages/characters/src/*"
       ],
+      "@magicborn/theme": [
+        "./packages/theme/src"
+      ],
+      "@magicborn/theme/*": [
+        "./packages/theme/src/*"
+      ],
       "@magicborn/ai": [
         "./packages/ai/src"
       ],

@@ -21,7 +21,7 @@ Migrate React Flow node components and inspector (node fields) to forge-agent. N
 
 - FlagSelector, CharacterSelector, ConditionAutocomplete — port and use inside the appropriate *NodeFields. Ensure flagSchema and characters are available (adapter or context).
 - Choice inputs and condition inputs: port state/hook pattern (choiceInputs, debouncedChoiceInputs, expandedChoices; conditionInputs, debouncedConditionInputs, dismissedConditions, expandedConditions) or simplify if forge-agent uses a different pattern.
-- Storylet call: targetGraphId, targetStartNodeId, returnNodeId, returnGraphId; need a way to list graphs for target picker (adapter or store).
+- Storylet call: targetGraphId, targetStartNodeId, returnNodeId, returnGraphId; list graphs for target picker via **React Query hooks** (e.g. `useForgeGraphs(projectId, kind)`), not adapter. See [55-data-access-and-export.md](55-data-access-and-export.md).
 
 ### 4. Notion vs narrative graph (decided)
 

@@ -25,13 +25,13 @@ Migrate the Yarn pipeline and extend forge-agent graph types so dialogue logic a
   - handlers: base-handler, character-handler, player-handler, conditional-handler, storylet-handler, detour-handler.
   - utils: runtime-export (prepareGraphForYarnExport, logRuntimeExportDiagnostics), condition-formatter, condition-parser, content-formatter, variable-handler.
 - Do not port any edge-drop logic. Ensure handler registry only uses node types we support.
-- Wire createWorkspaceContext(store) so that when export runs with context, storylet/detour handlers can getGraphFromCache / ensureGraph and inline referenced graphs (with visitedGraphs to avoid cycles).
+- In forge-agent, **graph data** is loaded via **React Query hooks** that call the **Payload CMS SDK** (no data adapters). Full **export resolution** (loading referenced graphs for storylet/detour inlining) is **server-side**; the server uses Payload to load graphs and produce complete Yarn. See [55-data-access-and-export.md](55-data-access-and-export.md).
 
 ### 3. exportToYarn(graph, context?) and importFromYarn
 
 - Export: already described in step 2; call from Yarn view/modal with context when available so storylet/detour inlining works.
 - Import: parse .yarn into node blocks; determineNodeTypeFromYarn; call handler.importNode; build ForgeGraphDoc (id 0, project 0, kind STORYLET default, title, startNodeId, endNodeIds [], flow { nodes, edges, viewport }).
-- Document in forge-agent that single-graph export without context will not resolve storylet/detour refs; prefer passing store-based context for composed export.
+- Document in forge-agent: client can show a **preview** of Yarn (e.g. current graph only); **full export** (with storylet/detour resolution) is requested from the server, which loads all referenced graphs via Payload and returns the complete Yarn string.
 
 ### 4. Tests (optional but recommended)
 

@@ -7,6 +7,10 @@ For agents. This folder is the canonical place for migration plans and parity do
 Migrate Writer and ForgeWorkspace nodes and Yarn implementation from dialogue-forge into forge-agent.
 Do not migrate edge-drop (see [11-out-of-scope.md](11-out-of-scope.md)).
 
+## Forge focus (current)
+
+**Current priority:** ForgeWorkspace, dialogue nodes, and producing a **complete Yarn file from any graph** (with storylet/detour resolution). Writer and narrative↔page linking are deferred; narrative nodes = structure only. See [README-FORGE-FOCUS.md](README-FORGE-FOCUS.md) for scope and which docs to re-read for the forge migration. Goal and next steps: [53-forge-yarn-export-goal-next-steps.md](53-forge-yarn-export-goal-next-steps.md).
+
 ## Before you start
 
 1. Read [01-agent-strategy-migration.md](01-agent-strategy-migration.md).
@@ -19,6 +23,7 @@ Update the plan Done list and Next section, then update [docs/agent-artifacts/co
 
 ## Document list
 
+- [README-FORGE-FOCUS.md](README-FORGE-FOCUS.md) — Forge scope, goal, docs to re-read
 - [01-agent-strategy-migration.md](01-agent-strategy-migration.md)
 - [10-parity-overview.md](10-parity-overview.md)
 - [11-out-of-scope.md](11-out-of-scope.md)
@@ -32,6 +37,11 @@ Update the plan Done list and Next section, then update [docs/agent-artifacts/co
 - [33-plan-dialogue-editor-chrome.md](33-plan-dialogue-editor-chrome.md)
 - [40-ideas-and-concerns.md](40-ideas-and-concerns.md)
 - [50-game-state-and-player.md](50-game-state-and-player.md)
+- [51-flag-manager-and-flattening.md](51-flag-manager-and-flattening.md)
+- [52-yarn-spinner-variables-flattening-caveats.md](52-yarn-spinner-variables-flattening-caveats.md)
+- [53-forge-yarn-export-goal-next-steps.md](53-forge-yarn-export-goal-next-steps.md)
+- [54-migration-roadmap.md](54-migration-roadmap.md)
+- [55-data-access-and-export.md](55-data-access-and-export.md) — Data access (React Query + Payload), export resolution (server-side, preview vs full).
 
 ## Links
 

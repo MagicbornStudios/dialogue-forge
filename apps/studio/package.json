@@ -13,10 +13,12 @@
     "payload:seed": "echo 'Seeding runs on dev server onInit'"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.0",
+    "@ai-sdk/openai": "^3.0.10",
+    "@copilotkit/runtime": "^1.51.3",
     "@forge/dev-kit": "^0.1.0",
     "@forge/ui": "^0.1.0",
     "@tanstack/react-query": "^5.62.0",
+    "@magicborn/theme": "workspace:*",
     "@magicborn/characters": "workspace:*",
     "@magicborn/forge": "workspace:*",
     "@magicborn/shared": "workspace:*",
@@ -26,7 +28,9 @@
     "@payloadcms/next": "^3.74.0",
     "@payloadcms/sdk": "^3.74.0",
     "@payloadcms/ui": "^3.74.0",
+    "ai": "^6.0.34",
     "next": "15.5.7",
+    "openai": "^4.85.1",
     "payload": "^3.74.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",

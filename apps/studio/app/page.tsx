@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+// Dev-kit from Verdaccio: verify install; future Dialogue editor will use EditorShell/DockLayout
+import { EditorShell } from '@/lib/forge/dev-kit-bridge';
 import { ForgeWorkspace } from '@magicborn/forge';
 import { WriterWorkspace } from '@magicborn/writer';
 import { WriterProjectSwitcher } from '@magicborn/writer/components/WriterWorkspace/layout/WriterProjectSwitcher';
@@ -60,7 +62,7 @@ export default function StudioPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
   return (
-    <div className="min-h-screen flex flex-col bg-df-bg">
+    <div className="h-full min-h-0 flex flex-col bg-df-bg">
       <header className="flex items-center gap-4 px-4 py-2 border-b border-df-control-border bg-df-surface shrink-0">
         <nav className="flex items-center gap-1">
           {TABS.map((tab) => (
@@ -80,6 +82,24 @@ export default function StudioPage() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <Link
+            href="/tweakcn-ai"
+            className="flex items-center gap-2 px-2 py-1.5 rounded text-sm text-df-text-secondary hover:bg-df-control-bg"
+            title="Tweakcn AI helper"
+          >
+            <Code2 size={14} />
+            Tweakcn AI
+          </Link>
+          <a
+            href="http://localhost:3001"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 px-2 py-1.5 rounded text-sm text-df-text-secondary hover:bg-df-control-bg"
+            title="Open tweakcn dev app"
+          >
+            <Code2 size={14} />
+            Tweakcn
+          </a>
           <Link
             href="/admin"
             className="flex items-center gap-2 px-2 py-1.5 rounded text-sm text-df-text-secondary hover:bg-df-control-bg"

@@ -32,6 +32,7 @@
 
 ## Known Footguns
 - Graph deletion must use dataAdapter.deleteGraph + actions.removeGraph.
+- Forge workspace content area (menu bar + layout): the layout must be wrapped in a container with `flex-1 min-h-0` (and optionally `overflow-hidden`) so it gets bounded height; otherwise the bottom (storylet) panel is cut off.
 
 ## How to Test
 - npm run build

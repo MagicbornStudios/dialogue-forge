@@ -144,6 +144,12 @@ div[class*="poweredBy"] {
   --color-ring: var(--ring);
 }
 
+/* Full viewport height chain so Studio main content (flex-1) gets remaining space */
+html,
+body {
+  height: 100%;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);

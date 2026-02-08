@@ -51,21 +51,22 @@ function SpeechToTextPlugin(): null {
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const SpeechRecognition =
     typeof window !== 'undefined'
-      ? // @ts-expect-error missing type
-        window.SpeechRecognition || window.webkitSpeechRecognition
+      ? window.SpeechRecognition || (window as unknown as { webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition
       : null;
-  const recognition = useRef<typeof SpeechRecognition | null>(null);
+  const recognition = useRef<InstanceType<NonNullable<typeof window.SpeechRecognition>> | null>(null);
   const report = useReport();
 
   useEffect(() => {
     if (isEnabled && recognition.current === null && SpeechRecognition) {
-      recognition.current = new SpeechRecognition();
-      recognition.current.continuous = true;
-      recognition.current.interimResults = true;
-      recognition.current.addEventListener(
+      const rec = new SpeechRecognition();
+      recognition.current = rec;
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.addEventListener(
         'result',
-        (event: typeof SpeechRecognition) => {
-          const resultItem = event.results.item(event.resultIndex);
+        (event: Event) => {
+          const e = event as unknown as { results: SpeechRecognitionResultList; resultIndex: number };
+          const resultItem = e.results.item(e.resultIndex);
           const {transcript} = resultItem.item(0);
           report(transcript);
 

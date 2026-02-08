@@ -17,6 +17,8 @@
 ## Known Footguns
 - Provider keys and runtime config must remain host-owned.
 - Avoid side effects in shared AI helpers.
+- `CopilotKitProvider` defaults to `runtimeUrl=/api/copilotkit`; verify host route exists before enabling UI.
+- For quick experiments (for example tweakcn theme suggestions), host can expose focused API routes (e.g. `/api/tweakcn/ai`) while keeping package-level AI utilities host-agnostic.
 
 ## How to Test
 - npm run typecheck:domains

@@ -1,3 +1,6 @@
 [submodule "vendor/opencode"]
 	path = vendor/opencode
 	url = https://github.com/sst/opencode.git
+[submodule "vendor/tweakcn"]
+	path = vendor/tweakcn
+	url = https://github.com/jnsahaj/tweakcn

@@ -13,6 +13,9 @@
     "payload:seed": "echo 'Seeding runs on dev server onInit'"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.0",
+    "@forge/dev-kit": "^0.1.0",
+    "@forge/ui": "^0.1.0",
     "@tanstack/react-query": "^5.62.0",
     "@magicborn/characters": "workspace:*",
     "@magicborn/forge": "workspace:*",

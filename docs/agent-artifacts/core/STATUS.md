@@ -1,6 +1,6 @@
 # STATUS (Living)
 
-**Last Updated**: February 4, 2026
+**Last Updated**: February 8, 2026
 
 ## Monorepo Migration Phases (Inline Status)
 
@@ -47,8 +47,32 @@
 - Keep docs aligned to the extracted packages (architecture + conventions + status).
 - Capture any new build blockers in STATUS with exact errors and owners.
 
+## Known Build Blockers
+
+- `pnpm run typecheck:domains` fails in `packages/writer/src/components/WriterWorkspace/editor/lexical/plugins/SpeechToTextPlugin/index.ts` because `window.SpeechRecognition` is not declared on `Window`.
+- `pnpm run typecheck:domains` fails in `packages/dialogue-forge/src/index.ts` due missing `@magicborn/forge/*` module export targets (multiple `TS2307` unresolved paths).
+
+## Studio app layout (full-height main)
+
+For the Studio home page (`apps/studio/app/page.tsx`), the main content area must fill the viewport so workspaces (Forge, Writer, Characters) are not cut off. **Height chain:** `html, body { height: 100% }` in `apps/studio/styles/globals.css`; page root div uses `h-full min-h-0 flex flex-col`; `<main>` uses `flex-1 min-h-0`. Do not remove the html/body height or the root `h-full` or main will not get full remaining height.
+
+## Vendor tweakcn (Studio integration)
+
+When Studio builds code under `vendor/tweakcn` (e.g. middleware, auth, mail example):
+
+- **@neondatabase/serverless**: Resolved from workspace root. `drizzle-orm` (used by `vendor/tweakcn/db`) pulls in `neon-http/driver.js`, which requires `@neondatabase/serverless`. **Fix:** Add `@neondatabase/serverless` to `apps/studio/package.json` so the module resolves at build time. Run `pnpm install --no-frozen-lockfile` after adding.
+- **react-resizable-panels v4**: Workspace uses v4 (`Group`, `Panel`, `Separator`; `PanelImperativeHandle`). Tweakcn was written for v2 (`PanelGroup`, `PanelResizeHandle`, `ImperativePanelHandle`). **Fix:** In `vendor/tweakcn`: (1) `components/ui/resizable.tsx` — use `Group`, `Panel`, `Separator`; map `direction` → `orientation`; forward `ref` to `Panel`’s `panelRef`. (2) `components/block-viewer.tsx` — use type `PanelImperativeHandle` and pass ref to `ResizablePanel` (which forwards to `panelRef`).
+
 ## Recent Changes
 
+- Studio main content full height: set `html, body { height: 100% }` in apps/studio/styles/globals.css and page root to `h-full min-h-0` so the main (flex-1) gets the full remaining viewport instead of being cut off.
+- Forge workspace: wrapped `ForgeWorkspaceLayout` in a container with `flex-1 min-h-0 overflow-hidden` so the layout gets bounded height and the bottom (storylet) panel is visible instead of being cut off.
+- Fixed Studio build when compiling vendor/tweakcn: added `@neondatabase/serverless` to apps/studio; updated vendor/tweakcn resizable UI and block-viewer to react-resizable-panels v4 API (Group/Panel/Separator, PanelImperativeHandle, direction→orientation, ref→panelRef). Documented in STATUS (Vendor tweakcn), 20-vendor-tweakcn (Troubleshooting), and plans/tweakcn-vendor-and-ai.md (Resolved).
+- Added numbered consumer/playground docs under `docs/guides/` aligned with forge-agent flow (01, 05, 15, 20, 21).
+- Added consumer registry guide for `@forge/*` and `@twick/*` install from local Verdaccio.
+- Added `vendor/tweakcn` submodule wiring plus root scripts for install/dev/build/update.
+- Added Studio `tweakcn + AI` touchpoint: `/tweakcn-ai` UI and `POST /api/tweakcn/ai` OpenRouter endpoint.
+- Updated migration agent strategy doc with explicit consumer/playground alignment to forge-agent.
 - Domain packages extracted to `packages/{shared,forge,writer,video,characters,ai}`.
 - Runtime package removed; runtime types remain in shared.
 - Host app now depends on domain packages (`@magicborn/<domain>`).

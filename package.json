@@ -36,12 +36,19 @@
     "vendor:opencode:build": "cd vendor/opencode/packages/console/app && bun run build",
     "vendor:opencode:sync": "node scripts/sync-opencode-ui.js",
     "vendor:opencode:update": "node scripts/update-opencode-submodule.js",
-    "vendor:opencode:update-and-build": "npm run vendor:opencode:update && npm run vendor:opencode:build && npm run vendor:opencode:sync"
+    "vendor:opencode:update-and-build": "npm run vendor:opencode:update && npm run vendor:opencode:build && npm run vendor:opencode:sync",
+    "vendor:tweakcn:install": "cd vendor/tweakcn && pnpm install",
+    "vendor:tweakcn:dev": "cd vendor/tweakcn && pnpm dev",
+    "vendor:tweakcn:build": "cd vendor/tweakcn && pnpm build",
+    "vendor:tweakcn:update": "node scripts/update-tweakcn-submodule.js"
   },
   "pnpm": {
     "overrides": {
       "undici": "^6.19.8",
-      "openai": "^4.85.1"
+      "openai": "^4.85.1",
+      "@forge/ui": "^0.1.0",
+      "@forge/shared": "^0.1.0",
+      "@forge/agent-engine": "^0.1.0"
     }
   },
   "devDependencies": {

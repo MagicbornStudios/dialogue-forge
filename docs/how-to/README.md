@@ -1,6 +1,7 @@
 # How-to
 
 Step-by-step walkthroughs and guides for reimplementation or onboarding.
+For numbered, forge-agent-aligned quick guides, see `docs/guides/README.md`.
 
 ## Index
 

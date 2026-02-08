@@ -395,16 +395,18 @@ function ForgeWorkspaceContent({
 
       <CommandBar open={commandBarOpen} onOpenChange={setCommandBarOpen} />
 
-      <ForgeWorkspaceLayout
-        panelVisibility={panelVisibility}
-        narrativeGraph={narrativeGraph}
-        storyletGraph={storyletGraph}
-        flagSchema={activeFlagSchema}
-        gameState={activeGameState}
-        characters={characters}
-        onNarrativeGraphChange={onNarrativeGraphChange}
-        onStoryletGraphChange={onStoryletGraphChange}
-      />
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        <ForgeWorkspaceLayout
+          panelVisibility={panelVisibility}
+          narrativeGraph={narrativeGraph}
+          storyletGraph={storyletGraph}
+          flagSchema={activeFlagSchema}
+          gameState={activeGameState}
+          characters={characters}
+          onNarrativeGraphChange={onNarrativeGraphChange}
+          onStoryletGraphChange={onStoryletGraphChange}
+        />
+      </div>
 
       <ForgeWorkspaceModalsRenderer
         narrativeGraph={narrativeGraph}

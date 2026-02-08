@@ -13,6 +13,12 @@
 
 After changes, update STATUS + the relevant domain AGENTS with new footguns or rules.
 
+## Consumer + Playground Alignment (forge-agent)
+
+- Treat `../forge-agent` as the publisher/source-of-truth for `@forge/dev-kit`, local registry, vendor workflows, and Copilot/runtime wiring.
+- In this repo, prioritize consumer validation and experimental slices that can be upstreamed back to `forge-agent`.
+- Read `docs/guides/README.md` for numbered, fast context aligned to forge-agent style.
+
 ## Migration to forge-agent
 
 When working on migration to forge-agent: read [docs/plans/migration-forge-agent/00-index.md](docs/plans/migration-forge-agent/00-index.md) and the relevant plan (30–33). Do not migrate edge-drop (see [docs/plans/migration-forge-agent/11-out-of-scope.md](docs/plans/migration-forge-agent/11-out-of-scope.md)). After each slice, update the plan and [docs/agent-artifacts/core/MIGRATION.md](docs/agent-artifacts/core/MIGRATION.md).

@@ -35,6 +35,7 @@
 - Graph deletion must call `useDeleteForgeGraph().mutateAsync(id)` and then `actions.removeGraph(id)` for immediate UI consistency.
 - Forge workspace content area (menu bar + layout): the layout must be wrapped in a container with `flex-1 min-h-0` (and optionally `overflow-hidden`) so it gets bounded height; otherwise the bottom (storylet) panel is cut off.
 - Forge components that use hooks require `ForgePayloadProvider` above the workspace tree.
+- In Studio, React Query must resolve to one module instance for host and package code (`apps/studio/next.config.mjs` aliases for webpack and Turbopack). Duplicate `@tanstack/react-query` instances cause `No QueryClient set`.
 
 ## How to Test
 - npm run build

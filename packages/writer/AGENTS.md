@@ -22,6 +22,7 @@
 - Keep autosave debounced and explicit.
 - Writer data access must use hooks in `src/data/writer-queries.ts`; do not reintroduce adapter contexts.
 - Writer workspace and Lexical comment flows require `ForgePayloadProvider` in the host tree.
+- Writer hooks also require the same React Query module instance as host `QueryClientProvider`; keep `@tanstack/react-query` aliased in `apps/studio/next.config.mjs` (webpack + Turbopack) to avoid context split.
 
 ## How to Test
 - npm run build

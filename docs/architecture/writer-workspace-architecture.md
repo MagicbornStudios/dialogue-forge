@@ -1,72 +1,73 @@
-# Writer workspace architecture
+# Writer Workspace Architecture
 
-Writer is the narrative prose workspace: acts, chapters, pages, and a Lexical-based editor with AI assistance. This doc is for reimplementation.
+Writer is the narrative prose workspace for acts, chapters, and pages, backed by a narrative Forge graph.
 
 ## Role
 
-- Organize story structure (acts, chapters, pages) and edit prose.
-- Sync with Forge narrative graph: Writer's hierarchy (acts/chapters/pages) can map to narrative graph nodes; narrative graph is loaded/updated via WriterForgeDataAdapter.
-- AI patch workflow: CopilotKit-driven edits expressed as WriterPatchOp (replace/splice/replace-block); editor can apply or preview.
+- Organize structure as pages (`ACT`, `CHAPTER`, `PAGE`).
+- Edit prose with Lexical-based editor flows.
+- Sync structure and narrative graph explicitly through store actions and commit helpers.
+- Support AI patch workflows (`WriterPatchOp`) with preview/apply.
+
+## Data Access Model
+
+Writer no longer uses host-provided adapter contracts.
+
+- Host provides providers only:
+  - `QueryClientProvider`
+  - `ForgePayloadProvider`
+- Writer data hooks live in `packages/writer/src/data/writer-queries.ts`.
+- Writer imports Forge graph hooks/helpers from `@magicborn/forge` for narrative graph reads and mutations.
+- `WriterWorkspace` builds runtime callbacks from hook mutations and passes those callbacks into the store.
 
 ## Store
 
 Location: `packages/writer/src/components/WriterWorkspace/store/writer-workspace-store.tsx`.
 
-**Slices:**
-- **content** — Acts, chapters, pages; active page.
-- **navigation** — Selection and tree state for sidebar.
-- **editor** — Editor instance state (e.g. Lexical).
-- **ai** — AI proposals, preview meta, selection ranges, error status (WriterAiProposalStatus, WriterAiPreviewMeta).
-- **draft** — Draft graph (narrative) and deltas; commit creates pages and updates graph via adapter.
-- **viewState** — Modal and UI visibility.
-- **subscriptions** — React to project/pages load; sync narrative graph and pages.
+Slices:
+- `content` for pages and page map
+- `navigation` for active page and tree expansion
+- `editor` for save and editor errors
+- `ai` for proposal state and preview metadata
+- `draft` for narrative graph draft and pending page creations
+- `viewState` for modal and panel visibility
 
-No event bus. Mutations via explicit actions. Draft slice is used for narrative graph + pending page creations; commit uses `buildOnCommitWriterDraft(dataAdapter, forgeDataAdapter)` which creates pages then calls `forgeDataAdapter.updateGraph`.
+Mutations are explicit actions; there is no adapter-in-context pattern.
 
-## Data flow and adapters
+## Graph Commit Flow
 
-- **WriterDataAdapter** — Pages CRUD: createPage, updatePage, list pages (scoped by project/narrative).
-- **WriterForgeDataAdapter** — Narrative graph: getGraph, createGraph, updateGraph. Used to load/save the narrative graph that backs the act/chapter/page structure.
-- **WriterDataContext** / **ForgeDataContext** — Provide adapters to the workspace. Host or parent can pass `dataAdapter` and `forgeDataAdapter` props; otherwise context is used.
-- **setupWriterWorkspaceSubscriptions** — On project change, load pages and narrative graph; set initial active page; keep store in sync with adapter data.
+- `buildOnCommitWriterDraft(api)` takes a small API object:
+  - `createPage(...)`
+  - `updateGraph(...)`
+- Commit creates pending pages first, patches graph node `pageId` mappings, then persists graph updates.
+- `createNarrativeGraph(api, projectId)` similarly takes a narrow create-graph API.
 
-## Layout
+## Loading Flow
 
-- **WriterLayout** — Wraps sidebar + editor pane + top bar.
-- **WriterTree** (sidebar) — Acts/chapters/pages tree; WriterTreeRow per node; expand/collapse, selection, open page.
-- **WriterEditorPane** — Lexical-based editing surface (under `editor/`); block-level editing, sync with workspace store.
-- **WriterTopBar** / **topBar** prop — Optional top bar (e.g. project switcher). WriterProjectSwitcher lives in layout.
-- **WriterWorkspaceModalsRenderer** — Modals (e.g. WriterYarnModal).
+- `WriterWorkspace` queries narrative graphs with `useForgeGraphs(projectId, NARRATIVE)`.
+- `WriterWorkspace` queries project metadata with `useForgeProject(projectId)`.
+- `WriterWorkspaceContent` queries pages with `useWriterPages(projectId, selectedNarrativeGraphId)`.
+- Store actions hydrate UI state from query results.
 
-## Editor
+## UI Structure
 
-- **Lexical** for rich text and content blocks.
-- Editor lives under `packages/writer/src/components/WriterWorkspace/editor/` (WriterEditorPane, plugins, block types).
-- Sync: workspace store actions update content; editor state is synced with store (avoid infinite loops in sync plugins).
-- Autosave: debounced; explicit save flow.
+- `WriterLayout` composes sidebar and editor panes.
+- `WriterTree` handles hierarchy operations and page CRUD mutations.
+- `WriterEditorPane` handles Lexical editing and page updates.
+- Comment flows use writer comment hooks directly from `writer-queries`.
+- `WriterWorkspaceModalsRenderer` renders workspace modals.
 
-## AI patch workflow
+## Key Files
 
-- **WriterPatchOp** — Replace, splice, or replace-block operations.
-- Store tracks AI proposal status, preview meta, and selection. Editor can apply or preview patches.
-- CopilotKit integrates via provider and actions; OpenRouter (or similar) for model routing.
+- `packages/writer/src/components/WriterWorkspace/WriterWorkspace.tsx`
+- `packages/writer/src/components/WriterWorkspace/store/writer-workspace-store.tsx`
+- `packages/writer/src/components/WriterWorkspace/store/slices/subscriptions.ts`
+- `packages/writer/src/components/WriterWorkspace/sidebar/WriterTree.tsx`
+- `packages/writer/src/components/WriterWorkspace/editor/WriterEditorPane.tsx`
+- `packages/writer/src/data/writer-queries.ts`
 
-## Modals
+## Invariants
 
-- **WriterYarnModal** — View/export Yarn for the narrative graph (if wired). Other modals as needed via viewState slice.
-
-## Key files
-
-- `WriterWorkspace.tsx` — Shell; creates store with callbacks (updatePage, createPage, getNarrativeGraph, createNarrativeGraph, onCommitWriterDraft); runs subscriptions; renders WriterLayout, WriterTree, WriterEditorPane, WriterWorkspaceModalsRenderer.
-- `store/slices/content.slice.ts`, `navigation.slice.ts`, `editor.slice.ts`, `ai.slice.ts`, `draft.slice.ts`, `viewState.slice.ts`, `subscriptions.ts`.
-- `layout/WriterLayout.tsx`, `WriterProjectSwitcher.tsx`, `WriterTopBar.tsx`.
-- `sidebar/WriterTree.tsx`, `WriterTreeRow.tsx`.
-- `editor/WriterEditorPane` and plugins under `editor/`.
-- `modals/WriterWorkspaceModals.tsx`, `WriterYarnModal.tsx`.
-
-## Workspace architecture alignment
-
-- Workspace store = domain state (content, navigation, draft, viewState, ai).
-- Editor session state can live in editor slice or Lexical internals.
-- No draft slices in the “new” sense per workspace-editor-architecture: Writer keeps a draft slice for the narrative graph + pending page creations; commit is explicit via adapter.
-- Adapters are contracts (WriterDataAdapter, WriterForgeDataAdapter); host implements and passes them in.
+- Do not reintroduce `WriterDataAdapter` or `WriterForgeDataAdapter`.
+- Keep data queries and mutations in package hooks.
+- Keep Writer dependent on Forge data hooks and types only, not Forge UI/store internals.

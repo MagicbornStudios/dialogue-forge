@@ -53,6 +53,10 @@
 
 - `pnpm run test` is long-running in this workspace and timed out in this environment; use targeted `vitest run <path>` for quick validation while iterating.
 
+## Known Runtime Footguns
+
+- With Next alias-based package source imports (`@magicborn/* -> ../../packages/*/src`), ensure `@tanstack/react-query` resolves to a single module instance (webpack + Turbopack aliases in `apps/studio/next.config.mjs`). Duplicate instances cause `No QueryClient set` at runtime even when `QueryClientProvider` is mounted.
+
 ## Studio app layout (full-height main)
 
 For the Studio home page (`apps/studio/app/page.tsx`), the main content area must fill the viewport so workspaces (Forge, Writer, Characters) are not cut off. **Height chain:** `html, body { height: 100% }` in `apps/studio/styles/globals.css`; page root div uses `h-full min-h-0 flex flex-col`; `<main>` uses `flex-1 min-h-0`. Do not remove the html/body height or the root `h-full` or main will not get full remaining height.
@@ -90,6 +94,8 @@ For the Studio home page (`apps/studio/app/page.tsx`), the main content area mus
   - Added Writer page/comment hooks in `packages/writer/src/data/` using the same payload client context.
   - Removed adapter contexts/types/providers (`ForgeDataContext`, `WriterDataContext`, host `ForgeDataProvider` / `WriterDataProvider`).
   - Studio now wraps Forge/Writer with a single payload provider in `apps/studio/app/page.tsx`.
+- Updated Forge/Writer architecture and walkthrough docs to describe the hook-based data flow and provider requirements.
+- Added explicit Next config aliasing for `@tanstack/react-query` so Forge/Writer hooks and host `QueryClientProvider` share one React Query context under webpack and Turbopack.
 - Fixed domain typecheck blockers:
   - Reworked SpeechRecognition typing in Writer plugin.
   - Simplified `@magicborn/dialogue-forge` exports to consume `@magicborn/forge` public API.

@@ -13,10 +13,10 @@ import {
 import {
   Flag,
   HelpCircle,
-  Layout,
   PanelLeft,
   FileText,
   Layers,
+  Play,
 } from 'lucide-react';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { Button } from '@magicborn/shared/ui/button';
@@ -40,6 +40,7 @@ export interface HeaderLink {
 interface ForgeWorkspaceMenuBarProps {
   onFlagClick: () => void;
   onGuideClick: () => void;
+  onPlayClick: () => void;
   counts: {
     actCount: number;
     chapterCount: number;
@@ -54,6 +55,7 @@ interface ForgeWorkspaceMenuBarProps {
 export function ForgeWorkspaceMenuBar({
   onFlagClick,
   onGuideClick,
+  onPlayClick,
   counts,
   panelVisibility,
   onTogglePanel,
@@ -153,6 +155,10 @@ export function ForgeWorkspaceMenuBar({
               <MenubarItem onClick={onFlagClick}>
                 <Flag size={14} className="mr-2" />
                 Game State
+              </MenubarItem>
+              <MenubarItem onClick={onPlayClick}>
+                <Play size={14} className="mr-2" />
+                Play Scene
               </MenubarItem>
               <MenubarSeparator />
               <MenubarItem onClick={onGuideClick}>

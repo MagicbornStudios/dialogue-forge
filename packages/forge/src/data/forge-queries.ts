@@ -137,10 +137,15 @@ export function useForgeProjects() {
   const payload = useForgePayloadClient();
   return useQuery({
     queryKey: forgeQueryKeys.projects(),
+    retry: 5,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000),
+    refetchOnMount: 'always',
+    refetchOnReconnect: true,
     queryFn: async (): Promise<ForgeProjectSummary[]> => {
       const projects = await listDocs<PayloadProject>(payload.find, {
         collection: PAYLOAD_COLLECTIONS.PROJECTS,
         limit: 200,
+        depth: 0,
       });
       return projects.map((project) => {
         const mapped = mapProject(project);
@@ -320,6 +325,7 @@ export async function fetchForgeProjects(
       const projects = await listDocs<PayloadProject>(payload.find, {
         collection: PAYLOAD_COLLECTIONS.PROJECTS,
         limit: 200,
+        depth: 0,
       });
       return projects.map(mapProject);
     },

@@ -19,6 +19,8 @@
 ## Known Footguns
 - Changes in constants ripple across domains; update refs carefully.
 - Keep shared utilities pure (no side effects).
+- `ProjectSwitcher` supports recoverable load failures via optional `onRetry`; when callers pass `error`, they should also pass `onRetry` so dropdown users can retry immediately.
+- `types/composition.ts` is a cross-domain runtime contract; keep it host-agnostic and avoid importing forge-specific package types into shared.
 
 ## How to Test
 - npm run typecheck:domains

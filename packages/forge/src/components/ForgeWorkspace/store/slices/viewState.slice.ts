@@ -33,6 +33,7 @@ export interface ModalState {
   isFlagModalOpen: boolean;
   isGuideOpen: boolean;
   isCopilotChatOpen: boolean;
+  isPlayerModalOpen: boolean;
 }
 
 const defaultModalState: ModalState = {
@@ -40,6 +41,7 @@ const defaultModalState: ModalState = {
   isFlagModalOpen: false,
   isGuideOpen: false,
   isCopilotChatOpen: false,
+  isPlayerModalOpen: false,
 };
 
 export interface ViewStateSlice {
@@ -75,6 +77,8 @@ export interface ViewStateActions {
   closeFlagModal: () => void
   openGuide: () => void
   closeGuide: () => void
+  openPlayerModal: () => void
+  closePlayerModal: () => void
   openCopilotChat: () => void
   closeCopilotChat: () => void
   setCopilotVisible: (visible: boolean) => void
@@ -178,6 +182,12 @@ export function createViewStateSlice(
     })),
     closeGuide: () => set((state) => ({
       modalState: { ...state.modalState, isGuideOpen: false }
+    })),
+    openPlayerModal: () => set((state) => ({
+      modalState: { ...state.modalState, isPlayerModalOpen: true }
+    })),
+    closePlayerModal: () => set((state) => ({
+      modalState: { ...state.modalState, isPlayerModalOpen: false }
     })),
     openCopilotChat: () => set((state) => ({
       modalState: { ...state.modalState, isCopilotChatOpen: true }

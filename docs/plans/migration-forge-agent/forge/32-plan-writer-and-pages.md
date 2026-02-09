@@ -4,8 +4,12 @@ Map Writer workspace to forge-agent’s Writer editor or Notion-style Writer mod
 
 ## Context
 
-- dialogue-forge: WriterWorkspace with acts/chapters/pages tree, Lexical editor, WriterDataAdapter (pages CRUD), WriterForgeDataAdapter (narrative graph load/save). Draft slice creates pages on commit and updates narrative graph.
+- dialogue-forge: WriterWorkspace with acts/chapters/pages tree, Lexical editor; pages CRUD and narrative graph load/save via **hooks** (no adapters). Draft slice creates pages on commit and updates narrative graph. See [21-writer-forge-inventory.md](21-writer-forge-inventory.md) and [61-writer-current-implementation.md](../writer/61-writer-current-implementation.md).
 - forge-agent: PageDoc, BlockDoc, PageParent, BlockParent in packages/types/src/page.ts (Notion-inspired; no Notion SDK). Writer mode uses these for prose. Narrative graph in DialogueEditor has only Page, Detour, Jump nodes (structure-only) and is **not** linked to Writer PageDocs.
+
+## Features checklist
+
+For a full list of Writer features and requirements (hierarchy, editor, narrative graph sync, AI patch, commenting, modals), see [60-writer-features-and-requirements.md](../writer/60-writer-features-and-requirements.md).
 
 ## Steps
 
@@ -17,16 +21,17 @@ Map Writer workspace to forge-agent’s Writer editor or Notion-style Writer mod
 ### 2. Writer pages: no link to narrative graph
 
 - **Decision:** No association between Writer pages (Notion-style PageDoc/BlockDoc) and narrative graph. Writer is fully Notion-style; narrative graph nodes (Page, Detour, Jump) are structure-only and do not have pageId links to PageDoc.
+- Notion SDK alignment, rebuilt page/block schema (without `bookBody`/`content`), and persisted block reorder design are tracked in [63-writer-pages-blocks-and-reorder.md](../writer/63-writer-pages-blocks-and-reorder.md).
 - listPages (or equivalent) in forge-agent is not scoped by narrative graph; Writer tree is driven by Notion hierarchy (PageParent: workspace, page_id, block_id, database_id). Commit creates/updates PageDocs; narrative graph is separate.
 
 ### 3. Lexical editor and AI patch (WriterPatchOp)
 
 - If Writer editor is ported, port Lexical editor surface and plugins (e.g. DraggableBlockPlugin) and the AI patch workflow: WriterPatchOp (replace, splice, replace-block), proposal state, apply/preview in editor. CopilotKit integration in forge-agent may already support similar patterns; align with existing copilot/workflow APIs.
 
-### 4. Adapters
+### 4. Data access (hooks, no adapters)
 
-- WriterDataAdapter equivalent: createPage, updatePage, list pages (by project / parent). Implement in forge-agent host (e.g. Payload collections for pages). No listPages by narrative graph.
-- WriterForgeDataAdapter equivalent (if Writer needs to reference narrative): getGraph (narrative), createGraph, updateGraph. Narrative graph is separate from Writer pages; no pageId on narrative nodes.
+- Pages: createPage, updatePage, list pages (by project / parent) via React Query hooks that call Payload (or equivalent). No listPages by narrative graph. See [55-data-access-and-export.md](55-data-access-and-export.md).
+- Narrative graph (if Writer needs it): getGraph (narrative), createGraph, updateGraph via Forge hooks. Narrative graph is separate from Writer pages; no pageId on narrative nodes.
 
 ## Done
 

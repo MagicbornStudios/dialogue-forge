@@ -7,6 +7,11 @@ import { ForgeYarnModal } from '@magicborn/forge/components/ForgeWorkspace/compo
 import { GuidePanel } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/shared/GuidePanel';
 import { useForgeWorkspaceStore } from '@magicborn/forge/components/ForgeWorkspace/store/forge-workspace-store';
 import { ForgeFlagManagerModal } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeFlagManagerModal/ForgeFlagManagerModal';
+import {
+  ForgePlayerModal,
+  type RequestPlayerCompositionInput,
+  type RequestPlayerCompositionResult,
+} from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgePlayerModal';
 import { GRAPH_SCOPE } from '@magicborn/forge/types/constants';
 interface ForgeWorkspaceModalsProps {
   narrativeGraph: ForgeGraphDoc | null;
@@ -16,6 +21,10 @@ interface ForgeWorkspaceModalsProps {
   characters?: Record<string, ForgeCharacter>;
   onUpdateFlagSchema?: (schema: FlagSchema) => void;
   onUpdateGameState?: (state: ForgeGameState) => void;
+  requestPlayerComposition?: (
+    rootGraphId: number,
+    payload?: RequestPlayerCompositionInput
+  ) => Promise<RequestPlayerCompositionResult>;
 }
 
 interface ForgeWorkspaceModalsRendererProps extends ForgeWorkspaceModalsProps {}
@@ -28,11 +37,13 @@ export function ForgeWorkspaceModalsRenderer({
   characters,
   onUpdateFlagSchema,
   onUpdateGameState,
+  requestPlayerComposition,
 }: ForgeWorkspaceModalsRendererProps) {
   const modalState = useForgeWorkspaceStore((s) => s.modalState);
   const closeYarnModal = useForgeWorkspaceStore((s) => s.actions.closeYarnModal);
   const closeFlagModal = useForgeWorkspaceStore((s) => s.actions.closeFlagModal);
   const closeGuide = useForgeWorkspaceStore((s) => s.actions.closeGuide);
+  const closePlayerModal = useForgeWorkspaceStore((s) => s.actions.closePlayerModal);
   const focusedEditor = useForgeWorkspaceStore((s) => s.focusedEditor);
   const graphScope = useForgeWorkspaceStore((s) => s.graphScope);
   const resolvedScope = focusedEditor ?? graphScope;
@@ -71,6 +82,16 @@ export function ForgeWorkspaceModalsRenderer({
           resolvedCharacters={characters}
           onUpdateFlagSchema={onUpdateFlagSchema ?? (() => {})}
           onUpdateGameState={onUpdateGameState ?? (() => {})}
+        />
+      )}
+
+      {yarnGraph && (
+        <ForgePlayerModal
+          isOpen={modalState.isPlayerModalOpen}
+          onClose={closePlayerModal}
+          graph={yarnGraph}
+          gameState={gameState}
+          requestPlayerComposition={requestPlayerComposition}
         />
       )}
 

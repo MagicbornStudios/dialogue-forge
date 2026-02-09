@@ -5,7 +5,8 @@
  * Supports: flags, player, characters (as object), and any other nested structures.
  * 
  * Rules:
- * - Only includes truthy values (skips 0, false, null, undefined, empty strings)
+ * - Includes truthy values by default (skips 0, false, null, undefined, empty strings)
+ * - Player paths can opt-in to preserve numeric zero via includeFalsyNumbers
  * - Flattens nested objects using underscore separator
  * - Characters are objects, not arrays (uses object keys as part of path)
  * - All values must be boolean | number | string (Yarn-compatible)
@@ -20,6 +21,8 @@ export interface FlattenConfig {
   separator?: string;
   /** Maximum depth to flatten (default: 5, prevents infinite recursion) */
   maxDepth?: number;
+  /** Keep numeric zero values (default: false) */
+  includeFalsyNumbers?: boolean;
 }
 
 export interface FlattenedState {
@@ -45,13 +48,17 @@ function isYarnCompatible(value: any): value is boolean | number | string {
  * - Strings: only include if non-empty
  * - null/undefined: excluded if excludeNull is true
  */
-function isTruthyValue(value: any, excludeNull: boolean): boolean {
+function isTruthyValue(
+  value: any,
+  excludeNull: boolean,
+  includeFalsyNumbers: boolean
+): boolean {
   if (value == null) {
     return !excludeNull; // Include null only if excludeNull is false
   }
   
   if (typeof value === 'number') {
-    return value !== 0; // Exclude zero
+    return includeFalsyNumbers ? true : value !== 0;
   }
   
   if (typeof value === 'boolean') {
@@ -80,6 +87,7 @@ export function flattenGameState(
     excludeNull = true,
     separator = '_',
     maxDepth = 5,
+    includeFalsyNumbers = false,
   } = config;
 
   const flags: ForgeFlagState = {};
@@ -102,7 +110,7 @@ export function flattenGameState(
     // Handle primitives (Yarn-compatible types)
     if (isYarnCompatible(value)) {
       // Only include truthy values
-      if (isTruthyValue(value, excludeNull)) {
+      if (isTruthyValue(value, excludeNull, includeFalsyNumbers)) {
         const key = path.replace(/\./g, separator);
         flags[key] = value;
         sourcePaths[key] = path;

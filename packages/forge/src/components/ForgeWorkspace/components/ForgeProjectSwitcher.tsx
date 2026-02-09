@@ -14,6 +14,25 @@ function toSummary(project: ForgeProjectSummary): ProjectSummary {
   return { id: project.id, name: project.name };
 }
 
+function toErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'string' && error) return error;
+  if (typeof error === 'object') {
+    const candidate = error as {
+      message?: unknown;
+      errors?: Array<{ message?: string }>;
+    };
+    if (typeof candidate.message === 'string' && candidate.message) {
+      return candidate.message;
+    }
+    if (Array.isArray(candidate.errors) && candidate.errors[0]?.message) {
+      return candidate.errors[0].message;
+    }
+  }
+  return 'Failed to load projects';
+}
+
 export function ForgeProjectSwitcher() {
   const selectedProjectId = useForgeWorkspaceStore((state) => state.selectedProjectId);
   const setSelectedProjectId = useForgeWorkspaceStore(
@@ -26,6 +45,7 @@ export function ForgeProjectSwitcher() {
     () => (projectsQuery.data ?? []).map(toSummary),
     [projectsQuery.data]
   );
+  const errorMessage = toErrorMessage(projectsQuery.error);
 
   const handleCreateProject = async (data: {
     name: string;
@@ -47,7 +67,10 @@ export function ForgeProjectSwitcher() {
       onProjectChange={handleProjectChange}
       onCreateProject={handleCreateProject}
       isLoading={projectsQuery.isLoading}
-      error={projectsQuery.error ? 'Failed to load projects' : null}
+      error={errorMessage}
+      onRetry={() => {
+        void projectsQuery.refetch();
+      }}
       variant="compact"
     />
   );

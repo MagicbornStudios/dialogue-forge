@@ -41,4 +41,6 @@ export * from './forge-game-state';
 export * from './characters';
 export * from './draft';
 export * from './narrative';
+export * from './page-contract-v2';
+export * from './composition';
 export * from './runtime';

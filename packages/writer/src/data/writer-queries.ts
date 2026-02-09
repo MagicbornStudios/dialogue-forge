@@ -1,17 +1,23 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForgePayloadClient } from '@magicborn/forge';
-import type { ForgePage } from '@magicborn/shared/types/narrative';
 import type { Comment } from '@magicborn/writer/components/WriterWorkspace/editor/lexical/commenting';
 import type {
+  WriterBlockDoc,
   WriterComment,
   WriterPageDoc,
   WriterThread,
 } from './writer-types';
+import {
+  mapPayloadBlockToWriterBlockDoc,
+  resolveSerializedContentFromBlocksOrLegacy,
+} from './writer-page-block-mappers';
 
 const PAYLOAD_COLLECTIONS = {
   PAGES: 'pages',
+  BLOCKS: 'blocks',
 } as const;
 
 type PayloadPage = {
@@ -29,6 +35,18 @@ type PayloadPage = {
   content?: unknown;
   archivedAt?: string | null;
   comments?: Array<WriterComment | WriterThread>;
+};
+
+type PayloadBlock = {
+  id: number;
+  page: number | { id?: number };
+  parent_block?: number | { id?: number } | null;
+  type: string;
+  position: number;
+  payload?: Record<string, unknown> | null;
+  archived?: boolean;
+  in_trash?: boolean;
+  has_children?: boolean;
 };
 
 type QueryClientLike = {
@@ -75,11 +93,16 @@ function mapPage(doc: PayloadPage): WriterPageDoc {
 const sortByOrder = <T extends { order: number }>(items: T[]): T[] =>
   [...items].sort((a, b) => a.order - b.order);
 
+const sortByPosition = <T extends { position: number }>(items: T[]): T[] =>
+  [...items].sort((a, b) => a.position - b.position);
+
 export const writerQueryKeys = {
   all: ['writer'] as const,
   pages: (projectId: number, narrativeGraphId?: number | null) =>
     [...writerQueryKeys.all, 'pages', projectId, narrativeGraphId ?? 'all'] as const,
   page: (pageId: number) => [...writerQueryKeys.all, 'page', pageId] as const,
+  blocks: (pageId: number) => [...writerQueryKeys.all, 'blocks', pageId] as const,
+  block: (blockId: number) => [...writerQueryKeys.all, 'block', blockId] as const,
   comments: (pageId: number) => [...writerQueryKeys.all, 'comments', pageId] as const,
 };
 
@@ -118,6 +141,26 @@ export function useWriterPage(pageId: number | null) {
         id: pageId!,
       })) as PayloadPage;
       return mapPage(page);
+    },
+    enabled: pageId != null,
+  });
+}
+
+export function useWriterBlocks(pageId: number | null) {
+  const payload = useForgePayloadClient();
+  return useQuery({
+    queryKey: writerQueryKeys.blocks(pageId ?? 0),
+    queryFn: async (): Promise<WriterBlockDoc[]> => {
+      const result = await payload.find({
+        collection: PAYLOAD_COLLECTIONS.BLOCKS,
+        where: {
+          page: { equals: pageId },
+        },
+        limit: 2000,
+      });
+      return sortByPosition(
+        (result.docs as PayloadBlock[]).map(mapPayloadBlockToWriterBlockDoc)
+      );
     },
     enabled: pageId != null,
   });
@@ -181,6 +224,26 @@ export async function fetchWriterPage(
   });
 }
 
+export async function fetchWriterBlocks(
+  queryClient: QueryClientLike,
+  payload: ReturnType<typeof useForgePayloadClient>,
+  pageId: number
+): Promise<WriterBlockDoc[]> {
+  return queryClient.fetchQuery({
+    queryKey: writerQueryKeys.blocks(pageId),
+    queryFn: async () => {
+      const result = await payload.find({
+        collection: PAYLOAD_COLLECTIONS.BLOCKS,
+        where: { page: { equals: pageId } },
+        limit: 2000,
+      });
+      return sortByPosition(
+        (result.docs as PayloadBlock[]).map(mapPayloadBlockToWriterBlockDoc)
+      );
+    },
+  });
+}
+
 export async function fetchWriterComments(
   queryClient: QueryClientLike,
   payload: ReturnType<typeof useForgePayloadClient>,
@@ -197,6 +260,33 @@ export async function fetchWriterComments(
       return page.comments.map((comment) => ({ ...comment, pageId }));
     },
   });
+}
+
+export function useWriterResolvedPageContent(pageId: number | null) {
+  const pageQuery = useWriterPage(pageId);
+  const blocksQuery = useWriterBlocks(pageId);
+
+  const resolved = useMemo(
+    () =>
+      resolveSerializedContentFromBlocksOrLegacy(
+        blocksQuery.data,
+        pageQuery.data?.bookBody ?? null
+      ),
+    [blocksQuery.data, pageQuery.data?.bookBody]
+  );
+
+  return {
+    ...resolved,
+    page: pageQuery.data ?? null,
+    blocks: blocksQuery.data ?? [],
+    isLoading: pageQuery.isLoading || blocksQuery.isLoading,
+    isFetching: pageQuery.isFetching || blocksQuery.isFetching,
+    isError: pageQuery.isError || blocksQuery.isError,
+    error: pageQuery.error ?? blocksQuery.error ?? null,
+    refetch: async () => {
+      await Promise.all([pageQuery.refetch(), blocksQuery.refetch()]);
+    },
+  };
 }
 
 export function useCreateWriterPage() {
@@ -286,6 +376,139 @@ export function useDeleteWriterPage() {
           queryKey: writerQueryKeys.pages(projectId, narrativeGraphId),
         });
       }
+    },
+  });
+}
+
+export function useCreateWriterBlock() {
+  const payload = useForgePayloadClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      pageId: number;
+      parentBlockId?: number | null;
+      type: string;
+      position: number;
+      payload?: Record<string, unknown>;
+      archived?: boolean;
+      inTrash?: boolean;
+      hasChildren?: boolean;
+    }) => {
+      const created = (await payload.create({
+        collection: PAYLOAD_COLLECTIONS.BLOCKS,
+        data: {
+          page: input.pageId,
+          parent_block: input.parentBlockId ?? null,
+          type: input.type,
+          position: input.position,
+          payload: input.payload ?? {},
+          archived: input.archived ?? false,
+          in_trash: input.inTrash ?? false,
+          has_children: input.hasChildren ?? false,
+        },
+      })) as PayloadBlock;
+      return mapPayloadBlockToWriterBlockDoc(created);
+    },
+    onSuccess: (block) => {
+      queryClient.invalidateQueries({ queryKey: writerQueryKeys.blocks(block.page) });
+      queryClient.invalidateQueries({ queryKey: writerQueryKeys.page(block.page) });
+    },
+  });
+}
+
+export function useUpdateWriterBlock() {
+  const payload = useForgePayloadClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      blockId,
+      patch,
+    }: {
+      blockId: number;
+      patch: Partial<
+        Pick<
+          WriterBlockDoc,
+          | 'parent_block'
+          | 'type'
+          | 'position'
+          | 'payload'
+          | 'archived'
+          | 'in_trash'
+          | 'has_children'
+        >
+      >;
+    }) => {
+      const updated = (await payload.update({
+        collection: PAYLOAD_COLLECTIONS.BLOCKS,
+        id: blockId,
+        data: patch as unknown as Record<string, unknown>,
+      })) as PayloadBlock;
+      return mapPayloadBlockToWriterBlockDoc(updated);
+    },
+    onSuccess: (block) => {
+      queryClient.invalidateQueries({ queryKey: writerQueryKeys.blocks(block.page) });
+      queryClient.invalidateQueries({ queryKey: writerQueryKeys.block(block.id) });
+      queryClient.invalidateQueries({ queryKey: writerQueryKeys.page(block.page) });
+    },
+  });
+}
+
+export function useDeleteWriterBlock() {
+  const payload = useForgePayloadClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (blockId: number) => {
+      const block = (await payload.findByID({
+        collection: PAYLOAD_COLLECTIONS.BLOCKS,
+        id: blockId,
+      })) as PayloadBlock;
+      const pageId = extractId(block.page, 'block.page');
+      await payload.delete({
+        collection: PAYLOAD_COLLECTIONS.BLOCKS,
+        id: blockId,
+      });
+      return { blockId, pageId };
+    },
+    onSuccess: ({ blockId, pageId }) => {
+      queryClient.removeQueries({ queryKey: writerQueryKeys.block(blockId) });
+      if (pageId != null) {
+        queryClient.invalidateQueries({ queryKey: writerQueryKeys.blocks(pageId) });
+        queryClient.invalidateQueries({ queryKey: writerQueryKeys.page(pageId) });
+      }
+    },
+  });
+}
+
+export function useReorderWriterBlocks() {
+  const payload = useForgePayloadClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      pageId,
+      orderedBlockIds,
+      parentBlockId,
+    }: {
+      pageId: number;
+      orderedBlockIds: number[];
+      parentBlockId?: number | null;
+    }) => {
+      await Promise.all(
+        orderedBlockIds.map((blockId, index) =>
+          payload.update({
+            collection: PAYLOAD_COLLECTIONS.BLOCKS,
+            id: blockId,
+            data:
+              typeof parentBlockId === 'undefined'
+                ? { position: index }
+                : { position: index, parent_block: parentBlockId },
+          })
+        )
+      );
+      return { pageId, orderedBlockIds };
+    },
+    onSuccess: ({ pageId }) => {
+      queryClient.invalidateQueries({ queryKey: writerQueryKeys.blocks(pageId) });
+      queryClient.invalidateQueries({ queryKey: writerQueryKeys.page(pageId) });
     },
   });
 }

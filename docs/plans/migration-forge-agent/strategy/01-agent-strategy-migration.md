@@ -5,7 +5,7 @@ How agents use the migration plans and keep them up to date. This folder is the 
 ## Ralph Wiggum loop for plans and documentation
 
 1. **Before a migration slice**
-   - Read [00-index.md](00-index.md), the specific plan (for example [31-plan-nodes-and-inspector.md](31-plan-nodes-and-inspector.md)), and [docs/agent-artifacts/core/STATUS.md](../../agent-artifacts/core/STATUS.md) or [MIGRATION.md](../../agent-artifacts/core/MIGRATION.md).
+   - Read [00-index.md](../00-index.md), the specific plan (for example [31-plan-nodes-and-inspector.md](../forge/31-plan-nodes-and-inspector.md)), and [docs/agent-artifacts/core/STATUS.md](../../../agent-artifacts/core/STATUS.md) or [MIGRATION.md](../../../agent-artifacts/core/MIGRATION.md).
    - Check [11-out-of-scope.md](11-out-of-scope.md) so edge-drop is not reintroduced.
    - Understand the "Next" or "Next slice" in the plan.
 
@@ -15,8 +15,8 @@ How agents use the migration plans and keep them up to date. This folder is the 
 
 3. **After the slice**
    - Update the plan's **Done** list and **Next** section.
-   - Update [00-index.md](00-index.md) if you added a new plan or doc.
-   - Update [docs/agent-artifacts/core/MIGRATION.md](../../agent-artifacts/core/MIGRATION.md) (or migration section in STATUS) with a one-line "Done: ...".
+   - Update [00-index.md](../00-index.md) if you added a new plan or doc.
+   - Update [docs/agent-artifacts/core/MIGRATION.md](../../../agent-artifacts/core/MIGRATION.md) (or migration section in STATUS) with a one-line "Done: ...".
 
 4. **Scope**
    - Edits in **dialogue-forge** are docs and plans in this folder (and agent-artifacts) unless a plan explicitly says otherwise.
@@ -45,4 +45,4 @@ Use Dialogue Forge as a consumer and experimental playground for publisher patte
 
 - Prefer updating the plan with `Open:` or `Blocked:` notes rather than leaving state ambiguous.
 - Do not migrate edge-drop; see [11-out-of-scope.md](11-out-of-scope.md).
-- Link plans to [docs/architecture/dialogue-domain-and-yarn.md](../../architecture/dialogue-domain-and-yarn.md) and [docs/architecture/writer-workspace-architecture.md](../../architecture/writer-workspace-architecture.md) for source-of-truth behavior.
+- Link plans to [docs/architecture/dialogue-domain-and-yarn.md](../../../architecture/dialogue-domain-and-yarn.md) and [docs/architecture/writer-workspace-architecture.md](../../../architecture/writer-workspace-architecture.md) for source-of-truth behavior.

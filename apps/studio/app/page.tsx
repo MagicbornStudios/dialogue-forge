@@ -2,6 +2,10 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { ForgePayloadProvider, ForgeWorkspace } from '@magicborn/forge';
+import type {
+  CompositionDiagnostic,
+  ForgeCompositionV1,
+} from '@magicborn/shared/types/composition';
 import { WriterWorkspace } from '@magicborn/writer';
 import { WriterProjectSwitcher } from '@magicborn/writer/components/WriterWorkspace/layout/WriterProjectSwitcher';
 import { CharacterWorkspace } from '@magicborn/characters/components/CharacterWorkspace/CharacterWorkspace';
@@ -27,6 +31,12 @@ const TABS: { id: Workspace; label: string; icon: React.ReactNode }[] = [
   { id: 'theme', label: 'Theme', icon: <Palette size={16} /> },
   { id: 'characters', label: 'Characters', icon: <Users size={16} /> },
 ];
+
+type PlayerCompositionResponse = {
+  composition: ForgeCompositionV1;
+  resolvedGraphIds: number[];
+  diagnostics?: CompositionDiagnostic[];
+};
 
 function CharactersWorkspaceContent() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -60,6 +70,37 @@ function CharactersWorkspaceContent() {
 export default function StudioPage() {
   const [workspace, setWorkspace] = useState<Workspace>('forge');
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const requestPlayerComposition = useCallback(
+    async (
+      rootGraphId: number,
+      payload?: { gameState?: unknown; options?: { resolveStorylets?: boolean } }
+    ): Promise<PlayerCompositionResponse> => {
+      const response = await fetch('/api/forge/player/composition', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rootGraphId,
+          gameState: payload?.gameState,
+          options: payload?.options,
+        }),
+      });
+      const json = (await response.json()) as
+        | ({ ok: true } & PlayerCompositionResponse)
+        | { ok: false; message?: string; code?: string };
+
+      if (!response.ok || !json.ok) {
+        const message = !json.ok ? json.message : undefined;
+        throw new Error(message ?? 'Failed to fetch player composition');
+      }
+
+      return {
+        composition: json.composition,
+        resolvedGraphIds: json.resolvedGraphIds,
+        diagnostics: json.diagnostics,
+      };
+    },
+    []
+  );
 
   return (
     <div className="h-full min-h-0 flex flex-col bg-df-bg">
@@ -108,6 +149,7 @@ export default function StudioPage() {
               className="h-full"
               selectedProjectId={selectedProjectId}
               onProjectChange={setSelectedProjectId}
+              requestPlayerComposition={requestPlayerComposition}
               headerLinks={[
                 { label: 'Admin', href: '/admin', icon: <Settings size={14} /> },
                 { label: 'API', href: '/api/graphql-playground', icon: <Code2 size={14} /> },

@@ -1,18 +1,32 @@
 # Runtime
 
 ## Overview
-Runtime concepts (frames, directives, execution status) are defined in shared types for use by tooling or a future playback feature. The **runtime package** and **GamePlayer** playback UI have been removed.
+Runtime now includes a first graph-first player slice in Forge:
+
+- Shared runtime + composition contracts in `packages/shared/src/types/runtime.ts` and `packages/shared/src/types/composition.ts`.
+- Graph execution and variable handling in `packages/forge/src/lib/game-player/`.
+- Play surface (`GamePlayer`) and Forge modal integration for in-editor playback.
+
+Yarn export remains supported and is still independent from player execution.
 
 ## Current state
-- **Shared types** ([packages/shared/src/types/runtime.ts](packages/shared/src/types/runtime.ts)): `RUNTIME_DIRECTIVE_TYPE`, `FRAME_KIND`, `EXECUTION_STATUS`, etc. These remain for Yarn export (e.g. stripping runtime directives) and any future execution/playback work.
-- **Yarn conversion** ([packages/forge/src/lib/yarn-converter/](packages/forge/src/lib/yarn-converter/)): Independent of the old runtime package; uses shared runtime constants where needed (e.g. `prepareGraphForYarnExport`).
-- **Playback**: There is no in-app dialogue playback or GamePlayer; the previous runtime engine and PlayView were removed.
 
-## When to edit
-- **Runtime constants or types** (directives, frame kinds) → packages/shared/src/types/runtime.ts.
-- **Yarn export behavior** (what gets stripped or preserved) → packages/forge/src/lib/yarn-converter/.
+- **Execution model:** direct graph runner (no Yarn VM/WASM).
+- **Variable model:** flattened Yarn-compatible variables (`boolean | number | string`), with player path preserving numeric zero values.
+- **Composition model:** `ForgeCompositionV1`, generated on demand from graph + resolver.
+- **Server route:** `POST /api/forge/player/composition`.
+- **UI:** Forge Play modal with Pixi'VN shell + React overlay controls.
+
+## Where to edit
+
+- Runtime constants/directives: `packages/shared/src/types/runtime.ts`
+- Composition contract: `packages/shared/src/types/composition.ts`
+- Runner/storage/adapter logic: `packages/forge/src/lib/game-player/`
+- Workspace player wiring: `packages/forge/src/components/ForgeWorkspace/`
+- Studio server composition route: `apps/studio/app/api/forge/player/composition/route.ts`
 
 ## Related docs
-- [Forge](../forge.md)
-- [Dialogue domain and Yarn](../architecture/dialogue-domain-and-yarn.md)
-- [Architecture graphs](../architecture/graphs/README.md)
+
+- `docs/plans/migration-forge-agent/game-player/50-game-state-and-player.md`
+- `docs/plans/migration-forge-agent/game-player/64-game-player-tech-design-and-roadmap.md`
+- `docs/plans/migration-forge-agent/game-player/67-pixivn-composition-contract-and-adapter.md`

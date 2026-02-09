@@ -6,12 +6,14 @@
 ## Owner Map
 - Forge workspace shell: src/components/ForgeWorkspace/ForgeWorkspace.tsx
 - Graph editors: src/components/ForgeWorkspace/components/GraphEditors/
-- Runtime types: packages/shared/src/types/runtime.ts (execution engine removed)
+- Game player runtime + composition adapter: src/lib/game-player/
+- Runtime/composition contracts: packages/shared/src/types/runtime.ts + packages/shared/src/types/composition.ts
 
 ## Public API
 - DialogueGraphEditor
 - ForgeWorkspace
 - Yarn import/export helpers
+- GamePlayer + composition utilities (graph runner, variable storage, graph-to-composition)
 
 ## Folder Map
 - src/components: UI
@@ -36,6 +38,11 @@
 - Forge workspace content area (menu bar + layout): the layout must be wrapped in a container with `flex-1 min-h-0` (and optionally `overflow-hidden`) so it gets bounded height; otherwise the bottom (storylet) panel is cut off.
 - Forge components that use hooks require `ForgePayloadProvider` above the workspace tree.
 - In Studio, React Query must resolve to one module instance for host and package code (`apps/studio/next.config.mjs` aliases for webpack and Turbopack). Duplicate `@tanstack/react-query` instances cause `No QueryClient set`.
+- Studio demo data seeding is idempotent: `apps/studio/payload/seeds/graph-seeds.ts` creates missing fixture graphs for `Demo Project` and updates `projects.narrativeGraph` when needed; do not switch back to unconditional graph rewrites on startup.
+- Forge project switcher reads should stay lightweight/retryable (`depth=0`, retry with backoff in `useForgeProjects`) and expose manual retry in the dropdown via shared `ProjectSwitcher` `onRetry`.
+- Player composition is generated on demand (`/api/forge/player/composition`); do not persist composition as canonical data in this slice.
+- Pixi runtime must stay client-only. Never initialize `pixi.js` or `@drincs/pixi-vn` in server code paths.
+- Keep frame-cycle runtime behavior deferred even though schema hooks exist (`CompositionAnimationHint.frameCycle`).
 
 ## How to Test
 - npm run build

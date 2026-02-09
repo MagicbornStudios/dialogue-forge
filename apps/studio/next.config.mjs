@@ -57,6 +57,10 @@ const nextConfig = {
       '@magicborn/types': path.resolve(__dirname, '../../packages/types/src'),
       // Force a single React Query module instance across app + aliased package sources.
       '@tanstack/react-query': path.resolve(__dirname, './node_modules/@tanstack/react-query'),
+      // Keep Yjs packages singleton to avoid constructor mismatches in collaborative editors.
+      yjs: path.resolve(__dirname, '../../node_modules/yjs'),
+      'y-websocket': path.resolve(__dirname, '../../node_modules/y-websocket'),
+      'y-protocols': path.resolve(__dirname, '../../node_modules/y-protocols'),
       // Payload config alias (server-side usage)
       '@payload-config': path.resolve(__dirname, './payload/payload.config.ts'),
 
@@ -97,6 +101,9 @@ const nextConfig = {
       '@magicborn/types': '../../packages/types/src',
       // Keep Turbopack aligned with webpack aliasing to avoid duplicate RQ contexts.
       '@tanstack/react-query': './node_modules/@tanstack/react-query',
+      yjs: '../../node_modules/yjs',
+      'y-websocket': '../../node_modules/y-websocket',
+      'y-protocols': '../../node_modules/y-protocols',
       '@payload-config': './payload/payload.config.ts',
       // Relative paths so Turbopack does not use Windows absolute paths (not implemented)
       'payload/shared': '../../node_modules/payload/dist/exports/shared.js',

@@ -16,6 +16,10 @@ import { ForgeWorkspaceMenuBar } from '@magicborn/forge/components/ForgeWorkspac
 import { ProjectSync } from '@magicborn/forge/components/ForgeWorkspace/components/ProjectSync';
 import { ForgeWorkspaceLayout } from '@magicborn/forge/components/ForgeWorkspace/components/ForgeWorkspaceLayout';
 import { ForgeWorkspaceModalsRenderer } from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgeWorkspaceModals';
+import type {
+  RequestPlayerCompositionInput,
+  RequestPlayerCompositionResult,
+} from '@magicborn/forge/components/ForgeWorkspace/components/GraphEditors/ForgeWorkSpaceModals/ForgePlayerModal';
 import { NodeDragProvider } from '@magicborn/forge/components/ForgeWorkspace/hooks/useNodeDrag';
 import { CommandBar, useCommandBar } from './components/CommandBar/CommandBar';
 import { TooltipProvider } from '@magicborn/shared/ui/tooltip';
@@ -54,6 +58,10 @@ interface ForgeWorkspaceProps {
   selectedProjectId?: number | null;
   onProjectChange?: (projectId: number | null) => void;
   headerLinks?: HeaderLink[];
+  requestPlayerComposition?: (
+    rootGraphId: number,
+    payload?: RequestPlayerCompositionInput
+  ) => Promise<RequestPlayerCompositionResult>;
 }
 
 export function ForgeWorkspace({
@@ -67,6 +75,7 @@ export function ForgeWorkspace({
   resolveGraph,
   selectedProjectId,
   headerLinks,
+  requestPlayerComposition,
 }: ForgeWorkspaceProps) {
   const queryClient = useQueryClient();
   const payloadClient = useForgePayloadClient();
@@ -131,6 +140,7 @@ export function ForgeWorkspace({
             characters={initialCharacters}
             className={className}
             headerLinks={headerLinks}
+            requestPlayerComposition={requestPlayerComposition}
           />
         </NodeDragProvider>
       </TooltipProvider>
@@ -144,7 +154,11 @@ function ForgeWorkspaceContent({
   characters,
   className = '',
   headerLinks,
-}: Pick<ForgeWorkspaceProps, 'characters' | 'className' | 'headerLinks'>) {
+  requestPlayerComposition,
+}: Pick<
+  ForgeWorkspaceProps,
+  'characters' | 'className' | 'headerLinks' | 'requestPlayerComposition'
+>) {
   const selectedProjectId = useForgeWorkspaceStore((state) => state.selectedProjectId);
   const activeNarrativeGraphId = useForgeWorkspaceStore(
     (state) => state.activeNarrativeGraphId
@@ -484,6 +498,7 @@ function ForgeWorkspaceContent({
 
   const openFlagModal = useForgeWorkspaceStore((state) => state.actions.openFlagModal);
   const openGuide = useForgeWorkspaceStore((state) => state.actions.openGuide);
+  const openPlayerModal = useForgeWorkspaceStore((state) => state.actions.openPlayerModal);
   const { open: commandBarOpen, setOpen: setCommandBarOpen } = useCommandBar();
 
   const handleUpdateFlagSchema = useCallback(
@@ -523,6 +538,7 @@ function ForgeWorkspaceContent({
         }}
         onGuideClick={openGuide}
         onFlagClick={openFlagModal}
+        onPlayClick={openPlayerModal}
         panelVisibility={panelVisibility}
         onTogglePanel={togglePanel}
         headerLinks={headerLinks}
@@ -551,6 +567,7 @@ function ForgeWorkspaceContent({
         characters={effectiveCharacters}
         onUpdateFlagSchema={handleUpdateFlagSchema}
         onUpdateGameState={handleUpdateGameState}
+        requestPlayerComposition={requestPlayerComposition}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 # STATUS (Living)
 
-**Last Updated**: February 8, 2026
+**Last Updated**: February 9, 2026
 
 ## Monorepo Migration Phases (Inline Status)
 
@@ -49,13 +49,25 @@
 - Keep docs aligned to the extracted packages (architecture + conventions + status).
 - Capture any new build blockers in STATUS with exact errors and owners.
 
+## In Progress
+
+- Dialogue-Forge Alignment Program (forge-agent parity, markdown-only):
+  - Governance parity docs (`SKILLS`, `ISSUES`, `CONTRIBUTING`, PR template)
+  - Agent artifact strategy parity (`00/18/19` docs and core artifact hardening)
+  - Writer migration continuation (`blocks`-first editor persistence + legacy field deprecation path)
+- Game player MVP alignment slice:
+  - Pixi'VN package wiring, shared composition contract, graph runner/storage, server composition route, and Forge play modal.
+
 ## Known Build Blockers
 
 - `pnpm run test` is long-running in this workspace and timed out in this environment; use targeted `vitest run <path>` for quick validation while iterating.
+- `pnpm run payload:generate` currently fails in this environment on Node 24 (`ERR_REQUIRE_ASYNC_MODULE` from Payload CLI config loading). Typecheck remains green; payload type regeneration needs a Node/Payload runtime compatibility pass.
 
 ## Known Runtime Footguns
 
 - With Next alias-based package source imports (`@magicborn/* -> ../../packages/*/src`), ensure `@tanstack/react-query` resolves to a single module instance (webpack + Turbopack aliases in `apps/studio/next.config.mjs`). Duplicate instances cause `No QueryClient set` at runtime even when `QueryClientProvider` is mounted.
+- Keep Yjs libraries deduped in Next config aliases (`yjs`, `y-websocket`, `y-protocols`) to avoid duplicate constructor instances and collaborative editing warnings.
+- Pixi canvas initialization must remain client-only (`'use client'` and dynamic imports). Do not initialize `pixi.js` or `@drincs/pixi-vn` from server routes/components.
 
 ## Studio app layout (full-height main)
 
@@ -70,6 +82,12 @@ For the Studio home page (`apps/studio/app/page.tsx`), the main content area mus
 
 ## Recent Changes
 
+- Added first game-player MVP slice aligned with docs 50/51/52/64 + ADR-006:
+  - shared `ForgeCompositionV1` contract (`packages/shared/src/types/composition.ts`)
+  - graph runtime core (`variable-storage`, `runner-events`, `graph-runner`) and composition adapter/resolver
+  - Forge `GamePlayer` surface + play modal wiring
+  - Studio route `POST /api/forge/player/composition` for on-demand composition generation
+  - targeted game-player tests (runner/storage/flattener/composition adapter)
 - Added first-class Theme workspace domain at `packages/theme` with:
   - `ThemeWorkspace` UI and package-local store slices (`themeState`, `historyState`, `aiState`, `viewState`)
   - theme schema/defaults/codegen utilities
@@ -96,6 +114,16 @@ For the Studio home page (`apps/studio/app/page.tsx`), the main content area mus
   - Studio now wraps Forge/Writer with a single payload provider in `apps/studio/app/page.tsx`.
 - Updated Forge/Writer architecture and walkthrough docs to describe the hook-based data flow and provider requirements.
 - Added explicit Next config aliasing for `@tanstack/react-query` so Forge/Writer hooks and host `QueryClientProvider` share one React Query context under webpack and Turbopack.
+- Updated dev seed flow to idempotently create missing Forge demo graphs under `Demo Project` (without rewriting existing graph docs on every startup) and set `projects.narrativeGraph` when missing/wrong.
+- Hardened Studio project loading (`apps/studio/lib/forge/queries.ts`) with REST fallback when Payload SDK calls fail, and surfaced the real project-load error message in the switcher dropdown for faster diagnosis.
+- Project list queries now force `depth=0` and retry with backoff to avoid oversized relationship payloads and transient startup failures while Payload initializes on first API hit.
+- Forge and Writer project switchers now expose an explicit retry action in the dropdown when project loading fails (`ProjectSwitcher` `onRetry`).
+- Added Next webpack + Turbopack aliases for Yjs packages to keep a singleton module instance alongside the existing React Query aliasing.
+- Added Writer migration docs for Notion SDK page/block alignment and reorder planning: new `63-writer-pages-blocks-and-reorder.md`, with linked updates in `00`, `60`, `61`, `62`, and `32` so "what's next" is explicit.
+- Added non-breaking Writer block compatibility foundation:
+  - new Payload `blocks` collection wiring in Studio config/collection indexes.
+  - Writer block contract + mapper utilities (`legacy <-> canonical` and fallback serialized-content resolver).
+  - Writer block data hooks (`useWriterBlocks`, CRUD/reorder mutations, `useWriterResolvedPageContent` fallback read path).
 - Fixed domain typecheck blockers:
   - Reworked SpeechRecognition typing in Writer plugin.
   - Simplified `@magicborn/dialogue-forge` exports to consume `@magicborn/forge` public API.
@@ -118,6 +146,22 @@ For the Studio home page (`apps/studio/app/page.tsx`), the main content area mus
 - Updated ProjectSwitcher to pass children correctly (no `children` prop).
 - Aligned Next version to 15.5.7 to eliminate SWC mismatch warning.
 - Removed generated `.d.ts` artifacts from package sources and ignored nested build outputs (`.turbo`, `**/dist`, `**/.next`).
+
+## Done Log
+
+- 2026-02-09: Implemented Pixi'VN player MVP slice (composition contract, graph runner/storage, composition API route, Forge play modal, and tests).
+- 2026-02-09: Added non-breaking Writer blocks compatibility path (blocks collection, Writer block hooks, mapper/fallback utilities, and exports).
+- 2026-02-09: Added Writer docs slice for Notion SDK page/block alignment and reorder planning (63 + linked updates in 00/60/61/62/32).
+- 2026-02-09: Hardened project switcher reliability with retry UX and lightweight/retryable project queries.
+- 2026-02-08: Replaced Forge/Writer adapter-context flow with package-owned React Query hooks and shared payload provider.
+
+## Next (Impact-Labeled)
+
+1. [Large] Expand game-player template rendering: apply full directive mapping (BACKGROUND, PORTRAIT, AUDIO_CUE) from composition cues.
+2. [Large] Complete dialogue-forge governance and agent-artifact parity with forge-agent (`SKILLS`, `ISSUES`, `CONTRIBUTING`, 00/18/19 docs, task registry system).
+3. [Large] Integrate Writer editor/store save and hydrate flows onto block-first hooks (keep legacy `bookBody` fallback until migration cutover).
+4. [Medium] Maintain and enforce collection/editor contract parity docs (`65` matrix + `66` readiness) after each schema/API slice.
+5. [Medium] Add mapper/hook validation tests for legacy-to-canonical Writer content conversion.
 
 ## Handoffs / Owners
 - Platform/Monorepo: keep build green, scaffold-only changes.

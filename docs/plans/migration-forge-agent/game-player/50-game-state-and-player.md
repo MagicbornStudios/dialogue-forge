@@ -49,10 +49,69 @@ flowchart LR
 
 ## Tech stack
 
-- **Player:** Web-first (browser). No game engine required for the “standard look” of our Yarn games: textbox, choices, character portraits, simple enter/exit.
-- **Rendering:** DOM + CSS (or React) for MVP. Character “slide in from left” and basic transitions are CSS/JS. No dependency on Unity/Godot/Unreal for the player.
-- **Optional later:** A web game framework (e.g. Phaser, PixiJS) or a visual-novel–style engine for richer animations, effects, and export targets (e.g. packaged web or desktop). Not required for Phase 1; the plan keeps layout and behaviors documented so a future engine can implement the same flow.
+- **Player engine:** **Pixi'VN** (@drincs/pixi-vn) — narrative, state, save/load, 2D canvas (PixiJS). UI layer is external (React). Handles dialogue, choices, history, variables; PixiJS for backgrounds, sprites, frame cycling, Spine, transitions.
+- **Rendering:** PixiJS for scene (backgrounds, sprites, frame cycling, transitions); React for menus/HUD and any overlay UI.
+- **Motion:** Framer Motion for UI transitions (e.g. textbox, choice buttons); sprite frame cycling (idle/animations) so the screen is not static during play.
+- **Effects:** Particle layer (e.g. tsparticles / @tsparticles/react) as a swappable dependency for ambient effects.
+- **Packaging:** Electron for desktop builds.
+- **Composition:** One **composition format** (elements + timing + animation props) is the source of truth. Both the **player** (Pixi'VN) and the **animation editor** (timeline; see below) consume it so we can edit the same content on a timeline and export video (Canva-style).
+- **Animation editor:** The "video" workspace is effectively an **animation editor** (timeline + elements). Naming stays "video" for consistency with Canva; alignment with Pixi'VN and composition is required so the same composition can be edited on a timeline and played in the player.
 - **Yarn Spinner:** We support it by (1) exporting valid Yarn from dialogue-forge, (2) using the same variable types and condition/set semantics in our runner, and (3) documenting the mapping. See [Yarn Spinner compatibility](#yarn-spinner-compatibility) and [Runtime: direct graph execution (no WASM)](#runtime-direct-graph-execution-no-wasm) below.
+
+---
+
+## Pixi'VN implementation path (current repo)
+
+This repo now implements a first full vertical slice for this plan:
+
+- Shared composition contract: `ForgeCompositionV1` in `packages/shared/src/types/composition.ts`.
+- Graph runner and variable storage in `packages/forge/src/lib/game-player/`.
+- Graph -> composition adapter + storylet/detour resolver in `packages/forge/src/lib/game-player/composition/`.
+- Studio route: `POST /api/forge/player/composition` in `apps/studio/app/api/forge/player/composition/route.ts`.
+- Forge workspace Play surface via `ForgePlayerModal` and `GamePlayer` component.
+
+### Composition API example
+
+```http
+POST /api/forge/player/composition
+Content-Type: application/json
+
+{
+  "rootGraphId": 101,
+  "gameState": { "flags": { "player_gold": 0, "quest_started": true } },
+  "options": { "resolveStorylets": true }
+}
+```
+
+```json
+{
+  "ok": true,
+  "composition": {
+    "schema": "forge.composition.v1",
+    "rootGraphId": 101,
+    "resolvedGraphIds": [101, 205]
+  }
+}
+```
+
+### Workspace integration example
+
+```tsx
+<ForgeWorkspace
+  selectedProjectId={projectId}
+  onProjectChange={setProjectId}
+  requestPlayerComposition={async (rootGraphId, payload) => {
+    const response = await fetch('/api/forge/player/composition', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rootGraphId, ...payload }),
+    });
+    const json = await response.json();
+    if (!response.ok || !json.ok) throw new Error(json.message);
+    return json;
+  }}
+/>
+```
 
 ---
 
@@ -82,7 +141,7 @@ What the MVP includes so implementers know the target.
 - **Presentation events:** Runner emits node id, characterId, content, presentation (backgroundId, portraitId), runtimeDirectives so the view can update background, portraits, and optional audio.
 - **Optional but MVP-documented:** Character enter animation (e.g. slide in), portrait in slot, music/voice hooks (AUDIO_CUE). Implementation can be minimal (e.g. CSS transition, one music track) but the **contract** (when to trigger, what payload) is part of MVP.
 
-**Tech stack (confirmed):** Web (browser). DOM + CSS or React. No game engine, no WASM. Optional later: Phaser/PixiJS or VN-style engine for richer effects; not required for MVP.
+**Tech stack (confirmed):** Pixi'VN (engine); React (UI); Framer Motion (UI motion); sprite frame cycling; particle lib (e.g. tsparticles); Electron (packaged builds). Composition format shared with animation editor. See [Tech stack](#tech-stack) above.
 
 ---
 
@@ -98,9 +157,9 @@ At **runtime** the player uses a **variable storage** (Yarn-compatible): get/set
 
 ### In dialogue-forge
 
-- **Types:** [packages/shared/.../forge-game-state.ts](../../packages/shared/src/types/forge-game-state.ts): `ForgeGameState` (flags + optional characters), `ForgeFlagState` (flat key → bool/number/string).
-- **Flattener:** [packages/forge/.../game-state-flattener.ts](../../packages/forge/src/lib/game-player/game-state-flattener.ts): flattens nested game state to Yarn-compatible flat variables for condition eval and set.
-- **Store:** [packages/forge/.../gameState.slice.ts](../../packages/forge/src/components/ForgeWorkspace/store/slices/gameState.slice.ts): `activeGameState`, `activeFlagSchema`, load/set state.
+- **Types:** [packages/shared/.../forge-game-state.ts](../../../../packages/shared/src/types/forge-game-state.ts): `ForgeGameState` (flags + optional characters), `ForgeFlagState` (flat key → bool/number/string).
+- **Flattener:** [packages/forge/.../game-state-flattener.ts](../../../../packages/forge/src/lib/game-player/game-state-flattener.ts): flattens nested game state to Yarn-compatible flat variables for condition eval and set.
+- **Store:** [packages/forge/.../gameState.slice.ts](../../../../packages/forge/src/components/ForgeWorkspace/store/slices/gameState.slice.ts): `activeGameState`, `activeFlagSchema`, load/set state.
 
 ### In the player (forge-agent)
 
@@ -113,7 +172,7 @@ At **runtime** the player uses a **variable storage** (Yarn-compatible): get/set
 
 ### Condition evaluation
 
-- **Operators:** Same as Yarn and dialogue-forge: IS_SET, IS_NOT_SET, EQUALS, NOT_EQUALS, GREATER_THAN, LESS_THAN, etc. (see [packages/shared/.../constants.ts](../../packages/shared/src/types/constants.ts) and condition types in [forge-graph](../../packages/shared/src/types/forge-graph.ts)).
+- **Operators:** Same as Yarn and dialogue-forge: IS_SET, IS_NOT_SET, EQUALS, NOT_EQUALS, GREATER_THAN, LESS_THAN, etc. (see [packages/shared/.../constants.ts](../../../../packages/shared/src/types/constants.ts) and condition types in [forge-graph](../../../../packages/shared/src/types/forge-graph.ts)).
 - **Types:** Values in storage are boolean | number | string. Conditions compare flag value to a literal (or check set/unset).
 - **Graph runner:** For CONDITIONAL nodes, evaluate blocks in order (if → elseif → else); first matching block wins. For PLAYER nodes, filter choices by their conditions. For CHARACTER nodes with conditionalBlocks, same if/elseif/else evaluation to pick content and nextNodeId.
 
@@ -176,7 +235,7 @@ Not required for MVP; the layout and runner should emit events so audio can be p
 
 ## Scene management (MVP)
 
-When and how presentation and directives apply. Types: [packages/shared/src/types/runtime.ts](../../packages/shared/src/types/runtime.ts) (`RUNTIME_DIRECTIVE_TYPE`: SCENE, MEDIA, CAMERA, BACKGROUND, PORTRAIT, OVERLAY, AUDIO_CUE; `RUNTIME_DIRECTIVE_APPLY_MODE`: ON_ENTER, PERSIST_UNTIL_CHANGED) and [packages/shared/src/types/forge-graph.ts](../../packages/shared/src/types/forge-graph.ts) (`ForgeNodePresentation`: imageId, backgroundId, portraitId; `ForgeRuntimeDirective`). Yarn export strips these; the player reads them from the graph.
+When and how presentation and directives apply. Types: [packages/shared/src/types/runtime.ts](../../../../packages/shared/src/types/runtime.ts) (`RUNTIME_DIRECTIVE_TYPE`: SCENE, MEDIA, CAMERA, BACKGROUND, PORTRAIT, OVERLAY, AUDIO_CUE; `RUNTIME_DIRECTIVE_APPLY_MODE`: ON_ENTER, PERSIST_UNTIL_CHANGED) and [packages/shared/src/types/forge-graph.ts](../../../../packages/shared/src/types/forge-graph.ts) (`ForgeNodePresentation`: imageId, backgroundId, portraitId; `ForgeRuntimeDirective`). Yarn export strips these; the player reads them from the graph.
 
 - **When does the background change?** When the runner **enters a node** that has (a) `presentation.backgroundId` or (b) a `runtimeDirectives` entry with `type: BACKGROUND` (and optional refId/payload). The scene layer subscribes to runner events; on EnterNode or Line it receives the current node’s presentation + directives and applies the background. So: **background changes on node enter** when that node (or its directives) specify a different background.
 - **When does music play or stop?** When the runner emits a directive of type `AUDIO_CUE`. Minimal payload shape for MVP: `payload: { kind: 'music' | 'ambient' | 'voice', url?: string, action: 'play' | 'stop' | 'fadeOut' }`. **Play:** on directive with action play (and optional url). **Stop:** on directive with action stop or fadeOut, or when the scene ends (runner ended). `PERSIST_UNTIL_CHANGED` means “keep this music until another AUDIO_CUE for the same kind overwrites it.”
@@ -222,7 +281,7 @@ These behaviors define what “a Yarn game exported from our system” does. Imp
 
 We **execute graphs directly** (see [Runtime: direct graph execution (no WASM)](#runtime-direct-graph-execution-no-wasm)); we do not run the Yarn VM or WASM. Our **export** produces valid Yarn; our **runner** uses the same variable types and condition/set semantics so that (a) exported Yarn could be run in other tools, and (b) our runner behavior matches what Yarn would do for the same variables and conditions.
 
-- **Export:** dialogue-forge exports to Yarn via [packages/forge/.../yarn-converter](../../packages/forge/src/lib/yarn-converter/index.ts). Export remains the compatibility contract for “this content is valid Yarn.”
+- **Export:** dialogue-forge exports to Yarn via [packages/forge/.../yarn-converter](../../../../packages/forge/src/lib/yarn-converter/index.ts). Export remains the compatibility contract for “this content is valid Yarn.”
 - **Variables:** Variable storage holds the same types as Yarn (bool, number, string). Flattening rules (dialogue-forge) produce the same keys we’d get from Yarn `<<set $x>>` and declarations.
 - **Conditions:** Our condition model (flag, operator, value) maps to Yarn `<<if>>` / `<<elseif>>`; we evaluate the same way so behavior matches.
 - **Runtime:** We do not run a Yarn VM or WASM; our player executes graphs directly. Variable storage and condition semantics are documented so external Yarn tools or a future VM could consume our exports if ever needed.
@@ -249,12 +308,12 @@ We call this the **flag manager**; it manages **game flags** (not feature flags)
 
 | Piece | Location | Role |
 |------|----------|------|
-| Game state slice | [gameState.slice.ts](../../packages/forge/src/components/ForgeWorkspace/store/slices/gameState.slice.ts) | activeGameState, activeFlagSchema, load/set |
-| Types | [forge-game-state.ts](../../packages/shared/src/types/forge-game-state.ts) | ForgeGameState, ForgeFlagState, ForgeGameStateRecord |
-| Flattener | [game-state-flattener.ts](../../packages/forge/src/lib/game-player/game-state-flattener.ts) | Flatten to Yarn-compatible variables |
-| Execution strategy | [execution-strategy.md](../../packages/forge/src/lib/game-player/docs/execution-strategy.md) | Option B (direct) recommended for MVP |
-| Graph types | [forge-graph.ts](../../packages/shared/src/types/forge-graph.ts) | ForgeNode (characterId, content, choices, conditionalBlocks, setFlags, presentation, runtimeDirectives) |
-| Yarn export | [yarn-converter](../../packages/forge/src/lib/yarn-converter/index.ts) | exportToYarn, importFromYarn |
+| Game state slice | [gameState.slice.ts](../../../../packages/forge/src/components/ForgeWorkspace/store/slices/gameState.slice.ts) | activeGameState, activeFlagSchema, load/set |
+| Types | [forge-game-state.ts](../../../../packages/shared/src/types/forge-game-state.ts) | ForgeGameState, ForgeFlagState, ForgeGameStateRecord |
+| Flattener | [game-state-flattener.ts](../../../../packages/forge/src/lib/game-player/game-state-flattener.ts) | Flatten to Yarn-compatible variables |
+| Execution strategy | [execution-strategy.md](../../../../packages/forge/src/lib/game-player/docs/execution-strategy.md) | Option B (direct) recommended for MVP |
+| Graph types | [forge-graph.ts](../../../../packages/shared/src/types/forge-graph.ts) | ForgeNode (characterId, content, choices, conditionalBlocks, setFlags, presentation, runtimeDirectives) |
+| Yarn export | [yarn-converter](../../../../packages/forge/src/lib/yarn-converter/index.ts) | exportToYarn, importFromYarn |
 
 The current game player in dialogue-forge **never worked fully**. The basic player is to be implemented in forge-agent per this plan, not ported as-is.
 
@@ -262,7 +321,7 @@ The current game player in dialogue-forge **never worked fully**. The basic play
 
 ## Game player planning and Yarn runtime directives
 
-**Significant planning is needed for the game player** (presentation and interactivity) as a separate effort from export. Yarn Spinner has runtime directives and concepts (e.g. line metadata, presenters, behavior) that describe how content is presented; we should **investigate** which of these map to our graph-first player. They may be too rigid for our model; explore further. Document as a planning dependency; see [54-migration-roadmap.md](54-migration-roadmap.md) Phase 5 and [52-yarn-spinner-variables-flattening-caveats.md](52-yarn-spinner-variables-flattening-caveats.md) (Game player and Yarn runtime directives).
+**Significant planning is needed for the game player** (presentation and interactivity) as a separate effort from export. **Game player tech, one opinionated template, and roadmap** are in [64-game-player-tech-design-and-roadmap.md](64-game-player-tech-design-and-roadmap.md); use 64 for "what's next," decisions, and open questions. Yarn Spinner has runtime directives and concepts (e.g. line metadata, presenters, behavior) that describe how content is presented; we should **investigate** which of these map to our graph-first player. They may be too rigid for our model; explore further. See [forge/54-migration-roadmap.md](../forge/54-migration-roadmap.md) Phase 5 and [52-yarn-spinner-variables-flattening-caveats.md](52-yarn-spinner-variables-flattening-caveats.md) (Game player and Yarn runtime directives).
 
 ---
 
@@ -273,6 +332,8 @@ The current game player in dialogue-forge **never worked fully**. The basic play
 ---
 
 ## Next
+
+See [64-game-player-tech-design-and-roadmap.md](64-game-player-tech-design-and-roadmap.md) for task breakdown and one opinionated template.
 
 1. **Overhaul flag/schema manager** in dialogue-forge (data model, UI, persistence, validation).
 2. **Implement variable storage interface** in forge-agent (get/set, init from flattened game state).

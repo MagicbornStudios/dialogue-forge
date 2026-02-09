@@ -28,6 +28,7 @@ export interface ProjectSwitcherProps {
   selectedProjectId: string | number | null;
   onProjectChange: (projectId: string | number | null) => void;
   onCreateProject?: (data: { name: string; description?: string }) => Promise<ProjectSummary>;
+  onRetry?: () => void;
   isLoading?: boolean;
   error?: string | null;
   /** compact: dropdown + plus only. full: label + dropdown + plus + children */
@@ -40,6 +41,7 @@ export function ProjectSwitcher({
   selectedProjectId,
   onProjectChange,
   onCreateProject,
+  onRetry,
   isLoading = false,
   error = null,
   variant = 'compact',
@@ -123,9 +125,12 @@ export function ProjectSwitcher({
               <DropdownMenuItem disabled>No projects found</DropdownMenuItem>
             )}
             {error && (
-              <DropdownMenuItem disabled className="text-destructive">
-                {error}
-              </DropdownMenuItem>
+              <>
+                <DropdownMenuItem disabled className="text-destructive">
+                  {error}
+                </DropdownMenuItem>
+                {onRetry && <DropdownMenuItem onClick={onRetry}>Retry</DropdownMenuItem>}
+              </>
             )}
             {onCreateProject && (
               <>

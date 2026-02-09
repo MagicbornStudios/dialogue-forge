@@ -2,7 +2,7 @@
 
 **Goal:** Generate a **complete Yarn Spinner file** from any narrative/dialogue graph that is meant to produce Yarn, **resolving all referenced graphs** (storylet/detour) so the output is self-contained and valid for any consumer (our graph runner or a Yarn VM). This applies to **any graph intended to produce Yarn Spinner output**.
 
-Context: [README-FORGE-FOCUS.md](README-FORGE-FOCUS.md), [12-yarn-spinner-alignment.md](12-yarn-spinner-alignment.md), [30-plan-yarn-and-graph-types.md](30-plan-yarn-and-graph-types.md), [54-migration-roadmap.md](54-migration-roadmap.md). Data access and export resolution: [55-data-access-and-export.md](55-data-access-and-export.md).
+Context: [00-index.md](../00-index.md), [12-yarn-spinner-alignment.md](12-yarn-spinner-alignment.md), [30-plan-yarn-and-graph-types.md](30-plan-yarn-and-graph-types.md), [54-migration-roadmap.md](54-migration-roadmap.md). Data access and export resolution: [55-data-access-and-export.md](55-data-access-and-export.md).
 
 ---
 
@@ -41,13 +41,13 @@ Use these to drive slices; update Done/Next in [30-plan-yarn-and-graph-types.md]
    Build a test: root graph + 1–2 referenced graphs (storylet/detour). Export with context. Assert: single string, no placeholder “Could not load graph”, all node titles unique, every `<<jump>>` target exists in the output. Optionally run through a Yarn parser or VM if available to validate syntax.
 
 6. **Variables and flattening in export**  
-   Ensure setFlags and conditionals in the graph use variable names that match our flattening (see [51-flag-manager-and-flattening.md](51-flag-manager-and-flattening.md), [52-yarn-spinner-variables-flattening-caveats.md](52-yarn-spinner-variables-flattening-caveats.md)). Emit `<<set $flatKey = value>>`; document or add tests that flat keys match what the flattener produces.
+   Ensure setFlags and conditionals in the graph use variable names that match our flattening (see [51-flag-manager-and-flattening.md](../game-player/51-flag-manager-and-flattening.md), [52-yarn-spinner-variables-flattening-caveats.md](../game-player/52-yarn-spinner-variables-flattening-caveats.md)). Emit `<<set $flatKey = value>>`; document or add tests that flat keys match what the flattener produces.
 
 7. **Narrative nodes in export**  
    Act, Chapter, and Page are all page nodes; export contract uses PAGE only (and narrative Detour/Jump). When root is narrative-only, export a **structural skeleton** with **blank nodes** (no dialogue, no choices). Implement narrative handlers to emit skeleton; align with [12](12-yarn-spinner-alignment.md).
 
 8. **Docs and review**  
-   Keep [README-FORGE-FOCUS.md](README-FORGE-FOCUS.md), [50-game-state-and-player.md](50-game-state-and-player.md), [51](51-flag-manager-and-flattening.md), [52](52-yarn-spinner-variables-flattening-caveats.md), [54-migration-roadmap.md](54-migration-roadmap.md), and this doc updated. Re-read the forge migration docs when changing export, flattening, or graph resolution.
+   Keep [00-index.md](../00-index.md), [50-game-state-and-player.md](../game-player/50-game-state-and-player.md), [51](../game-player/51-flag-manager-and-flattening.md), [52](../game-player/52-yarn-spinner-variables-flattening-caveats.md), [54-migration-roadmap.md](54-migration-roadmap.md), and this doc updated. Re-read the forge migration docs when changing export, flattening, or graph resolution.
 
 ---
 

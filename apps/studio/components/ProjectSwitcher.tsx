@@ -32,12 +32,25 @@ function toSummary(p: ProjectDocument): ProjectSummary {
   return { id: p.id, name: p.name };
 }
 
+function toErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'string') return error;
+  if (typeof error === 'object') {
+    const maybe = error as { message?: unknown; errors?: Array<{ message?: string }> };
+    if (typeof maybe.message === 'string' && maybe.message) return maybe.message;
+    if (Array.isArray(maybe.errors) && maybe.errors[0]?.message) return maybe.errors[0].message;
+  }
+  return 'Failed to load projects';
+}
+
 export function ProjectSwitcher({ selectedProjectId, onProjectChange, writerMenus }: ProjectSwitcherProps) {
   const projectsQuery = useProjects();
   const createProjectMutation = useCreateProject();
 
   const projects: ProjectSummary[] = (projectsQuery.data ?? []).map(toSummary);
   const isLoading = projectsQuery.isLoading ?? false;
+  const projectError = toErrorMessage(projectsQuery.error);
 
   const handleCreateProject = async (data: { name: string; description?: string }): Promise<ProjectSummary> => {
     const created = await createProjectMutation.mutateAsync(data);
@@ -137,8 +150,11 @@ export function ProjectSwitcher({ selectedProjectId, onProjectChange, writerMenu
       selectedProjectId={selectedProjectId}
       onProjectChange={handleProjectChange}
       onCreateProject={handleCreateProject}
+      onRetry={() => {
+        void projectsQuery.refetch();
+      }}
       isLoading={isLoading}
-      error={projectsQuery.error ? 'Failed to load projects' : null}
+      error={projectError}
       variant="full"
     >
       {children}

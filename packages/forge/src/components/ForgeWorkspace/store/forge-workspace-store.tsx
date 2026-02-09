@@ -117,6 +117,8 @@ export interface ForgeWorkspaceState {
     closeFlagModal: ReturnType<typeof createViewStateSlice>["closeFlagModal"]
     openGuide: ReturnType<typeof createViewStateSlice>["openGuide"]
     closeGuide: ReturnType<typeof createViewStateSlice>["closeGuide"]
+    openPlayerModal: ReturnType<typeof createViewStateSlice>["openPlayerModal"]
+    closePlayerModal: ReturnType<typeof createViewStateSlice>["closePlayerModal"]
     openCopilotChat: ReturnType<typeof createViewStateSlice>["openCopilotChat"]
     closeCopilotChat: ReturnType<typeof createViewStateSlice>["closeCopilotChat"]
     setCopilotVisible: ReturnType<typeof createViewStateSlice>["setCopilotVisible"]
@@ -284,6 +286,8 @@ export function createForgeWorkspaceStore(
             closeFlagModal: viewStateSlice.closeFlagModal,
             openGuide: viewStateSlice.openGuide,
             closeGuide: viewStateSlice.closeGuide,
+            openPlayerModal: viewStateSlice.openPlayerModal,
+            closePlayerModal: viewStateSlice.closePlayerModal,
             openCopilotChat: viewStateSlice.openCopilotChat,
             closeCopilotChat: viewStateSlice.closeCopilotChat,
             setCopilotVisible: viewStateSlice.setCopilotVisible,

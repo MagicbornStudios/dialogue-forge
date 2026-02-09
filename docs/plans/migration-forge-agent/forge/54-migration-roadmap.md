@@ -1,6 +1,6 @@
 # Forge migration roadmap
 
-Single place for **ordered migration work** and **pointers to technical context**. Use this when rebuilding in the other codebase. Decisions and caveats are in [52-yarn-spinner-variables-flattening-caveats.md](52-yarn-spinner-variables-flattening-caveats.md) and linked docs.
+Single place for **ordered migration work** and **pointers to technical context**. Use this when rebuilding in the other codebase. Decisions and caveats are in [52-yarn-spinner-variables-flattening-caveats.md](../game-player/52-yarn-spinner-variables-flattening-caveats.md) and linked docs.
 
 ---
 
@@ -38,10 +38,10 @@ flowchart LR
 **Technical context:**
 
 - [30-plan-yarn-and-graph-types.md](30-plan-yarn-and-graph-types.md) — ForgeGraphDoc, ForgeNode, node types (PAGE, STORYLET, DETOUR, etc.).
-- [50-game-state-and-player.md](50-game-state-and-player.md) — Game state, variable storage, graph runner (no WASM).
-- [51-flag-manager-and-flattening.md](51-flag-manager-and-flattening.md) — ForgeGameState shape, flattening rules, stats and zero, complex examples.
-- [52-yarn-spinner-variables-flattening-caveats.md](52-yarn-spinner-variables-flattening-caveats.md) — Why we flatten, variable names in graph, declarations, decisions table.
-- Code: [packages/shared/src/types/forge-game-state.ts](../../packages/shared/src/types/forge-game-state.ts), [packages/shared/src/types/forge-graph.ts](../../packages/shared/src/types/forge-graph.ts), [packages/forge/src/lib/game-player/game-state-flattener.ts](../../packages/forge/src/lib/game-player/game-state-flattener.ts).
+- [50-game-state-and-player.md](../game-player/50-game-state-and-player.md) — Game state, variable storage, graph runner (no WASM).
+- [51-flag-manager-and-flattening.md](../game-player/51-flag-manager-and-flattening.md) — ForgeGameState shape, flattening rules, stats and zero, complex examples.
+- [52-yarn-spinner-variables-flattening-caveats.md](../game-player/52-yarn-spinner-variables-flattening-caveats.md) — Why we flatten, variable names in graph, declarations, decisions table.
+- Code: [packages/shared/src/types/forge-game-state.ts](../../../../packages/shared/src/types/forge-game-state.ts), [packages/shared/src/types/forge-graph.ts](../../../../packages/shared/src/types/forge-graph.ts), [packages/forge/src/lib/game-player/game-state-flattener.ts](../../../../packages/forge/src/lib/game-player/game-state-flattener.ts).
 
 **Decisions / caveats:**
 
@@ -51,7 +51,7 @@ flowchart LR
 
 ## Phase 2 — Yarn export pipeline
 
-**Outcome:** `exportToYarn(graph, context)` produces a single Yarn string; storylet/detour resolve via context; missing graph fails export and warns. **Full export is server-side** (see [55](55-data-access-and-export.md)); client can show preview without full resolution.
+**Outcome:** `exportToYarn(graph, context)` produces a single Yarn string; storylet/detour resolve via context; missing graph fails export and warns. **Full export is server-side** (see [55-data-access-and-export.md](55-data-access-and-export.md)); client can show preview without full resolution.
 
 **Technical context:**
 
@@ -60,7 +60,7 @@ flowchart LR
 - [52-yarn-spinner-variables-flattening-caveats.md](52-yarn-spinner-variables-flattening-caveats.md) — Inlining (no prefix), missing graph (fail + warn), narrative skeleton.
 - [53-forge-yarn-export-goal-next-steps.md](53-forge-yarn-export-goal-next-steps.md) — Goal, next steps, server-side export.
 - [55-data-access-and-export.md](55-data-access-and-export.md) — Data access, server-side export resolution.
-- Code: [packages/forge/src/lib/yarn-converter/](../../packages/forge/src/lib/yarn-converter/) — index.ts, handlers, workspace-context.ts, utils/runtime-export.ts, utils/variable-handler.ts.
+- Code: [packages/forge/src/lib/yarn-converter/](../../../../packages/forge/src/lib/yarn-converter/) — index.ts, handlers, workspace-context.ts, utils/runtime-export.ts, utils/variable-handler.ts.
 
 **Decisions / caveats:**
 
@@ -77,7 +77,7 @@ flowchart LR
 - [31-plan-nodes-and-inspector.md](31-plan-nodes-and-inspector.md) — Node components, inspector, no Writer link; graph list via hooks.
 - [33-plan-dialogue-editor-chrome.md](33-plan-dialogue-editor-chrome.md) — ForgeWorkspace chrome.
 - [55-data-access-and-export.md](55-data-access-and-export.md) — React Query + Payload, no adapters; server-side export.
-- [README-FORGE-FOCUS.md](README-FORGE-FOCUS.md) — Scope, goal, codebase anchors.
+- [00-index.md](../00-index.md) — Scope, goal, codebase anchors.
 - Code: ForgeWorkspace store, graph list (from hooks), breadcrumbs; node types and inspector sections.
 
 **Decisions / caveats:**
@@ -92,9 +92,9 @@ flowchart LR
 
 **Technical context:**
 
-- [51-flag-manager-and-flattening.md](51-flag-manager-and-flattening.md) — Flattening rules, stats and zero, boolean false, setFlags shape extension.
-- [52-yarn-spinner-variables-flattening-caveats.md](52-yarn-spinner-variables-flattening-caveats.md) — Declarations (only with schema), variable names in graph, setFlags row, variable suggestion system.
-- Code: [packages/forge/src/lib/game-player/game-state-flattener.ts](../../packages/forge/src/lib/game-player/game-state-flattener.ts), [packages/forge/src/lib/yarn-converter/utils/variable-handler.ts](../../packages/forge/src/lib/yarn-converter/utils/variable-handler.ts) (formatSetCommand, extend for SetFlagOp).
+- [51-flag-manager-and-flattening.md](../game-player/51-flag-manager-and-flattening.md) — Flattening rules, stats and zero, boolean false, setFlags shape extension.
+- [52-yarn-spinner-variables-flattening-caveats.md](../game-player/52-yarn-spinner-variables-flattening-caveats.md) — Declarations (only with schema), variable names in graph, setFlags row, variable suggestion system.
+- Code: [packages/forge/src/lib/game-player/game-state-flattener.ts](../../../../packages/forge/src/lib/game-player/game-state-flattener.ts), [packages/forge/src/lib/yarn-converter/utils/variable-handler.ts](../../../../packages/forge/src/lib/yarn-converter/utils/variable-handler.ts) (formatSetCommand, extend for SetFlagOp).
 
 **Decisions / caveats:**
 
@@ -104,17 +104,18 @@ flowchart LR
 
 ## Phase 5 — Validation and tests
 
-**Outcome:** E2E "complete Yarn" test (root + referenced graphs, server-side); import round-trip where applicable. **Game player:** Significant planning for presentation and interactivity; align with Yarn runtime directives where useful (investigate).
+**Outcome:** E2E "complete Yarn" test (root + referenced graphs, server-side); import round-trip where applicable. **Game player:** Tech, one template, and roadmap in [64-game-player-tech-design-and-roadmap.md](../game-player/64-game-player-tech-design-and-roadmap.md); "what's next" and decisions/open questions live there. Align with Yarn runtime directives where useful (investigate).
 
 **Technical context:**
 
 - [53-forge-yarn-export-goal-next-steps.md](53-forge-yarn-export-goal-next-steps.md) — Next steps 5–8.
 - [52-yarn-spinner-variables-flattening-caveats.md](52-yarn-spinner-variables-flattening-caveats.md) — No prefix; uniqueness enforced in editor so duplicates cannot occur.
-- [50-game-state-and-player.md](50-game-state-and-player.md) — Game player planning, Yarn runtime directives.
+- [50-game-state-and-player.md](../game-player/50-game-state-and-player.md) — Game state, variable storage, runner, layout.
+- [64-game-player-tech-design-and-roadmap.md](../game-player/64-game-player-tech-design-and-roadmap.md) — Game player tech, design, one template, roadmap, task breakdown.
 
 **Decisions / caveats:**
 
-- Unique node ids are enforced in the editor (graph-scoped or global), so inlined export does not produce duplicate Yarn titles. Game player (presentation, interactivity) and Yarn runtime directives need separate planning; see 50.
+- Unique node ids are enforced in the editor (graph-scoped or global), so inlined export does not produce duplicate Yarn titles. Game player (presentation, interactivity) and Yarn runtime directives need separate planning; see 50 and 64.
 
 ---
 
@@ -129,13 +130,14 @@ flowchart LR
 
 | Doc | Content |
 |-----|---------|
-| [00-index](00-index.md) | Entry point, document list, forge focus |
+| [00-index](../00-index.md) | Entry point, document list, forge focus |
 | [12](12-yarn-spinner-alignment.md) | Node types to Yarn, export/import pipeline, PAGE only in contract |
 | [30](30-plan-yarn-and-graph-types.md) | Graph types, yarn-converter port steps |
 | [31](31-plan-nodes-and-inspector.md) | Nodes and inspector |
 | [33](33-plan-dialogue-editor-chrome.md) | ForgeWorkspace chrome |
-| [50](50-game-state-and-player.md) | Game state, variable storage, runner, no WASM |
-| [51](51-flag-manager-and-flattening.md) | Game flags, flattening, stats and zero |
-| [52](52-yarn-spinner-variables-flattening-caveats.md) | Why flatten, declarations, variable names, caveats, decisions |
+| [50](../game-player/50-game-state-and-player.md) | Game state, variable storage, runner, no WASM |
+| [51](../game-player/51-flag-manager-and-flattening.md) | Game flags, flattening, stats and zero |
+| [52](../game-player/52-yarn-spinner-variables-flattening-caveats.md) | Why flatten, declarations, variable names, caveats, decisions |
 | [53](53-forge-yarn-export-goal-next-steps.md) | Goal, next steps, server-side export, resolved/remaining questions |
 | [55](55-data-access-and-export.md) | Data access (React Query, Payload), server-side export resolution |
+| [64](../game-player/64-game-player-tech-design-and-roadmap.md) | Game player tech, design, one template, roadmap, "what's next" |

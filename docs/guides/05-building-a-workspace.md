@@ -25,4 +25,4 @@ Build or adapt workspace surfaces in Dialogue Forge while staying compatible wit
 ## Related
 
 - `docs/how-to/building-a-workspace.md`
-- `docs/plans/migration-forge-agent/01-agent-strategy-migration.md`
+- `docs/plans/migration-forge-agent/strategy/01-agent-strategy-migration.md`
